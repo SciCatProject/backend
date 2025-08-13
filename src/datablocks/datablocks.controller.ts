@@ -67,7 +67,7 @@ export class DatablocksController {
     action: Action,
   ) {
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
+    const ability = this.caslAbilityFactory.datablockAccess(user);
 
     if (
       !ability.can(
@@ -81,7 +81,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockCreateEndpoint, Datablock),
+    ability.can(Action.DatablockCreate, Datablock),
   )
   @Post()
   async create(
@@ -91,7 +91,7 @@ export class DatablocksController {
     this.checkPermission(
       req,
       createDatablockDto,
-      Action.DatablockCreateInstance,
+      Action.DatablockCreate,
     );
 
     try {
@@ -127,7 +127,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockReadEndpoint, Datablock),
+    ability.can(Action.DatablockRead, Datablock),
   )
   @ApiQuery({
     name: "filter",
@@ -145,9 +145,9 @@ export class DatablocksController {
   ): Promise<Datablock[]> {
     let datablockFilter: IFilters<DatablockDocument> = filter ?? {};
     const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockInstanceAccess(user);
+    const abilities = this.caslAbilityFactory.datablockAccess(user);
 
-    if (abilities.cannot(Action.DatablockReadAny, Datablock)) {
+    if (abilities.cannot(Action.DatablockRead, Datablock)) {
       datablockFilter = addAccessControlFilters(datablockFilter, user);
     }
 
@@ -156,7 +156,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockReadEndpoint, Datablock),
+    ability.can(Action.DatablockRead, Datablock),
   )
   @Get("/count")
   @ApiOperation({
@@ -213,9 +213,9 @@ export class DatablocksController {
 
     let datablockFilter: IFilters<DatablockDocument> = filter ?? {};
     const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockInstanceAccess(user);
+    const abilities = this.caslAbilityFactory.datablockAccess(user);
 
-    if (abilities.cannot(Action.DatablockReadAny, Datablock)) {
+    if (abilities.cannot(Action.DatablockRead, Datablock)) {
       datablockFilter = addAccessControlFilters(datablockFilter, user);
     }
 
@@ -224,7 +224,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockReadEndpoint, Datablock),
+    ability.can(Action.DatablockRead, Datablock),
   )
   @Get(":id")
   async findById(
@@ -232,7 +232,7 @@ export class DatablocksController {
     @Param("id") id: string,
   ): Promise<Datablock | null> {
     const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockInstanceAccess(user);
+    const abilities = this.caslAbilityFactory.datablockAccess(user);
 
     const instance = await this.datablocksService.findOne({
       where: { _id: id },
@@ -242,8 +242,8 @@ export class DatablocksController {
     }
 
     if (
-      abilities.cannot(Action.DatablockReadInstance, instance) &&
-      abilities.cannot(Action.DatablockReadAny, Datablock)
+      abilities.cannot(Action.DatablockRead, instance) &&
+      abilities.cannot(Action.DatablockRead, Datablock)
     ) {
       throw new UnauthorizedException();
     }
@@ -253,7 +253,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockUpdateEndpoint, Datablock),
+    ability.can(Action.DatablockUpdate, Datablock),
   )
   @Patch(":id")
   async update(
@@ -266,15 +266,15 @@ export class DatablocksController {
         where: { _id: id },
       });
       const user: JWTUser = request.user as JWTUser;
-      const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
+      const ability = this.caslAbilityFactory.datablockAccess(user);
 
       if (!instance) {
         throw new NotFoundException();
       }
 
       if (
-        ability.cannot(Action.DatablockUpdateInstance, instance) &&
-        ability.cannot(Action.DatablockUpdateAny, Datablock)
+        ability.cannot(Action.DatablockUpdate, instance) &&
+        ability.cannot(Action.DatablockUpdate, Datablock)
       ) {
         throw new ForbiddenException("Unauthorized to update this datablock");
       }
@@ -297,7 +297,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockDeleteEndpoint, Datablock),
+    ability.can(Action.DatablockDelete, Datablock),
   )
   @Delete(":id")
   async remove(
@@ -315,8 +315,8 @@ export class DatablocksController {
       throw new NotFoundException(`dataset: ${datablock.datasetId} not found`);
 
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
-    if (ability.cannot(Action.DatablockDeleteAny, Datablock)) {
+    const ability = this.caslAbilityFactory.datablockAccess(user);
+    if (ability.cannot(Action.DatablockDelete, Datablock)) {
       throw new ForbiddenException("Unauthorized to delete this datablock");
     }
 
