@@ -109,25 +109,28 @@ export class AttachmentsV4Controller {
       this.generateAttachmentInstanceForPermissions(attachment);
 
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.attachmentInstanceAccess(user);
+    const ability = this.caslAbilityFactory.attachmentAccess(user);
 
     try {
       switch (group) {
-        case Action.AttachmentCreateEndpoint:
+        case Action.AttachmentCreate:
           return ability.can(
-            Action.AttachmentCreateInstance,
+            Action.AttachmentCreate,
             attachmentInstance,
           );
-        case Action.AttachmentReadEndpoint:
-          return ability.can(Action.AttachmentReadInstance, attachmentInstance);
-        case Action.AttachmentUpdateEndpoint:
+        case Action.AttachmentRead:
           return ability.can(
-            Action.AttachmentUpdateInstance,
+            Action.AttachmentRead,
+            attachmentInstance
+          );
+        case Action.AttachmentUpdate:
+          return ability.can(
+            Action.AttachmentUpdate,
             attachmentInstance,
           );
-        case Action.AttachmentDeleteEndpoint:
+        case Action.AttachmentDelete:
           return ability.can(
-            Action.AttachmentDeleteInstance,
+            Action.AttachmentDelete,
             attachmentInstance,
           );
         default:
@@ -147,8 +150,8 @@ export class AttachmentsV4Controller {
     if (!filter.where) {
       filter.where = {};
     }
-    const ability = this.caslAbilityFactory.attachmentInstanceAccess(user);
-    const canAccessAny = ability.can(Action.accessAny, Attachment);
+    const ability = this.caslAbilityFactory.attachmentAccess(user);
+    const canAccessAny = ability.can(Action.AccessAny, Attachment);
 
     if (!canAccessAny) {
       if (filter.where["$and"]) {
@@ -215,7 +218,7 @@ export class AttachmentsV4Controller {
   // GET /attachments
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentReadEndpoint, Attachment),
+    ability.can(Action.AttachmentRead, Attachment),
   )
   @ApiOperation({
     summary: "It returns a list of attachments.",
@@ -309,7 +312,7 @@ export class AttachmentsV4Controller {
   // GET /attachments/:aid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentReadEndpoint, Attachment),
+    ability.can(Action.AttachmentRead, Attachment),
   )
   @ApiOperation({
     summary: "It returns the attachment requested.",
@@ -334,7 +337,7 @@ export class AttachmentsV4Controller {
     await this.checkPermissionsForAttachment(
       request,
       aid,
-      Action.AttachmentReadEndpoint,
+      Action.AttachmentRead,
     );
     return this.attachmentsService.findOne({ aid });
   }
@@ -342,7 +345,7 @@ export class AttachmentsV4Controller {
   // PATCH /attachments/:aid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentUpdateEndpoint, Attachment),
+    ability.can(Action.AttachmentUpdate, Attachment),
   )
   @ApiOperation({
     summary: "It updates the attachment.",
@@ -378,7 +381,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     const foundAttachment = await this.checkPermissionsForAttachment(
       request,
       aid,
-      Action.AttachmentUpdateEndpoint,
+      Action.AttachmentUpdate,
     );
     const updateAttachmentDtoForservice =
       request.headers["content-type"] === "application/merge-patch+json"
@@ -396,7 +399,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // PUT /attachments/:aid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentUpdateEndpoint, Attachment),
+    ability.can(Action.AttachmentUpdate, Attachment),
   )
   @ApiOperation({
     summary: "It updates the attachment.",
@@ -428,7 +431,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForAttachment(
       request,
       aid,
-      Action.AttachmentUpdateEndpoint,
+      Action.AttachmentUpdate,
     );
     return this.attachmentsService.findOneAndReplace(
       { _id: aid },
@@ -439,7 +442,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // POST /attachments
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentCreateEndpoint, Attachment),
+    ability.can(Action.AttachmentCreate, Attachment),
   )
   @ApiOperation({
     summary: "It creates a new attachment.",
@@ -463,14 +466,14 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     this.checkPermissionsForAttachmentCreate(
       request,
       createAttachmentDto,
-      Action.AttachmentCreateEndpoint,
+      Action.AttachmentCreate,
     );
     return this.attachmentsService.create(createAttachmentDto);
   }
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentCreateEndpoint, Attachment),
+    ability.can(Action.AttachmentCreate, Attachment),
   )
   @Post("/isValid")
   @HttpCode(HttpStatus.OK)
@@ -504,7 +507,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     this.checkPermissionsForAttachmentCreate(
       request,
       CreateAttachmentDtoInstance,
-      Action.AttachmentCreateEndpoint,
+      Action.AttachmentCreate,
     );
     const errorsAttachment = await validate(
       CreateAttachmentDtoInstance,
@@ -519,7 +522,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // DELETE /attachments/:aid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.AttachmentDeleteEndpoint, Attachment),
+    ability.can(Action.AttachmentDelete, Attachment),
   )
   @ApiOperation({
     summary: "It deletes the attachment.",
@@ -542,7 +545,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForAttachment(
       request,
       aid,
-      Action.AttachmentDeleteEndpoint,
+      Action.AttachmentDelete,
     );
     return this.attachmentsService.findOneAndDelete({ aid });
   }
