@@ -62,21 +62,21 @@ export class DatasetsAccessService {
         return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
       }
       case DatasetLookupKeysEnum.datablocks: {
-        const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
+        const ability = this.caslAbilityFactory.datasetAccess(user);
         const canViewAny = ability.can(
-          Action.DatasetDatablockReadAny,
+          Action.DatasetDatablockRead,
           DatasetClass,
         );
         const canViewAccess = ability.can(
-          Action.DatasetDatablockReadAccess,
+          Action.DatasetDatablockRead,
           DatasetClass,
         );
         const canViewOwner = ability.can(
-          Action.DatasetDatablockReadOwner,
+          Action.DatasetDatablockRead,
           DatasetClass,
         );
         const canViewPublic = ability.can(
-          Action.DatasetDatablockReadPublic,
+          Action.DatasetDatablockRead,
           DatasetClass,
         );
 
@@ -113,7 +113,7 @@ export class DatasetsAccessService {
         };
       }
       case DatasetLookupKeysEnum.attachments: {
-        const ability = this.caslAbilityFactory.datasetEndpointAccess(user);
+        const ability = this.caslAbilityFactory.datasetAccess(user);
         const canViewAny = ability.can(
           Action.DatasetAttachmentRead,
           DatasetClass,

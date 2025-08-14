@@ -179,28 +179,9 @@ export class OrigDatablocksV4Controller {
     const datasetInstance =
       await this.generateDatasetInstanceForPermissions(dataset);
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
+    const ability = this.caslAbilityFactory.datasetAccess(user);
 
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.DatasetRead:
-        canDoAction =
-          ability.can(Action.DatasetReadAny, datasetInstance) ||
-          ability.can(Action.DatasetReadOneOwner, datasetInstance) ||
-          ability.can(Action.DatasetReadOneAccess, datasetInstance) ||
-          ability.can(Action.DatasetReadOnePublic, datasetInstance);
-        break;
-      case Action.DatasetUpdate:
-        canDoAction =
-          ability.can(Action.DatasetUpdateAny, datasetInstance) ||
-          ability.can(Action.DatasetUpdateOwner, datasetInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const canDoAction = ability.can(group, datasetInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");

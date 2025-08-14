@@ -984,27 +984,17 @@ export class ProposalsController {
     @Param("pid") proposalId: string,
   ): Promise<DatasetClass[] | null> {
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
 
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
+    const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-      const canViewPublic = ability.can(
-        Action.DatasetReadManyPublic,
-        DatasetClass,
-      );
-      if (canViewAccess) {
-        fields.userGroups = user.currentGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-        // fields.sharedWith = user.email;
-      } else if (canViewPublic) {
-        fields.isPublished = true;
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const dataset = await this.datasetsService.fullquery({

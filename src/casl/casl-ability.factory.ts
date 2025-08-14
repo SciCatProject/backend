@@ -77,7 +77,7 @@ export class CaslAbilityFactory {
   } = {
     attachments: this.attachmentAccess,
     datablocks: this.datablockAccess,
-    datasets: this.datasetEndpointAccess,
+    datasets: this.datasetAccess,
     opensearch: this.opensearchEndpointAccess,
     jobs: this.jobsEndpointAccess,
     instruments: this.instrumentEndpointAccess,
@@ -312,21 +312,372 @@ export class CaslAbilityFactory {
   }
 
   datasetAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
+    const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
+    if (!user) {
+      /**
+       * Unauthenticated user
+       */
+      can(Action.DatasetRead, DatasetClass, {
+        isPublished: true,
+      });
 
-  elasticSearchAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    
+      can(Action.DatasetAttachmentRead, DatasetClass, {
+        isPublished: true,
+      });
+
+      can(Action.DatasetDatablockRead, DatasetClass, {
+        isPublished: true,
+      });
+
+      can(Action.DatasetOrigdatablockRead, DatasetClass, {
+        isPublished: true,
+      });
+    } else {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        /**
+         * User belonging to DELETE_GROUPS
+         */
+        can(Action.DatasetDelete, DatasetClass);
+        
+        can(Action.DatasetAttachmentDelete, DatasetClass);
+
+        can(Action.DatasetDatablockDelete, DatasetClass);
+
+        can(Action.DatasetOrigdatablockDelete, DatasetClass);
+      }
+      if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.updateDatasetLifecycle.includes(g),
+        )
+      ) {
+        /**
+         * User belonging to UPDATE_DATASET_LIFECYCLE_GROUPS
+         */
+        can(Action.AccessAny, DatasetClass);
+
+        can(Action.DatasetRead, DatasetClass);
+        can(Action.DatasetLifecycleUpdate, DatasetClass);
+      }
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+        can(Action.AccessAny, DatasetClass);
+
+        can(Action.DatasetCreate, DatasetClass);
+        can(Action.DatasetRead, DatasetClass);
+        can(Action.DatasetUpdate, DatasetClass);
+        can(Action.DatasetLifecycleUpdate, DatasetClass);
+        
+        can(Action.DatasetAttachmentCreate, DatasetClass);
+        can(Action.DatasetAttachmentRead, DatasetClass);
+        can(Action.DatasetAttachmentUpdate, DatasetClass);
+        can(Action.DatasetAttachmentDelete, DatasetClass);
+
+        can(Action.DatasetOrigdatablockCreate, DatasetClass);
+        can(Action.DatasetOrigdatablockRead, DatasetClass);
+        can(Action.DatasetOrigdatablockUpdate, DatasetClass);
+
+        can(Action.DatasetDatablockCreate, DatasetClass);
+        can(Action.DatasetDatablockRead, DatasetClass);
+        can(Action.DatasetDatablockUpdate, DatasetClass);
+
+        can(Action.DatasetLogbookRead, DatasetClass);
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.createDatasetPrivileged.includes(g),
+        )
+      ) {
+        /**
+         * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
+         */
+        can(Action.DatasetCreate, DatasetClass);
+        can(Action.DatasetRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetLifecycleUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetAttachmentCreate, DatasetClass);
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetAttachmentUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentDelete, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetOrigdatablockCreate, DatasetClass);
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetOrigdatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetDatablockCreate, DatasetClass);
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetDatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetLogbookRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.createDatasetWithPid.includes(g),
+        ) ||
+        this.accessGroups?.createDatasetWithPid.includes("#all")
+      ) {
+        /**
+         * User belonging to CREATE_DATASET_WITH_PID_GROUPS
+         */
+        can(Action.DatasetCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetLifecycleUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetAttachmentCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetAttachmentUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentDelete, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetOrigdatablockCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetOrigdatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetDatablockCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetDatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetLogbookRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.createDataset.includes(g),
+        ) ||
+        this.accessGroups?.createDataset.includes("#all")
+      ) {
+        /**
+         * User belonging to CREATE_DATASET_GROUPS
+         */
+        can(Action.DatasetCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+          pid: { $eq: "" },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetLifecycleUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetAttachmentCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetAttachmentUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentDelete, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetDatablockCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetDatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetOrigdatablockCreate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+        can(Action.DatasetOrigdatablockUpdate, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.DatasetLogbookRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      } else if (user) {
+        /**
+         * Authenticated user not belonging to special group
+         */
+        can(Action.DatasetRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetRead, DatasetClass, {
+          isPublished: true,
+        });
+
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetAttachmentRead, DatasetClass, {
+          isPublished: true,
+        });
+
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetDatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.DatasetOrigdatablockRead, DatasetClass, {
+          isPublished: true,
+        });
+
+        can(Action.DatasetLogbookRead, DatasetClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      }
+    }
+
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -426,231 +777,6 @@ export class CaslAbilityFactory {
       createMongoAbility<PossibleAbilities, Conditions>,
     );
     
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  datasetEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.DatasetReadManyPublic, DatasetClass);
-      can(Action.DatasetReadOnePublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetAttachmentReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetOrigdatablockReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetDatablockReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-
-      cannot(Action.DatasetCreate, DatasetClass);
-      cannot(Action.DatasetRead, DatasetClass);
-      cannot(Action.DatasetUpdate, DatasetClass);
-      cannot(Action.DatasetLifecycleUpdate, DatasetClass);
-      // -
-      cannot(Action.DatasetAttachmentCreate, DatasetClass);
-      can(Action.DatasetAttachmentRead, DatasetClass);
-      cannot(Action.DatasetAttachmentUpdate, DatasetClass);
-      cannot(Action.DatasetAttachmentDelete, DatasetClass);
-      // -
-      cannot(Action.DatasetOrigdatablockCreate, DatasetClass);
-      can(Action.DatasetOrigdatablockRead, DatasetClass);
-      cannot(Action.DatasetOrigdatablockUpdate, DatasetClass);
-      // -
-      cannot(Action.DatasetDatablockCreate, DatasetClass);
-      can(Action.DatasetDatablockRead, DatasetClass);
-      cannot(Action.DatasetDatablockUpdate, DatasetClass);
-      // -
-      cannot(Action.DatasetLogbookRead, DatasetClass);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-
-        can(Action.DatasetDelete, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockDelete, DatasetClass);
-        // -
-        can(Action.DatasetDatablockDelete, DatasetClass);
-      } else {
-        /*
-        /  user that does not belong to any of the group listed in DELETE_GROUPS
-        */
-
-        cannot(Action.DatasetDelete, DatasetClass);
-        // -
-        cannot(Action.DatasetOrigdatablockDelete, DatasetClass);
-        // -
-        cannot(Action.DatasetDatablockDelete, DatasetClass);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-        can(Action.DatasetCreate, DatasetClass);
-        can(Action.DatasetRead, DatasetClass);
-        can(Action.DatasetUpdate, DatasetClass);
-        can(Action.DatasetLifecycleUpdate, DatasetClass);
-        // -
-        can(Action.DatasetAttachmentCreate, DatasetClass);
-        can(Action.DatasetAttachmentRead, DatasetClass);
-        can(Action.DatasetAttachmentUpdate, DatasetClass);
-        can(Action.DatasetAttachmentDelete, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockCreate, DatasetClass);
-        can(Action.DatasetOrigdatablockRead, DatasetClass);
-        can(Action.DatasetOrigdatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetDatablockCreate, DatasetClass);
-        can(Action.DatasetDatablockRead, DatasetClass);
-        can(Action.DatasetDatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetLogbookRead, DatasetClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.DatasetCreate, DatasetClass);
-        can(Action.DatasetRead, DatasetClass);
-        can(Action.DatasetUpdate, DatasetClass);
-        can(Action.DatasetLifecycleUpdate, DatasetClass);
-        // -
-        can(Action.DatasetAttachmentCreate, DatasetClass);
-        can(Action.DatasetAttachmentRead, DatasetClass);
-        can(Action.DatasetAttachmentUpdate, DatasetClass);
-        can(Action.DatasetAttachmentDelete, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockCreate, DatasetClass);
-        can(Action.DatasetOrigdatablockRead, DatasetClass);
-        can(Action.DatasetOrigdatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetDatablockCreate, DatasetClass);
-        can(Action.DatasetDatablockRead, DatasetClass);
-        can(Action.DatasetDatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetLogbookRead, DatasetClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.DatasetCreate, DatasetClass);
-        can(Action.DatasetRead, DatasetClass);
-        can(Action.DatasetUpdate, DatasetClass);
-        can(Action.DatasetLifecycleUpdate, DatasetClass);
-        // -
-        can(Action.DatasetAttachmentCreate, DatasetClass);
-        can(Action.DatasetAttachmentRead, DatasetClass);
-        can(Action.DatasetAttachmentUpdate, DatasetClass);
-        can(Action.DatasetAttachmentDelete, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockCreate, DatasetClass);
-        can(Action.DatasetOrigdatablockRead, DatasetClass);
-        can(Action.DatasetOrigdatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetDatablockCreate, DatasetClass);
-        can(Action.DatasetDatablockRead, DatasetClass);
-        can(Action.DatasetDatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetLogbookRead, DatasetClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.DatasetCreate, DatasetClass);
-        can(Action.DatasetRead, DatasetClass);
-        can(Action.DatasetUpdate, DatasetClass);
-        can(Action.DatasetLifecycleUpdate, DatasetClass);
-        // -
-        can(Action.DatasetAttachmentCreate, DatasetClass);
-        can(Action.DatasetAttachmentRead, DatasetClass);
-        can(Action.DatasetAttachmentUpdate, DatasetClass);
-        can(Action.DatasetAttachmentDelete, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockCreate, DatasetClass);
-        can(Action.DatasetOrigdatablockRead, DatasetClass);
-        can(Action.DatasetOrigdatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetDatablockCreate, DatasetClass);
-        can(Action.DatasetDatablockRead, DatasetClass);
-        can(Action.DatasetDatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetLogbookRead, DatasetClass);
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-        if (
-          user.currentGroups.some((g) =>
-            this.accessGroups?.updateDatasetLifecycle.includes(g),
-          )
-        ) {
-          /**
-          /*  users belonging to UPDATE_DATASET_LIFECYCLE_GROUPS
-          **/
-
-          can(Action.DatasetLifecycleUpdate, DatasetClass);
-        } else {
-          cannot(Action.DatasetLifecycleUpdate, DatasetClass);
-        }
-        cannot(Action.DatasetCreate, DatasetClass);
-        can(Action.DatasetRead, DatasetClass);
-        // -
-        cannot(Action.DatasetAttachmentCreate, DatasetClass);
-        can(Action.DatasetAttachmentRead, DatasetClass);
-        cannot(Action.DatasetAttachmentUpdate, DatasetClass);
-        cannot(Action.DatasetAttachmentDelete, DatasetClass);
-        // -
-        cannot(Action.DatasetOrigdatablockCreate, DatasetClass);
-        can(Action.DatasetOrigdatablockRead, DatasetClass);
-        cannot(Action.DatasetOrigdatablockUpdate, DatasetClass);
-        // -
-        cannot(Action.DatasetDatablockCreate, DatasetClass);
-        can(Action.DatasetDatablockRead, DatasetClass);
-        cannot(Action.DatasetDatablockUpdate, DatasetClass);
-        // -
-        can(Action.DatasetLogbookRead, DatasetClass);
-      }
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -1532,375 +1658,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  datasetInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.DatasetReadManyPublic, DatasetClass);
-      can(Action.DatasetReadOnePublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetAttachmentReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetOrigdatablockReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-      // -
-      can(Action.DatasetDatablockReadPublic, DatasetClass, {
-        isPublished: true,
-      });
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-
-        can(Action.DatasetDeleteAny, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockDeleteAny, DatasetClass);
-        // -
-        can(Action.DatasetDatablockDeleteAny, DatasetClass);
-      }
-      if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.updateDatasetLifecycle.includes(g),
-        )
-      ) {
-        /*
-        / user that belongs to any of the group listed in UPDATE_DATASET_LIFECYCLE_GROUPS
-        */
-        can(Action.DatasetReadAny, DatasetClass);
-        can(Action.DatasetLifecycleUpdateAny, DatasetClass);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-        can(Action.DatasetCreateAny, DatasetClass);
-        can(Action.DatasetReadAny, DatasetClass);
-        can(Action.DatasetUpdateAny, DatasetClass);
-        // -
-        can(Action.DatasetAttachmentCreateAny, DatasetClass);
-        can(Action.DatasetAttachmentReadAny, DatasetClass);
-        can(Action.DatasetAttachmentUpdateAny, DatasetClass);
-        can(Action.DatasetAttachmentDeleteAny, DatasetClass);
-        // -
-        can(Action.DatasetOrigdatablockCreateAny, DatasetClass);
-        can(Action.DatasetOrigdatablockReadAny, DatasetClass);
-        can(Action.DatasetOrigdatablockUpdateAny, DatasetClass);
-        // -
-        can(Action.DatasetDatablockCreateAny, DatasetClass);
-        can(Action.DatasetDatablockReadAny, DatasetClass);
-        can(Action.DatasetDatablockUpdateAny, DatasetClass);
-        // -------------------------------------
-        can(Action.DatasetLogbookReadAny, DatasetClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.DatasetCreateAny, DatasetClass);
-        can(Action.DatasetReadManyAccess, DatasetClass);
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetAttachmentCreateAny, DatasetClass);
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetAttachmentUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentDeleteOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetOrigdatablockCreateAny, DatasetClass);
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetOrigdatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetDatablockCreateAny, DatasetClass);
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetDatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetLogbookReadOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.DatasetCreateOwnerWithPid, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadManyAccess, DatasetClass);
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetAttachmentCreateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetAttachmentUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentDeleteOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetOrigdatablockCreateAny, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetOrigdatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetDatablockCreateAny, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetDatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetLogbookReadOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.DatasetCreateOwnerNoPid, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-          pid: { $eq: "" },
-        });
-
-        can(Action.DatasetReadManyAccess, DatasetClass);
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetAttachmentCreateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetAttachmentUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentDeleteOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetOrigdatablockCreateAny, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetOrigdatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetDatablockCreateAny, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        can(Action.DatasetDatablockUpdateOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        // -
-        can(Action.DatasetLogbookReadOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-
-        can(Action.DatasetReadManyAccess, DatasetClass);
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetReadOneAccess, DatasetClass, {
-          isPublished: true,
-        });
-        // -
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetAttachmentReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        // -
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetOrigdatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        // -
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.DatasetDatablockReadAccess, DatasetClass, {
-          isPublished: true,
-        });
-        // -
-        can(Action.DatasetLogbookReadOwner, DatasetClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      }
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   origDatablockInstanceAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1914,7 +1671,7 @@ export class CaslAbilityFactory {
       can(Action.OrigdatablockReadOnePublic, OrigDatablock, {
         isPublished: true,
       });
-      can(Action.DatasetOrigdatablockReadPublic, OrigDatablock, {
+      can(Action.DatasetOrigdatablockRead, OrigDatablock, {
         isPublished: true,
       });
     } else {

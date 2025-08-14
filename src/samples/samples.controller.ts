@@ -996,26 +996,17 @@ export class SamplesController {
     @Param("id") id: string,
   ): Promise<DatasetClass[] | null> {
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
+    
+    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
-      const canViewPublic = ability.can(
-        Action.DatasetReadManyPublic,
-        DatasetClass,
-      );
-      if (canViewAccess) {
-        fields.userGroups = user.currentGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-        // fields.sharedWith = user.email;
-      } else if (canViewPublic) {
-        fields.isPublished = true;
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const datasets = await this.datasetsService.fullquery({
