@@ -114,25 +114,13 @@ export class AttachmentsV4Controller {
     try {
       switch (group) {
         case Action.AttachmentCreate:
-          return ability.can(
-            Action.AttachmentCreate,
-            attachmentInstance,
-          );
+          return ability.can(Action.AttachmentCreate, attachmentInstance);
         case Action.AttachmentRead:
-          return ability.can(
-            Action.AttachmentRead,
-            attachmentInstance
-          );
+          return ability.can(Action.AttachmentRead, attachmentInstance);
         case Action.AttachmentUpdate:
-          return ability.can(
-            Action.AttachmentUpdate,
-            attachmentInstance,
-          );
+          return ability.can(Action.AttachmentUpdate, attachmentInstance);
         case Action.AttachmentDelete:
-          return ability.can(
-            Action.AttachmentDelete,
-            attachmentInstance,
-          );
+          return ability.can(Action.AttachmentDelete, attachmentInstance);
         default:
           throw new InternalServerErrorException(
             "Permission for the action is not specified",

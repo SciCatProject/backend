@@ -997,7 +997,7 @@ export class SamplesController {
   ): Promise<DatasetClass[] | null> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
-    
+
     const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
     const canView = ability.can(Action.DatasetRead, DatasetClass);

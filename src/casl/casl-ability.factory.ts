@@ -103,7 +103,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  attachmentAccess(user:JWTUser) {
+  attachmentAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
@@ -220,11 +220,11 @@ export class CaslAbilityFactory {
 
   // TODO: The access rights granted depending on group are irregular
   //       and dependent on dataset groups
-  datablockAccess(user:JWTUser) {
+  datablockAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
-    
+
     if (!user) {
       /**
        * Unauthenticated user
@@ -311,7 +311,7 @@ export class CaslAbilityFactory {
     });
   }
 
-  datasetAccess(user:JWTUser) {
+  datasetAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
@@ -343,7 +343,7 @@ export class CaslAbilityFactory {
          * User belonging to DELETE_GROUPS
          */
         can(Action.DatasetDelete, DatasetClass);
-        
+
         can(Action.DatasetAttachmentDelete, DatasetClass);
 
         can(Action.DatasetDatablockDelete, DatasetClass);
@@ -375,7 +375,7 @@ export class CaslAbilityFactory {
         can(Action.DatasetRead, DatasetClass);
         can(Action.DatasetUpdate, DatasetClass);
         can(Action.DatasetLifecycleUpdate, DatasetClass);
-        
+
         can(Action.DatasetAttachmentCreate, DatasetClass);
         can(Action.DatasetAttachmentRead, DatasetClass);
         can(Action.DatasetAttachmentUpdate, DatasetClass);
