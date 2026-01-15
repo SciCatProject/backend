@@ -42,14 +42,15 @@ export class MailService {
 
   async sendTemplateEmail(doi: string, userEmail: string): Promise<void> {
     const templateName = "doi-registered"; // hdb
-
+    const registerDoiUri = process.env.REGISTER_DOI_URI;
     try {
       const mailOptions: ISendMailOptions = {
         to: userEmail,
         subject: `DOI registration confirmed: ${doi}.`,
         template: templateName,
         context: {
-          doi: doi,
+          registerDoiUri: registerDoiUri,
+          doi: doi
         },
       };
 
