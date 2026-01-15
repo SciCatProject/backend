@@ -6,7 +6,7 @@ import {
 } from "../../jobconfig.interface";
 import { isEmailJobActionOptions } from "./emailaction.interface";
 import { EmailJobAction } from "./emailaction";
-import { MailService } from "src/common/mail.service";
+import { MailService } from "src/common/services/mail.service";
 
 @Injectable()
 export class EmailJobActionCreator implements JobActionCreator<JobDto> {

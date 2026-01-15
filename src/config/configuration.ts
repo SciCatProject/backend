@@ -4,6 +4,7 @@ import localconfiguration from "./localconfiguration";
 import { boolean } from "mathjs";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
+import { Logger } from "@nestjs/common";
 
 const configuration = () => {
   const accessGroupsStaticValues =
@@ -85,12 +86,14 @@ const configuration = () => {
     publishedDataConfig:
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
   };
+
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, "utf8");
       try {
         jsonConfigMap[key] = JSON.parse(data);
+        Logger.debug(`From ${filePath} parsing data ${data}.`);
       } catch (error) {
         console.error(
           "Error json config file parsing " + filePath + " : " + error,
@@ -123,6 +126,7 @@ const configuration = () => {
             `Example configuration file ${exampleFilePath} does not exist. Using empty configuration for ${key}`,
           );
           jsonConfigMap[key] = {};
+          Logger.debug(`jsonConfigMap[key] is ${jsonConfigMap[key]}`);
         }
       }
     }

@@ -39,4 +39,29 @@ export class MailService {
       }
     }
   }
+
+  async sendTemplateEmail(doi: string, userEmail: string): Promise<void> {
+    const templateName = "doi-registered"; // hdb
+
+    try {
+      const mailOptions: ISendMailOptions = {
+        to: userEmail,
+        subject: `DOI registration confirmed: ${doi}.`,
+        template: templateName,
+        context: {
+          doi: doi,
+        },
+      };
+
+      if (!mailOptions.template) {
+        throw new Error("INTERNAL ERROR: template property is missing!");
+      }
+
+      Logger.debug(`mailOptions: ${JSON.stringify(mailOptions)}`);
+      await this.sendMail(mailOptions);
+      Logger.log(`DOI registration email sent to ${userEmail}.`);
+    } catch (error) {
+      Logger.error(`Failed to send email: ${JSON.stringify(error)}`);
+    }
+  }
 }

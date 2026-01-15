@@ -11,7 +11,7 @@
 import { EmailJobAction } from "./emailaction";
 import { EmailJobActionOptions } from "./emailaction.interface";
 import { JobClass } from "../../../../jobs/schemas/job.schema";
-import { MailService } from "src/common/mail.service";
+import { MailService } from "src/common/services/mail.service";
 import { MailerService } from "@nestjs-modules/mailer";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateJobDto } from "src/jobs/dto/create-job.dto";

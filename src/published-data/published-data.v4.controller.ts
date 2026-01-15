@@ -57,6 +57,7 @@ import {
   PublishedData,
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
+import { MailService } from "src/common/services/mail.service";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -76,6 +77,7 @@ export class PublishedDataV4Controller {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
+    private readonly mailService: MailService,
   ) {}
 
   @AllowAny()
@@ -634,6 +636,12 @@ export class PublishedDataV4Controller {
     const res = await this.publishedDataService.update(
       { doi: publishedData.doi },
       { status: PublishedDataStatus.REGISTERED, registeredTime: new Date() },
+    );
+
+    const user = request.user as JWTUser;
+    await this.mailService.sendTemplateEmail(
+      publishedData.doi, // Replacements for the template
+      user.email, // Recipient email
     );
 
     return res;

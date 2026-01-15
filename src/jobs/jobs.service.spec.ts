@@ -2,7 +2,7 @@ import { ConfigService } from "@nestjs/config";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
-import { MailService } from "src/common/mail.service";
+import { MailService } from "src/common/services/mail.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsAccessService } from "src/datasets/datasets-access.service";
 import { PoliciesService } from "src/policies/policies.service";

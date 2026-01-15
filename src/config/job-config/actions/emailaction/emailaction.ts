@@ -13,7 +13,7 @@ import {
 } from "../../jobconfig.interface";
 import { ISendMailOptions } from "@nestjs-modules/mailer";
 import { actionType, EmailJobActionOptions } from "./emailaction.interface";
-import { MailService } from "src/common/mail.service";
+import { MailService } from "src/common/services/mail.service";
 
 /**
  * Send an email following a job
