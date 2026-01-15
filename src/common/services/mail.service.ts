@@ -1,5 +1,6 @@
 import { ISendMailOptions, MailerService } from "@nestjs-modules/mailer";
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { isAxiosError } from "@nestjs/terminus/dist/utils";
 import { SentMessageInfo } from "nodemailer";
 
@@ -10,7 +11,10 @@ import { SentMessageInfo } from "nodemailer";
  */
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async sendMail(options: ISendMailOptions): Promise<SentMessageInfo> {
     try {
@@ -42,7 +46,7 @@ export class MailService {
 
   async sendTemplateEmail(doi: string, userEmail: string): Promise<void> {
     const templateName = "doi-registered"; // hdb
-    const registerDoiUri = process.env.REGISTER_DOI_URI;
+    const registerDoiUri = this.configService.get<string>("registerDoiUri");
     try {
       const mailOptions: ISendMailOptions = {
         to: userEmail,
@@ -50,7 +54,7 @@ export class MailService {
         template: templateName,
         context: {
           registerDoiUri: registerDoiUri,
-          doi: doi
+          doi: doi,
         },
       };
 
