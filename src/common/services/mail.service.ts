@@ -47,6 +47,8 @@ export class MailService {
   async sendTemplateEmail(doi: string, userEmail: string): Promise<void> {
     const templateName = "doi-registered"; // hdb
     const registerDoiUri = this.configService.get<string>("registerDoiUri");
+    Logger.debug(`registerDoiUri is ${registerDoiUri}`);
+    
     try {
       const mailOptions: ISendMailOptions = {
         to: userEmail,
