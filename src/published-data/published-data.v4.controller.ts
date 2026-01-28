@@ -58,6 +58,7 @@ import {
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
 import { MailService } from "src/common/services/mail.service";
+import { logger } from "handlebars";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -619,6 +620,9 @@ export class PublishedDataV4Controller {
       };
 
       try {
+
+        console.log("registerDataciteDoiOptions is", JSON.stringify(registerDataciteDoiOptions));
+        
         await firstValueFrom(
           this.httpService.request(registerDataciteDoiOptions),
         );
