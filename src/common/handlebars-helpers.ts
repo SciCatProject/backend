@@ -132,6 +132,9 @@ export const urlencode = (context: string): string => {
   return encodeURIComponent(context);
 };
 
+export const exchangeString = (registerDoiUri: string, search: string, replacement: string): string => {
+    return registerDoiUri.replace(search, replacement);
+};
 /**
  * Format a unit using mathjs.
  *
