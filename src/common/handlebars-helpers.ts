@@ -194,6 +194,7 @@ export const handlebarsHelpers: hb.HelperDeclareSpec = {
   jsonify: jsonify,
   job_v3: job_v3,
   urlencode: urlencode,
+  exchangeString: exchangeString,
   base64enc: base64enc,
   base64dec: atob,
   formatUnit: formatUnit,
