@@ -22,7 +22,7 @@ import { AuthService } from "../auth.service";
 import { Profile } from "passport";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
 import { OidcConfig } from "src/config/configuration";
-import { AccessGroupService } from "../access-group-provider/access-group.service";
+import { AccessGroupService } from "../providers/access-group-provider/access-group.service";
 import { UserPayload } from "../interfaces/userPayload.interface";
 import {
   IOidcUserInfoMapping,
@@ -231,10 +231,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
             ],
           };
 
-    if (
-      !userQuery?.operator ||
-      (userQuery?.filter && userQuery.filter.length < 1)
-    ) {
+    if (!userQuery?.operator || !userQuery.filter.length) {
       return defaultFilter;
     }
     const operator = "$" + userQuery.operator.toLowerCase();

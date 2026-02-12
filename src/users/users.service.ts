@@ -28,7 +28,7 @@ import {
 } from "./dto/update-user-settings.dto";
 import { UpdateUserIdentityDto } from "./dto/update-user-identity.dto";
 import { UserPayload } from "src/auth/interfaces/userPayload.interface";
-import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
+import { AccessGroupService } from "src/auth/providers/access-group-provider/access-group.service";
 import { ReturnedUserDto } from "./dto/returned-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 

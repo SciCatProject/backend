@@ -7,7 +7,7 @@ import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { CreateUserIdentityDto } from "src/users/dto/create-user-identity.dto";
 import { FilterQuery } from "mongoose";
 import { User, UserDocument } from "src/users/schemas/user.schema";
-import { AccessGroupService } from "../access-group-provider/access-group.service";
+import { AccessGroupService } from "../providers/access-group-provider/access-group.service";
 import { UserPayload } from "../interfaces/userPayload.interface";
 import { Profile } from "passport";
 import { UserProfile } from "src/users/schemas/user-profile.schema";

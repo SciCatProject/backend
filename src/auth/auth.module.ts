@@ -11,8 +11,8 @@ import { ConfigService } from "@nestjs/config";
 import { UsersService } from "src/users/users.service";
 import { OidcConfig } from "src/config/configuration";
 import { BuildOpenIdClient, OidcStrategy } from "./strategies/oidc.strategy";
-import { accessGroupServiceFactory } from "./access-group-provider/access-group-service-factory";
-import { AccessGroupService } from "./access-group-provider/access-group.service";
+import { accessGroupServiceFactory } from "./providers/access-group-provider/access-group-service-factory";
+import { AccessGroupService } from "./providers/access-group-provider/access-group.service";
 import { CaslModule } from "src/casl/casl.module";
 import { SessionMiddleware } from "./middlewares/session.middleware";
 
