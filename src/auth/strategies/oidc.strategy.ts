@@ -14,11 +14,9 @@ import {
   Strategy,
   Client,
   TokenSet,
-  Issuer,
   IdTokenClaims,
   UserinfoResponse,
 } from "openid-client";
-import { AuthService } from "../auth.service";
 import { Profile } from "passport";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
 import { OidcConfig } from "src/config/configuration";
@@ -35,28 +33,12 @@ type extendedIdTokenClaims = IdTokenClaims &
   };
 type OidcProfile = Profile & UserProfile;
 
-export class BuildOpenIdClient {
-  constructor(private configService: ConfigService) {}
-  async build() {
-    const oidcConfig = this.configService.get<OidcConfig>("oidc");
-    const trustIssuer = await Issuer.discover(
-      `${oidcConfig?.issuer}/.well-known/openid-configuration`,
-    );
-    const client = new trustIssuer.Client({
-      client_id: oidcConfig?.clientID as string,
-      client_secret: oidcConfig?.clientSecret as string,
-    });
-    return client;
-  }
-}
-
 @Injectable()
 export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
   client: Client;
   authStrategy = "oidc";
 
   constructor(
-    private readonly authService: AuthService,
     client: Client,
     private configService: ConfigService,
     private usersService: UsersService,
