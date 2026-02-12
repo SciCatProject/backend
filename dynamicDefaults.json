@@ -1,0 +1,105 @@
+{
+  "metadataSchema": {
+    "$async": true,
+    "type": "object",
+    "required": [ "creators", "publisher", "subject" ],
+    "allOf": [
+      {
+        "dynamicDefaults": {
+          "subjects": "mergeKeywords"
+        }
+      },
+      {
+        "properties": {
+          "creators": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "setFullName": true,
+              "required": [ "name", "givenName", "familyName" ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "Name",
+                  "minLength": 1
+                },
+                "givenName": {
+                  "type": "string",
+                  "title": "Given Name",
+                  "minLength": 1
+                },
+                "familyName": {
+                  "type": "string",
+                  "title": "Family Name",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "publisher": {
+            "type:": "object",
+            "title": "Publisher",
+            "required": [ "name", "publisherIdentifier", "publisherIdentifierScheme", "schemeUri" ],
+            "default": {
+              "name": "PSI Open Data Provider",
+              "publisherIdentifier": "https://www.re3data.org/repository/r3d100013504",
+              "publisherIdentifierScheme": "re3data",
+              "schemeUri": "https://re3data.org/"
+            },
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Publisher Name"
+              },
+              "publisherIdentifier": {
+                "type": "string",
+                "title": "Publisher Identifier"
+              },
+              "publisherIdentifierScheme": {
+                "type": "string",
+                "title": "Publisher Identifier Scheme"
+              },
+              "schemeUri": {
+                "type": "string",
+                "title": "Scheme URI"
+              }
+            }
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [ "subject", "lang" ],
+              "properties": {
+                "subject": {
+                  "type": "string"
+                },
+                "lang": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "uiSchema": {
+    "type": "VerticalLayout",
+    "elements": [
+      {
+        "type": "Control",
+        "scope": "#/properties/givenName"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/familyName"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/dynamic"
+      }
+    ]
+  }
+}

@@ -27,6 +27,7 @@ import {
 import { Request } from "express";
 import { Validator } from "jsonschema";
 import { FilterQuery, QueryOptions } from "mongoose";
+import { readFileSync } from "node:fs";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
@@ -36,6 +37,7 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { ILimitsFilter } from "src/common/interfaces/common.interface";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
@@ -50,15 +52,21 @@ import {
   IRegister,
   PublishedDataStatus,
 } from "./interfaces/published-data.interface";
+import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { RegisteredFilterPipe } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
 import {
   PublishedData,
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
-import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
-import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { ValidatorService } from "./validator.service";
 
+class example {
+  name: string;
+  givenName: string;
+  familyName: string;
+  dynamic: string;
+}
 @ApiBearerAuth()
 @ApiTags("published data v4")
 /* NOTE: Generated SDK method names include "V4" twice:
@@ -77,24 +85,36 @@ export class PublishedDataV4Controller {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
-  ) {}
+    private validatorService: ValidatorService,
+  ) { }
 
   @AllowAny()
   @Get("config")
   async getConfig(): Promise<Record<string, unknown> | null> {
-    return this.publishedDataService.getConfig();
+    // return this.publishedDataService.getConfig();
+    return JSON.parse(
+      readFileSync("/home/node/app/dynamicDefaults.json", "utf-8"),
+    );
   }
 
   // POST /publisheddata
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Create, PublishedData),
-  )
+  // @UseGuards(PoliciesGuard)
+  // @CheckPolicies("publisheddata", (ability: AppAbility) =>
+  //   ability.can(Action.Create, PublishedData),
+  // )
   @Post()
   async create(
+    @Req() request: Request,
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
-  ): Promise<PublishedData> {
-    return this.publishedDataService.create(createPublishedDataDto);
+  ): Promise<PublishedData | CreatePublishedDataV4Dto> {
+    // const user: JWTUser = request.user as JWTUser;
+
+    const isvalid = await this.validatorService.validate(createPublishedDataDto);
+    return createPublishedDataDto;
+    //return this.publishedDataService.create(
+    //  createPublishedDataDto,
+    //  user.username,
+    //);
   }
 
   // GET /publisheddata
@@ -340,6 +360,7 @@ export class PublishedDataV4Controller {
     @Param("id") id: string,
     @Body() updatePublishedDataDto: PartialUpdatePublishedDataV4Dto,
   ): Promise<PublishedData | null> {
+    const user: JWTUser = request.user as JWTUser;
     const filter = this.getAccessBasedFilters(request, id);
 
     const publishedData = await this.publishedDataService.findOne(filter);
@@ -347,9 +368,7 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
-      request.user as JWTUser,
-    );
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(user);
 
     const canAccessAny = ability.can(Action.accessAny, PublishedData);
 
@@ -375,6 +394,7 @@ export class PublishedDataV4Controller {
     return this.publishedDataService.update(
       { doi: id },
       updatePublishedDataDto,
+      user.username,
     );
   }
 
@@ -394,6 +414,7 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<PublishedData | null> {
+    const user: JWTUser = request.user as JWTUser;
     const filter = this.getAccessBasedFilters(request, id);
     const publishedData = await this.publishedDataService.findOne(filter);
 
@@ -423,6 +444,7 @@ export class PublishedDataV4Controller {
     return this.publishedDataService.update(
       { doi: id },
       { status: PublishedDataStatus.PUBLIC },
+      user.username,
     );
   }
 
@@ -442,9 +464,8 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<PublishedData | null> {
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
-      request.user as JWTUser,
-    );
+    const user: JWTUser = request.user as JWTUser;
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(user);
 
     const canAccessAny = ability.can(Action.accessAny, PublishedData);
 
@@ -473,6 +494,7 @@ export class PublishedDataV4Controller {
     return this.publishedDataService.update(
       { doi: id },
       { status: PublishedDataStatus.AMENDED },
+      user.username,
     );
   }
 
@@ -552,6 +574,7 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<IRegister | null> {
+    const user: JWTUser = request.user as JWTUser;
     const filter = this.getAccessBasedFilters(request, id);
     const publishedData = await this.publishedDataService.findOne(filter);
 
@@ -626,6 +649,7 @@ export class PublishedDataV4Controller {
     const res = await this.publishedDataService.update(
       { doi: publishedData.doi },
       { status: PublishedDataStatus.REGISTERED, registeredTime: new Date() },
+      user.username,
     );
 
     return res;
@@ -663,6 +687,7 @@ export class PublishedDataV4Controller {
     @Param("id") id: string,
     @Body() data: PartialUpdatePublishedDataV4Dto,
   ): Promise<IRegister | null> {
+    const user: JWTUser = request.user as JWTUser;
     const filter = this.getAccessBasedFilters(request, id);
 
     const publishedData = await this.publishedDataService.findOne(filter);
@@ -706,7 +731,7 @@ export class PublishedDataV4Controller {
       );
     }
 
-    await this.publishedDataService.update({ doi: id }, data);
+    await this.publishedDataService.update({ doi: id }, data, user.username);
 
     return returnValue;
   }

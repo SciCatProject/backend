@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import { merge } from "lodash";
-import localconfiguration from "./localconfiguration";
 import { boolean } from "mathjs";
-import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
+import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
+import localconfiguration from "./localconfiguration";
 
 const configuration = () => {
   const accessGroupsStaticValues =
@@ -63,6 +63,8 @@ const configuration = () => {
     process.env.OIDC_USERINFO_MAPPING_FIELD_USERNAME || "";
 
   const jobConfigurationFile = process.env.JOB_CONFIGURATION_FILE || "";
+
+  const ajvCustomDefinitions = process.env.AJV_CUSTOM_DEFINITIONS_FILE || "";
 
   const defaultLogger = {
     type: "DefaultLogger",
@@ -420,6 +422,7 @@ const configuration = () => {
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
+    ajvCustomDefinitions: process.env.AJV_CUSTOM_DEFINITIONS_FILE,
   };
   return merge(config, localconfiguration);
 };

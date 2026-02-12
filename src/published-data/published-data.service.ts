@@ -1,20 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpService } from "@nestjs/axios";
-import {
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  Scope,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { REQUEST } from "@nestjs/core";
 import { InjectModel } from "@nestjs/mongoose";
-import { Request } from "express";
 import { existsSync, readFileSync } from "fs";
 import { FilterQuery, Model } from "mongoose";
 import { firstValueFrom } from "rxjs";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import {
   addCreatedByFields,
   handleAxiosRequestError,
@@ -35,7 +26,7 @@ import {
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class PublishedDataService {
   private doiConfigPath = "./src/config/doiconfig.local.json";
 
@@ -43,8 +34,8 @@ export class PublishedDataService {
     @InjectModel(PublishedData.name)
     private publishedDataModel: Model<PublishedDataDocument>,
     private readonly httpService: HttpService,
-    @Inject(REQUEST)
-    private request: Request,
+    // @Inject(REQUEST)
+    // private request: Request,
     private configService: ConfigService,
   ) {}
 
@@ -58,8 +49,8 @@ export class PublishedDataService {
 
   async create(
     createPublishedDataDto: CreatePublishedDataV4Dto,
+    username: string,
   ): Promise<PublishedData> {
-    const username = (this.request.user as JWTUser).username;
     const createdPublished = new this.publishedDataModel(
       addCreatedByFields<CreatePublishedDataV4Dto>(
         createPublishedDataDto,
@@ -107,8 +98,8 @@ export class PublishedDataService {
   async update(
     filter: FilterQuery<PublishedDataDocument>,
     updatePublishedDataDto: PartialUpdatePublishedDataV4Dto,
+    username: string,
   ): Promise<PublishedData | null> {
-    const username = (this.request.user as JWTUser).username;
     return this.publishedDataModel
       .findOneAndUpdate(
         filter,

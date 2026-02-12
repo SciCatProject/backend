@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"],
-  "exclude": ["**/*spec.ts"]
+  "include": [ "src", "ajv-definitions.js" ],
+  "exclude": [ "**/*spec.ts" ]
 }

@@ -14,6 +14,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   SerializeOptions,
   UseGuards,
   UseInterceptors,
@@ -29,16 +30,20 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
+import { Request } from "express";
 import { QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "src/casl/action.enum";
 import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
+import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { Filter } from "src/datasets/decorators/filter.decorator";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataDto } from "./dto/create-published-data.dto";
@@ -59,6 +64,7 @@ import {
   IRegister,
   PublishedDataStatus,
 } from "./interfaces/published-data.interface";
+import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import {
   IdToDoiPipe,
   RegisteredFilterPipe,
@@ -66,8 +72,6 @@ import {
 } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
 import { PublishedData } from "./schemas/published-data.schema";
-import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
-import { Filter } from "src/datasets/decorators/filter.decorator";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -230,7 +234,7 @@ export class PublishedDataController {
   }
 
   // POST /publisheddata
-  @UseGuards(PoliciesGuard)
+  @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
     ability.can(Action.Create, PublishedData),
   )
@@ -245,14 +249,18 @@ export class PublishedDataController {
   })
   @Post()
   async create(
+    @Req() request: Request,
     @Body() createPublishedDataDto: CreatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto> {
+    const user: JWTUser = request.user as JWTUser;
     const publishedDataDto = this.convertObsoleteToCurrentSchema(
       createPublishedDataDto,
     ) as CreatePublishedDataV4Dto;
 
-    const createdPublishedData =
-      await this.publishedDataService.create(publishedDataDto);
+    const createdPublishedData = await this.publishedDataService.create(
+      publishedDataDto,
+      user.username,
+    );
 
     return createdPublishedData as unknown as PublishedDataObsoleteDto;
   }
@@ -434,7 +442,7 @@ export class PublishedDataController {
   }
 
   // PATCH /publisheddata/:id
-  @UseGuards(PoliciesGuard)
+  @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
     ability.can(Action.Update, PublishedData),
   )
@@ -455,15 +463,18 @@ export class PublishedDataController {
   })
   @Patch("/:id")
   async update(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body() updatePublishedDataDto: PartialUpdatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto | null> {
+    const user = request.user as JWTUser;
     const updateData = this.convertObsoleteToCurrentSchema(
       updatePublishedDataDto,
     );
     const updatedData = await this.publishedDataService.update(
       { doi: id },
       updateData,
+      user.username,
     );
 
     return updatedData as unknown as PublishedDataObsoleteDto;
@@ -511,7 +522,11 @@ export class PublishedDataController {
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
   @Post("/:id/register")
-  async register(@Param("id") id: string): Promise<IRegister | null> {
+  async register(
+    @Req() request: Request,
+    @Param("id") id: string,
+  ): Promise<IRegister | null> {
+    const user = request.user as JWTUser;
     const publishedData = await this.publishedDataService.findOne({ doi: id });
 
     const publishedDataObsolete = plainToInstance(
@@ -634,6 +649,7 @@ export class PublishedDataController {
           await this.publishedDataService.update(
             { doi: publishedDataObsolete.doi },
             data,
+            user.username,
           );
         } catch (error) {
           console.error(error);
@@ -645,6 +661,7 @@ export class PublishedDataController {
           await this.publishedDataService.update(
             { doi: publishedDataObsolete.doi },
             data,
+            user.username,
           );
         } catch (error) {
           console.error(error);
@@ -679,6 +696,7 @@ export class PublishedDataController {
           await this.publishedDataService.update(
             { doi: publishedDataObsolete.doi },
             data,
+            user.username,
           );
         } catch (error) {
           console.error(error);
@@ -720,9 +738,11 @@ export class PublishedDataController {
   })
   @Post("/:id/resync")
   async resync(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body() data: UpdatePublishedDataDto,
   ): Promise<IRegister | null> {
+    const user = request.user as JWTUser;
     const { ...obsolettePublishedData } = data;
 
     const publishedData = this.convertObsoleteToCurrentSchema(
@@ -741,7 +761,11 @@ export class PublishedDataController {
     }
 
     try {
-      await this.publishedDataService.update({ doi: id }, publishedData);
+      await this.publishedDataService.update(
+        { doi: id },
+        publishedData,
+        user.username,
+      );
     } catch (error: any) {
       throw new HttpException(
         `Error occurred: ${error}`,
