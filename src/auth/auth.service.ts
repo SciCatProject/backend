@@ -18,6 +18,7 @@ import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
 import { OidcClientService } from "../common/openid-client/openid-cilent.service";
+import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     private configService: ConfigService,
     private usersService: UsersService,
     private oidcClientService: OidcClientService,
+    private oidcAuthService: OidcAuthService,
     private jwtService: JwtService,
   ) {}
 
@@ -76,7 +78,7 @@ export class AuthService {
         `Invalid idToken: ${(error as Error).message}`,
       );
     }
-    const user = await this.oidcClientService.validate(tokenSet);
+    const user = await this.oidcAuthService.validate(tokenSet);
     const expiresIn = this.configService.get<number>("jwt.expiresIn");
     const accessToken = this.jwtService.sign(user, { expiresIn });
     await this.postLoginTasks(user);
