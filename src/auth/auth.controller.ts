@@ -6,6 +6,7 @@ import {
   Res,
   Req,
   HttpCode,
+  Body,
 } from "@nestjs/common";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { AuthService } from "./auth.service";
@@ -17,6 +18,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiQuery,
+  ApiOkResponse,
 } from "@nestjs/swagger";
 import { CredentialsDto } from "./dto/credentials.dto";
 import { LdapAuthGuard } from "./guards/ldap.guard";
@@ -25,6 +27,8 @@ import { User } from "src/users/schemas/user.schema";
 import { OidcAuthGuard } from "./guards/oidc.guard";
 import { Request, Response } from "express";
 import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
+import { IdTokenDto } from "./dto/idToken.dto";
+import { ThrottlerGuard } from "@nestjs/throttler";
 
 @ApiBearerAuth()
 @ApiTags("auth")
@@ -89,6 +93,21 @@ export class AuthController {
   })
   async oidcLogin() {
     // this function is invoked when the oidc is set as an auth method. It's behaviour comes from the oidc strategy
+  }
+
+  @AllowAny()
+  @UseGuards(ThrottlerGuard)
+  @ApiBody({ type: IdTokenDto })
+  @ApiOkResponse({
+    description:
+      "Successfully authenticated via OIDC. Returns SciCat access token.",
+    type: ReturnedAuthLoginDto,
+  })
+  @Post("oidc/token")
+  async oidcTokenLogin(
+    @Body() idTokenDto: IdTokenDto,
+  ): Promise<ReturnedAuthLoginDto> {
+    return this.authService.oidcTokenLogin(idTokenDto.idToken);
   }
 
   @AllowAny()

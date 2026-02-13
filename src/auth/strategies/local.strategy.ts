@@ -5,7 +5,7 @@ import { AuthService } from "../auth.service";
 import { User } from "src/users/schemas/user.schema";
 import { UserPayload } from "../interfaces/userPayload.interface";
 import { UsersService } from "src/users/users.service";
-import { AccessGroupService } from "../providers/access-group-provider/access-group.service";
+import { AccessGroupService } from "../access-group-provider/access-group.service";
 import { RolesService } from "src/users/roles.service";
 import { Role } from "src/users/schemas/role.schema";
 import { UserRole } from "src/users/schemas/user-role.schema";
@@ -15,7 +15,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private authService: AuthService,
     private rolesService: RolesService,
-    //private configService: ConfigService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {
