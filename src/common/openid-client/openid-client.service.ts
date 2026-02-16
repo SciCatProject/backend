@@ -34,10 +34,8 @@ export class OidcClientService {
   async getClient(): Promise<Client> {
     if (this.client) return this.client;
 
-    if (!this.oidcConfig?.clientID || !this.oidcConfig?.clientSecret) {
-      throw new Error(
-        "OIDC clientID or clientSecret is not defined in the configuration.",
-      );
+    if (!this.oidcConfig?.clientID) {
+      throw new Error("OIDC clientID not defined in the configuration.");
     }
     try {
       const issuer = await Issuer.discover(
