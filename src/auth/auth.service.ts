@@ -17,7 +17,7 @@ import { Issuer, TokenSet } from "openid-client";
 import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
-import { OidcClientService } from "../common/openid-client/openid-cilent.service";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 
 @Injectable()

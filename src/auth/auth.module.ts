@@ -13,7 +13,7 @@ import { OidcStrategy } from "./strategies/oidc.strategy";
 import { accessGroupServiceFactory } from "./access-group-provider/access-group-service-factory";
 import { CaslModule } from "src/casl/casl.module";
 import { SessionMiddleware } from "./middlewares/session.middleware";
-import { OidcClientService } from "../common/openid-client/openid-cilent.service";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 
 const OidcStrategyFactory = {

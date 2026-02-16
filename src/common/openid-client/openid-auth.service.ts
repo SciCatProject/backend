@@ -37,8 +37,6 @@ export class OidcAuthService {
   async validate(tokenset: TokenSet): Promise<Omit<User, "password">> {
     const userinfo: extendedIdTokenClaims = tokenset.claims();
 
-    console.log("tokenset", tokenset);
-
     const oidcConfig = this.configService.get<OidcConfig>("oidc");
 
     const userProfile = this.parseUserInfo(userinfo);
