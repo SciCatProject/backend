@@ -1,35 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { RuntimeConfigService } from "src/config/runtime-config/runtime-config.service";
 
 @Injectable()
 export class AdminService {
-  constructor(private configService: ConfigService) {}
+  constructor(private runtimeConfigService: RuntimeConfigService) {}
 
   async getConfig(): Promise<Record<string, unknown> | null> {
-    const modifiedConfig = this.applyBackendConfigAdjustments();
+    const config = await this.runtimeConfigService.getConfig("frontendConfig");
 
-    return modifiedConfig;
+    return config?.data || null;
   }
 
   async getTheme(): Promise<Record<string, unknown> | null> {
-    const theme =
-      this.configService.get<Record<string, unknown>>("frontendTheme") || null;
-    return theme;
-  }
-
-  // NOTE: Adjusts backend config values for frontend use (e.g., file upload limits).
-  // Add future backend-dependent adjustments here as needed.
-  private applyBackendConfigAdjustments(): Record<string, unknown> | null {
-    const config =
-      this.configService.get<Record<string, unknown>>("frontendConfig") || null;
-    if (!config) {
-      return null;
-    }
-    const postEncodedMaxFileUploadSize =
-      this.configService.get<string>("maxFileUploadSizeInMb") || "16mb";
-    return {
-      ...config,
-      maxFileUploadSizeInMb: postEncodedMaxFileUploadSize,
-    };
+    const theme = await this.runtimeConfigService.getConfig("frontendTheme");
+    return theme?.data || null;
   }
 }

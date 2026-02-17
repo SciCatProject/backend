@@ -1046,11 +1046,12 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       });
   });
 
-  it("0315: Fullfacet via /api/v3 jobs that were created by user5.1, as a user from ADMIN_GROUPS", async () => {
+  it("0315: Fullfacet via /api/v3 jobs that were created by user5.1, as a user from ADMIN_GROUPS with fields and facets", async () => {
     const query = { createdBy: "user5.1", emailJobInitiator: "test@email.scicat" };
     return request(appUrl)
       .get(`/api/v3/Jobs/fullfacet`)
       .query("fields=" + encodeURIComponent(JSON.stringify(query)))
+      .query("facets=" + encodeURIComponent(JSON.stringify([])))
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
       .expect(TestData.SuccessfulGetStatusCode)

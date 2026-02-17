@@ -42,6 +42,8 @@ import {
 } from "./common/schemas/generic-history.schema";
 import { HistoryModule } from "./history/history.module";
 import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-sensitive-data.interceptor";
+import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.module";
+import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
     DatasetsModule,
     InitialDatasetsModule,
     InstrumentsModule,
+    MetadataKeysModule,
+    RuntimeConfigModule,
     JobsModule,
     LogbooksModule,
     EventEmitterModule.forRoot(),

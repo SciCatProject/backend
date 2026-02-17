@@ -1,6 +1,8 @@
 import { PartialType } from "@nestjs/swagger";
 import { IsBoolean, IsObject, IsOptional, IsString } from "class-validator";
 import { OwnableDto } from "../../common/dto/ownable.dto";
+import { Transform } from "class-transformer";
+import { encodeScientificMetadataKeys } from "src/common/utils";
 
 export class UpdateSampleDto extends OwnableDto {
   /**
@@ -43,7 +45,8 @@ export class UpdateSampleDto extends OwnableDto {
    */
   @IsObject()
   @IsOptional()
-  readonly sampleCharacteristics?: Record<string, unknown> = {};
+  @Transform(({ value }) => encodeScientificMetadataKeys(value))
+  sampleCharacteristics?: Record<string, unknown>;
 
   /**
    * Flag is true when data are made publicly available.

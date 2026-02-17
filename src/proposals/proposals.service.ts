@@ -1,8 +1,14 @@
-import { Inject, Injectable, Scope } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
+import {
+  FilterQuery,
+  Model,
+  PipelineStage,
+  QueryOptions,
+  UpdateQuery,
+} from "mongoose";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import {
   createFullfacetPipeline,
@@ -17,14 +23,33 @@ import { IProposalFields } from "./interfaces/proposal-filters.interface";
 import { ProposalClass, ProposalDocument } from "./schemas/proposal.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateMeasurementPeriodDto } from "./dto/create-measurement-period.dto";
+import {
+  MetadataKeysService,
+  MetadataSourceDoc,
+} from "src/metadata-keys/metadatakeys.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
   constructor(
     @InjectModel(ProposalClass.name)
     private proposalModel: Model<ProposalDocument>,
+    private metadataKeysService: MetadataKeysService,
     @Inject(REQUEST) private request: Request,
   ) {}
+
+  private createMetadataKeysInstance(
+    doc: UpdateQuery<ProposalDocument>,
+  ): MetadataSourceDoc {
+    const source: MetadataSourceDoc = {
+      sourceType: "proposal",
+      sourceId: doc.proposalId,
+      ownerGroup: doc.ownerGroup,
+      accessGroups: doc.accessGroups || [],
+      isPublished: doc.isPublished || false,
+      metadata: doc.metadata ?? {},
+    };
+    return source;
+  }
 
   async create(createProposalDto: CreateProposalDto): Promise<ProposalClass> {
     const username = (this.request.user as JWTUser).username;
@@ -40,7 +65,12 @@ export class ProposalsService {
     const createdProposal = new this.proposalModel(
       addCreatedByFields<CreateProposalDto>(createProposalDto, username),
     );
-    return createdProposal.save();
+    const savedProposal = await createdProposal.save();
+
+    this.metadataKeysService.insertManyFromSource(
+      this.createMetadataKeysInstance(savedProposal),
+    );
+    return savedProposal;
   }
 
   async findAll(
@@ -119,9 +149,7 @@ export class ProposalsService {
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
 
-    // Use findOneAndUpdate instead of manually updating the document
-    // This ensures the history plugin middleware is triggered
-    return this.proposalModel
+    const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
         filter,
         {
@@ -135,10 +163,37 @@ export class ProposalsService {
         },
       )
       .exec();
+
+    if (!updatedProposal) {
+      throw new NotFoundException(
+        `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(updatedProposal),
+    );
+
+    return updatedProposal;
   }
 
   async remove(filter: FilterQuery<ProposalDocument>): Promise<unknown> {
-    return this.proposalModel.findOneAndDelete(filter).exec();
+    const deletedProposal = await this.proposalModel
+      .findOneAndDelete(filter)
+      .exec();
+
+    if (!deletedProposal) {
+      throw new NotFoundException(
+        `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    this.metadataKeysService.deleteMany({
+      sourceType: "proposal",
+      sourceId: deletedProposal.proposalId,
+    });
+
+    return deletedProposal;
   }
 
   async incrementNumberOfDatasets(proposalIds: string[]) {

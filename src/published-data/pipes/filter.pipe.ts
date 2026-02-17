@@ -5,7 +5,7 @@ import {
 } from "../schemas/published-data.schema";
 import { publishedDataV3toV4FieldMap } from "../dto/published-data.obsolete.dto";
 import { PipeTransform } from "@nestjs/common";
-import { isEmpty } from "lodash";
+import { isEmpty, mapValues } from "lodash";
 import { IPublishedDataFilters } from "../interfaces/published-data.interface";
 import { FilterQuery } from "mongoose";
 
@@ -22,8 +22,13 @@ class AppendFieldsToFilterPipe implements PipeTransform {
   }
 }
 
+const publishedDataV3toV4FilterMap = mapValues(
+  publishedDataV3toV4FieldMap,
+  (val) => val?.replace(/\[\]\.?/g, ""),
+);
+
 export const V3_FILTER_PIPE = [
-  new FilterPipe<PublishedData>({ apiToDBMap: publishedDataV3toV4FieldMap }),
+  new FilterPipe<PublishedData>({ apiToDBMap: publishedDataV3toV4FilterMap }),
 ];
 
 export const V4_FILTER_PIPE = [

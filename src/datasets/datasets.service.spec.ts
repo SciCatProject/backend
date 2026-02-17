@@ -13,6 +13,7 @@ import { Request } from "express";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { plainToInstance } from "class-transformer";
 import { ProposalsService } from "src/proposals/proposals.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 
 class InitialDatasetsServiceMock {}
 
@@ -21,6 +22,11 @@ class LogbooksServiceMock {}
 class CaslAbilityFactoryMock {}
 
 class ElasticSearchServiceMock {}
+
+class MetadataKeysServiceMock {
+  insertManyFromSource = jest.fn().mockResolvedValue([]);
+  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
+}
 
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
@@ -119,6 +125,7 @@ describe("DatasetsService", () => {
         },
         { provide: LogbooksService, useClass: LogbooksServiceMock },
         { provide: ElasticSearchService, useClass: ElasticSearchServiceMock },
+        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
       ],

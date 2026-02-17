@@ -24,6 +24,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
 import { ProposalsModule } from "src/proposals/proposals.module";
 import { HistoryModule } from "src/history/history.module";
+import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { HistoryModule } from "src/history/history.module";
     OrigDatablocksModule,
     InitialDatasetsModule,
     HistoryModule,
+    MetadataKeysModule,
     ElasticSearchModule,
     ProposalsModule,
     forwardRef(() => LogbooksModule),

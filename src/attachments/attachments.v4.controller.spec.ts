@@ -41,7 +41,6 @@ describe("AttachmentsController - findOneAndUpdate", () => {
       providers: [
         {
           provide: AttachmentsV4Service,
-          useValue: mockAttachmentsV4Service,
           useValue: {
             findOneAndUpdate: jest
               .fn()

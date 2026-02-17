@@ -769,7 +769,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     description: "Id of the dataset to modify",
     type: String,
   })
-  @ApiConsumes("application/merge-patch+json", "application/json")
+  @ApiConsumes("application/json", "application/merge-patch+json")
   @ApiBody({
     description:
       "Fields that needs to be updated in the dataset. Only the fields that needs to be updated have to be passed in.",

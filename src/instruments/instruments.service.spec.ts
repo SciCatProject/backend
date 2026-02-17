@@ -3,6 +3,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 import { InstrumentsService } from "./instruments.service";
 import { Instrument } from "./schemas/instrument.schema";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
+
+class MetadataKeysServiceMock {
+  insertManyFromSource = jest.fn().mockResolvedValue([]);
+  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
+}
 
 const mockInstrument: Instrument = {
   _id: "testPid",
@@ -35,6 +41,7 @@ describe("InstrumentsService", () => {
             exec: jest.fn(),
           },
         },
+        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
       ],
     }).compile();
 

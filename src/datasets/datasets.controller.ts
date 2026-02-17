@@ -617,7 +617,7 @@ export class DatasetsController {
         documentId: datasetId,
         subsystem: "Dataset",
       }),
-      currentDataset,
+      currentDataset.toObject(),
     ).reverse();
   }
 
@@ -832,7 +832,7 @@ export class DatasetsController {
       | CreateRawDatasetObsoleteDto
       | CreateDerivedDatasetObsoleteDto
       | CreateDatasetDto,
-  ): Promise<{ valid: boolean }> {
+  ): Promise<{ valid: boolean; error?: string }> {
     await this.checkPermissionsForObsoleteDatasetCreate(
       request,
       createDatasetObsoleteDto,
@@ -856,12 +856,23 @@ export class DatasetsController {
     );
     const errorsTestCustomCorrect = await validate(dtoTestCustomCorrect);
 
-    const valid =
-      errorsTestRawCorrect.length == 0 ||
-      errorsTestDerivedCorrect.length == 0 ||
-      errorsTestCustomCorrect.length == 0;
+    const joinErrors = (errors: ValidationError[]) =>
+      errors
+        .flatMap((err) =>
+          err.constraints ? Object.values(err.constraints) : [],
+        )
+        .join("; ");
 
-    return { valid: valid };
+    let targetErrors: ValidationError[];
+    if (createDatasetObsoleteDto.type === "raw")
+      targetErrors = errorsTestRawCorrect;
+    else if (createDatasetObsoleteDto.type === "derived")
+      targetErrors = errorsTestDerivedCorrect;
+    else targetErrors = errorsTestCustomCorrect;
+
+    if (targetErrors.length > 0)
+      return { valid: false, error: joinErrors(targetErrors) };
+    return { valid: true };
   }
 
   // GET /datasets
