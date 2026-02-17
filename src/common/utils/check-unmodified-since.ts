@@ -21,7 +21,7 @@ export function checkUnmodifiedSince(
   const headerDate = new Date(headerDateString);
   if (isNaN(headerDate.getTime())) return;
 
-  if (headerDate <= resourceDate) {
+  if (headerDate < resourceDate) {
     throw new PreconditionFailedException(
       "Resource has been modified on server",
     );
