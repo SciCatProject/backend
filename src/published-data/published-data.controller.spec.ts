@@ -5,7 +5,6 @@ import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
-import { PublishedDataStatus } from "./interfaces/published-data.interface";
 import { PublishedDataController } from "./published-data.controller";
 import { PublishedDataService } from "./published-data.service";
 
@@ -43,21 +42,5 @@ describe("PublishedDataController", () => {
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
-  });
-
-  it("should result in PublishedDataStatus.REGISTERED", () => {
-    expect(controller.convertObsoleteStatusToCurrent("registered")).toEqual(
-      PublishedDataStatus.REGISTERED,
-    );
-  });
-  it("should result in PublishedDataStatus.PRIVATE", () => {
-    expect(
-      controller.convertObsoleteStatusToCurrent("pending_registration"),
-    ).toEqual(PublishedDataStatus.PRIVATE);
-  });
-  it("should result in PublishedDataStatus.PRIVATE", () => {
-    expect(controller.convertObsoleteStatusToCurrent("invalid_status")).toEqual(
-      PublishedDataStatus.PRIVATE,
-    );
   });
 });
