@@ -4,8 +4,6 @@
 
 This guide documents frontend configuration options that control various UI behaviors and features in SciCat. These settings are defined in the configuration file specified by the `FRONTEND_CONFIG_FILE` environment variable (default `src/config/frontend.config.json`).
 
-**TODO:** Many of these configuration options were added a long time ago and may no longer be in use. This documentation should be reviewed and updated to reflect the current state of the application and remove obsolete configuration flags.
-
 ## Configuration Options
 
 | **Configuration Options** | **Type** | **Default Value** | **Description** |
@@ -17,24 +15,24 @@ This guide documents frontend configuration options that control various UI beha
 | `accessTokenPrefix` | string | `"Bearer "` | Set the backend token prefix. Should be empty string for old backend or "Bearer " if using scicat-backend-next. |
 | `addDatasetEnabled` | boolean | `false` | Show/hide the "Create Dataset" button in the Datasets Dashboard. |
 | `archiveWorkflowEnabled` | boolean | `false` | Enable/disable the archive/retrieve workflow. |
-| `datasetReduceEnabled` | boolean | `true` | Enable/disable the automatic Dataset reduction/analysis workflow. |
-| `datasetJsonScientificMetadata` | boolean | `true` | |
-| `editDatasetEnabled` | boolean | `true` | |
-| `editDatasetSampleEnabled` | boolean | `true` | Enable/disable editing of which Sample a Dataset belongs to. |
+| `datasetReduceEnabled` | boolean | `true` | Show/hide the "Reduce" tab. |
+| `datasetJsonScientificMetadata` | boolean | `true` | Show/hide the "Scientific Metadata (JSON)" tab. |
+| `editDatasetEnabled` | boolean | `true` | Show/hide the "Edit" buttons in the Datasets Details page |
+| `editDatasetSampleEnabled` | boolean | `true` | **Deprecated** Enable/disable editing of which Sample a Dataset belongs to. |
 | `editMetadataEnabled` | boolean | `true` | Enable/disable editing of Scientific Metadata. |
-| `addSampleEnabled` | boolean | `false` | |
+| `addSampleEnabled` | boolean | `false` | Show/hide the "Create Sample" button in the Sample Dashboard |
 | `externalAuthEndpoint` | string | `"/api/v3/auth/msad"` | Endpoint used for third party authentication, e.g., LDAP. |
 | `facility` | string | `"SciCat Vanilla"` | Facility running the SciCat instance. |
-| `siteIcon` | string | `""` | Path to the site icon/logo image file. |
-| `siteTitle` | string | `""` | Title displayed in the browser tab and header. |
-| `siteSciCatLogo` | string | `"full"` | |
+| `siteIcon` | string | `""` | **Deprecated** Path to the site icon/logo image file. |
+| `siteTitle` | string | `""` | Title displayed in the header. |
+| `siteSciCatLogo` | string | `""` | **Deprecated** Set to `"icon"` for icon-only display; full logo shown otherwise. |
 | `loginFacilityLabel` | string | `""` | Label for the facility login option. |
 | `loginLdapLabel` | string | `""` | Label for the LDAP login option. |
 | `loginLocalLabel` | string | `""` | Label for the local login option. |
 | `loginFacilityEnabled` | boolean | `true` | Enable/disable facility login option. |
 | `loginLdapEnabled` | boolean | `true` | Enable/disable LDAP login option. |
-| `loginLocalEnabled` | boolean | `true` | Enable/disable local login option. |
-| `fileColorEnabled` | boolean | `true` | Enable/disable file size color representation in the Datasets Dashboard. |
+| `loginLocalEnabled` | boolean | `true` | **Deprecated** Enable/disable local login option. |
+| `fileColorEnabled` | boolean | `true` | **Deprecated** Enable/disable file size color representation in the Datasets Dashboard. |
 | `fileDownloadEnabled` | boolean | `true` | Enable/disable download workflow for Dataset datafiles. |
 | `gettingStarted` | string | `null` | URL to Getting Started guide for SciCat, displayed on the Help page. |
 | `ingestManual` | string | `null` | URL to Ingest Manual for SciCat, displayed on the Help page. |
@@ -55,7 +53,7 @@ This guide documents frontend configuration options that control various UI beha
 | `riotBaseUrl` | string | `""` | URL to SciChat client. |
 | `scienceSearchEnabled` | boolean | `true` | Enable/disable filtering documents on Scientific Metadata. |
 | `scienceSearchUnitsEnabled` | boolean | `true` | Enable/disable filtering documents on Scientific Metadata using units. |
-| `searchPublicDataEnabled` | boolean | `true` | Enable/disable filtering Datasets on public or non-public data. |
+| `searchPublicDataEnabled` | boolean | `true` | **Deprecated** Enable/disable filtering Datasets on public or non-public data. |
 | `searchSamples` | boolean | `true` | Enable/disable searching Samples on Samples Dashboard. |
 | `sftpHost` | string | `""` | URL to SFTP service used for downloading files exceeding maximum allowed file size. |
 | `sourceFolder` | string | `""` | Default source folder path for datasets. |
@@ -65,10 +63,10 @@ This guide documents frontend configuration options that control various UI beha
 | `shoppingCartEnabled` | boolean | `true` | Enable/disable the Dataset cart used for bulk actions. |
 | `shoppingCartOnHeader` | boolean | `true` | Toggle Dataset cart placement, either on header or to the left on the Datasets Dashboard. |
 | `tableSciDataEnabled` | boolean | `true` | Enable/disable Scientific Metadata table view on details pages. If disabled, Scientific Metadata is displayed as raw JSON. |
-| `datasetDetailsShowMissingProposalId` | boolean | `false` | |
-| `notificationInterceptorEnabled` | boolean | `true` | |
-| `metadataEditingUnitListDisabled` | boolean | `true` | |
-| `hideEmptyMetadataTable` | boolean | `false` | |
+| `datasetDetailsShowMissingProposalId` | boolean | `false` | Show/hide the ProposalId property even when the proposal no longer exists |
+| `notificationInterceptorEnabled` | boolean | `true` | Enable/disable a snackbar when creating, updating or deleting entities |
+| `metadataEditingUnitListDisabled` | boolean | `true` | Enable/disable the unitlist dropdown in metadata edit view |
+| `hideEmptyMetadataTable` | boolean | `false` | Show/hide metadata tables when it is empty |
 | `datafilesActionsEnabled` | boolean | `true` | Enable/disable custom datafile actions configuration. |
 | `datafilesActions` | array | `[]` | Array of custom action configurations for datafiles. Each action can define download, notebook generation, or other custom behaviors. |
 | `labelsLocalization` | object | `{}` | Localization configuration for labels in datasets and proposals. Maps field names to display labels. |
