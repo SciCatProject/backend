@@ -69,8 +69,11 @@ This guide documents frontend configuration options that control various UI beha
 | `hideEmptyMetadataTable` | boolean | `false` | Show/hide metadata tables when it is empty |
 | `datafilesActionsEnabled` | boolean | `true` | Enable/disable custom datafile actions configuration. |
 | `datafilesActions` | array | `[]` | Array of custom action configurations for datafiles. Each action can define download, notebook generation, or other custom behaviors. |
+| `defaultDatasetsListSettings` | object | `{}` | Configuration for datasets list columns, filters, and conditions. **Detailed documentation:** [Default List Settings Configuration](./default-list-settings.md) |
+| `defaultProposalsListSettings` | object | `{}` | Configuration for proposals list columns and filters. **Detailed documentation:** [Default List Settings Configuration](./default-list-settings.md) |
 | `labelsLocalization` | object | `{}` | Localization configuration for labels in datasets and proposals. Maps field names to display labels. |
 | `dateFormat` | string | `"yyyy-MM-dd HH:mm"` | Default date format used throughout the application. |
+| `datasetDetailComponent` | object | `{}` | Configuration for customizing the dataset detail page layout and components. **Detailed documentation:** [Dynamic Dataset Detail Component Configuration](./dynamic-dataset-detail-component.md) |
 | **`mainMenu`** | object | | Configuration for main menu visibility based on user authentication status. |
 | &nbsp;&nbsp;&nbsp;&nbsp;**`nonAuthenticatedUser`** | object | | Menu configuration for non-authenticated users. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`datasets` | boolean | `true` | Show/hide datasets menu item. |
@@ -92,8 +95,3 @@ This guide documents frontend configuration options that control various UI beha
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`samples` | boolean | `true` | Show/hide samples menu item. |
 | **`defaultTab`** | object | | Specifies which tab is shown by default when viewing different entities. |
 | &nbsp;&nbsp;&nbsp;&nbsp;`proposal` | string | `"details"` | Default tab for proposals. Valid values: `"details"`, `"datasets"`, `"relatedProposals"`, `"logbook"`. |
-
-## See Also
-
-- [Default List Settings Configuration](./default-list-settings.md)
-- [Dynamic Dataset Detail Component Configuration](./dynamic-dataset-detail-component.md)
