@@ -58,6 +58,8 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
         userId: user.id as string,
         username: user.username,
         email: user.email,
+        accessGroupProperty: "_groups",
+        payload: payload,
       };
       const accessGroups =
         await this.accessGroupService.getAccessGroups(userPayload);
@@ -99,6 +101,8 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
         userId: user.id as string,
         username: user.username,
         email: user.email,
+        accessGroupProperty: "_groups",
+        payload: payload,
       };
       const userIdentity = await this.usersService.findByIdUserIdentity(
         user._id,
