@@ -25,6 +25,7 @@ import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plug
 import { ProposalsModule } from "src/proposals/proposals.module";
 import { HistoryModule } from "src/history/history.module";
 import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
+import { ConditionalModule } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -35,7 +36,10 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
     InitialDatasetsModule,
     HistoryModule,
     MetadataKeysModule,
-    ElasticSearchModule,
+    ConditionalModule.registerWhen(
+      ElasticSearchModule,
+      (env: NodeJS.ProcessEnv) => env.ELASTICSEARCH_ENABLED === "yes",
+    ),
     ProposalsModule,
     forwardRef(() => LogbooksModule),
     MongooseModule.forFeatureAsync([
