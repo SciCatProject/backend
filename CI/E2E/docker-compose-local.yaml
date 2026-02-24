@@ -1,50 +1,67 @@
 version: "3.2"
 services:
   mongodb:
-    image: bitnami/mongodb:latest
+    image: mongo:latest
     volumes:
-      - "mongodb_data:/bitnami"
+      - "mongodb_data://data/db"
     ports:
       - "27017:27017"
-  scichat-loopback:
-    image: dacat/scichat-loopback:e2e
-    command:
-      [
-        "./wait-for-it.sh",
-        "mongodb:27017",
-        "--",
-        "node",
-        "-r",
-        "dotenv/config",
-        "."
-      ]
-    volumes:
-      - ".env.scichat-loopback:/home/node/app/.env"
-    depends_on:
-      - mongodb
+  # scichat-loopback:
+  #   image: dacat/scichat-loopback:e2e
+  #   command:
+  #     [
+  #       "./wait-for-it.sh",
+  #       "mongodb:27017",
+  #       "--",
+  #       "node",
+  #       "-r",
+  #       "dotenv/config",
+  #       "."
+  #     ]
+  #   volumes:
+  #     - ".env.scichat-loopback:/home/node/app/.env"
+  #   depends_on:
+  #     - mongodb
 
-  es01:
+  opensearch:
     depends_on:
       - mongodb
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    image: opensearchproject/opensearch:3.5.0
     ports:
-      - ${ES_PORT}:9200
+      - 9200:9200
     environment:
-      - node.name=es01
-      - ES_JAVA_OPTS=-Xms2g -Xmx2g
-      - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
-      - ELASTIC_PASSWORD=${ES_PASSWORD}
+      - node.name=opensearch
+      - discovery.type=single-node
+      - cluster.name=os-cluster
       - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS}
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - DISABLE_INSTALL_DEMO_CONFIG=false
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
     mem_limit: ${MEM_LIMIT}
     ulimits:
       memlock:
         soft: -1
         hard: -1
 
+
+ # Web UI for OpenSearch
+ # Enable this service if you want to use OpenSearch Dashboards to visualize and debug your OpenSearch data. 
+ # Access it at http://localhost:5601
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.5.0
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=https://opensearch:9200
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=admin
+      - OPENSEARCH_SSL_VERIFICATIONMODE=none
+
 volumes:
   mongodb_data:
     driver: local
 
-  es01:
+  opensearch_data:
     driver: local

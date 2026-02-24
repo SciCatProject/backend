@@ -308,7 +308,6 @@ export class DatasetsService {
         modifiers.skip,
         modifiers.sort,
       );
-
       datasets = await this.datasetModel
         .find({ pid: { $in: esResult.data } })
         .sort(modifiers.sort)
@@ -602,6 +601,6 @@ export class DatasetsService {
   async isElasticSearchDBEmpty() {
     if (!this.ESClient) return;
     const count = await this.ESClient.getCount();
-    return count.count > 0;
+    return count.body.count > 0;
   }
 }

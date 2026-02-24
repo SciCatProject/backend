@@ -30,7 +30,7 @@
     "test:api": "npm run test:api:jest --maxWorkers=50% && concurrently -k -s first \"wait-on http://localhost:3000/explorer/ && npm run test:api:mocha\" \"npm run start:test\"",
     "test:api:jest": "dotenv -o -e test/config/.env -e test/config/.env.override -- jest --config ./test/config/jest-e2e.json --maxWorkers=50%",
     "test:api:mocha": "dotenv -o -e test/config/.env -e test/config/.env.override -- mocha --config ./test/config/.mocharc.js -r chai/register-should.js",
-    "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml --env-file CI/E2E/.env.elastic-search up  -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
+    "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml --env-file CI/E2E/.env.open-search up  -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
   },
   "dependencies": {
     "@casl/ability": "^6.3.2",
@@ -41,7 +41,6 @@
     "@nestjs/common": "^11",
     "@nestjs/config": "^4",
     "@nestjs/core": "^11",
-    "@nestjs/elasticsearch": "^11",
     "@nestjs/event-emitter": "^3",
     "@nestjs/jwt": "^11",
     "@nestjs/mongoose": "^11.0.4",
@@ -50,6 +49,7 @@
     "@nestjs/swagger": "^11.1.1",
     "@nestjs/terminus": "^11",
     "@nestjs/throttler": "^6.5.0",
+    "@opensearch-project/opensearch": "^3.5.1",
     "@types/json-merge-patch": "^1.0.0",
     "@types/jsonschema": "^1.1.1",
     "@user-office-software/duo-logger": "^2.1.1",

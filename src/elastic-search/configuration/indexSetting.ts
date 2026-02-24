@@ -1,12 +1,5 @@
-import {
-  AnalysisEdgeNGramTokenizer,
-  AnalysisPatternReplaceCharFilter,
-  IndicesIndexSettingsAnalysis,
-  MappingDynamicTemplate,
-} from "@elastic/elasticsearch/lib/api/types";
-
 //Tokenizers
-export const autocomplete_tokenizer: AnalysisEdgeNGramTokenizer = {
+export const autocomplete_tokenizer: any = {
   type: "edge_ngram",
   min_gram: 2,
   max_gram: 40,
@@ -14,14 +7,14 @@ export const autocomplete_tokenizer: AnalysisEdgeNGramTokenizer = {
 };
 
 //Filters
-export const special_character_filter: AnalysisPatternReplaceCharFilter = {
+export const special_character_filter: any = {
   pattern: "[^A-Za-z0-9]",
   type: "pattern_replace",
   replacement: "",
 };
 
 //Dynamic templates
-export const dynamic_template: Record<string, MappingDynamicTemplate>[] = [
+export const dynamic_template: Record<string, any>[] = [
   // NOTE: date as keyword is temporary solution for date format inconsistency issue in the scientificMetadata field
   {
     date_as_keyword: {
@@ -123,4 +116,4 @@ export const defaultElasticSettings = {
       autocomplete: autocomplete_tokenizer,
     },
   },
-} as IndicesIndexSettingsAnalysis;
+} as any;
