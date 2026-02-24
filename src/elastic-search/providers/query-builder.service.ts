@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { QueryDslQueryContainer } from "@elastic/elasticsearch/lib/api/types";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import {
   IBoolShould,
@@ -81,8 +80,8 @@ export class SearchQueryService {
 
   private buildTextQuery(
     fields: Partial<IDatasetFields>,
-  ): QueryDslQueryContainer[] {
-    let wildcardQueries: QueryDslQueryContainer[] = [];
+  ): Record<string, unknown>[] {
+    let wildcardQueries: Record<string, unknown>[] = [];
     const { text } = fields;
 
     //NOTE: if text field is present, we query both datasetName and description fields
@@ -103,7 +102,7 @@ export class SearchQueryService {
       .filter(Boolean);
   }
 
-  private buildWildcardQueries(text: string): QueryDslQueryContainer[] {
+  private buildWildcardQueries(text: string): Record<string, unknown>[] {
     const terms = this.splitSearchText(text);
     return terms.flatMap((term) =>
       this.mustFields.map((fieldName) => ({
@@ -211,7 +210,7 @@ export class SearchQueryService {
   private constructFinalQuery(
     filter: IFilter[],
     should: IBoolShould,
-    query: QueryDslQueryContainer[],
+    query: Record<string, unknown>[],
   ) {
     const finalQuery = {
       query: {
