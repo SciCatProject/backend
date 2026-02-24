@@ -161,28 +161,30 @@ describe("HidePersonalInfo test", () => {
       );
   });
 
-  it("Check that nothing is masked when admin", async () => {
-    const adminToken = await getToken(app.getHttpServer(), {
-      username: "admin",
-      password: TestData.Accounts["admin"]["password"],
-    });
-    await request(app.getHttpServer())
-      .get("/api/v3/datasets")
-      .auth(adminToken, { type: "bearer" })
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .then(
-        (result) => (
-          expect(result.body[0].contactEmail).toEqual(
-            `${user1email}; ${user2email}`,
+  ["admin", "datasetIngestor"].forEach((user) => {
+    it(`Check that nothing is masked when ${user}`, async () => {
+      const adminToken = await getToken(app.getHttpServer(), {
+        username: user,
+        password: TestData.Accounts[user]["password"],
+      });
+      await request(app.getHttpServer())
+        .get("/api/v3/datasets")
+        .auth(adminToken, { type: "bearer" })
+        .set("Accept", "application/json")
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then(
+          (result) => (
+            expect(result.body[0].contactEmail).toEqual(
+              `${user1email}; ${user2email}`,
+            ),
+            expect(result.body[0].ownerEmail).toEqual(user1email),
+            expect(result.body[0].accessGroups).toEqual([
+              "access1@group.site",
+              "access2@group.site",
+            ])
           ),
-          expect(result.body[0].ownerEmail).toEqual(user1email),
-          expect(result.body[0].accessGroups).toEqual([
-            "access1@group.site",
-            "access2@group.site",
-          ])
-        ),
-      );
+        );
+    });
   });
 
   it("Check that user profile emails are not hidden", async () => {
