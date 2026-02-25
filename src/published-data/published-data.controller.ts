@@ -68,11 +68,11 @@ import { PublishedDataService } from "./published-data.service";
 import { PublishedData } from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
+import { FastResponseInterceptor } from "./interceptors/fast-response.interceptor";
 
 @ApiBearerAuth()
 @ApiTags("published data")
 @Controller("publisheddata")
-@UseInterceptors(ClassSerializerInterceptor)
 export class PublishedDataController {
   constructor(
     private readonly attachmentsService: AttachmentsService,
@@ -239,6 +239,7 @@ export class PublishedDataController {
     description:
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
+  @UseInterceptors(new FastResponseInterceptor(), ClassSerializerInterceptor)
   @SerializeOptions({
     type: PublishedDataObsoleteDto,
     excludeExtraneousValues: true,
@@ -276,6 +277,7 @@ export class PublishedDataController {
     isArray: true,
     description: "Results with a published documents array",
   })
+  @UseInterceptors(new FastResponseInterceptor(), ClassSerializerInterceptor)
   @SerializeOptions({
     type: PublishedDataObsoleteDto,
     excludeExtraneousValues: true,
@@ -408,11 +410,12 @@ export class PublishedDataController {
     status: HttpStatus.NOT_FOUND,
     description: "PublishedData not found",
   })
-  @Get("/:id")
+  @UseInterceptors(new FastResponseInterceptor(), ClassSerializerInterceptor)
   @SerializeOptions({
     type: PublishedDataObsoleteDto,
     excludeExtraneousValues: true,
   })
+  @Get("/:id")
   async findOne(
     @Param(new IdToDoiPipe(), RegisteredPipe)
     filter: {
@@ -449,6 +452,7 @@ export class PublishedDataController {
     isArray: false,
     description: "Return updated published data",
   })
+  @UseInterceptors(new FastResponseInterceptor(), ClassSerializerInterceptor)
   @SerializeOptions({
     type: PublishedDataObsoleteDto,
     excludeExtraneousValues: true,
@@ -485,6 +489,7 @@ export class PublishedDataController {
     isArray: false,
     description: "Return removed published data",
   })
+  @UseInterceptors(new FastResponseInterceptor(), ClassSerializerInterceptor)
   @SerializeOptions({
     type: PublishedDataObsoleteDto,
     excludeExtraneousValues: true,
