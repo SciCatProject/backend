@@ -4,7 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { genSalt, hash } from "bcrypt";
 import { FilterQuery, Model } from "mongoose";
 import { CreateUserIdentityDto } from "./dto/create-user-identity.dto";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto, isCreateUserDtoArray } from "./dto/create-user.dto";
 import { RolesService } from "./roles.service";
 import {
   UserIdentity,
@@ -31,6 +31,7 @@ import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
 import { ReturnedUserDto } from "./dto/returned-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { load } from "js-yaml";
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -55,7 +56,13 @@ export class UsersService implements OnModuleInit {
     const filePath = this.configService.get("functionalAccounts.file");
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, "utf8");
-      functionalAccounts = JSON.parse(data);
+      const parsedData = load(data, { filename: filePath });
+      if (!parsedData || !isCreateUserDtoArray(parsedData)) {
+        throw new Error(
+          `Invalid functional accounts file format. Expected an object but got ${typeof parsedData}`,
+        );
+      }
+      functionalAccounts = parsedData;
     }
 
     if (functionalAccounts && functionalAccounts.length > 0) {

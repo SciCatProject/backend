@@ -1203,6 +1203,16 @@ export function oneOrMore<T>(x: T[] | T): T[] {
 }
 
 /**
+ * Given a type guard for T, check whether an object is an array of T
+ */
+export function isArrayOf<T>(
+  itemGuard: (item: unknown) => item is T,
+): (arr: unknown) => arr is T[] {
+  return (arr: unknown): arr is T[] =>
+    Array.isArray(arr) && arr.every(itemGuard);
+}
+
+/**
  * Make a single property K of T optional
  */
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> &

@@ -115,11 +115,15 @@ automatically create the specified accounts on startup. If this file is not prov
 Follow the structure of [functionalAccounts.json.minimal.example](/functionalAccounts.json.minimal.example) to create
 your own _functionalAccounts.json_ file.
 
+YAML syntax is also supported. Set `FUNCTIONAL_ACCOUNTS_FILE=functionalAccounts.yaml` in your environment.
+
 ## Frontend configuration and theme
 
 The SciCat backend provides functionality to serve a configuration and theme to a connected frontend. The default files are _frontend.config.json_ and _frontend.theme.json_ located in the `/src/config` directory, locally or in the container. The file names and locations can be configured via the environment variables `FRONTEND_CONFIG_FILE` and `FRONTEND_THEME_FILE`.
 
 Follow the structure of the provided [frontend.config.json](/frontend.config.json) and [frontend.theme.json](/frontend.theme.json) to create your own files.
+
+YAML syntax is also supported. Set `FRONTEND_CONFIG_FILE=frontend.config.yaml` in your environment.
 
 ### Loggers configuration
 
@@ -127,11 +131,15 @@ Providing a file called _loggers.json_ at the root of the project, locally or in
 
 The `loggers.example.json` file in the root directory showcases the example of configuration structure for the one or multiple loggers. `logger.service.ts` file contains the configuration handling process logic, and `src/loggers/loggingProviders/grayLogger.ts` includes actual usecase of grayLogger.
 
+YAML syntax is also supported. Set `LOGGERS_CONFIG_FILE=loggers.yaml` in your environment.
+
 ### Proposal types configuration
 
 Providing a file called _proposalTypes.json_ at the root of the project, locally or in the container, will be automatically loaded into the application configuration service under property called `proposalTypes` and used for validation against proposal creation and update.
 
 The `proposalTypes.json.example` file in the root directory showcases the example of configuration structure for proposal types.
+
+YAML syntax is also supported. Set `PROPOSAL_TYPES_FILE=proposalTypes.yaml` in your environment.
 
 ### Dataset types configuration
 
@@ -144,6 +152,8 @@ The `datasetTypes.example.json` file in the root directory showcases an example 
 Providing a file called _publishedDataConfig.json_ at the root of the project, locally or in the container, will be automatically loaded into the application configuration service under property called `publishedDataConfig`. It will be used for published data metadata form generation in the frontend and metadata validation in publication and registration of the published data.
 
 The `publishedDataConfig.json.example` file in the root directory showcases the example of configuration structure for published data metadata.
+
+YAML syntax is also supported. Set `DATASET_TYPES_FILE=datasetTypes.yaml` in your environment.
 
 ## Environment variables
 
@@ -250,14 +260,14 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`STACK_VERSION` | string | Yes | Defines the Elasticsearch version to deploy | "8.8.2" |
 |`CLUSTER_NAME` | string | Yes | Sets the name of the Elasticsearch cluster | "es-cluster" |
 |`MEM_LIMIT`| string | Yes | Specifies the max memory for Elasticsearch container (or process) | "4G" |
-|`FRONTEND_CONFIG_FILE`| string | | The file name for frontend configuration, located in the`/src/config`directory by default. | "./src/config/frontend.config.json" |
-|`FRONTEND_THEME_FILE`| string | | The file name for frontend theme, located in the`/src/config`directory by default. | "./src/config/frontend.theme.json" |
-|`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |
-|`PROPOSAL_TYPES_FILE`| string | | The file name for proposal types configuration, located in the project root directory. | "proposalTypes.json" |
+|`FRONTEND_CONFIG_FILE`| string | | The file name for frontend configuration (yaml/json), located in the`/src/config`directory by default. | "./src/config/frontend.config.json" |
+|`FRONTEND_THEME_FILE`| string | | The file name for frontend theme (yaml/json), located in the`/src/config`directory by default. | "./src/config/frontend.theme.json" |
+|`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration (yaml/json), located in the project root directory. | "loggers.json" |
+|`PROPOSAL_TYPES_FILE`| string | | The file name for proposal types configuration (yaml/json), located in the project root directory. | "proposalTypes.json" |
 |`DATASET_TYPES_FILE`| string | | | "datasetTypes.json" |
 |`SWAGGER_PATH`| string | Yes | swaggerPath is the path where the swagger UI will be available. | "explorer"|
 |`MAX_FILE_UPLOAD_SIZE`| string | Yes | Maximum allowed file upload size. | "16mb"|
-|`FUNCTIONAL_ACCOUNTS_FILE`| string | Yes | The file name for functional accounts, relative to the project root directory | "functionalAccounts.json"|
+|`FUNCTIONAL_ACCOUNTS_FILE`| string | Yes | The file name for functional accounts (yaml/json), relative to the project root directory | "functionalAccounts.json"|
 |`JOB_CONFIGURATION_FILE`| string | Yes | Path of a job configuration file (conventionally`"jobConfig.yaml"`). If unset, jobs are disabled | |
 |`JOB_DEFAULT_STATUS_CODE`| string | Yes | Default statusCode for new jobs | "jobSubmitted" |
 |`JOB_DEFAULT_STATUS_MESSAGE` | string | Yes | Default statusMessage for new jobs | "Job submitted." |
