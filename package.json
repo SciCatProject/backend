@@ -71,7 +71,7 @@
     "luxon": "^3.2.1",
     "mathjs": "^15.0.0",
     "migrate-mongo": "^14.0.7",
-    "mongoose": "^8.20.3",
+    "mongoose": "^9.2.2",
     "node-fetch": "^3.3.0",
     "openid-client": "^5.1.8",
     "passport": "^0.7.0",
