@@ -1,14 +1,3 @@
-export type searchType =
-  | "text"
-  | "keyword"
-  | "long"
-  | "integer"
-  | "date"
-  | "boolean"
-  | "object"
-  | "flattened"
-  | "nested";
-
 export type ObjectType = {
   begin: string;
   end: string;

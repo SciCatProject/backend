@@ -5,14 +5,10 @@ import {
   Logger,
   OnModuleInit,
 } from "@nestjs/common";
+import { Client } from "@opensearch-project/opensearch";
 
-import { Client } from "@elastic/elasticsearch";
 import { SearchQueryService } from "./providers/query-builder.service";
-import {
-  SearchRequest,
-  AggregationsAggregate,
-  SortOrder,
-} from "@elastic/elasticsearch/lib/api/types";
+
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import {
   defaultElasticSettings,
@@ -32,6 +28,7 @@ import {
 } from "./helpers/utils";
 
 import { SortFields } from "./providers/fields.enum";
+import { SortOrder } from "@opensearch-project/opensearch/api/_types/ml._common";
 
 @Injectable()
 export class ElasticSearchService implements OnModuleInit {
@@ -105,7 +102,7 @@ export class ElasticSearchService implements OnModuleInit {
         username: this.username,
         password: this.password,
       },
-      tls: {
+      ssl: {
         rejectUnauthorized: false,
       },
     });
@@ -146,10 +143,10 @@ export class ElasticSearchService implements OnModuleInit {
         body: {
           settings: defaultElasticSettings,
           mappings: {
-            dynamic: true,
+            dynamic: "true",
             dynamic_templates: dynamic_template,
             numeric_detection: false,
-            date_detection: true,
+            date_detection: false,
             dynamic_date_formats: [
               "yyyy-MM-dd'T'HH:mm:ss|| yyyy-MM-dd HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss.SSSZ||yyyy-MM-dd'T'HH:mm:ss.SSS'Z'||yyyy-MM-dd'T'HH:mm:ss.SSS",
             ],
@@ -208,7 +205,6 @@ export class ElasticSearchService implements OnModuleInit {
 
       await this.esService.indices.putMapping({
         index,
-        dynamic: true,
         body: {
           properties: datasetMappings,
           dynamic_templates: dynamic_template,
@@ -270,14 +266,17 @@ export class ElasticSearchService implements OnModuleInit {
       const searchQuery = this.searchService.buildSearchQuery(searchParam);
       const searchOptions = {
         track_scores: true,
-        sort: [{ _score: { order: "desc" } }],
+        sort: [{ _score: { order: "desc" } }] as unknown as Record<
+          string,
+          unknown
+        >[],
         query: searchQuery.query,
         from: skip,
         size: limit,
         min_score: defaultMinScore,
         track_total_hits: true,
         _source: [""],
-      } as SearchRequest;
+      };
 
       if (!isSortEmpty) {
         const sortField = Object.keys(sort)[0];
@@ -312,11 +311,16 @@ export class ElasticSearchService implements OnModuleInit {
         }
       }
 
-      const body = await this.esService.search(searchOptions);
+      const body = (await this.esService.search({
+        index: this.defaultIndex,
+        body: searchOptions,
+      } as any)) as any;
 
-      const totalCount = body.hits.hits.length || 0;
+      console.log("---body---", body.body.hits);
 
-      const data = body.hits.hits.map((item) => item._id || "");
+      const totalCount = body.body.hits.hits.length || 0;
+
+      const data = body.body.hits.hits.map((item: any) => item._id || "");
       return {
         totalCount,
         data,
@@ -339,13 +343,14 @@ export class ElasticSearchService implements OnModuleInit {
         size: 0,
         aggs: facetPipeline,
         _source: [""],
-      } as SearchRequest;
+      };
 
-      const body = await this.esService.search(searchOptions);
+      const body = (await this.esService.search({
+        index: this.defaultIndex,
+        body: searchOptions,
+      } as any)) as any;
 
-      const transformedFacets = transformFacets(
-        body.aggregations as AggregationsAggregate,
-      );
+      const transformedFacets = transformFacets(body.aggregations || {});
 
       return transformedFacets;
     } catch (error) {
@@ -370,7 +375,7 @@ export class ElasticSearchService implements OnModuleInit {
       await this.esService.index({
         index: this.defaultIndex,
         id: data.pid,
-        document: transformedData,
+        body: transformedData,
         refresh: this.refresh,
       });
 
