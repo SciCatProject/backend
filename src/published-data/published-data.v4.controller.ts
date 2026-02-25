@@ -6,6 +6,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -26,6 +27,7 @@ import {
 } from "@nestjs/swagger";
 import { Request } from "express";
 import { Validator } from "jsonschema";
+import { cloneDeep, isArray } from "lodash";
 import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
@@ -568,6 +570,7 @@ export class PublishedDataV4Controller {
     publishedData.status = data.status;
 
     await this.validateMetadata(publishedData.metadata);
+    await this.tryAddDateIssued(publishedData, publishedData.registeredTime);
 
     await Promise.all(
       publishedData.datasetPids.map(async (pid) => {
@@ -625,7 +628,11 @@ export class PublishedDataV4Controller {
 
     const res = await this.publishedDataService.update(
       { doi: publishedData.doi },
-      { status: PublishedDataStatus.REGISTERED, registeredTime: new Date() },
+      {
+        status: PublishedDataStatus.REGISTERED,
+        registeredTime: publishedData.registeredTime,
+        metadata: publishedData.metadata,
+      },
     );
 
     return res;
@@ -776,5 +783,31 @@ export class PublishedDataV4Controller {
     };
 
     return registrationData;
+  }
+
+  private async tryAddDateIssued(
+    publishedData: PublishedData,
+    registeredTime: Date,
+  ) {
+    const originalMetadata = cloneDeep(publishedData.metadata);
+    try {
+      if (!publishedData.metadata) publishedData.metadata = {};
+      publishedData.metadata.dates = publishedData.metadata.dates ?? [];
+
+      if (
+        isArray(publishedData.metadata.dates) &&
+        !publishedData.metadata.dates.some((d) => d.dateType === "Issued")
+      ) {
+        publishedData.metadata.dates.push({
+          date: registeredTime.toISOString(),
+          dateType: "Issued",
+        });
+      }
+      await this.validateMetadata(publishedData.metadata);
+    } catch (validationError) {
+      // Restore original metadata if schema doesn't support DataCite dates
+      publishedData.metadata = originalMetadata;
+      Logger.warn(validationError, "failed to add data issued to metadata");
+    }
   }
 }
