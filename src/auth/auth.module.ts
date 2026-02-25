@@ -8,37 +8,31 @@ import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { LdapStrategy } from "./strategies/ldap.strategy";
 import { ConfigService } from "@nestjs/config";
-import { UsersService } from "src/users/users.service";
 import { OidcConfig } from "src/config/configuration";
-import { BuildOpenIdClient, OidcStrategy } from "./strategies/oidc.strategy";
+import { OidcStrategy } from "./strategies/oidc.strategy";
 import { accessGroupServiceFactory } from "./access-group-provider/access-group-service-factory";
-import { AccessGroupService } from "./access-group-provider/access-group.service";
 import { CaslModule } from "src/casl/casl.module";
 import { SessionMiddleware } from "./middlewares/session.middleware";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
+import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 
 const OidcStrategyFactory = {
   provide: "OidcStrategy",
   useFactory: async (
-    authService: AuthService,
+    oidcClientService: OidcClientService,
+    oidcAuthService: OidcAuthService,
     configService: ConfigService,
-    userService: UsersService,
-    accessGroupService: AccessGroupService,
   ) => {
     if (!configService.get<OidcConfig>("oidc")?.issuer) {
       return null;
     }
-    const clientBuilder = new BuildOpenIdClient(configService);
-    const client = await clientBuilder.build();
-    const strategy = new OidcStrategy(
-      authService,
-      client,
-      configService,
-      userService,
-      accessGroupService,
-    );
+
+    const client = await oidcClientService.getClient();
+
+    const strategy = new OidcStrategy(client, configService, oidcAuthService);
     return strategy;
   },
-  inject: [AuthService, ConfigService, UsersService, AccessGroupService],
+  inject: [OidcClientService, OidcAuthService, ConfigService],
 };
 
 @Module({

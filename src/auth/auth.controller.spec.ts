@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { Response } from "express";
 import { Session } from "express-session";
 import { ConfigService } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 class AuthServiceMock {
   login() {
@@ -29,6 +30,17 @@ describe("AuthController", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot({
+          throttlers: [
+            {
+              name: "login",
+              ttl: 1000,
+              limit: 1,
+            },
+          ],
+        }),
+      ],
       controllers: [AuthController],
       providers: [
         ConfigService,

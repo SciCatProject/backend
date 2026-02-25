@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { compare } from "bcrypt";
@@ -7,16 +13,20 @@ import { UsersService } from "../users/users.service";
 import { Request } from "express";
 import { OidcConfig } from "src/config/configuration";
 import { flattenObject, parseBoolean } from "src/common/utils";
-import { Issuer } from "openid-client";
+import { Issuer, TokenSet } from "openid-client";
 import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
+import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,
+    private oidcClientService: OidcClientService,
+    private oidcAuthService: OidcAuthService,
     private jwtService: JwtService,
   ) {}
 
@@ -45,6 +55,34 @@ export class AuthService {
     const expiresIn = this.configService.get<number>("jwt.expiresIn");
     const accessToken = this.jwtService.sign(user, { expiresIn });
     await this.postLoginTasks(user);
+    return {
+      access_token: accessToken,
+      id: accessToken,
+      expires_in: expiresIn,
+      ttl: expiresIn,
+      created: new Date().toISOString(),
+      userId: user._id,
+      user: user as ReturnedUserDto,
+    };
+  }
+
+  async oidcTokenLogin(idToken: string): Promise<ReturnedAuthLoginDto> {
+    let tokenSet: TokenSet;
+    const client = await this.oidcClientService.getClient();
+    const callbackUrl = this.configService.get<string>("oidc.callbackURL");
+
+    try {
+      tokenSet = await client.callback(callbackUrl, { id_token: idToken }, {});
+    } catch (error) {
+      throw new UnauthorizedException(
+        `Invalid idToken: ${(error as Error).message}`,
+      );
+    }
+    const user = await this.oidcAuthService.validate(tokenSet);
+    const expiresIn = this.configService.get<number>("jwt.expiresIn");
+    const accessToken = this.jwtService.sign(user, { expiresIn });
+    await this.postLoginTasks(user);
+
     return {
       access_token: accessToken,
       id: accessToken,
