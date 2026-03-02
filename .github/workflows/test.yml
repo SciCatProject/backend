@@ -131,6 +131,7 @@ jobs:
       - name: API tests
         env:
           ELASTICSEARCH_ENABLED: ${{ matrix.elasticsearch_enabled }}
+          COMPOSE_PROFILES: ${{ matrix.elasticsearch_enabled == 'yes' && 'elasticsearch' || ''}}
           CLUSTER_NAME: es-cluster
           ES_PASSWORD: duo-password
           MEM_LIMIT: 4G

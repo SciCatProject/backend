@@ -938,6 +938,7 @@ export class CaslAbilityFactory {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   metadataKeysEndpointAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
