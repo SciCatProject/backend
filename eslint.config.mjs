@@ -73,8 +73,8 @@ export default [
       ],
 
       "@typescript-eslint/no-unused-vars": [
-        "warn",
-        { "argsIgnorePattern": "^_" },
+        "error",
+        { argsIgnorePattern: "^_" },
       ],
     },
   },
