@@ -32,7 +32,7 @@ import { SortOrder } from "@opensearch-project/opensearch/api/_types/ml._common"
 
 @Injectable()
 export class ElasticSearchService implements OnModuleInit {
-  private esService: Client;
+  private osService: Client;
   private host: string;
   private username: string;
   private password: string;
@@ -81,6 +81,7 @@ export class ElasticSearchService implements OnModuleInit {
     try {
       await this.retryConnection(3, 3000);
       const isIndexExists = await this.isIndexExists(this.defaultIndex);
+
       if (!isIndexExists) {
         await this.createIndex(this.defaultIndex);
         Logger.log(
@@ -106,8 +107,10 @@ export class ElasticSearchService implements OnModuleInit {
         rejectUnauthorized: false,
       },
     });
+
     await connection.ping();
-    this.esService = connection;
+
+    this.osService = connection;
   }
   private async retryConnection(maxRetries: number, interval: number) {
     let retryCount = 0;
@@ -131,14 +134,14 @@ export class ElasticSearchService implements OnModuleInit {
   }
 
   async isIndexExists(index = this.defaultIndex) {
-    return await this.esService.indices.exists({
+    return await this.osService.indices.exists({
       index,
     });
   }
 
   async createIndex(index = this.defaultIndex) {
     try {
-      await this.esService.indices.create({
+      await this.osService.indices.create({
         index,
         body: {
           settings: defaultElasticSettings,
@@ -167,7 +170,7 @@ export class ElasticSearchService implements OnModuleInit {
     }
   }
   async syncDatabase(collection: DatasetClass[], index = this.defaultIndex) {
-    const indexExists = await this.esService.indices.exists({ index });
+    const indexExists = await this.osService.indices.exists({ index });
     if (!indexExists) {
       throw new Error("Index not found");
     }
@@ -184,7 +187,7 @@ export class ElasticSearchService implements OnModuleInit {
 
   async getCount(index = this.defaultIndex) {
     try {
-      return await this.esService.count({ index });
+      return await this.osService.count({ index });
     } catch (error) {
       throw new HttpException(
         `getCount failed-> ElasticSearchService ${error}`,
@@ -195,15 +198,15 @@ export class ElasticSearchService implements OnModuleInit {
 
   async updateIndex(index = this.defaultIndex) {
     try {
-      await this.esService.indices.close({
+      await this.osService.indices.close({
         index,
       });
-      await this.esService.indices.putSettings({
+      await this.osService.indices.putSettings({
         index,
         body: { settings: defaultElasticSettings },
       });
 
-      await this.esService.indices.putMapping({
+      await this.osService.indices.putMapping({
         index,
         body: {
           properties: datasetMappings,
@@ -211,7 +214,7 @@ export class ElasticSearchService implements OnModuleInit {
         },
       });
 
-      await this.esService.indices.open({
+      await this.osService.indices.open({
         index,
       });
       Logger.log(
@@ -228,7 +231,7 @@ export class ElasticSearchService implements OnModuleInit {
 
   async getIndexSettings(index = this.defaultIndex) {
     try {
-      return await this.esService.indices.getSettings({ index });
+      return await this.osService.indices.getSettings({ index });
     } catch (error) {
       throw new HttpException(
         `getIndexSettings failed-> ElasticSearchService ${error}`,
@@ -239,7 +242,7 @@ export class ElasticSearchService implements OnModuleInit {
 
   async deleteIndex(index = this.defaultIndex) {
     try {
-      await this.esService.indices.delete({ index });
+      await this.osService.indices.delete({ index });
       Logger.log(
         `Elasticsearch Index Deleted-> Index: ${index} `,
         "Elasticsearch",
@@ -311,7 +314,7 @@ export class ElasticSearchService implements OnModuleInit {
         }
       }
 
-      const body = (await this.esService.search({
+      const body = (await this.osService.search({
         index: this.defaultIndex,
         body: searchOptions,
       } as any)) as any;
@@ -345,7 +348,7 @@ export class ElasticSearchService implements OnModuleInit {
         _source: [""],
       };
 
-      const body = (await this.esService.search({
+      const body = (await this.osService.search({
         index: this.defaultIndex,
         body: searchOptions,
       } as any)) as any;
@@ -372,7 +375,7 @@ export class ElasticSearchService implements OnModuleInit {
       scientificMetadata: transformedScientificMetadata,
     };
     try {
-      await this.esService.index({
+      await this.osService.index({
         index: this.defaultIndex,
         id: data.pid,
         body: transformedData,
@@ -393,7 +396,7 @@ export class ElasticSearchService implements OnModuleInit {
 
   async deleteDocument(id: string) {
     try {
-      await this.esService.delete({
+      await this.osService.delete({
         index: this.defaultIndex,
         id,
         refresh: this.refresh,
@@ -413,7 +416,7 @@ export class ElasticSearchService implements OnModuleInit {
   // *** NOTE: below are helper methods ***
 
   async performBulkOperation(collection: DatasetClass[], index: string) {
-    const result = await this.esService.helpers.bulk({
+    const result = await this.osService.helpers.bulk({
       retries: 5,
       wait: 10000,
       datasource: collection,

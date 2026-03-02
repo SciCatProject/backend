@@ -3,7 +3,7 @@ services:
   mongodb:
     image: mongo:latest
     volumes:
-      - "mongodb_data://data/db"
+      - "mongodb_data:/data/db"
     ports:
       - "27017:27017"
   # scichat-loopback:
@@ -36,7 +36,6 @@ services:
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS}
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
-      - DISABLE_INSTALL_DEMO_CONFIG=false
     volumes:
       - opensearch_data:/usr/share/opensearch/data
     mem_limit: ${MEM_LIMIT}
