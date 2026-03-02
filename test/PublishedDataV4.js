@@ -88,6 +88,9 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .then((res) => {
         res.body.should.have.property("title").and.be.string;
         res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(publishedData.metadata.publicationYear);
         res.body.metadata.should.have.property("publisher");
         res.body.should.have.property("status").and.equal(defaultStatus);
         doi = encodeURIComponent(res.body["doi"]);
