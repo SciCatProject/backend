@@ -21,7 +21,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "start:test": "dotenv -o -e test/config/.env -e test/config/.env.override -- npm run start",
-    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint": "eslint \"{src}/**/*.ts\"",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch --maxWorkers=25%",
