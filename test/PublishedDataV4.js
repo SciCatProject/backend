@@ -1,16 +1,17 @@
 "use strict";
+const { cloneDeep } = require("lodash");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 const sandbox = require("sinon").createSandbox();
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   idOrigDatablock = null,
   pid = null,
   pidnonpublic = null,
   attachmentId = null,
-  doi = null;
+  doi = null,
+  doi2 = null;
 
 const publishedData = { ...TestData.PublishedDataV4 };
 
@@ -88,9 +89,97 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .then((res) => {
         res.body.should.have.property("title").and.be.string;
         res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(publishedData.metadata.publicationYear);
         res.body.metadata.should.have.property("publisher");
         res.body.should.have.property("status").and.equal(defaultStatus);
         doi = encodeURIComponent(res.body["doi"]);
+      });
+  });
+
+  it("0016: publicationYear should default to the current year", async () => {
+    const payload = cloneDeep(publishedData);
+    delete payload.metadata.publicationYear;
+    delete payload.metadata.publisher;
+    return request(appUrl)
+      .post("/api/v4/PublishedData")
+      .send(payload)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("title").and.be.string;
+        res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(new Date().getFullYear());
+        res.body.should.have.property("status").and.equal(defaultStatus);
+        doi2 = encodeURIComponent(res.body["doi"]);
+      });
+  });
+
+  it("0017: should not be able to publish if metadata is invalid", async () => {
+    return request(appUrl)
+      .post("/api/v4/PublishedData/" + doi2 + "/publish")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("length").and.equal(1);
+        res.body[0].should.have
+          .property("message")
+          .and.equal("must have required property 'publisher'");
+      });
+  });
+
+  it("0018: should be able to overwrite publicationYear", async () => {
+    return request(appUrl)
+      .patch("/api/v4/PublishedData/" + doi2)
+      .send(modifiedPublishedData)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(publishedData.metadata.publicationYear);
+        res.body.metadata.publisher.should.have
+          .property("name")
+          .and.equal("ESS");
+        res.body.metadata.publisher.should.have
+          .property("publisherIdentifierScheme")
+          .and.equal("testSchemeUpdated");
+        res.body.should.have.property("status").and.equal(defaultStatus);
+      });
+  });
+
+  it("0019: publicationYear should default to current year if removed by update", async () => {
+    const payload = cloneDeep(modifiedPublishedData);
+    delete payload.metadata.publicationYear;
+    return request(appUrl)
+      .patch("/api/v4/PublishedData/" + doi2)
+      .send(payload)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(new Date().getFullYear());
+        res.body.metadata.publisher.should.have
+          .property("name")
+          .and.equal("ESS");
+        res.body.metadata.publisher.should.have
+          .property("publisherIdentifierScheme")
+          .and.equal("testSchemeUpdated");
+        res.body.should.have.property("status").and.equal(defaultStatus);
       });
   });
 
@@ -111,7 +200,7 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.be.instanceof(Array).and.to.have.length(1);
+        res.body.should.be.instanceof(Array).and.to.have.length(2);
       });
   });
 
