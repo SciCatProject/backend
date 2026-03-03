@@ -43,7 +43,7 @@ jobs:
       - name: Download the Swagger schema
         run: curl -o ./swagger-schema.json http://localhost:3000/explorer-json
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: swagger-schema-${{ github.sha }}
           path: ./swagger-schema.json
@@ -81,7 +81,7 @@ jobs:
             fi
             )
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'push'
         with:
           name: sdk-${{ matrix.generator }}-${{ github.sha }}
