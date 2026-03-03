@@ -1,20 +1,18 @@
-//import { AccessGroupService as AccessGroupService } from "./access-group.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { UserPayload } from "../interfaces/userPayload.interface";
 import { AccessGroupService } from "./access-group.service";
-import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 
 /**
- * This service is used to get the access groups from the payload of the IDP.
+ * This service is used to get the access groups from the payload of the ldap IDP.
  */
 @Injectable()
-export class AccessGroupFromPayloadService extends AccessGroupService {
+export class AccessGroupFromLdapService extends AccessGroupService {
   constructor(private configService: ConfigService) {
     super();
   }
 
   async getAccessGroups(userPayload: UserPayload): Promise<string[]> {
-    //const defaultAccessGroups: string[] = [];
     let accessGroups: string[] = [];
 
     const accessGroupsProperty = userPayload.accessGroupProperty;
@@ -24,15 +22,18 @@ export class AccessGroupFromPayloadService extends AccessGroupService {
         payload !== undefined &&
         Array.isArray(payload[accessGroupsProperty])
       ) {
-        for (var group of payload[accessGroupsProperty]) {
-          if (typeof group === "string") {
-            accessGroups.push(group);
+        for (const group of payload[accessGroupsProperty]) {
+          if (
+              typeof group === "object" &&
+              "cn" in group &&
+              typeof group["cn"] === "string"
+          ) {
+            accessGroups.push(group["cn"]);
           }
         }
       }
-      Logger.log(accessGroups, "AccessGroupFromPayloadService");
+      Logger.log(accessGroups, "AccessGroupFromLdapService");
     }
-
     return accessGroups;
   }
 }
