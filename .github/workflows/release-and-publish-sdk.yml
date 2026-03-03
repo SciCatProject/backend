@@ -164,7 +164,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: swagger-schema-${{ github.sha }}
           path: .
@@ -213,7 +213,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Download TypeScript SDK Artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: sdk-${{ matrix.sdk_type }}-${{ github.sha }}
           path: ./sdk
@@ -253,7 +253,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Download Python SDK Artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: sdk-${{ matrix.sdk_type }}-${{ github.sha }}
           path: ./sdk
