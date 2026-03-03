@@ -25,7 +25,6 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { Validator } from "jsonschema";
 import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
@@ -36,6 +35,7 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { ILimitsFilter } from "src/common/interfaces/common.interface";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
@@ -50,14 +50,14 @@ import {
   IRegister,
   PublishedDataStatus,
 } from "./interfaces/published-data.interface";
+import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { RegisteredFilterPipe } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
 import {
   PublishedData,
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
-import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
-import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { ValidatorService } from "./validator.service";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -77,6 +77,7 @@ export class PublishedDataV4Controller {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
+    private validatorService: ValidatorService,
   ) {}
 
   @AllowAny()
@@ -94,6 +95,7 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
+    await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
@@ -372,6 +374,7 @@ export class PublishedDataV4Controller {
       }
     }
 
+    await this.validatorService.validate(updatePublishedDataDto);
     return this.publishedDataService.update(
       { doi: id },
       updatePublishedDataDto,
@@ -408,7 +411,11 @@ export class PublishedDataV4Controller {
       );
     }
 
-    await this.validateMetadata(publishedData.metadata);
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
+    }
 
     // Make datasets in publishedData datasetPids array public
     const datasetPids = publishedData.datasetPids;
@@ -474,29 +481,6 @@ export class PublishedDataV4Controller {
       { doi: id },
       { status: PublishedDataStatus.AMENDED },
     );
-  }
-
-  async validateMetadata(metadata?: object) {
-    const validator = new Validator();
-    const metadataConfig = await this.getConfig();
-    if (!metadataConfig?.metadataSchema) {
-      throw new HttpException(
-        "Published data schema is not defined in the configuration.",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const validationResult = validator.validate(
-      metadata,
-      metadataConfig.metadataSchema,
-    );
-
-    if (!validationResult.valid) {
-      throw new HttpException(
-        validationResult.errors.map((error) => error.stack),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
   }
 
   // DELETE /publisheddata/:id
@@ -567,7 +551,11 @@ export class PublishedDataV4Controller {
     publishedData.registeredTime = data.registeredTime;
     publishedData.status = data.status;
 
-    await this.validateMetadata(publishedData.metadata);
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
+    }
 
     await Promise.all(
       publishedData.datasetPids.map(async (pid) => {
