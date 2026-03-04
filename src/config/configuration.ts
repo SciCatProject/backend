@@ -372,16 +372,22 @@ const configuration = () => {
       username: process.env.RABBITMQ_USERNAME,
       password: process.env.RABBITMQ_PASSWORD,
     },
-    elasticSearch: {
-      enabled: process.env.ELASTICSEARCH_ENABLED ?? "no",
-      username: process.env.ES_USERNAME,
-      password: process.env.ES_PASSWORD,
-      host: process.env.ES_HOST,
-      refresh: process.env.ES_REFRESH,
-      maxResultWindow: parseInt(process.env.ES_MAX_RESULT || "100000", 10),
-      fieldsLimit: parseInt(process.env.ES_FIELDS_LIMIT || "100000", 10),
+    opensearch: {
+      enabled: process.env.OPENSEARCH_ENABLED ?? "no",
+      username: process.env.OPENSEARCH_USERNAME ?? "admin",
+      password: process.env.OPENSEARCH_PASSWORD,
+      host: process.env.OPENSEARCH_HOST,
+      refresh: process.env.OPENSEARCH_REFRESH,
+      maxResultWindow: parseInt(
+        process.env.OPENSEARCH_MAX_RESULT || "100000",
+        10,
+      ),
+      fieldsLimit: parseInt(
+        process.env.OPENSEARCH_FIELDS_LIMIT || "100000",
+        10,
+      ),
       mongoDBCollection: process.env.MONGODB_COLLECTION,
-      defaultIndex: process.env.ES_INDEX ?? "dataset",
+      defaultIndex: process.env.OPENSEARCH_INDEX ?? "dataset",
     },
     metrics: {
       // Note: `process.env.METRICS_ENABLED` is directly used for conditional module loading in

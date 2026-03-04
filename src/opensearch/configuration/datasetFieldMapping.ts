@@ -5,23 +5,11 @@ export const datasetMappings: MappingObject = {
     type: "text",
     analyzer: "autocomplete",
     search_analyzer: "autocomplete_search",
-    fields: {
-      keyword: {
-        type: "keyword",
-        ignore_above: 256,
-      },
-    },
   },
   datasetName: {
     type: "text",
     analyzer: "autocomplete",
     search_analyzer: "autocomplete_search",
-    fields: {
-      keyword: {
-        type: "keyword",
-        ignore_above: 256,
-      },
-    },
   },
   pid: {
     type: "keyword",
@@ -33,15 +21,11 @@ export const datasetMappings: MappingObject = {
   endTime: {
     type: "date",
   },
-  scientificMetadata: {
-    type: "nested",
-    dynamic: true,
-    properties: {},
-  },
-  history: {
-    type: "nested",
-    dynamic: false,
-  },
+  // scientificMetadata: {
+  //   type: "nested",
+  //   dynamic: true,
+  //   properties: {},
+  // },
   proposalIds: {
     type: "keyword",
     ignore_above: 256,
