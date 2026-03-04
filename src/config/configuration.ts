@@ -289,6 +289,14 @@ const configuration = () => {
       enabled: boolean(process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false),
       accessGroupProperty: process.env?.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
     },
+    accessGroupsRestConfig: {
+      enabled: boolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
+      authKey:
+        process.env?.ACCESS_GROUPS_SERVICE_REST_AUTH_KEY || "Authorization",
+      token: process.env.ACCESS_GROUPS_SERVICE_REST_AUTH_VALUE,
+      apiUrl: process.env.ACCESS_GROUPS_SERVICE_REST_API_URL,
+      userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
+    },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {
       secret: process.env.EXPRESS_SESSION_SECRET,
