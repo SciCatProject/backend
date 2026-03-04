@@ -13,6 +13,7 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
@@ -58,6 +59,7 @@ import {
 } from "./schemas/published-data.schema";
 import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { FastResponseInterceptor } from "./interceptors/fast-response.interceptor";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -116,6 +118,7 @@ export class PublishedDataV4Controller {
     isArray: true,
     description: "Results with a published documents array",
   })
+  @UseInterceptors(new FastResponseInterceptor())
   async findAll(
     @Req() request: Request,
     @Query(...V4_FILTER_PIPE, RegisteredFilterPipe)
@@ -307,6 +310,7 @@ export class PublishedDataV4Controller {
     status: HttpStatus.NOT_FOUND,
     description: "PublishedData not found",
   })
+  @UseInterceptors(new FastResponseInterceptor())
   @Get("/:id")
   async findOne(
     @Req() request: Request,
@@ -334,6 +338,7 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return updated published data with id specified",
   })
+  @UseInterceptors(new FastResponseInterceptor())
   @Patch("/:id")
   async update(
     @Req() request: Request,
@@ -389,6 +394,7 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return published data with id specified after publishing",
   })
+  @UseInterceptors(new FastResponseInterceptor())
   @Post("/:id/publish")
   async publish(
     @Req() request: Request,
@@ -437,6 +443,7 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return amended data with id specified",
   })
+  @UseInterceptors(new FastResponseInterceptor())
   @Post("/:id/amend")
   async amend(
     @Req() request: Request,
@@ -504,6 +511,7 @@ export class PublishedDataV4Controller {
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
     ability.can(Action.Delete, PublishedData),
   )
+  @UseInterceptors(new FastResponseInterceptor())
   @Delete("/:id")
   async remove(
     @Req() request: Request,
@@ -547,6 +555,7 @@ export class PublishedDataV4Controller {
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
     ability.can(Action.Update, PublishedData),
   )
+  @UseInterceptors(new FastResponseInterceptor())
   @Post("/:id/register")
   async register(
     @Req() request: Request,
