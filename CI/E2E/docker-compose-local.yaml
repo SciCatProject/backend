@@ -6,22 +6,23 @@ services:
       - "mongodb_data:/data/db"
     ports:
       - "27017:27017"
-  # scichat-loopback:
-  #   image: dacat/scichat-loopback:e2e
-  #   command:
-  #     [
-  #       "./wait-for-it.sh",
-  #       "mongodb:27017",
-  #       "--",
-  #       "node",
-  #       "-r",
-  #       "dotenv/config",
-  #       "."
-  #     ]
-  #   volumes:
-  #     - ".env.scichat-loopback:/home/node/app/.env"
-  #   depends_on:
-  #     - mongodb
+      
+  scichat-loopback:
+    image: dacat/scichat-loopback:e2e
+    command:
+      [
+        "./wait-for-it.sh",
+        "mongodb:27017",
+        "--",
+        "node",
+        "-r",
+        "dotenv/config",
+        "."
+      ]
+    volumes:
+      - ".env.scichat-loopback:/home/node/app/.env"
+    depends_on:
+      - mongodb
 
   opensearch:
     depends_on:
@@ -55,7 +56,7 @@ services:
     environment:
       - OPENSEARCH_HOSTS=https://opensearch:9200
       - OPENSEARCH_USERNAME=admin
-      - OPENSEARCH_PASSWORD=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
       - OPENSEARCH_SSL_VERIFICATIONMODE=none
 
 volumes:
