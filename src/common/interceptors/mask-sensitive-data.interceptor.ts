@@ -16,14 +16,18 @@ import { UsersModule } from "src/users/users.module";
 
 @Injectable()
 class MaskSensitiveDataInterceptor implements NestInterceptor {
-  adminGroups: string[] | undefined;
+  private allowedGroups: Set<string> = new Set();
 
   constructor(
     private readonly configService: ConfigService,
     private userIdentitiesService: UserIdentitiesService,
   ) {
-    this.adminGroups =
-      this.configService.get<AccessGroupsType>("accessGroups")?.admin;
+    const adminGroups =
+      this.configService.get<AccessGroupsType>("accessGroups")?.admin || [];
+    const createPriviligedGroups =
+      this.configService.get<AccessGroupsType>("accessGroups")
+        ?.createDatasetPrivileged || [];
+    this.allowedGroups = new Set([...adminGroups, ...createPriviligedGroups]);
   }
 
   private _maskSensitiveData<T>(
@@ -123,7 +127,7 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
     const user = request.user;
     if (
       user?.currentGroups?.some((group: string) =>
-        this.adminGroups?.includes(group),
+        this.allowedGroups.has(group),
       )
     )
       return next.handle();
