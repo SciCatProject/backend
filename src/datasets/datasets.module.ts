@@ -11,7 +11,6 @@ import { InitialDatasetsModule } from "src/initial-datasets/initial-datasets.mod
 import { LogbooksModule } from "src/logbooks/logbooks.module";
 import { PoliciesService } from "src/policies/policies.service";
 import { PoliciesModule } from "src/policies/policies.module";
-import { ElasticSearchModule } from "src/elastic-search/elastic-search.module";
 import { DatasetsV4Controller } from "./datasets.v4.controller";
 import { DatasetsPublicV4Controller } from "./datasets-public.v4.controller";
 import { DatasetsAccessService } from "./datasets-access.service";
@@ -25,6 +24,7 @@ import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plug
 import { ProposalsModule } from "src/proposals/proposals.module";
 import { HistoryModule } from "src/history/history.module";
 import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
+import { OpensearchModule } from "src/opensearch/opensearch.module";
 
 @Module({
   imports: [
@@ -35,7 +35,7 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
     InitialDatasetsModule,
     HistoryModule,
     MetadataKeysModule,
-    ElasticSearchModule,
+    OpensearchModule,
     ProposalsModule,
     forwardRef(() => LogbooksModule),
     MongooseModule.forFeatureAsync([
