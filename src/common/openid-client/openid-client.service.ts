@@ -42,10 +42,19 @@ export class OidcClientService {
         `${this.oidcConfig.issuer}/.well-known/openid-configuration`,
       );
 
-      this.client = new issuer.Client({
-        client_id: this.oidcConfig.clientID,
-        client_secret: this.oidcConfig.clientSecret,
-      });
+      this.client = new issuer.Client(
+        {
+          client_id: this.oidcConfig.clientID,
+          client_secret: this.oidcConfig.clientSecret,
+        },
+        undefined, // use issuer's JWKS
+        this.oidcConfig.additionalAuthorizedParties?.length
+          ? {
+              additionalAuthorizedParties:
+                this.oidcConfig.additionalAuthorizedParties,
+            }
+          : undefined,
+      );
 
       return this.client;
     } catch (err) {
