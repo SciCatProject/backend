@@ -168,7 +168,7 @@ export class DatasetsController {
 
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
+
     const canViewAccess = ability.can(
       Action.DatasetReadManyAccess,
       DatasetClass,
@@ -205,11 +205,6 @@ export class DatasetsController {
             },
           ];
         }
-      } else if (canViewOwner) {
-        mergedFilters.where = {
-          ...mergedFilters.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
       } else if (canViewPublic) {
         mergedFilters.where = {
           ...mergedFilters.where,
@@ -982,16 +977,9 @@ export class DatasetsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
       } else {
         fields.isPublished = true;
       }
@@ -1064,17 +1052,10 @@ export class DatasetsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
 
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
       } else {
         fields.isPublished = true;
       }
@@ -1135,31 +1116,15 @@ export class DatasetsController {
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
 
     if (!canViewAny && !fields.isPublished) {
-      // delete fields.isPublished;
 
       const canViewAccess = ability.can(
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-      // const canViewPublic = ability.can(
-      //   Action.DatasetReadManyPublic,
-      //   DatasetClass,
-      // );
 
       if (canViewAccess) {
         fields.userGroups?.push(...user.currentGroups);
-        // fields.sharedWith = user.email;
-        // fields.isPublished = true; //are they in or?
-      } else if (canViewOwner) {
-        fields.ownerGroup?.push(...user.currentGroups);
       }
-      // else if (canViewPublic) {
-      //   fields.isPublished = true;
-      // }
     }
 
     const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {

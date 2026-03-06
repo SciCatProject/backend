@@ -218,7 +218,6 @@ export class DatasetsV4Controller {
   ): IDatasetFiltersV4<DatasetDocument, IDatasetFields> {
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
     const canViewAccess = ability.can(
       Action.DatasetReadManyAccess,
       DatasetClass,
@@ -251,11 +250,6 @@ export class DatasetsV4Controller {
             },
           ];
         }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
       }
     }
 
@@ -495,17 +489,10 @@ export class DatasetsV4Controller {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
 
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
       }
     }
 
@@ -567,15 +554,9 @@ export class DatasetsV4Controller {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
 
       if (canViewAccess) {
         fields.userGroups?.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup?.push(...user.currentGroups);
       }
     }
 
