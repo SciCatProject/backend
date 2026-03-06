@@ -1,15 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { QueryDslQueryContainer } from "@elastic/elasticsearch/lib/api/types";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
-import {
-  IBoolShould,
-  IFilter,
-  IFullFacets,
-  IShould,
-  NumberRangeType,
-  ObjectType,
-  ScientificQuery,
-} from "../interfaces/es-common.type";
+import { NumberRangeType, ObjectType } from "../interfaces/os-common.type";
 import {
   FilterFields,
   MustFields,
@@ -17,9 +8,8 @@ import {
   ShouldFields,
 } from "./fields.enum";
 
-import { mapScientificQuery } from "src/common/utils";
-import { IScientificFilter } from "src/common/interfaces/common.interface";
-import { convertToElasticSearchQuery } from "../helpers/utils";
+import { AggregationContainer } from "@opensearch-project/opensearch/api/_types/_common.aggregations";
+import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl";
 
 @Injectable()
 export class SearchQueryService {
@@ -47,8 +37,8 @@ export class SearchQueryService {
       throw err;
     }
   }
-  private buildFilterFields(fields: Partial<IDatasetFields>): IFilter[] {
-    const filter: IFilter[] = [];
+  private buildFilterFields(fields: Partial<IDatasetFields>): QueryContainer[] {
+    const filter: QueryContainer[] = [];
 
     Object.entries(fields).forEach(([key, value]) => {
       if (this.shouldFields.includes(key as ShouldFields) || key === "text") {
@@ -62,8 +52,8 @@ export class SearchQueryService {
     return filter;
   }
 
-  private buildShouldFields(fields: Partial<IDatasetFields>) {
-    const shouldFilter: IShould[] = [];
+  private buildShouldFields(fields: Partial<IDatasetFields>): QueryContainer {
+    const shouldFilter = [];
     if (fields["sharedWith"]) {
       const termFilter = { terms: { sharedWith: fields["sharedWith"] } };
 
@@ -79,10 +69,8 @@ export class SearchQueryService {
     return { bool: { should: shouldFilter, minimum_should_match: 1 } };
   }
 
-  private buildTextQuery(
-    fields: Partial<IDatasetFields>,
-  ): QueryDslQueryContainer[] {
-    let wildcardQueries: QueryDslQueryContainer[] = [];
+  private buildTextQuery(fields: Partial<IDatasetFields>): QueryContainer[] {
+    let wildcardQueries: QueryContainer[] = [];
     const { text } = fields;
 
     //NOTE: if text field is present, we query both datasetName and description fields
@@ -103,7 +91,7 @@ export class SearchQueryService {
       .filter(Boolean);
   }
 
-  private buildWildcardQueries(text: string): QueryDslQueryContainer[] {
+  private buildWildcardQueries(text: string): QueryContainer[] {
     const terms = this.splitSearchText(text);
     return terms.flatMap((term) =>
       this.mustFields.map((fieldName) => ({
@@ -112,35 +100,17 @@ export class SearchQueryService {
     );
   }
 
-  private buildTermsFilter(fieldName: string, values: unknown) {
-    const filterArray: IFilter[] = [];
+  private buildTermsFilter(
+    fieldName: string,
+    values: unknown,
+  ): QueryContainer[] {
+    const filterArray: QueryContainer[] = [];
 
     if (Array.isArray(values) && values.length === 0) {
       return filterArray;
     }
 
     switch (fieldName) {
-      case FilterFields.ScientificMetadata:
-        const scientificFilterQuery = mapScientificQuery(
-          fieldName,
-          values as IScientificFilter[],
-        );
-
-        const esScientificFilterQuery = convertToElasticSearchQuery(
-          scientificFilterQuery as ScientificQuery,
-        );
-        filterArray.push({
-          nested: {
-            path: "scientificMetadata",
-            query: {
-              bool: {
-                must: esScientificFilterQuery,
-              },
-            },
-          },
-        });
-        break;
-
       case FilterFields.CreationTime:
         filterArray.push({
           range: {
@@ -209,9 +179,9 @@ export class SearchQueryService {
   }
 
   private constructFinalQuery(
-    filter: IFilter[],
-    should: IBoolShould,
-    query: QueryDslQueryContainer[],
+    filter: QueryContainer[],
+    should: QueryContainer,
+    query: QueryContainer[],
   ) {
     const finalQuery = {
       query: {
@@ -224,19 +194,19 @@ export class SearchQueryService {
     return finalQuery;
   }
 
-  public buildFullFacetPipeline(facetFields = this.facetFields) {
-    const pipeline: IFullFacets = {
+  public buildFullFacetPipeline(
+    facetFields = this.facetFields,
+  ): Record<string, AggregationContainer> {
+    const pipeline: Record<string, AggregationContainer> = {
       all: {
-        value_count: {
-          field: "pid",
-        },
+        value_count: { field: "pid" },
       },
     };
 
     for (const field of facetFields) {
       pipeline[field] = {
         terms: {
-          field: field,
+          field,
           order: {
             _count: "desc",
           },

@@ -17,7 +17,6 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { SubDatasetsPublicInterceptor } from "src/datasets/interceptors/datasets-public.interceptor";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
-import { ElasticSearchActions } from "./dto";
 import { CreateIndexDto } from "./dto/create-index.dto";
 import { DeleteIndexDto } from "./dto/delete-index.dto";
 import { GetIndexDto } from "./dto/get-index.dto";
@@ -25,20 +24,21 @@ import { GetIndexDto } from "./dto/get-index.dto";
 import { SearchDto } from "./dto/search.dto";
 import { SyncDatabaseDto } from "./dto/sync-data.dto";
 import { UpdateIndexDto } from "./dto/update-index.dto";
-import { ElasticSearchService } from "./elastic-search.service";
+import { OpensearchActions } from "./dto";
+import { OpensearchService } from "./opensearch.service";
 
 @ApiBearerAuth()
-@ApiTags("elastic-search")
-@Controller("elastic-search")
-export class ElasticSearchServiceController {
+@ApiTags("opensearch")
+@Controller("opensearch")
+export class OpensearchController {
   constructor(
-    private readonly elasticSearchService: ElasticSearchService,
+    private readonly opensearchService: OpensearchService,
     private readonly datasetService: DatasetsService,
   ) {}
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.CREATED)
   @ApiResponse({
@@ -49,12 +49,12 @@ export class ElasticSearchServiceController {
   async createIndex(@Query() { index }: CreateIndexDto) {
     const esIndex = index.trim();
 
-    return this.elasticSearchService.createIndex(esIndex);
+    return this.opensearchService.createIndex(esIndex);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
@@ -66,12 +66,12 @@ export class ElasticSearchServiceController {
     const esIndex = index.trim();
     const collectionData = await this.datasetService.getDatasetsWithoutId();
 
-    return this.elasticSearchService.syncDatabase(collectionData, esIndex);
+    return this.opensearchService.syncDatabase(collectionData, esIndex);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(SubDatasetsPublicInterceptor)
@@ -84,12 +84,12 @@ export class ElasticSearchServiceController {
   })
   @Post("/search")
   async fetchESResults(@Body() searchDto: IDatasetFields) {
-    return this.elasticSearchService.search(searchDto);
+    return this.opensearchService.search(searchDto);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
@@ -100,12 +100,12 @@ export class ElasticSearchServiceController {
   async deleteIndex(@Query() { index }: DeleteIndexDto) {
     const esIndex = index.trim();
 
-    return this.elasticSearchService.deleteIndex(esIndex);
+    return this.opensearchService.deleteIndex(esIndex);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
@@ -116,12 +116,12 @@ export class ElasticSearchServiceController {
   async getIndex(@Query() { index }: GetIndexDto) {
     const esIndex = index.trim();
 
-    return this.elasticSearchService.getIndexSettings(esIndex);
+    return this.opensearchService.getIndexSettings(esIndex);
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("elastic-search", (ability: AppAbility) =>
-    ability.can(Action.Manage, ElasticSearchActions),
+  @CheckPolicies("opensearch", (ability: AppAbility) =>
+    ability.can(Action.Manage, OpensearchActions),
   )
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
@@ -132,6 +132,6 @@ export class ElasticSearchServiceController {
   async updateIndex(@Query() { index }: UpdateIndexDto) {
     const esIndex = index.trim();
 
-    return this.elasticSearchService.updateIndex(esIndex);
+    return this.opensearchService.updateIndex(esIndex);
   }
 }

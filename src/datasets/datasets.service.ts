@@ -34,7 +34,6 @@ import {
   parsePipelineSort,
   decodeMetadataKeyStrings,
 } from "src/common/utils";
-import { ElasticSearchService } from "src/elastic-search/elastic-search.service";
 import { DatasetsAccessService } from "./datasets-access.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import {
@@ -63,10 +62,11 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { OpensearchService } from "src/opensearch/opensearch.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
-  private ESClient: ElasticSearchService | null;
+  private searchService: OpensearchService | null;
   constructor(
     private configService: ConfigService,
     @InjectModel(DatasetClass.name)
@@ -74,12 +74,12 @@ export class DatasetsService {
     @Inject(REQUEST) private request: Request,
 
     private datasetsAccessService: DatasetsAccessService,
-    private elasticSearchService: ElasticSearchService,
+    private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
   ) {
-    if (this.elasticSearchService.connected) {
-      this.ESClient = this.elasticSearchService;
+    if (this.opensearchService.connected) {
+      this.searchService = this.opensearchService;
     }
   }
 
@@ -186,8 +186,8 @@ export class DatasetsService {
 
     const savedDataset = await createdDataset.save();
 
-    if (this.ESClient && createdDataset) {
-      await this.ESClient.updateInsertDocument(savedDataset.toObject());
+    if (this.searchService && createdDataset) {
+      await this.searchService.updateInsertDocument(savedDataset.toObject());
     }
 
     if (savedDataset.proposalIds && savedDataset.proposalIds.length > 0) {
@@ -297,18 +297,21 @@ export class DatasetsService {
     // NOTE: if Elastic search DB is empty we should use default mongo query
     const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
 
-    if (!this.ESClient || isFieldsEmpty || !canPerformElasticSearchQueries) {
+    if (
+      !this.searchService ||
+      isFieldsEmpty ||
+      !canPerformElasticSearchQueries
+    ) {
       datasets = await this.datasetModel
         .find(whereClause, null, modifiers)
         .exec();
     } else {
-      const esResult = await this.ESClient.search(
+      const esResult = await this.searchService.search(
         filter.fields as IDatasetFields,
         modifiers.limit,
         modifiers.skip,
         modifiers.sort,
       );
-
       datasets = await this.datasetModel
         .find({ pid: { $in: esResult.data } })
         .sort(modifiers.sort)
@@ -333,7 +336,11 @@ export class DatasetsService {
     // NOTE: if Elastic search DB is empty we should use default mongo query
     const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
 
-    if (!this.ESClient || isFieldsEmpty || !canPerformElasticSearchQueries) {
+    if (
+      !this.searchService ||
+      isFieldsEmpty ||
+      !canPerformElasticSearchQueries
+    ) {
       const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
         this.datasetModel,
         "pid",
@@ -344,7 +351,7 @@ export class DatasetsService {
 
       data = await this.datasetModel.aggregate(pipeline).exec();
     } else {
-      const facetResult = await this.ESClient.aggregate(fields);
+      const facetResult = await this.searchService.aggregate(fields);
 
       data = facetResult;
     }
@@ -388,10 +395,10 @@ export class DatasetsService {
   ): Promise<{ count: number }> {
     const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
     let count = 0;
-    if (this.ESClient && !filter.where) {
+    if (this.searchService && !filter.where) {
       const totalDocCount = await this.datasetModel.countDocuments();
 
-      const { totalCount } = await this.ESClient.search(
+      const { totalCount } = await this.searchService.search(
         whereFilter as IDatasetFields,
         totalDocCount,
       );
@@ -438,8 +445,8 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.updateInsertDocument(updatedDataset.toObject());
+    if (this.searchService) {
+      await this.searchService.updateInsertDocument(updatedDataset.toObject());
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -484,8 +491,8 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.updateInsertDocument(patchedDataset.toObject());
+    if (this.searchService) {
+      await this.searchService.updateInsertDocument(patchedDataset.toObject());
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -507,8 +514,8 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.deleteDocument(id);
+    if (this.searchService) {
+      await this.searchService.deleteDocument(id);
     }
 
     if (deletedDataset?.proposalIds && deletedDataset.proposalIds.length > 0) {
@@ -600,8 +607,8 @@ export class DatasetsService {
   }
 
   async isElasticSearchDBEmpty() {
-    if (!this.ESClient) return;
-    const count = await this.ESClient.getCount();
-    return count.count > 0;
+    if (!this.searchService) return;
+    const count = await this.searchService.getCount();
+    return count.body.count > 0;
   }
 }
