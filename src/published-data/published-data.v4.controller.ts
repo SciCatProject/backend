@@ -58,6 +58,7 @@ import {
 } from "./schemas/published-data.schema";
 import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { cloneDeep } from "lodash";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -569,12 +570,18 @@ export class PublishedDataV4Controller {
 
     await this.validateMetadata(publishedData.metadata);
 
+    const mergePatchRequest = cloneDeep(request);
+    mergePatchRequest.headers["content-type"] = "application/merge-patch+json";
     await Promise.all(
       publishedData.datasetPids.map(async (pid) => {
-        await this.datasetsController.findByIdAndUpdate(request, pid, {
-          isPublished: true,
-          datasetlifecycle: { publishedOn: data.registeredTime },
-        });
+        await this.datasetsController.findByIdAndUpdate(
+          mergePatchRequest,
+          pid,
+          {
+            isPublished: true,
+            datasetlifecycle: { publishedOn: data.registeredTime },
+          },
+        );
       }),
     );
 
