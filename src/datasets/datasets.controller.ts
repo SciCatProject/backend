@@ -2620,8 +2620,7 @@ export class DatasetsController {
     );
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
-    const datablockBeforeUpdate = await this.datablocksService.findOne({
-      _id: did,
+    const datablockBeforeUpdate = await this.datablocksService.findOne({where: {_id: did,}
     });
     if (!datablockBeforeUpdate)
       throw new NotFoundException(`datablock: ${did} not found`);
