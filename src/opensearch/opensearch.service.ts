@@ -9,7 +9,6 @@ import { Client } from "@opensearch-project/opensearch";
 
 import { SearchQueryService } from "./providers/query-builder.service";
 
-import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import { defaultOpensearchSettings } from "./configuration/indexSetting";
 import { datasetMappings } from "./configuration/datasetFieldMapping";
 import {
@@ -18,11 +17,9 @@ import {
 } from "src/datasets/schemas/dataset.schema";
 import { ConfigService } from "@nestjs/config";
 import { sleep } from "src/common/utils";
-import { transformFacets } from "./helpers/utils";
 
-import { SortFields } from "./providers/fields.enum";
-import { SortOrder } from "@opensearch-project/opensearch/api/_types/ml._common";
 import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import { ISearchFilter } from "./interfaces/os-common.type";
 
 @Injectable()
 export class OpensearchService implements OnModuleInit {
@@ -230,16 +227,12 @@ export class OpensearchService implements OnModuleInit {
   }
 
   async search(
-    searchParam: IDatasetFields,
+    filter: ISearchFilter,
     limit = 20,
     skip = 0,
-    sort?: Record<string, SortOrder>,
   ): Promise<{ totalCount: number; data: (string | undefined)[] }> {
-    const defaultMinScore = searchParam.text ? 1 : 0;
-
     try {
-      // const isSortEmpty = !sort || JSON.stringify(sort) === "{}";
-      const searchQuery = this.searchService.buildSearchQuery(searchParam);
+      const searchQuery = this.searchService.buildSearchQuery(filter);
       const searchOptions = {
         track_scores: true,
         sort: [{ _score: { order: "desc" } }] as unknown as Record<
@@ -249,24 +242,10 @@ export class OpensearchService implements OnModuleInit {
         query: searchQuery.query,
         from: skip,
         size: limit,
-        min_score: defaultMinScore,
+        min_score: 1,
         track_total_hits: true,
         _source: [""],
       };
-
-      // if (!isSortEmpty) {
-      //   const sortField = Object.keys(sort)[0];
-      //   const sortDirection = Object.values(sort)[0];
-
-      //   // NOTE: To sort datasetName field we need to use datasetName.keyword field,
-      //   // as Opensearch does not have good support for text type field sorting
-      //   const isDatasetName = sortField === SortFields.DatasetName;
-      //   const fieldForSorting = isDatasetName
-      //     ? SortFields.DatasetNameKeyword
-      //     : sortField;
-
-      //   searchOptions.sort = [{ [fieldForSorting]: { order: sortDirection } }];
-      // }
 
       const { body } = await this.osClient.search({
         index: this.defaultIndex,
@@ -289,33 +268,6 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async aggregate(searchParam: IDatasetFields) {
-    try {
-      const searchQuery = this.searchService.buildSearchQuery(searchParam);
-      const facetPipeline = this.searchService.buildFullFacetPipeline();
-
-      const searchOptions = {
-        query: searchQuery.query,
-        size: 0,
-        aggs: facetPipeline,
-        _source: [""],
-      };
-
-      const { body } = await this.osClient.search({
-        index: this.defaultIndex,
-        body: searchOptions,
-      });
-
-      const transformedFacets = transformFacets(body.aggregations || {});
-
-      return transformedFacets;
-    } catch (error) {
-      throw new HttpException(
-        `SearchService || aggregate query issue || -> aggregate ${error}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
   async updateInsertDocument(data: Partial<DatasetDocument>) {
     //NOTE: Replace all keys with lower case, also replace spaces and dot with underscore
     delete data._id;

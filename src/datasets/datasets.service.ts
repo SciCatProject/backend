@@ -66,7 +66,7 @@ import { OpensearchService } from "src/opensearch/opensearch.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
-  private searchService: OpensearchService | null;
+  private searchService: OpensearchService | null = null;
   constructor(
     private configService: ConfigService,
     @InjectModel(DatasetClass.name)
@@ -78,6 +78,8 @@ export class DatasetsService {
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
   ) {
+    // TODO: Verify if this connection check is needed.
+    // OpenSearch should fallback to MongoDB if unavailable.
     if (this.opensearchService.connected) {
       this.searchService = this.opensearchService;
     }
@@ -277,8 +279,6 @@ export class DatasetsService {
     filter: IFilters<DatasetDocument, IDatasetFields>,
     extraWhereClause: FilterQuery<DatasetDocument> = {},
   ): Promise<DatasetDocument[] | null> {
-    let datasets;
-
     const filterQuery: FilterQuery<DatasetDocument> =
       createFullqueryFilter<DatasetDocument>(
         this.datasetModel,
@@ -292,31 +292,44 @@ export class DatasetsService {
     };
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
-    const isFieldsEmpty = Object.keys(whereClause).length === 0;
+    const datasets = await this.datasetModel
+      .find(whereClause, null, modifiers)
+      .exec();
 
-    // NOTE: if Elastic search DB is empty we should use default mongo query
-    const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
+    return datasets;
+  }
 
-    if (
-      !this.searchService ||
-      isFieldsEmpty ||
-      !canPerformElasticSearchQueries
-    ) {
-      datasets = await this.datasetModel
-        .find(whereClause, null, modifiers)
-        .exec();
-    } else {
-      const esResult = await this.searchService.search(
-        filter.fields as IDatasetFields,
-        modifiers.limit,
-        modifiers.skip,
-        modifiers.sort,
-      );
-      datasets = await this.datasetModel
-        .find({ pid: { $in: esResult.data } })
-        .sort(modifiers.sort)
-        .exec();
+  async opensearchQuery(
+    filter: IFilters<DatasetDocument, IDatasetFields>,
+    isAdmin: boolean,
+  ): Promise<DatasetDocument[] | null> {
+    // if no text field is provided, we fallback to full query
+    if (!this.searchService || !filter.fields) {
+      return this.fullquery(filter);
     }
+    const { text, userGroups } = filter.fields || {};
+
+    const mongoQuery: FilterQuery<DatasetDocument> =
+      createFullqueryFilter<DatasetDocument>(
+        this.datasetModel,
+        "pid",
+        filter.fields as FilterQuery<DatasetDocument>,
+      );
+
+    const modifiers: QueryOptions = parseLimitFilters(filter.limits);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { $text, ...otherQueries } = mongoQuery;
+
+    const osResult = await this.searchService.search(
+      { text, userGroups, isAdmin: isAdmin },
+      modifiers.limit,
+      modifiers.skip,
+    );
+    const datasets = await this.datasetModel
+      .find({ pid: { $in: osResult.data }, ...otherQueries })
+      .sort(modifiers.sort)
+      .exec();
 
     return datasets;
   }
@@ -324,38 +337,45 @@ export class DatasetsService {
   async fullFacet(
     filters: IFacets<IDatasetFields>,
   ): Promise<Record<string, unknown>[]> {
-    let data;
-
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
 
-    // NOTE: if fields contains no value, we should use mongo query to optimize performance.
-    // however, fields always contain "mode" key, so we need to check if there's more than one key
-    const isFieldsEmpty = Object.keys(fields).length === 1;
+    const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
+      this.datasetModel,
+      "pid",
+      fields,
+      facets,
+      "",
+    );
 
-    // NOTE: if Elastic search DB is empty we should use default mongo query
-    const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
+    return await this.datasetModel.aggregate(pipeline).exec();
+  }
 
-    if (
-      !this.searchService ||
-      isFieldsEmpty ||
-      !canPerformElasticSearchQueries
-    ) {
-      const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
-        this.datasetModel,
-        "pid",
-        fields,
-        facets,
-        "",
-      );
-
-      data = await this.datasetModel.aggregate(pipeline).exec();
-    } else {
-      const facetResult = await this.searchService.aggregate(fields);
-
-      data = facetResult;
+  async opensearchFacet(
+    filters: IFacets<IDatasetFields>,
+    isAdmin: boolean,
+  ): Promise<Record<string, unknown>[]> {
+    if (!this.searchService || !filters.fields) {
+      return this.fullFacet(filters);
     }
-    return data;
+    const { text, userGroups } = filters.fields || {};
+    const osResult = await this.searchService.search({
+      text,
+      userGroups,
+      isAdmin: isAdmin,
+    });
+
+    filters.fields.openSearchIdList = osResult.data;
+    delete filters.fields.text;
+    const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
+      this.datasetModel,
+      "pid",
+      filters.fields ?? {},
+      filters.facets ?? [],
+      "",
+    );
+
+    return await this.datasetModel.aggregate(pipeline).exec();
   }
 
   async updateAll(
@@ -395,17 +415,7 @@ export class DatasetsService {
   ): Promise<{ count: number }> {
     const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
     let count = 0;
-    if (this.searchService && !filter.where) {
-      const totalDocCount = await this.datasetModel.countDocuments();
-
-      const { totalCount } = await this.searchService.search(
-        whereFilter as IDatasetFields,
-        totalDocCount,
-      );
-      count = totalCount;
-    } else {
-      count = await this.datasetModel.countDocuments(whereFilter).exec();
-    }
+    count = await this.datasetModel.countDocuments(whereFilter).exec();
 
     return { count };
   }
@@ -606,7 +616,7 @@ export class DatasetsService {
     }
   }
 
-  async isElasticSearchDBEmpty() {
+  async isOpenSearchPopulated() {
     if (!this.searchService) return;
     const count = await this.searchService.getCount();
     return count.body.count > 0;
