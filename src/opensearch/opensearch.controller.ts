@@ -3,25 +3,22 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Body,
   Get,
   Query,
   UseInterceptors,
   UseGuards,
 } from "@nestjs/common";
-import { ApiTags, ApiBearerAuth, ApiBody, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiBearerAuth, ApiResponse, ApiQuery } from "@nestjs/swagger";
 import { Action } from "src/casl/action.enum";
 import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { SubDatasetsPublicInterceptor } from "src/datasets/interceptors/datasets-public.interceptor";
-import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import { CreateIndexDto } from "./dto/create-index.dto";
 import { DeleteIndexDto } from "./dto/delete-index.dto";
 import { GetIndexDto } from "./dto/get-index.dto";
 
-import { SearchDto } from "./dto/search.dto";
 import { SyncDatabaseDto } from "./dto/sync-data.dto";
 import { UpdateIndexDto } from "./dto/update-index.dto";
 import { OpensearchActions } from "./dto";
@@ -75,16 +72,18 @@ export class OpensearchController {
   )
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(SubDatasetsPublicInterceptor)
-  @ApiBody({
-    type: SearchDto,
+  @ApiQuery({
+    name: "textQuery",
+    description: "Partial search text for datasetName and description fields",
+    type: String,
   })
   @ApiResponse({
     status: 200,
-    description: "Search with elasticsearch to get restuls in PIDs",
+    description: "Search with opensearch to get results in PIDs",
   })
   @Post("/search")
-  async fetchESResults(@Body() searchDto: IDatasetFields) {
-    return this.opensearchService.search(searchDto);
+  async fetchOSResults(@Query("textQuery") textQuery: string) {
+    return this.opensearchService.search({ text: textQuery });
   }
 
   @UseGuards(PoliciesGuard)

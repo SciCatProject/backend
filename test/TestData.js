@@ -1,6 +1,6 @@
 "use strict";
 const { faker } = require("@faker-js/faker");
-const _ = require("lodash")
+const _ = require("lodash");
 
 const RawTestAccounts = require("../test/config/functionalAccounts.json");
 const TestAccounts = Object.fromEntries(
@@ -335,15 +335,13 @@ const TestData = {
       publishedOn: "JEST_ANY",
       retrievable: false,
       retrieveIntegrityCheck: false,
-      retrieveStatusMessage: ""
+      retrieveStatusMessage: "",
     },
     description: "None, The ultimate test",
     endTime: "JEST_ANY",
     inputDatasets: [],
     instrumentId: "1f016ec4-7a73-11ef-ae3e-439013069377",
-    instrumentIds: [
-      "1f016ec4-7a73-11ef-ae3e-439013069377"
-    ],
+    instrumentIds: ["1f016ec4-7a73-11ef-ae3e-439013069377"],
     isPublished: false,
     keywords: ["sls", "protein"],
     license: "CC BY-SA 4.0",
@@ -355,20 +353,14 @@ const TestData = {
     ownerGroup: "p13388",
     packedSize: 0,
     pid: "JEST_ANY",
-    principalInvestigators: [
-      "scicatingestor@your.site"
-    ],
+    principalInvestigators: ["scicatingestor@your.site"],
     principalInvestigator: "scicatingestor@your.site",
     proposalId: "JEST_ANY",
-    proposalIds: [
-      "JEST_ANY"
-    ],
+    proposalIds: ["JEST_ANY"],
     relationships: [],
     runNumber: "123456",
     sampleId: "20c32b4e-7a73-11ef-9aec-5b9688aa3791i",
-    sampleIds: [
-      "20c32b4e-7a73-11ef-9aec-5b9688aa3791i"
-    ],
+    sampleIds: ["20c32b4e-7a73-11ef-9aec-5b9688aa3791i"],
     scientificMetadata: {
       File_Prefix: "817b_B2_",
       approx_distance_range: {
@@ -376,43 +368,43 @@ const TestData = {
         unit: "cm",
         unitSI: "m",
         value: [1, 2],
-        valueSI: [0.01, 0.02]
+        valueSI: [0.01, 0.02],
       },
       approx_file_size_mb: {
         unit: "",
-        value: 8500
+        value: 8500,
       },
       beamlineParameters: {
         "Beam energy": {
           u: "eV",
           v: 22595,
           unitSI: "(kg m^2) / s^2",
-          valueSI: 3.6201179486175005e-15
+          valueSI: 3.6201179486175005e-15,
         },
         Monostripe: "Ru/C",
         "Ring current": {
           u: "A",
           v: 0.402246,
           unitSI: "A",
-          valueSI: 0.402246
-        }
+          valueSI: 0.402246,
+        },
       },
       detectorParameters: {
         "Exposure time": {
           u: "s",
           v: 0.4,
           unitSI: "s",
-          valueSI: 0.4
+          valueSI: 0.4,
         },
         Objective: 20,
-        Scintillator: "LAG 20um"
+        Scintillator: "LAG 20um",
       },
       scanParameters: {
         "Angular step": {
           u: "deg",
           v: 0.1,
           unitSI: "rad",
-          valueSI: 0.0017453292519943296
+          valueSI: 0.0017453292519943296,
         },
         "File Prefix": "817b_B2_",
         "Flat frequency": 0,
@@ -425,28 +417,28 @@ const TestData = {
           u: "deg",
           v: 180,
           unitSI: "rad",
-          valueSI: 3.141592653589793
+          valueSI: 3.141592653589793,
         },
         "Rot Y min position": {
           u: "deg",
           v: 0,
           unitSI: "rad",
-          valueSI: 0
+          valueSI: 0,
         },
         "Sample In": {
           u: "m",
           v: 0,
           unitSI: "m",
-          valueSI: 0
+          valueSI: 0,
         },
         "Sample Out": {
           u: "m",
           v: -0.005,
           unitSI: "m",
-          valueSI: -0.005
+          valueSI: -0.005,
         },
-        "Sample folder": "/ramjet/817b_B2_"
-      }
+        "Sample folder": "/ramjet/817b_B2_",
+      },
     },
     sharedWith: [],
     size: 0,
@@ -1424,79 +1416,11 @@ const TestData = {
   PatchDataQualityMetricsInvalid: {
     dataQualityMetrics: "test",
   },
-
-  ScientificMetadataForElasticSearch: {
-    ownerGroup: faker.company.name(),
-    creationLocation: faker.location.city(),
-    principalInvestigator: faker.internet.username(),
-    type: "raw",
-    datasetName: faker.string.sample(),
-    creationTime: faker.date.past(),
-    sourceFolder: faker.system.directoryPath(),
-    owner: faker.internet.username(),
-    size: faker.number.int({ min: 0, max: 100000000 }),
-    proposalId: faker.string.numeric(6),
-    contactEmail: faker.internet.email(),
-    scientificMetadata: {
-      with_key_value: "some text",
-      with_unit_and_value_si: {
-        value: 100,
-        unit: "mbar l/s/cm^2",
-        valueSI: 100000,
-        unitSI: "kg / s^3",
-      },
-      with_number: {
-        value: 111,
-        unit: "",
-      },
-      with_string: {
-        value: "222",
-        unit: "",
-      },
-    },
-  },
-
-  ScientificMetadataForElasticSearchV4: {
-    ownerGroup: faker.company.name(),
-    creationLocation: faker.location.city(),
-    type: "raw",
-    datasetName: faker.string.sample(),
-    creationTime: faker.date.past(),
-    sourceFolder: faker.system.directoryPath(),
-    owner: faker.internet.username(),
-    size: faker.number.int({ min: 0, max: 100000000 }),
-    contactEmail: faker.internet.email(),
-    scientificMetadata: {
-      with_key_value: "some text",
-      with_unit_and_value_si: {
-        value: 100,
-        unit: "mbar l/s/cm^2",
-        valueSI: 100000,
-        unitSI: "kg / s^3",
-      },
-      with_number: {
-        value: 111,
-        unit: "",
-      },
-      with_string: {
-        value: "222",
-        unit: "",
-      },
-      with_no_unit: {
-        value: 333,
-      },
-      with_undefined_unit: {
-        value: 777,
-        unit: undefined,
-      },
-    },
-  },
 };
 
-const isEqualWithAny = (actual, expected) => 
+const isEqualWithAny = (actual, expected) =>
   _.isEqualWith(actual, expected, (actualValue, expectedValue) => {
-    if (expectedValue === "JEST_ANY")
-      return true;
-});
+    if (expectedValue === "JEST_ANY") return true;
+  });
 
 module.exports = { TestData, isEqualWithAny };

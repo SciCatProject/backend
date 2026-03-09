@@ -969,6 +969,11 @@ export class DatasetsController {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
 
+    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
+      fields: fields,
+      limits: JSON.parse(filters.limits ?? "{}"),
+    };
+
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
 
@@ -985,12 +990,22 @@ export class DatasetsController {
       }
     }
 
-    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
-      fields: fields,
-      limits: JSON.parse(filters.limits ?? "{}"),
-    };
+    let datasets: DatasetDocument[] | null;
 
-    const datasets = await this.datasetsService.fullquery(parsedFilters);
+    const osEnabled = this.configService.get<boolean>("opensearch.enabled");
+    const textSearch = parsedFilters.fields?.text;
+    const isOpenSearchPopulated =
+      await this.datasetsService.isOpenSearchPopulated();
+
+    if (osEnabled && textSearch && isOpenSearchPopulated) {
+      const isAdmin = canViewAny;
+      datasets = await this.datasetsService.opensearchQuery(
+        parsedFilters,
+        isAdmin,
+      );
+    } else {
+      datasets = await this.datasetsService.fullquery(parsedFilters);
+    }
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 
@@ -1065,6 +1080,17 @@ export class DatasetsController {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "[]"),
     };
+
+    const osEnabled = this.configService.get<boolean>("opensearch.enabled");
+    const textSearch = parsedFilters.fields?.text;
+    const isOpenSearchPopulated =
+      await this.datasetsService.isOpenSearchPopulated();
+
+    if (osEnabled && textSearch && isOpenSearchPopulated) {
+      const isAdmin = canViewAny;
+      return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
+    }
+
     return this.datasetsService.fullFacet(parsedFilters);
   }
 
