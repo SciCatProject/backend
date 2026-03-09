@@ -700,6 +700,17 @@ export const createFullqueryFilter = <T>(
 };
 
 const pipelineHandler = {
+  handleOpensearchIdList: <T>(
+    pipeline: PipelineStage[],
+    fields: T,
+    key: string,
+  ) => {
+    const match = {
+      $match: { _id: { $in: fields[key as keyof T] as string[] } },
+    };
+    return pipeline.unshift(match);
+  },
+
   handleTextSearch: <T, Y>(
     pipeline: PipelineStage[],
     model: Model<T>,
@@ -836,6 +847,9 @@ export const createFullfacetPipeline = <T, Y extends object>(
     }
 
     switch (key) {
+      case "openSearchIdList":
+        pipelineHandler.handleOpensearchIdList(pipeline, fields, key);
+        break;
       case "text":
         pipelineHandler.handleTextSearch(pipeline, model, fields, key);
         break;
