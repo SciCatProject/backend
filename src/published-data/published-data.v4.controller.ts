@@ -734,7 +734,7 @@ export class PublishedDataV4Controller {
     } = metadata ?? {};
 
     const url = landingPage
-      ? `https://${landingPage}${encodeURIComponent(doi)}`
+      ? `${landingPage}${encodeURIComponent(doi)}`
       : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
