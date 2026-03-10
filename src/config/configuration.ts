@@ -72,6 +72,7 @@ const configuration = () => {
   const jsonConfigMap: { [key: string]: object | object[] | boolean } = {
     datasetTypes: {},
     proposalTypes: {},
+    opensearchConfig: {},
   };
   const jsonConfigFileList: { [key: string]: string } = {
     frontendConfig:
@@ -84,6 +85,8 @@ const configuration = () => {
     metricsConfig: process.env.METRICS_CONFIG_FILE || "metricsConfig.json",
     publishedDataConfig:
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
+    opensearchConfig:
+      process.env.OPENSEARCH_CONFIG_FILE || "opensearchConfig.json",
   };
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
@@ -98,7 +101,11 @@ const configuration = () => {
         jsonConfigMap[key] = false;
       }
     } else {
-      if (key === "publishedDataConfig") {
+      const configsWithExampleFallback = [
+        "publishedDataConfig",
+        "opensearchConfig",
+      ];
+      if (configsWithExampleFallback.includes(key)) {
         console.warn(
           `Configuration file ${filePath} does not exist. Trying to use the example ${key}.example.json file`,
         );
@@ -387,7 +394,7 @@ const configuration = () => {
         10,
       ),
       mongoDBCollection: process.env.MONGODB_COLLECTION,
-      defaultIndex: process.env.OPENSEARCH_INDEX ?? "dataset",
+      defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
     },
     metrics: {
       // Note: `process.env.METRICS_ENABLED` is directly used for conditional module loading in
@@ -426,6 +433,7 @@ const configuration = () => {
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
+    opensearchConfig: jsonConfigMap.opensearchConfig,
   };
   return merge(config, localconfiguration);
 };

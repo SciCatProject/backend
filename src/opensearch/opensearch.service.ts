@@ -9,8 +9,6 @@ import { Client } from "@opensearch-project/opensearch";
 
 import { SearchQueryService } from "./providers/query-builder.service";
 
-import { defaultOpensearchSettings } from "./configuration/indexSetting";
-import { datasetMappings } from "./configuration/datasetFieldMapping";
 import {
   DatasetClass,
   DatasetDocument,
@@ -20,6 +18,9 @@ import { sleep } from "src/common/utils";
 
 import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
 import { ISearchFilter } from "./interfaces/os-common.type";
+import { CreateIndexDto } from "./dto/create-index.dto";
+import { UpdateIndexDto } from "./dto/update-index.dto";
+import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 
 @Injectable()
 export class OpensearchService implements OnModuleInit {
@@ -28,9 +29,12 @@ export class OpensearchService implements OnModuleInit {
   private username: string;
   private password: string;
   private refresh: "false" | "wait_for";
+  private osConfigs: {
+    settings: IndexSettings;
+    mappings: TypeMapping;
+  } | null;
+
   public defaultIndex: string;
-  public esEnabled: boolean;
-  public connected = false;
 
   constructor(
     private readonly searchService: SearchQueryService,
@@ -39,43 +43,48 @@ export class OpensearchService implements OnModuleInit {
     this.host = this.configService.get<string>("opensearch.host") || "";
     this.username = this.configService.get<string>("opensearch.username") || "";
     this.password = this.configService.get<string>("opensearch.password") || "";
-    this.esEnabled =
-      this.configService.get<string>("opensearch.enabled") === "yes"
-        ? true
-        : false;
+
     this.refresh =
       this.configService.get<"false" | "wait_for">("opensearch.refresh") ||
       "false";
 
     this.defaultIndex =
-      this.configService.get<string>("opensearch.defaultIndex") || "";
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
 
-    if (
-      this.esEnabled &&
-      (!this.host || !this.username || !this.password || !this.defaultIndex)
-    ) {
-      Logger.error(
-        "Missing ENVIRONMENT variables for opensearch connection",
+    this.osConfigs =
+      this.configService.get<{
+        settings: IndexSettings;
+        mappings: TypeMapping;
+      }>("opensearchConfig") || null;
+
+    if (!this.host || !this.username || !this.password || !this.defaultIndex) {
+      Logger.warn(
+        `Missing Opensearch configuration for host: ${this.host}, username: ${this.username}, 
+        password: ${this.password} or defaultIndex: ${this.defaultIndex}`,
+        "Opensearch",
+      );
+    }
+    if (!this.osConfigs) {
+      Logger.warn(
+        `Missing Opensearch index configuration, using default settings and mappings`,
         "Opensearch",
       );
     }
   }
 
   async onModuleInit() {
-    if (!this.esEnabled) {
-      this.connected = false;
-      return;
-    }
-
     try {
       await this.retryConnection(3, 3000);
       const isIndexExists = await this.isIndexExists(this.defaultIndex);
 
       if (!isIndexExists) {
-        await this.createIndex(this.defaultIndex);
+        await this.createIndex({
+          index: this.defaultIndex,
+          settings: this.osConfigs?.settings || {},
+          mappings: this.osConfigs?.mappings || {},
+        });
         Logger.log(`New index ${this.defaultIndex}is created `, "Opensearch");
       }
-      this.connected = true;
       Logger.log("Opensearch Connected", "Opensearch");
     } catch (error) {
       Logger.error(error, "onModuleInit failed-> OpensearchService");
@@ -119,26 +128,45 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
+  connected() {
+    return !!this.osClient;
+  }
+
   async isIndexExists(index = this.defaultIndex) {
     return await this.osClient.indices.exists({
       index,
     });
   }
 
-  async createIndex(index = this.defaultIndex) {
+  async isPopulated(index = this.defaultIndex) {
+    const { body } = await this.getCount(index);
+
+    if (body.count > 0) {
+      return true;
+    }
+    Logger.error(
+      `Opensearch is enabled but index ${index} is empty`,
+      "Opensearch",
+    );
+
+    return false;
+  }
+
+  async createIndex(createIndexDto: CreateIndexDto) {
+    const index = createIndexDto.index.trim();
+    const { settings, mappings } = createIndexDto;
+
     try {
-      await this.osClient.indices.create({
+      const newIndex = await this.osClient.indices.create({
         index,
         body: {
-          settings: defaultOpensearchSettings as IndexSettings,
-          mappings: {
-            dynamic: "false",
-            properties: datasetMappings,
-          },
+          settings: settings || this.osConfigs?.settings,
+          mappings: mappings || this.osConfigs?.mappings,
         },
       });
       Logger.log(`Opensearch Index Created-> Index: ${index}`, "Opensearch");
-      return HttpStatus.CREATED;
+
+      return newIndex;
     } catch (error) {
       throw new HttpException(
         `createIndex failed-> OpensearchService ${error}`,
@@ -173,41 +201,47 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async updateIndex(index = this.defaultIndex) {
+  async updateIndexSettings(updateIndexDto: UpdateIndexDto) {
+    const index = updateIndexDto.index.trim();
+
     try {
       await this.osClient.indices.close({
         index,
       });
       await this.osClient.indices.putSettings({
         index,
-        body: { settings: defaultOpensearchSettings as IndexSettings },
-      });
-
-      await this.osClient.indices.putMapping({
-        index,
-        body: {
-          properties: datasetMappings,
-        },
+        body: { settings: updateIndexDto.settings || this.osConfigs?.settings },
       });
 
       await this.osClient.indices.open({
         index,
       });
-      Logger.log(`Opensearch Index Updated-> Index: ${index}`, "Opensearch");
+
+      const { settings } = await this.getIndexConfig(index);
+
+      return settings;
     } catch (error) {
       throw new HttpException(
-        `updateIndex failed-> OpensearchService ${error}`,
+        `updateIndexSettings failed-> OpensearchService ${error}`,
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
-  async getIndexSettings(index = this.defaultIndex) {
+  async getIndexConfig(index = this.defaultIndex) {
     try {
-      return await this.osClient.indices.getSettings({ index });
+      const [settings, mappings] = await Promise.all([
+        this.osClient.indices.getSettings({ index }),
+        this.osClient.indices.getMapping({ index }),
+      ]);
+
+      return {
+        settings: settings.body[index].settings,
+        mappings: mappings.body[index].mappings,
+      };
     } catch (error) {
       throw new HttpException(
-        `getIndexSettings failed-> OpensearchService ${error}`,
+        `getIndexConfig failed-> OpensearchService ${error}`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -228,7 +262,8 @@ export class OpensearchService implements OnModuleInit {
 
   async search(
     filter: ISearchFilter,
-    limit = 20,
+    index = this.defaultIndex,
+    limit = 1000,
     skip = 0,
   ): Promise<{ totalCount: number; data: (string | undefined)[] }> {
     try {
@@ -248,7 +283,7 @@ export class OpensearchService implements OnModuleInit {
       };
 
       const { body } = await this.osClient.search({
-        index: this.defaultIndex,
+        index,
         body: searchOptions,
       });
 
@@ -292,15 +327,15 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async deleteDocument(id: string) {
+  async deleteDocument(id: string, index = this.defaultIndex) {
     try {
       await this.osClient.delete({
-        index: this.defaultIndex,
+        index,
         id,
         refresh: this.refresh,
       });
       Logger.log(
-        `Document Deleted-> Document_id: ${id} deleted on index: ${this.defaultIndex}`,
+        `Document Deleted-> Document_id: ${id} deleted on index: ${index}`,
         "Opensearch",
       );
     } catch (error) {
@@ -311,26 +346,38 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
+  async checkIndexExists(index: string) {
+    const { body: indexExists } = await this.osClient.indices.exists({ index });
+
+    if (!indexExists) {
+      throw new Error(`Index ${index} not found`);
+    }
+  }
+
   // *** NOTE: below are helper methods ***
 
-  async performBulkOperation(collection: DatasetClass[], index: string) {
+  async performBulkOperation<T extends { _id: unknown }>(
+    collection: T[],
+    index: string,
+  ) {
     const result = await this.osClient.helpers.bulk({
       retries: 5,
       wait: 10000,
       datasource: collection,
-      onDocument(doc: DatasetClass) {
+      onDocument(doc: T) {
+        const { _id: mongoId, ...body } = doc;
         return [
           {
             index: {
               _index: index,
-              _id: doc.pid,
+              _id: mongoId,
             },
           },
-          doc,
+          body,
         ];
       },
       onDrop(doc) {
-        console.debug(`${doc.document.pid}`, doc.error?.reason);
+        console.debug(`${doc.document._id}`, doc.error?.reason);
       },
     });
     return result;

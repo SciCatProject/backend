@@ -994,10 +994,8 @@ export class DatasetsController {
 
     const osEnabled = this.configService.get<boolean>("opensearch.enabled");
     const textSearch = parsedFilters.fields?.text;
-    const isOpenSearchPopulated =
-      await this.datasetsService.isOpenSearchPopulated();
 
-    if (osEnabled && textSearch && isOpenSearchPopulated) {
+    if (osEnabled && textSearch) {
       const isAdmin = canViewAny;
       datasets = await this.datasetsService.opensearchQuery(
         parsedFilters,
@@ -1083,10 +1081,8 @@ export class DatasetsController {
 
     const osEnabled = this.configService.get<boolean>("opensearch.enabled");
     const textSearch = parsedFilters.fields?.text;
-    const isOpenSearchPopulated =
-      await this.datasetsService.isOpenSearchPopulated();
 
-    if (osEnabled && textSearch && isOpenSearchPopulated) {
+    if (osEnabled && textSearch) {
       const isAdmin = canViewAny;
       return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
     }

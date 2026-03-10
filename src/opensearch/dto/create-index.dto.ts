@@ -1,13 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { IsObject, IsOptional } from "class-validator";
+import { UpdateIndexDto } from "./update-index.dto";
+import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 
-export class CreateIndexDto {
+export class CreateIndexDto extends UpdateIndexDto {
   @ApiProperty({
-    type: String,
-    required: true,
-    default: "dataset",
-    description: "Create an index with this name",
+    description: "Index mappings",
+    type: Object,
+    example: {
+      properties: {
+        datasetName: { type: "text" },
+        ownerGroup: { type: "keyword" },
+      },
+    },
   })
-  @IsString()
-  readonly index: string;
+  @IsObject()
+  @IsOptional()
+  mappings: Partial<TypeMapping>;
 }
