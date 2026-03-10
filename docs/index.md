@@ -135,6 +135,8 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_BIND_CREDENTIALS` | string | Yes | Credentials for your LDAP server. | |
 | `LDAP_SEARCH_BASE` | string | Yes | Search base for your LDAP server. | |
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
+| `LDAP_GROUP_SEARCH_BASE` | string | Yes | Search base for the user groups. | |
+| `LDAP_GROUP_SEARCH_FILTER` | string | Yes | Search filter for the user groups. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
 | `OIDC_CLIENT_SECRET` | string | Yes | Secret to provide to the OIDC service to obtain the user token. Example: Aa1JIw3kv3mQlGFWhRrE3gOdkH6xreAwro. | |
