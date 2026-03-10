@@ -63,10 +63,15 @@ import {
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
+import {
+  DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY,
+  sanitizeDatasetForOpensearch,
+} from "./utils/dataset-opensearch.utils";
+import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
-  private searchService: OpensearchService | null = null;
   constructor(
     private configService: ConfigService,
     @InjectModel(DatasetClass.name)
@@ -77,13 +82,7 @@ export class DatasetsService {
     private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
-  ) {
-    // TODO: Verify if this connection check is needed.
-    // OpenSearch should fallback to MongoDB if unavailable.
-    if (this.opensearchService.connected) {
-      this.searchService = this.opensearchService;
-    }
-  }
+  ) {}
 
   private createMetadataKeysInstance(
     doc: UpdateQuery<DatasetDocument>,
@@ -188,8 +187,10 @@ export class DatasetsService {
 
     const savedDataset = await createdDataset.save();
 
-    if (this.searchService && createdDataset) {
-      await this.searchService.updateInsertDocument(savedDataset.toObject());
+    if (this.opensearchService && createdDataset) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(savedDataset.toObject()),
+      );
     }
 
     if (savedDataset.proposalIds && savedDataset.proposalIds.length > 0) {
@@ -303,10 +304,15 @@ export class DatasetsService {
     filter: IFilters<DatasetDocument, IDatasetFields>,
     isAdmin: boolean,
   ): Promise<DatasetDocument[] | null> {
-    // if no text field is provided, we fallback to full query
-    if (!this.searchService || !filter.fields) {
+    const defaultOsIndex =
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
+    if (
+      !this.opensearchService.connected() ||
+      !(await this.opensearchService.isPopulated())
+    ) {
       return this.fullquery(filter);
     }
+
     const { text, userGroups } = filter.fields || {};
 
     const mongoQuery: FilterQuery<DatasetDocument> =
@@ -318,16 +324,16 @@ export class DatasetsService {
 
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { $text, ...otherQueries } = mongoQuery;
+    delete mongoQuery.$text;
 
-    const osResult = await this.searchService.search(
+    const osResult = await this.opensearchService.search(
       { text, userGroups, isAdmin: isAdmin },
+      defaultOsIndex,
       modifiers.limit,
       modifiers.skip,
     );
     const datasets = await this.datasetModel
-      .find({ pid: { $in: osResult.data }, ...otherQueries })
+      .find({ pid: { $in: osResult.data }, ...mongoQuery })
       .sort(modifiers.sort)
       .exec();
 
@@ -355,23 +361,43 @@ export class DatasetsService {
     filters: IFacets<IDatasetFields>,
     isAdmin: boolean,
   ): Promise<Record<string, unknown>[]> {
-    if (!this.searchService || !filters.fields) {
+    const defaultOsIndex =
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
+    const osConfig =
+      this.configService.get<{
+        settings: IndexSettings;
+        mappings: TypeMapping;
+      }>("opensearchConfig") || null;
+    const osMaxResultWindow = Number(
+      osConfig?.settings?.index?.max_result_window,
+    );
+
+    if (
+      !this.opensearchService.connected() ||
+      !(await this.opensearchService.isPopulated())
+    ) {
       return this.fullFacet(filters);
     }
-    const { text, userGroups } = filters.fields || {};
-    const osResult = await this.searchService.search({
-      text,
-      userGroups,
-      isAdmin: isAdmin,
-    });
+    const fields = filters.fields ?? {};
+    const facets = filters.facets ?? [];
 
-    filters.fields.openSearchIdList = osResult.data;
-    delete filters.fields.text;
+    const osResult = await this.opensearchService.search(
+      {
+        text: fields.text,
+        userGroups: fields.userGroups,
+        isAdmin: isAdmin,
+      },
+      defaultOsIndex,
+      osMaxResultWindow,
+    );
+
+    fields.openSearchIdList = osResult.data;
+    delete fields.text;
     const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
       this.datasetModel,
       "pid",
-      filters.fields ?? {},
-      filters.facets ?? [],
+      fields,
+      facets,
       "",
     );
 
@@ -455,8 +481,12 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.searchService) {
-      await this.searchService.updateInsertDocument(updatedDataset.toObject());
+    if (this.opensearchService) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(
+          updatedDataset.toObject(),
+        ),
+      );
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -501,8 +531,12 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.searchService) {
-      await this.searchService.updateInsertDocument(patchedDataset.toObject());
+    if (this.opensearchService) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(
+          patchedDataset.toObject(),
+        ),
+      );
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -524,8 +558,8 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.searchService) {
-      await this.searchService.deleteDocument(id);
+    if (this.opensearchService) {
+      await this.opensearchService.deleteDocument(id);
     }
 
     if (deletedDataset?.proposalIds && deletedDataset.proposalIds.length > 0) {
@@ -541,15 +575,6 @@ export class DatasetsService {
     });
 
     return deletedDataset;
-  }
-  // GET datasets without _id which is used for elastic search data synchronization
-  async getDatasetsWithoutId(): Promise<DatasetClass[]> {
-    try {
-      const datasets = this.datasetModel.find({}, { _id: 0 }).lean().exec();
-      return datasets;
-    } catch (error) {
-      throw new NotFoundException(error);
-    }
   }
 
   // Get metadata keys
@@ -616,9 +641,20 @@ export class DatasetsService {
     }
   }
 
-  async isOpenSearchPopulated() {
-    if (!this.searchService) return;
-    const count = await this.searchService.getCount();
-    return count.body.count > 0;
+  async syncDatasetsToOpensearch(index: string) {
+    try {
+      await this.opensearchService.checkIndexExists(index);
+
+      const datasets = await this.datasetModel
+        .find({}, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
+        .lean()
+        .exec();
+      return await this.opensearchService.performBulkOperation<DatasetClass>(
+        datasets,
+        index,
+      );
+    } catch (error) {
+      throw new Error(`OpenSearch sync failed: ${error}`);
+    }
   }
 }
