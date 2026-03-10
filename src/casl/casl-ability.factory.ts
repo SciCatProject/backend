@@ -31,7 +31,7 @@ import { Action } from "./action.enum";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { accessibleBy } from "@casl/mongoose";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
-import { OpensearchActions } from "src/opensearch/dto";
+import { Opensearch } from "src/opensearch/opensearch.subject";
 
 type Subjects =
   | string
@@ -50,7 +50,7 @@ type Subjects =
       | typeof User
       | typeof UserIdentity
       | typeof UserSettings
-      | typeof OpensearchActions
+      | typeof Opensearch
       | typeof Datablock
       | typeof RuntimeConfig
       | typeof MetadataKeyClass
@@ -340,7 +340,7 @@ export class CaslAbilityFactory {
       /*
         / user that belongs to any of the group listed in ADMIN_GROUPS
         */
-      can(Action.Manage, OpensearchActions);
+      can(Action.Manage, Opensearch);
     }
     return build({
       detectSubjectType: (item) =>
