@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   Scope,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -79,7 +80,7 @@ export class DatasetsService {
     @Inject(REQUEST) private request: Request,
 
     private datasetsAccessService: DatasetsAccessService,
-    private opensearchService: OpensearchService,
+    @Optional() private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
   ) {}
