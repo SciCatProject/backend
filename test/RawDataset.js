@@ -573,7 +573,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
       .then((res) => {
         res.body.should.have
           .property("scientificMetadata")
-          .and.not.have.property("runNumber");
+          .and.have.property("runNumber");
         res.body.should.have
           .property("runNumber")
           .and.equal("12345");
