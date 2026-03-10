@@ -21,13 +21,14 @@ import {
   ValidateNested,
 } from "class-validator";
 import { TechniqueClass } from "../schemas/technique.schema";
-import { Type, Transform } from "class-transformer";
+import { Type, Transform, Expose } from "class-transformer";
 import { CreateTechniqueDto } from "./create-technique.dto";
 import { RelationshipClass } from "../schemas/relationship.schema";
 import { CreateRelationshipDto } from "./create-relationship.dto";
 import { LifecycleClass } from "../schemas/lifecycle.schema";
 import { encodeScientificMetadataKeys } from "src/common/utils";
 import { CustomEmailList } from "../utils/email-list-validator.util";
+import { omit } from "lodash";
 
 @ApiTags("datasets")
 export class UpdateDatasetObsoleteDto extends OwnableDto {
@@ -277,6 +278,7 @@ export class UpdateDatasetObsoleteDto extends OwnableDto {
   @IsOptional()
   @IsObject()
   @Transform(({ value }) => encodeScientificMetadataKeys(value))
+  @Transform(({ value }) => omit(value, "runNumber"), { toClassOnly: true })
   scientificMetadata?: Record<string, unknown>;
 
   @ApiProperty({
@@ -334,6 +336,10 @@ export class UpdateDatasetObsoleteDto extends OwnableDto {
   })
   @IsOptional()
   @IsString()
+  @Expose()
+  @Transform(({ value, obj }) => value ?? obj.scientificMetadata?.runNumber, {
+    toClassOnly: true,
+  })
   readonly runNumber?: string;
 }
 
