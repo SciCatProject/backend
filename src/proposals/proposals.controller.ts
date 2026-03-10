@@ -982,7 +982,7 @@ export class ProposalsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      
+
       const canViewPublic = ability.can(
         Action.DatasetReadManyPublic,
         DatasetClass,

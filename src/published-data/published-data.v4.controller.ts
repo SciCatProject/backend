@@ -746,8 +746,8 @@ export class PublishedDataV4Controller {
         ? landingPage
         : `https://${landingPage}`;
     const url = landingPage
-        ? `${landingPageBase}${encodeURIComponent(doi)}`
-        : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
+      ? `${landingPageBase}${encodeURIComponent(doi)}`
+      : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
       { description: abstract, descriptionType: "Abstract", lang: "en" },
