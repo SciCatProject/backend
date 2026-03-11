@@ -446,7 +446,8 @@ const TestData = {
           valueSI: -0.005
         },
         "Sample folder": "/ramjet/817b_B2_"
-      }
+      },
+      runNumber: "123456",
     },
     sharedWith: [],
     size: 0,
@@ -1493,10 +1494,10 @@ const TestData = {
   },
 };
 
-const isEqualWithAny = (actual, expected) => 
+const isEqualWithAny = (actual, expected) =>
   _.isEqualWith(actual, expected, (actualValue, expectedValue) => {
     if (expectedValue === "JEST_ANY")
       return true;
-});
+  });
 
 module.exports = { TestData, isEqualWithAny };

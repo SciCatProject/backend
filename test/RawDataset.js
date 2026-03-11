@@ -2,6 +2,7 @@
 const { faker } = require("@faker-js/faker");
 const utils = require("./LoginUtils");
 const { TestData, isEqualWithAny } = require("./TestData");
+const { omit } = require("lodash");
 
 let accessTokenAdminIngestor = null,
   accessProposalToken = null,
@@ -555,6 +556,27 @@ describe("1900: RawDataset: Raw Datasets", () => {
       .then((res) => {
         res.body.message.should.contain("dataQualityMetrics");
         res.body.message.should.contain("isNumber");
+      });
+  });
+
+  it("0165: tries to add a dataset with scientificMetadata.runNumber", async () => {
+    return request(appUrl)
+      .post("/api/v3/datasets")
+      .send({
+        ...omit(TestData.RawCorrectRandom, "runNumber"),
+        scientificMetadata: { ...TestData.RawCorrectRandom.scientificMetadata, runNumber: "12345" }
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect("Content-Type", /json/)
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        res.body.should.have
+          .property("scientificMetadata")
+          .and.have.property("runNumber");
+        res.body.should.have
+          .property("runNumber")
+          .and.equal("12345");
       });
   });
 
