@@ -64,6 +64,8 @@ const configuration = () => {
 
   const jobConfigurationFile = process.env.JOB_CONFIGURATION_FILE || "";
 
+  const ajvCustomDefinitions = process.env.AJV_CUSTOM_DEFINITIONS_FILE || "";
+
   const defaultLogger = {
     type: "DefaultLogger",
     modulePath: "./loggingProviders/defaultLogger",
@@ -420,6 +422,7 @@ const configuration = () => {
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
+    ajvCustomDefinitions: ajvCustomDefinitions,
   };
   return merge(config, localconfiguration);
 };
