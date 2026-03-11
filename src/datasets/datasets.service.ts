@@ -68,8 +68,8 @@ import {
   DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY,
   sanitizeDatasetForOpensearch,
 } from "./utils/dataset-opensearch.utils";
-import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
-import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
