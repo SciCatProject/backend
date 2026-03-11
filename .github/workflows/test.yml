@@ -130,11 +130,10 @@ jobs:
 
       - name: API tests
         env:
-          OPENSEARCH_ENABLED: ${{ matrix.opensearch_enabled }}
           COMPOSE_PROFILES: ${{ matrix.opensearch_enabled == 'yes' && 'opensearch' || ''}}
         # Start mongo container and app before running api tests
         run: |
           cp opensearchConfig.example.json opensearchConfig.json
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           docker compose up --build -d
-          npm run test:api
+          OPENSEARCH_ENABLED=${{ matrix.opensearch_enabled }} npm run test:api
