@@ -993,11 +993,11 @@ export class DatasetsController {
     let datasets: DatasetDocument[] | null;
 
     const osEnabled =
-      this.configService.get<boolean>("opensearch.enabled") || "no";
+      this.configService.get<string>("opensearch.enabled") || "no";
 
     const textSearch = parsedFilters.fields?.text;
 
-    if (osEnabled != "no" && textSearch) {
+    if (osEnabled === "yes" && textSearch) {
       const isAdmin = canViewAny;
       datasets = await this.datasetsService.opensearchQuery(
         parsedFilters,
@@ -1082,10 +1082,10 @@ export class DatasetsController {
     };
 
     const osEnabled =
-      this.configService.get<boolean>("opensearch.enabled") || "no";
+      this.configService.get<string>("opensearch.enabled") || "no";
     const textSearch = parsedFilters.fields?.text;
 
-    if (osEnabled != "no" && textSearch) {
+    if (osEnabled === "yes" && textSearch) {
       const isAdmin = canViewAny;
       return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
     }
