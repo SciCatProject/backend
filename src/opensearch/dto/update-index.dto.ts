@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
 import { IsObject, IsOptional, IsString } from "class-validator";
 
 export class UpdateIndexDto {
