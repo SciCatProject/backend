@@ -1416,6 +1416,73 @@ const TestData = {
   PatchDataQualityMetricsInvalid: {
     dataQualityMetrics: "test",
   },
+
+  ScientificMetadataForOpensearch: {
+    ownerGroup: faker.company.name(),
+    creationLocation: faker.location.city(),
+    principalInvestigator: faker.internet.username(),
+    type: "raw",
+    datasetName: faker.string.sample(),
+    creationTime: faker.date.past(),
+    sourceFolder: faker.system.directoryPath(),
+    owner: faker.internet.username(),
+    size: faker.number.int({ min: 0, max: 100000000 }),
+    proposalId: faker.string.numeric(6),
+    contactEmail: faker.internet.email(),
+    scientificMetadata: {
+      with_key_value: "some text",
+      with_unit_and_value_si: {
+        value: 100,
+        unit: "mbar l/s/cm^2",
+        valueSI: 100000,
+        unitSI: "kg / s^3",
+      },
+      with_number: {
+        value: 111,
+        unit: "",
+      },
+      with_string: {
+        value: "222",
+        unit: "",
+      },
+    },
+  },
+
+  ScientificMetadataForOpensearchV4: {
+    ownerGroup: faker.company.name(),
+    creationLocation: faker.location.city(),
+    type: "raw",
+    datasetName: faker.string.sample(),
+    creationTime: faker.date.past(),
+    sourceFolder: faker.system.directoryPath(),
+    owner: faker.internet.username(),
+    size: faker.number.int({ min: 0, max: 100000000 }),
+    contactEmail: faker.internet.email(),
+    scientificMetadata: {
+      with_key_value: "some text",
+      with_unit_and_value_si: {
+        value: 100,
+        unit: "mbar l/s/cm^2",
+        valueSI: 100000,
+        unitSI: "kg / s^3",
+      },
+      with_number: {
+        value: 111,
+        unit: "",
+      },
+      with_string: {
+        value: "222",
+        unit: "",
+      },
+      with_no_unit: {
+        value: 333,
+      },
+      with_undefined_unit: {
+        value: 777,
+        unit: undefined,
+      },
+    },
+  },
 };
 
 const isEqualWithAny = (actual, expected) =>
