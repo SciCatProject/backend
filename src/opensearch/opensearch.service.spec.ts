@@ -13,11 +13,11 @@ describe("OpensearchService", () => {
 
   const mockConfigService = {
     get: () => ({
-      "elasticSearch.host": "fake",
-      "elasticSearch.username": "fake",
-      "elasticSearch.password": "fake",
-      "elasticSearch.enabled": "yes",
-      "elasticSearch.defaultIndex": "fake",
+      "opensearch.host": "fake",
+      "opensearch.username": "fake",
+      "opensearch.password": "fake",
+      "opensearch.enabled": "yes",
+      "opensearch.defaultIndex": "fake",
     }),
   };
 
