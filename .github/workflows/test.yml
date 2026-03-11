@@ -132,10 +132,6 @@ jobs:
         env:
           OPENSEARCH_ENABLED: ${{ matrix.opensearch_enabled }}
           COMPOSE_PROFILES: ${{ matrix.opensearch_enabled == 'yes' && 'opensearch' || ''}}
-          CLUSTER_NAME: os-test-cluster
-          OPENSEARCH_HOST: https://localhost:9200
-          OPENSEARCH_PASSWORD: apiTestPassword1_
-          STACK_VERSION: 8.8.2
         # Start mongo container and app before running api tests
         run: |
           cp opensearchConfig.example.json opensearchConfig.json
