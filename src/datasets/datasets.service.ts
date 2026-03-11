@@ -50,6 +50,7 @@ import {
   IDatasetFields,
   IDatasetFilters,
   IDatasetFiltersV4,
+  IDatasetOpenSearchPipeline,
   IDatasetRelation,
   IDatasetScopes,
 } from "./interfaces/dataset-filters.interface";
@@ -394,13 +395,10 @@ export class DatasetsService {
 
     fields.openSearchIdList = osResult.data;
     delete fields.text;
-    const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
-      this.datasetModel,
-      "pid",
-      fields,
-      facets,
-      "",
-    );
+    const pipeline = createFullfacetPipeline<
+      DatasetDocument,
+      IDatasetOpenSearchPipeline
+    >(this.datasetModel, "pid", fields, facets, "");
 
     return await this.datasetModel.aggregate(pipeline).exec();
   }
