@@ -133,9 +133,8 @@ export class OpensearchService implements OnModuleInit {
   }
 
   async isIndexExists(index = this.defaultIndex) {
-    return await this.osClient.indices.exists({
-      index,
-    });
+    const { body: indexExists } = await this.osClient.indices.exists({ index });
+    return indexExists;
   }
 
   async isPopulated(index = this.defaultIndex) {
