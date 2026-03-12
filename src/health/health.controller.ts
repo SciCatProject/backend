@@ -22,6 +22,15 @@ export class HealthController {
     return this.health.check([
       // The readiness endpoint verifies that the application is running and can connect to required services
       async () => this.db.pingCheck("mongodb"),
+      async () => ({
+        uptime: {
+          status: "up",
+          seconds: process.uptime(),
+          bootTime: new Date(
+            Date.now() - process.uptime() * 1000,
+          ).toISOString(),
+        },
+      }),
     ]);
   }
 }
