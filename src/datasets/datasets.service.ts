@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
   Scope,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -34,7 +35,6 @@ import {
   parsePipelineSort,
   decodeMetadataKeyStrings,
 } from "src/common/utils";
-import { ElasticSearchService } from "src/elastic-search/elastic-search.service";
 import { DatasetsAccessService } from "./datasets-access.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import {
@@ -50,6 +50,7 @@ import {
   IDatasetFields,
   IDatasetFilters,
   IDatasetFiltersV4,
+  IDatasetOpenSearchPipeline,
   IDatasetRelation,
   IDatasetScopes,
 } from "./interfaces/dataset-filters.interface";
@@ -63,10 +64,16 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { OpensearchService } from "src/opensearch/opensearch.service";
+import {
+  DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY,
+  sanitizeDatasetForOpensearch,
+} from "./utils/dataset-opensearch.utils";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
-  private ESClient: ElasticSearchService | null;
   constructor(
     private configService: ConfigService,
     @InjectModel(DatasetClass.name)
@@ -74,14 +81,10 @@ export class DatasetsService {
     @Inject(REQUEST) private request: Request,
 
     private datasetsAccessService: DatasetsAccessService,
-    private elasticSearchService: ElasticSearchService,
+    @Optional() private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
-  ) {
-    if (this.elasticSearchService.connected) {
-      this.ESClient = this.elasticSearchService;
-    }
-  }
+  ) {}
 
   private createMetadataKeysInstance(
     doc: UpdateQuery<DatasetDocument>,
@@ -186,8 +189,10 @@ export class DatasetsService {
 
     const savedDataset = await createdDataset.save();
 
-    if (this.ESClient && createdDataset) {
-      await this.ESClient.updateInsertDocument(savedDataset.toObject());
+    if (this.opensearchService && createdDataset) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(savedDataset.toObject()),
+      );
     }
 
     if (savedDataset.proposalIds && savedDataset.proposalIds.length > 0) {
@@ -277,8 +282,6 @@ export class DatasetsService {
     filter: IFilters<DatasetDocument, IDatasetFields>,
     extraWhereClause: FilterQuery<DatasetDocument> = {},
   ): Promise<DatasetDocument[] | null> {
-    let datasets;
-
     const filterQuery: FilterQuery<DatasetDocument> =
       createFullqueryFilter<DatasetDocument>(
         this.datasetModel,
@@ -292,28 +295,49 @@ export class DatasetsService {
     };
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
-    const isFieldsEmpty = Object.keys(whereClause).length === 0;
+    const datasets = await this.datasetModel
+      .find(whereClause, null, modifiers)
+      .exec();
 
-    // NOTE: if Elastic search DB is empty we should use default mongo query
-    const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
+    return datasets;
+  }
 
-    if (!this.ESClient || isFieldsEmpty || !canPerformElasticSearchQueries) {
-      datasets = await this.datasetModel
-        .find(whereClause, null, modifiers)
-        .exec();
-    } else {
-      const esResult = await this.ESClient.search(
-        filter.fields as IDatasetFields,
-        modifiers.limit,
-        modifiers.skip,
-        modifiers.sort,
+  async opensearchQuery(
+    filter: IFilters<DatasetDocument, IDatasetFields>,
+    isAdmin: boolean,
+  ): Promise<DatasetDocument[] | null> {
+    const defaultOsIndex =
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
+    if (
+      !this.opensearchService.connected() ||
+      !(await this.opensearchService.isPopulated())
+    ) {
+      return this.fullquery(filter);
+    }
+
+    const { text, userGroups } = filter.fields || {};
+
+    const mongoQuery: FilterQuery<DatasetDocument> =
+      createFullqueryFilter<DatasetDocument>(
+        this.datasetModel,
+        "pid",
+        filter.fields as FilterQuery<DatasetDocument>,
       );
 
-      datasets = await this.datasetModel
-        .find({ pid: { $in: esResult.data } })
-        .sort(modifiers.sort)
-        .exec();
-    }
+    const modifiers: QueryOptions = parseLimitFilters(filter.limits);
+
+    delete mongoQuery.$text;
+
+    const osResult = await this.opensearchService.search(
+      { text, userGroups, isAdmin: isAdmin },
+      defaultOsIndex,
+      modifiers.limit,
+      modifiers.skip,
+    );
+    const datasets = await this.datasetModel
+      .find({ pid: { $in: osResult.data }, ...mongoQuery })
+      .sort(modifiers.sort)
+      .exec();
 
     return datasets;
   }
@@ -321,34 +345,62 @@ export class DatasetsService {
   async fullFacet(
     filters: IFacets<IDatasetFields>,
   ): Promise<Record<string, unknown>[]> {
-    let data;
-
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
 
-    // NOTE: if fields contains no value, we should use mongo query to optimize performance.
-    // however, fields always contain "mode" key, so we need to check if there's more than one key
-    const isFieldsEmpty = Object.keys(fields).length === 1;
+    const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
+      this.datasetModel,
+      "pid",
+      fields,
+      facets,
+      "",
+    );
 
-    // NOTE: if Elastic search DB is empty we should use default mongo query
-    const canPerformElasticSearchQueries = await this.isElasticSearchDBEmpty();
+    return await this.datasetModel.aggregate(pipeline).exec();
+  }
 
-    if (!this.ESClient || isFieldsEmpty || !canPerformElasticSearchQueries) {
-      const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
-        this.datasetModel,
-        "pid",
-        fields,
-        facets,
-        "",
-      );
+  async opensearchFacet(
+    filters: IFacets<IDatasetFields>,
+    isAdmin: boolean,
+  ): Promise<Record<string, unknown>[]> {
+    const defaultOsIndex =
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
+    const osConfig =
+      this.configService.get<{
+        settings: IndexSettings;
+        mappings: TypeMapping;
+      }>("opensearchConfig") || null;
+    const osMaxResultWindow = Number(
+      osConfig?.settings?.index?.max_result_window,
+    );
 
-      data = await this.datasetModel.aggregate(pipeline).exec();
-    } else {
-      const facetResult = await this.ESClient.aggregate(fields);
-
-      data = facetResult;
+    if (
+      !this.opensearchService.connected() ||
+      !(await this.opensearchService.isPopulated())
+    ) {
+      return this.fullFacet(filters);
     }
-    return data;
+    const fields = filters.fields ?? {};
+    const facets = filters.facets ?? [];
+
+    const osResult = await this.opensearchService.search(
+      {
+        text: fields.text,
+        userGroups: fields.userGroups,
+        isAdmin: isAdmin,
+      },
+      defaultOsIndex,
+      osMaxResultWindow,
+    );
+
+    fields.openSearchIdList = osResult.data;
+    delete fields.text;
+    const pipeline = createFullfacetPipeline<
+      DatasetDocument,
+      IDatasetOpenSearchPipeline
+    >(this.datasetModel, "pid", fields, facets, "");
+
+    return await this.datasetModel.aggregate(pipeline).exec();
   }
 
   async updateAll(
@@ -388,17 +440,7 @@ export class DatasetsService {
   ): Promise<{ count: number }> {
     const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
     let count = 0;
-    if (this.ESClient && !filter.where) {
-      const totalDocCount = await this.datasetModel.countDocuments();
-
-      const { totalCount } = await this.ESClient.search(
-        whereFilter as IDatasetFields,
-        totalDocCount,
-      );
-      count = totalCount;
-    } else {
-      count = await this.datasetModel.countDocuments(whereFilter).exec();
-    }
+    count = await this.datasetModel.countDocuments(whereFilter).exec();
 
     return { count };
   }
@@ -438,8 +480,12 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.updateInsertDocument(updatedDataset.toObject());
+    if (this.opensearchService) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(
+          updatedDataset.toObject(),
+        ),
+      );
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -484,8 +530,12 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.updateInsertDocument(patchedDataset.toObject());
+    if (this.opensearchService) {
+      await this.opensearchService.updateInsertDocument(
+        sanitizeDatasetForOpensearch<DatasetDocument>(
+          patchedDataset.toObject(),
+        ),
+      );
     }
 
     await this.metadataKeysService.replaceManyFromSource(
@@ -507,8 +557,8 @@ export class DatasetsService {
       throw new NotFoundException(`Dataset #${id} not found`);
     }
 
-    if (this.ESClient) {
-      await this.ESClient.deleteDocument(id);
+    if (this.opensearchService) {
+      await this.opensearchService.deleteDocument(id);
     }
 
     if (deletedDataset?.proposalIds && deletedDataset.proposalIds.length > 0) {
@@ -524,15 +574,6 @@ export class DatasetsService {
     });
 
     return deletedDataset;
-  }
-  // GET datasets without _id which is used for elastic search data synchronization
-  async getDatasetsWithoutId(): Promise<DatasetClass[]> {
-    try {
-      const datasets = this.datasetModel.find({}, { _id: 0 }).lean().exec();
-      return datasets;
-    } catch (error) {
-      throw new NotFoundException(error);
-    }
   }
 
   // Get metadata keys
@@ -599,9 +640,20 @@ export class DatasetsService {
     }
   }
 
-  async isElasticSearchDBEmpty() {
-    if (!this.ESClient) return;
-    const count = await this.ESClient.getCount();
-    return count.count > 0;
+  async syncDatasetsToOpensearch(index: string) {
+    try {
+      await this.opensearchService.checkIndexExists(index);
+
+      const datasets = await this.datasetModel
+        .find({}, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
+        .lean()
+        .exec();
+      return await this.opensearchService.performBulkOperation<DatasetClass>(
+        datasets,
+        index,
+      );
+    } catch (error) {
+      throw new Error(`OpenSearch sync failed: ${error}`);
+    }
   }
 }

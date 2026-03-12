@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "index": {
+      "max_result_window": 2000000,
+      "number_of_replicas": 0
+    },
+    "analysis": {
+      "analyzer": {
+        "autocomplete": {
+          "type": "custom",
+          "tokenizer": "autocomplete",
+          "filter": ["lowercase"]
+        },
+        "autocomplete_search": {
+          "type": "custom",
+          "tokenizer": "lowercase"
+        }
+      },
+      "tokenizer": {
+        "autocomplete": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 40,
+          "token_chars": ["letter", "digit", "symbol", "punctuation"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "description": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
+      },
+      "datasetName": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
+      },
+      "isPublished": {
+        "type": "boolean"
+      },
+      "ownerGroup": {
+        "type": "keyword",
+        "ignore_above": 256
+      },
+      "accessGroups": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  }
+}
