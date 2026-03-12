@@ -385,15 +385,6 @@ const configuration = () => {
       password: process.env.OPENSEARCH_PASSWORD,
       host: process.env.OPENSEARCH_HOST,
       refresh: process.env.OPENSEARCH_REFRESH,
-      maxResultWindow: parseInt(
-        process.env.OPENSEARCH_MAX_RESULT || "100000",
-        10,
-      ),
-      fieldsLimit: parseInt(
-        process.env.OPENSEARCH_FIELDS_LIMIT || "100000",
-        10,
-      ),
-      mongoDBCollection: process.env.MONGODB_COLLECTION,
       defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
     },
     metrics: {
