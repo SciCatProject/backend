@@ -27,7 +27,7 @@ export class SearchQueryService {
   private buildFilterFields(fields: ISearchFilter): QueryContainer[] {
     const filter: QueryContainer[] = [];
 
-    if (fields.userGroups) {
+    if (fields.userGroups && fields.userGroups.length > 0) {
       filter.push({
         bool: {
           should: [
