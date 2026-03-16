@@ -2,7 +2,7 @@ services:
   mongodb:
     image: mongo:latest
     volumes:
-      - mongodb_data:/bitnami
+      - "mongodb_data:/data/db"
     ports:
       - "27017:27017"
   opensearch:

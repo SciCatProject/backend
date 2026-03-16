@@ -27,22 +27,27 @@ services:
     depends_on:
       - mongodb
 
-  es01:
+  opensearch:
     depends_on:
       - mongodb
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    image: opensearchproject/opensearch:3.5.0
+    ports:
+      - 9200:9200
     environment:
-      - node.name=es01
-      - ES_JAVA_OPTS=-Xms2g -Xmx2g
-      - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
-      - ELASTIC_PASSWORD=${ES_PASSWORD}
+      - node.name=opensearch
+      - discovery.type=single-node
+      - cluster.name=os-cluster
       - bootstrap.memory_lock=true
-    mem_limit: ${MEM_LIMIT}
+      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat-password2026
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    mem_limit: 4G
     ulimits:
       memlock:
         soft: -1
         hard: -1
+
 #  catanie:
 #    build: 
 #      context: catanie
@@ -114,5 +119,5 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-  es01:
+  opensearch_data:
     driver: local
