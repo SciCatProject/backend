@@ -92,7 +92,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.WORKFLOW_DISPATCHER_APP_ID }}
