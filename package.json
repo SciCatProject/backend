@@ -30,7 +30,7 @@
     "test:api": "npm run test:api:jest --maxWorkers=50% && concurrently -k -s first \"wait-on http://localhost:3000/explorer/ && npm run test:api:mocha\" \"npm run start:test\"",
     "test:api:jest": "dotenv -o -e test/config/.env -e test/config/.env.override -- jest --config ./test/config/jest-e2e.json --maxWorkers=50%",
     "test:api:mocha": "dotenv -o -e test/config/.env -e test/config/.env.override -- mocha --config ./test/config/.mocharc.js -r chai/register-should.js",
-    "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
+    "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml up  -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
   },
   "dependencies": {
     "@casl/ability": "^6.3.2",
