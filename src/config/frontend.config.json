@@ -3,10 +3,12 @@
     "nonAuthenticatedUser": "DATASETS",
     "authenticatedUser": "PROPOSALS"
   },
+  "statusBannerMessage": "",
+  "statusBannerCode": "INFO",
   "checkBoxFilterClickTrigger": false,
   "accessTokenPrefix": "Bearer ",
   "addDatasetEnabled": false,
-  "allowConfigOverrides": true,  
+  "allowConfigOverrides": true,
   "archiveWorkflowEnabled": false,
   "datasetReduceEnabled": true,
   "datasetJsonScientificMetadata": true,
@@ -90,16 +92,16 @@
       "type": "form",
       "url": "https://zip.scicatproject.org/download/all",
       "target": "_blank",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0FilesPath",
         "totalSize": "#Dataset0FilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
       "enabled": "#MaxDownloadableSize(@totalSize)",
-      "inputs" : {
-        "item[]" : "@pid",
-        "directory[]" : "@folder",
+      "inputs": {
+        "item[]": "@pid",
+        "directory[]": "@folder",
         "files[]": "@files"
       },
       "authorization": ["#datasetAccess", "#datasetPublic"]
@@ -114,18 +116,18 @@
       "type": "form",
       "url": "https://zip.scicatproject.org/download/selected",
       "target": "_blank",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0SelectedFilesPath",
         "selected": "#Dataset0SelectedFilesCount",
         "totalSize": "#Dataset0SelectedFilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
-      "inputs" : {
-        "auth_token" : "#tokenBearer",
-        "jwt" : "#jwt",
-        "item[]" : "@pid",
-        "directory[]" : "@folder",
+      "inputs": {
+        "auth_token": "#tokenBearer",
+        "jwt": "#jwt",
+        "item[]": "@pid",
+        "directory[]": "@folder",
         "files[]": "@files"
       },
       "enabled": "#Length(@files) && #MaxDownloadableSize(@totalSize)",
@@ -141,18 +143,18 @@
       "type": "form",
       "url": "https://www.scicat.info/notebook/all",
       "target": "_blank",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0FilesPath",
         "totalSize": "#Dataset0FilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
       "enabled": "",
-      "inputs" : {
-        "auth_token" : "#token",
-        "jwt" : "#jwt",
-        "item[]" : "@pid",
-        "directory[]" : "@folder",
+      "inputs": {
+        "auth_token": "#token",
+        "jwt": "#jwt",
+        "item[]": "@pid",
+        "directory[]": "@folder",
         "files[]": "@files"
       },
       "authorization": ["#datasetAccess", "#datasetPublic"]
@@ -166,18 +168,18 @@
       "type": "form",
       "url": "https://www.scicat.info/notebook/selected",
       "target": "_blank",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0SelectedFilesPath",
         "selected": "#Dataset0SelectedFilesCount",
         "totalSize": "#Dataset0SelectedFilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
-      "inputs" : {
-        "auth_token" : "#token",
-        "jwt" : "#jwt",
-        "item[]" : "@pid",
-        "directory[]" : "@folder",
+      "inputs": {
+        "auth_token": "#token",
+        "jwt": "#jwt",
+        "item[]": "@pid",
+        "directory[]": "@folder",
         "files[]": "@files"
       },
       "enabled": "#Length(@files) > 0",
@@ -194,7 +196,7 @@
       "url": "https://www.sciwyrm.info/notebook",
       "target": "_blank",
       "authorization": ["#datasetAccess", "#datasetPublic"],
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0FilesPath",
         "folder": "#Dataset0SourceFolder"
@@ -213,7 +215,7 @@
       "target": "_blank",
       "enabled": "#Length(@files) > 0",
       "authorization": ["#datasetAccess", "#datasetPublic"],
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0SelectedFilesPath",
         "selected": "#Dataset0SelectedFiles",
@@ -229,14 +231,14 @@
       "label": "Publish",
       "type": "xhr",
       "mat_icon": "lock_open",
-      "method" : "PATCH",
+      "method": "PATCH",
       "url": "http://localhost:3000/dataset/{{ @pid }}/",
       "target": "_blank",
       "enabled": "(#datasetOwner || #userIsAdmin) && !@isPublished",
       "authorization": "#datasetOwner && !@isPublished",
-      "variables" : {
+      "variables": {
         "pid": "@Dataset0Pid",
-        "isPublished" : "#Dataset[0]Field[isPublished]"
+        "isPublished": "#Dataset[0]Field[isPublished]"
       },
       "payload": "{\"isPublished\":\"true\"}",
       "headers": {
@@ -251,14 +253,14 @@
       "label": "Unpublish",
       "type": "xhr",
       "mat_icon": "lock",
-      "method" : "PATCH",
+      "method": "PATCH",
       "url": "http://localhost:3000/dataset/{{ @pid }}/",
       "target": "_blank",
       "enabled": "(#datasetOwner || #userIsAdmin) && @isPublished",
       "authorization": "#datasetOwner && @isPublished",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
-        "isPublished" : "#Dataset[0]Field[isPublished]"
+        "isPublished": "#Dataset[0]Field[isPublished]"
       },
       "payload": "{\"isPublished\":\"false\"}",
       "headers": {
