@@ -37,6 +37,24 @@ To start the application with OpenSearch:
    [Nest] 80126  - 03/17/2026, 3:09:41 PM     LOG [Opensearch] Opensearch Connected
 ```
 
+4. Open the Swagger page at `http://localhost:3000/explorer` and authorize with an `admin` token.
+5. Execute `POST /opensearch/create-index` to create the index.
+   > **Note:** This step can be skipped if you want to use the default index `dataset`.
+6. Execute `POST /opensearch/sync-database` to sync data from MongoDB into OpenSearch. On success you will see:
+
+```json
+{
+  "total": 21670,
+  "failed": 0,
+  "retry": 0,
+  "successful": 21670,
+  "noop": 0,
+  "time": 4777,
+  "bytes": 279159021,
+  "aborted": false
+}
+```
+
 ## Environment Configuration
 
 OpenSearch behavior is controlled using environment variables.
