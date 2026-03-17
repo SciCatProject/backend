@@ -39,7 +39,7 @@ services:
       - cluster.name=os-cluster
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat-password2026
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat_default_password_2026
     volumes:
       - opensearch_data:/usr/share/opensearch/data
     mem_limit: 4G

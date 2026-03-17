@@ -19,7 +19,7 @@ services:
       - cluster.name=os-test-cluster
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=apiTestPassword1_
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat_default_password_2026
     mem_limit: 4G
     ulimits:
       memlock:
