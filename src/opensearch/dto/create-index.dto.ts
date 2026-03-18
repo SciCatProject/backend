@@ -16,5 +16,5 @@ export class CreateIndexDto extends UpdateIndexDto {
   })
   @IsObject()
   @IsOptional()
-  mappings: Partial<TypeMapping>;
+  mappings: TypeMapping;
 }
