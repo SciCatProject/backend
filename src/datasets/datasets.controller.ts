@@ -990,22 +990,12 @@ export class DatasetsController {
       }
     }
 
-    let datasets: DatasetDocument[] | null;
+    const isAdmin = canViewAny;
 
-    const osEnabled =
-      this.configService.get<string>("opensearch.enabled") || "no";
-
-    const textSearch = parsedFilters.fields?.text;
-
-    if (osEnabled === "yes" && textSearch) {
-      const isAdmin = canViewAny;
-      datasets = await this.datasetsService.opensearchQuery(
-        parsedFilters,
-        isAdmin,
-      );
-    } else {
-      datasets = await this.datasetsService.fullquery(parsedFilters);
-    }
+    const datasets = await this.datasetsService.opensearchQuery(
+      parsedFilters,
+      isAdmin,
+    );
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 
@@ -1080,17 +1070,8 @@ export class DatasetsController {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "[]"),
     };
-
-    const osEnabled =
-      this.configService.get<string>("opensearch.enabled") || "no";
-    const textSearch = parsedFilters.fields?.text;
-
-    if (osEnabled === "yes" && textSearch) {
-      const isAdmin = canViewAny;
-      return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
-    }
-
-    return this.datasetsService.fullFacet(parsedFilters);
+    const isAdmin = canViewAny;
+    return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
   }
 
   // GET /datasets/metadataKeys

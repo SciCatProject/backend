@@ -306,9 +306,9 @@ export class DatasetsService {
     filter: IFilters<DatasetDocument, IDatasetFields>,
     isAdmin: boolean,
   ): Promise<DatasetDocument[] | null> {
-    const defaultOsIndex =
-      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
     if (
+      this.configService.get<string>("opensearch.enabled") !== "yes" ||
+      !filter.fields?.text ||
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
     ) {
@@ -330,7 +330,7 @@ export class DatasetsService {
 
     const osResult = await this.opensearchService.search(
       { text, userGroups, isAdmin: isAdmin },
-      defaultOsIndex,
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset",
       modifiers.limit,
       modifiers.skip,
     );
@@ -363,8 +363,6 @@ export class DatasetsService {
     filters: IFacets<IDatasetFields>,
     isAdmin: boolean,
   ): Promise<Record<string, unknown>[]> {
-    const defaultOsIndex =
-      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
     const osConfig =
       this.configService.get<{
         settings: IndexSettings;
@@ -375,6 +373,8 @@ export class DatasetsService {
     );
 
     if (
+      this.configService.get<string>("opensearch.enabled") !== "yes" ||
+      !filters.fields?.text ||
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
     ) {
@@ -389,7 +389,7 @@ export class DatasetsService {
         userGroups: fields.userGroups,
         isAdmin: isAdmin,
       },
-      defaultOsIndex,
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset",
       osMaxResultWindow,
     );
 
