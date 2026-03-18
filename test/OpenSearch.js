@@ -59,7 +59,7 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
 
     it("0010: adds a new raw dataset -1 ", async () => {
       const dataset1 = {
-        ...TestData.ScientificMetadataForOpensearch,
+        ...TestData.DatasetWithScientificMetadata,
         datasetName: datasetName1,
         isPublished: true,
       };
@@ -78,7 +78,7 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
 
     it("0011: adds a new raw dataset -2 ", async () => {
       const dataset2 = {
-        ...TestData.ScientificMetadataForOpensearch,
+        ...TestData.DatasetWithScientificMetadata,
         datasetName: datasetName2,
         isPublished: true,
       };

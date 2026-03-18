@@ -1417,7 +1417,7 @@ const TestData = {
     dataQualityMetrics: "test",
   },
 
-  ScientificMetadataForOpensearch: {
+  DatasetWithScientificMetadata: {
     ownerGroup: faker.company.name(),
     creationLocation: faker.location.city(),
     principalInvestigator: faker.internet.username(),
@@ -1448,7 +1448,7 @@ const TestData = {
     },
   },
 
-  ScientificMetadataForOpensearchV4: {
+  DatasetWithScientificMetadataV4: {
     ownerGroup: faker.company.name(),
     creationLocation: faker.location.city(),
     type: "raw",
