@@ -74,6 +74,9 @@ import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_com
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
+  private readonly osDefaultIndex: string;
+  private readonly isOsEnabled: boolean;
+
   constructor(
     private configService: ConfigService,
     @InjectModel(DatasetClass.name)
@@ -84,7 +87,12 @@ export class DatasetsService {
     @Optional() private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
-  ) {}
+  ) {
+    this.osDefaultIndex =
+      this.configService.get<string>("opensearch.defaultIndex") || "dataset";
+    this.isOsEnabled =
+      this.configService.get<string>("opensearch.enabled") === "yes" || false;
+  }
 
   private createMetadataKeysInstance(
     doc: UpdateQuery<DatasetDocument>,
@@ -307,7 +315,7 @@ export class DatasetsService {
     isAdmin: boolean,
   ): Promise<DatasetDocument[] | null> {
     if (
-      this.configService.get<string>("opensearch.enabled") !== "yes" ||
+      !this.isOsEnabled ||
       !filter.fields?.text ||
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
@@ -330,7 +338,7 @@ export class DatasetsService {
 
     const osResult = await this.opensearchService.search(
       { text, userGroups, isAdmin: isAdmin },
-      this.configService.get<string>("opensearch.defaultIndex") || "dataset",
+      this.osDefaultIndex,
       modifiers.limit,
       modifiers.skip,
     );
@@ -373,7 +381,7 @@ export class DatasetsService {
     );
 
     if (
-      this.configService.get<string>("opensearch.enabled") !== "yes" ||
+      !this.isOsEnabled ||
       !filters.fields?.text ||
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
@@ -389,7 +397,7 @@ export class DatasetsService {
         userGroups: fields.userGroups,
         isAdmin: isAdmin,
       },
-      this.configService.get<string>("opensearch.defaultIndex") || "dataset",
+      this.osDefaultIndex,
       osMaxResultWindow,
     );
 
