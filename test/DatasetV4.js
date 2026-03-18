@@ -314,7 +314,7 @@ describe("2500: Datasets v4 tests", () => {
     it("0126: adds a new dataset with scientificMetadata", async () => {
       return request(appUrl)
         .post("/api/v4/datasets")
-        .send(TestData.ScientificMetadataForOpensearchV4)
+        .send(TestData.DatasetWithScientificMetadataV4)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
@@ -331,7 +331,7 @@ describe("2500: Datasets v4 tests", () => {
 
     it("0127: should be able to add a new dataset with non-empty datasetLifecycle", async () => {
       const newDataset = {
-        ...TestData.ScientificMetadataForOpensearchV4,
+        ...TestData.DatasetWithScientificMetadataV4,
         datasetlifecycle: {
           archivable: false,
           retrievable: true,
