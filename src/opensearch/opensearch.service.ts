@@ -72,23 +72,8 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async onModuleInit() {
-    try {
-      await this.retryConnection(3, 3000);
-      const isIndexExists = await this.isIndexExists(this.defaultIndex);
-
-      if (!isIndexExists) {
-        await this.createIndex({
-          index: this.defaultIndex,
-          settings: this.osConfigs?.settings || {},
-          mappings: this.osConfigs?.mappings || {},
-        });
-        Logger.log(`New index ${this.defaultIndex}is created `, "Opensearch");
-      }
-      Logger.log("Opensearch Connected", "Opensearch");
-    } catch (error) {
-      Logger.error(error, "onModuleInit failed-> OpensearchService");
-    }
+  onModuleInit() {
+    this.initWithRetry();
   }
 
   private async connect() {
@@ -107,25 +92,45 @@ export class OpensearchService implements OnModuleInit {
 
     this.osClient = connection;
   }
-  private async retryConnection(maxRetries: number, interval: number) {
+  private async initWithRetry(
+    maxRetries = 10,
+    initialDelayMs = 5000,
+    maxDelayMs = 60000,
+  ) {
+    let delayMs = initialDelayMs;
     let retryCount = 0;
-    while (maxRetries > retryCount) {
-      await sleep(interval);
+
+    while (retryCount < maxRetries) {
       try {
         await this.connect();
-        break;
+
+        const isIndexExists = await this.isIndexExists(this.defaultIndex);
+        if (!isIndexExists) {
+          await this.createIndex({
+            index: this.defaultIndex,
+            settings: this.osConfigs?.settings || {},
+            mappings: this.osConfigs?.mappings || {},
+          });
+          Logger.log(`New index ${this.defaultIndex} is created`, "Opensearch");
+        }
+
+        Logger.log("Opensearch Connected", "Opensearch");
+        return;
       } catch (error) {
-        Logger.error(`Retry attempt ${retryCount + 1} failed:`, error);
         retryCount++;
+        Logger.warn(
+          `Opensearch connection failed (attempt ${retryCount}/${maxRetries}), retrying in ${delayMs / 1000}s...`,
+          error,
+        );
+        await sleep(delayMs);
+        delayMs = Math.min(delayMs * 2, maxDelayMs);
       }
     }
 
-    if (retryCount === maxRetries) {
-      throw new HttpException(
-        "Max retries reached; check Opensearch config.",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    Logger.error(
+      `Opensearch failed to connect after ${maxRetries} attempts, running without it`,
+      "Opensearch",
+    );
   }
 
   connected() {
