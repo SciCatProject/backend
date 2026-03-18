@@ -237,19 +237,12 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`MS365_CLIENT_SECRET`| string | Yes | Client Secret for sending emails over Microsoft Graph API | |
 |`POLICY_PUBLICATION_SHIFT`| integer | Yes | Embargo period expressed in years. | 3 years |
 |`POLICY_RETENTION_SHIFT`| integer | Yes | Retention period (how long the facility will hold on to data) expressed in years. | -1 (indefinitely) |
-|`ELASTICSEARCH_ENABLED`| string | | Flag to enable/disable the Elasticsearch endpoints. Values "yes" or "no". | "no" |
-|`ES_HOST`| string | | Host of Elasticsearch server instance. |"https://localhost:9200"|
-|`ES_USERNAME`| string | Yes | Elasticsearch username. | "elastic" |
-|`ES_PASSWORD`| string | | Elasticsearch password. |"duo-password"|
-|`ES_PORT`| number | | Elasticsearch port. |9200|
-|`MONGODB_COLLECTION`| string | | Collection name to be mapped into specified Elasticsearch index. Used for data synchronization between MongoDB and Elasticsearch index. |"Dataset"|
-|`ES_MAX_RESULT`| number | Yes | Maximum records that can be indexed into Elasticsearch. | 10000 |
-|`ES_FIELDS_LIMIT`| number | Yes | The total number of fields in an index. | 1000 |
-|`ES_INDEX`| string | | Setting default index for the application |"dataset"|
-|`ES_REFRESH`| string | | If set to`wait_for`, Elasticsearch will wait till data is inserted into the specified index before returning a response. | false |
-|`STACK_VERSION` | string | Yes | Defines the Elasticsearch version to deploy | "8.8.2" |
-|`CLUSTER_NAME` | string | Yes | Sets the name of the Elasticsearch cluster | "es-cluster" |
-|`MEM_LIMIT`| string | Yes | Specifies the max memory for Elasticsearch container (or process) | "4G" |
+|`OPENSEARCH_ENABLED`| string | |  Controls whether OpenSearch is enabled on application startup. If not provided or set to `no`, OpenSearch will not be instantiated.| "no" |
+|`OPENSEARCH_DEFAULT_INDEX`| string | |  Specifies the default index. If not provided, a default index named `dataset` will be created automatically.     | "dataset" |
+|`OPENSEARCH_HOST`| string | | Host of Opensearch server instance. | |
+|`OPENSEARCH_USERNAME`| string | Yes | Username for OpenSearch authentication. Defaults to `admin` in standard deployments but can be configured to use a custom user with appropriate permissions. | "admin" |
+|`OPENSEARCH_PASSWORD`| string | | Password used for OpenSearch authentication. Must match `OPENSEARCH_INITIAL_ADMIN_PASSWORD` used when creating the OpenSearch container.  | |
+|`OPENSEARCH_REFRESH`| string | | Controls index refresh behavior. `wait_for`waits for the next refresh cycle before returning, which is useful for development and testing.`false`skips waiting and is recommended for production. Defaults to false. | false |
 |`FRONTEND_CONFIG_FILE`| string | | The file name for frontend configuration, located in the`/src/config`directory by default. | "./src/config/frontend.config.json" |
 |`FRONTEND_THEME_FILE`| string | | The file name for frontend theme, located in the`/src/config`directory by default. | "./src/config/frontend.theme.json" |
 |`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |

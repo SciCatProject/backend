@@ -14,10 +14,6 @@ export class SearchQueryService {
       const accessFilter = this.buildFilterFields(filter);
       const textQuery = this.buildTextQuery(filter);
 
-      // NOTE: The final query flow is as follows:
-      // step 1. Build filter fields conditions must match all filter fields
-      // step 2. Build should fields conditions must match at least one should field
-      // step 3. Build text query conditions must match all text query fields
       return this.constructFinalQuery(accessFilter, textQuery);
     } catch (err) {
       Logger.error("Open search build search query failed", err);
@@ -51,7 +47,6 @@ export class SearchQueryService {
   private buildTextQuery(filter: ISearchFilter): QueryContainer[] {
     let wildcardQueries: QueryContainer[] = [];
 
-    //NOTE: if text field is present, we query both datasetName and description fields
     if (filter.text) {
       wildcardQueries = this.buildWildcardQueries(filter.text);
     }

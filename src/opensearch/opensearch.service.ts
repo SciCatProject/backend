@@ -276,7 +276,7 @@ export class OpensearchService implements OnModuleInit {
         query: searchQuery.query,
         from: skip,
         size: limit,
-        min_score: 1,
+        min_score: 0.1,
         track_total_hits: true,
         _source: [""],
       };
