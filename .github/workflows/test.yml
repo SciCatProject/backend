@@ -136,5 +136,5 @@ jobs:
         run: |
           cp opensearchConfig.example.json opensearchConfig.json
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
-          docker compose up --build -d
+          docker compose up --build -d --wait
           OPENSEARCH_ENABLED=${{ matrix.opensearch_enabled }} npm run test:api
