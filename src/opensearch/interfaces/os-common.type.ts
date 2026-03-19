@@ -1,5 +1,5 @@
 export interface ISearchFilter {
-  isAdmin?: boolean;
   userGroups?: string[];
+  isPublished?: boolean;
   text?: string;
 }

@@ -312,7 +312,6 @@ export class DatasetsService {
 
   async opensearchQuery(
     filter: IFilters<DatasetDocument, IDatasetFields>,
-    isAdmin: boolean,
   ): Promise<DatasetDocument[] | null> {
     if (
       !this.isOsEnabled ||
@@ -323,7 +322,7 @@ export class DatasetsService {
       return this.fullquery(filter);
     }
 
-    const { text, userGroups } = filter.fields || {};
+    const { text, isPublished, userGroups } = filter.fields || {};
 
     const mongoQuery: FilterQuery<DatasetDocument> =
       createFullqueryFilter<DatasetDocument>(
@@ -337,7 +336,7 @@ export class DatasetsService {
     delete mongoQuery.$text;
 
     const osResult = await this.opensearchService.search(
-      { text, userGroups, isAdmin: isAdmin },
+      { text, userGroups, isPublished },
       this.osDefaultIndex,
       modifiers.limit,
       modifiers.skip,
@@ -369,7 +368,6 @@ export class DatasetsService {
 
   async opensearchFacet(
     filters: IFacets<IDatasetFields>,
-    isAdmin: boolean,
   ): Promise<Record<string, unknown>[]> {
     const osConfig =
       this.configService.get<{
@@ -395,7 +393,7 @@ export class DatasetsService {
       {
         text: fields.text,
         userGroups: fields.userGroups,
-        isAdmin: isAdmin,
+        isPublished: fields.isPublished,
       },
       this.osDefaultIndex,
       osMaxResultWindow,
