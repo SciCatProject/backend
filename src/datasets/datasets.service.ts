@@ -66,13 +66,12 @@ import {
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import {
-  DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY,
-  sanitizeDatasetForOpensearch,
-} from "./utils/dataset-opensearch.utils";
 import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
 import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
 import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
+import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
+import { plainToInstance } from "class-transformer";
+import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -204,7 +203,7 @@ export class DatasetsService {
 
     if (this.opensearchService && createdDataset) {
       await this.opensearchService.updateInsertDocument(
-        sanitizeDatasetForOpensearch<DatasetDocument>(savedDataset.toObject()),
+        plainToInstance(DatasetOpenSearchDto, savedDataset.toObject()),
       );
     }
 
@@ -493,9 +492,7 @@ export class DatasetsService {
 
     if (this.opensearchService) {
       await this.opensearchService.updateInsertDocument(
-        sanitizeDatasetForOpensearch<DatasetDocument>(
-          updatedDataset.toObject(),
-        ),
+        plainToInstance(DatasetOpenSearchDto, updatedDataset.toObject()),
       );
     }
 
@@ -543,9 +540,7 @@ export class DatasetsService {
 
     if (this.opensearchService) {
       await this.opensearchService.updateInsertDocument(
-        sanitizeDatasetForOpensearch<DatasetDocument>(
-          patchedDataset.toObject(),
-        ),
+        plainToInstance(DatasetOpenSearchDto, patchedDataset.toObject()),
       );
     }
 
@@ -667,7 +662,7 @@ export class DatasetsService {
       };
 
       const cursor = this.datasetModel
-        .find({}, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
+        .find({}, DATASET_OPENSEARCH_PROJECTION)
         .lean()
         .cursor({ batchSize: this.osSyncBatchSize });
 
