@@ -386,6 +386,10 @@ const configuration = () => {
       host: process.env.OPENSEARCH_HOST,
       refresh: process.env.OPENSEARCH_REFRESH,
       defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
+      dataSyncBatchSize: parseInt(
+        process.env.OPENSEARCH_DATA_SYNC_BATCH_SIZE || "10000",
+        10,
+      ),
     },
     metrics: {
       // Note: `process.env.METRICS_ENABLED` is directly used for conditional module loading in
