@@ -387,7 +387,7 @@ const configuration = () => {
       refresh: process.env.OPENSEARCH_REFRESH,
       defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
       dataSyncBatchSize: parseInt(
-        process.env.OPENSEARCH_DATA_SYNC_BATCH_SIZE || "10000",
+        process.env.OPENSEARCH_DATA_SYNC_BATCH_SIZE || "1000",
         10,
       ),
     },

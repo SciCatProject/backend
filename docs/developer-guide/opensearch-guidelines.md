@@ -68,7 +68,7 @@ To enable OpenSearch, set `OPENSEARCH_ENABLED=yes` and provide values for all re
 | `OPENSEARCH_USERNAME`             | `"admin"`                | Username for OpenSearch authentication. Defaults to `admin` in standard deployments but can be configured to use a custom user with appropriate permissions.                                                            | Yes      |
 | `OPENSEARCH_PASSWORD`             | `Scicat-password2026`    | Password used for OpenSearch authentication. Must match `OPENSEARCH_INITIAL_ADMIN_PASSWORD` used when creating the OpenSearch container.                                                                                | Yes      |
 | `OPENSEARCH_REFRESH`              | `"wait_for" \| "false"`  | Controls index refresh behavior. `wait_for` waits for the next refresh cycle before returning, which is useful for development and testing. `false` skips waiting and is recommended for production. Defaults to false. | No       |
-| `OPENSEARCH_DATA_SYNC_BATCH_SIZE` | 10000                    | Number of documents fetched from MongoDB per batch during OpenSearch data sync. Defaults to 10000                                                                                                                       | No       |
+| `OPENSEARCH_DATA_SYNC_BATCH_SIZE` | 1000                     | Number of documents fetched from MongoDB per batch during OpenSearch data sync. Defaults to 10000                                                                                                                       | No       |
 
 ## Index Configuration
 

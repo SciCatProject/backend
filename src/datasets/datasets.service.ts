@@ -96,7 +96,7 @@ export class DatasetsService {
     this.isOsEnabled =
       this.configService.get<string>("opensearch.enabled") === "yes" || false;
     this.osSyncBatchSize =
-      this.configService.get<number>("opensearch.dataSyncBatchSize") || 10000;
+      this.configService.get<number>("opensearch.dataSyncBatchSize") || 1000;
   }
 
   private createMetadataKeysInstance(
