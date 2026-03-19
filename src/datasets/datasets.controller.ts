@@ -990,12 +990,7 @@ export class DatasetsController {
       }
     }
 
-    const isAdmin = canViewAny;
-
-    const datasets = await this.datasetsService.opensearchQuery(
-      parsedFilters,
-      isAdmin,
-    );
+    const datasets = await this.datasetsService.opensearchQuery(parsedFilters);
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 
@@ -1070,8 +1065,7 @@ export class DatasetsController {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "[]"),
     };
-    const isAdmin = canViewAny;
-    return this.datasetsService.opensearchFacet(parsedFilters, isAdmin);
+    return this.datasetsService.opensearchFacet(parsedFilters);
   }
 
   // GET /datasets/metadataKeys

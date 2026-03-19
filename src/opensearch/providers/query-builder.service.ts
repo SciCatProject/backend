@@ -33,7 +33,8 @@ export class SearchQueryService {
           minimum_should_match: 1,
         },
       });
-    } else if (!fields.isAdmin) {
+    }
+    if (fields.isPublished) {
       filter.push({
         term: {
           isPublished: true,
