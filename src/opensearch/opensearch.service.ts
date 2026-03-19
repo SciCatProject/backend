@@ -308,9 +308,6 @@ export class OpensearchService implements OnModuleInit {
   }
 
   async updateInsertDocument(data: Partial<DatasetDocument>) {
-    //NOTE: Replace all keys with lower case, also replace spaces and dot with underscore
-    delete data._id;
-
     try {
       await this.osClient.index({
         index: this.defaultIndex,

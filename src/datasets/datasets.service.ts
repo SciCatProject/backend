@@ -203,7 +203,9 @@ export class DatasetsService {
 
     if (this.opensearchService && createdDataset) {
       await this.opensearchService.updateInsertDocument(
-        plainToInstance(DatasetOpenSearchDto, savedDataset.toObject()),
+        plainToInstance(DatasetOpenSearchDto, savedDataset.toObject(), {
+          excludeExtraneousValues: true,
+        }),
       );
     }
 
@@ -492,7 +494,9 @@ export class DatasetsService {
 
     if (this.opensearchService) {
       await this.opensearchService.updateInsertDocument(
-        plainToInstance(DatasetOpenSearchDto, updatedDataset.toObject()),
+        plainToInstance(DatasetOpenSearchDto, updatedDataset.toObject(), {
+          excludeExtraneousValues: true,
+        }),
       );
     }
 
@@ -540,7 +544,9 @@ export class DatasetsService {
 
     if (this.opensearchService) {
       await this.opensearchService.updateInsertDocument(
-        plainToInstance(DatasetOpenSearchDto, patchedDataset.toObject()),
+        plainToInstance(DatasetOpenSearchDto, patchedDataset.toObject(), {
+          excludeExtraneousValues: true,
+        }),
       );
     }
 

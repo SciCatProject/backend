@@ -1,6 +1,7 @@
 // It controlles which fields of the dataset document should be included
 // when sending it to Opensearch.
 export const DATASET_OPENSEARCH_FIELDS = [
+  "pid",
   "description",
   "datasetName",
   "isPublished",
