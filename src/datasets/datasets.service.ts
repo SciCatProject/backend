@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
   Optional,
   Scope,
@@ -71,11 +72,13 @@ import {
 } from "./utils/dataset-opensearch.utils";
 import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
 import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
+import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
   private readonly isOsEnabled: boolean;
+  private readonly osSyncBatchSize: number;
 
   constructor(
     private configService: ConfigService,
@@ -92,6 +95,8 @@ export class DatasetsService {
       this.configService.get<string>("opensearch.defaultIndex") || "dataset";
     this.isOsEnabled =
       this.configService.get<string>("opensearch.enabled") === "yes" || false;
+    this.osSyncBatchSize =
+      this.configService.get<number>("opensearch.dataSyncBatchSize") || 10000;
   }
 
   private createMetadataKeysInstance(
@@ -650,14 +655,60 @@ export class DatasetsService {
     try {
       await this.opensearchService.checkIndexExists(index);
 
-      const datasets = await this.datasetModel
-        .find({}, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
-        .lean()
-        .exec();
-      return await this.opensearchService.performBulkOperation<DatasetClass>(
-        datasets,
-        index,
+      let lastId: string | null = null;
+      const bulkOperationFinalResult: BulkStats = {
+        total: 0,
+        failed: 0,
+        retry: 0,
+        successful: 0,
+        noop: 0,
+        time: 0,
+        bytes: 0,
+        aborted: false,
+      };
+
+      while (true) {
+        const query = lastId ? { _id: { $gt: lastId } } : {};
+
+        const datasets: DatasetClass[] = await this.datasetModel
+          .find(query, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
+          .sort({ _id: 1 })
+          .lean()
+          .limit(this.osSyncBatchSize)
+          .exec();
+
+        if (datasets.length === 0) break;
+
+        const bulk =
+          await this.opensearchService.performBulkOperation<DatasetClass>(
+            datasets,
+            index,
+          );
+
+        lastId = datasets[datasets.length - 1]._id;
+
+        // Aggregate bulk stats across batches for internal sync status tracking.
+        bulkOperationFinalResult.total += bulk.total;
+        bulkOperationFinalResult.failed += bulk.failed;
+        bulkOperationFinalResult.retry += bulk.retry;
+        bulkOperationFinalResult.successful += bulk.successful;
+        bulkOperationFinalResult.noop += bulk.noop;
+        bulkOperationFinalResult.time += bulk.time;
+        bulkOperationFinalResult.bytes += bulk.bytes;
+        bulkOperationFinalResult.aborted = bulk.aborted;
+
+        Logger.log(
+          `Synced ${bulkOperationFinalResult.total} datasets to OpenSearch`,
+          "OpensearchSync",
+        );
+      }
+
+      Logger.log(
+        `Sync complete — total: ${bulkOperationFinalResult.total}`,
+        "OpensearchSync",
       );
+
+      return bulkOperationFinalResult;
     } catch (error) {
       throw new Error(`OpenSearch sync failed: ${error}`);
     }

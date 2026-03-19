@@ -243,6 +243,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`OPENSEARCH_USERNAME`| string | Yes | Username for OpenSearch authentication. Defaults to `admin` in standard deployments but can be configured to use a custom user with appropriate permissions. | "admin" |
 |`OPENSEARCH_PASSWORD`| string | | Password used for OpenSearch authentication. Must match `OPENSEARCH_INITIAL_ADMIN_PASSWORD` used when creating the OpenSearch container.  | |
 |`OPENSEARCH_REFRESH`| string | | Controls index refresh behavior. `wait_for`waits for the next refresh cycle before returning, which is useful for development and testing.`false`skips waiting and is recommended for production. Defaults to false. | false |
+|`OPENSEARCH_DATA_SYNC_BATCH_SIZE`| number | | Number of documents fetched from MongoDB per batch during OpenSearch data sync. | 10000 |
 |`FRONTEND_CONFIG_FILE`| string | | The file name for frontend configuration, located in the`/src/config`directory by default. | "./src/config/frontend.config.json" |
 |`FRONTEND_THEME_FILE`| string | | The file name for frontend theme, located in the`/src/config`directory by default. | "./src/config/frontend.theme.json" |
 |`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |
