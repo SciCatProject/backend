@@ -655,7 +655,6 @@ export class DatasetsService {
     try {
       await this.opensearchService.checkIndexExists(index);
 
-      let lastId: string | null = null;
       const bulkOperationFinalResult: BulkStats = {
         total: 0,
         failed: 0,
@@ -667,27 +666,39 @@ export class DatasetsService {
         aborted: false,
       };
 
-      while (true) {
-        const query = lastId ? { _id: { $gt: lastId } } : {};
+      const cursor = this.datasetModel
+        .find({}, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
+        .lean()
+        .cursor({ batchSize: this.osSyncBatchSize });
 
-        const datasets: DatasetClass[] = await this.datasetModel
-          .find(query, DATASET_OPENSEARCH_EXCLUDE_FIELDS_QUERY)
-          .sort({ _id: 1 })
-          .lean()
-          .limit(this.osSyncBatchSize)
-          .exec();
+      let batch: DatasetClass[] = [];
+      let isCursorExhausted = false;
 
-        if (datasets.length === 0) break;
+      while (!isCursorExhausted) {
+        const doc = await cursor.next();
 
+        if (doc) {
+          batch.push(doc as DatasetClass);
+        } else {
+          isCursorExhausted = true;
+        }
+
+        // Condition: Is the batch full OR are we at the very end with a non-empty tail?
+        const isBatchReady = batch.length >= this.osSyncBatchSize;
+        const isFinalBatch = isCursorExhausted && batch.length > 0;
+
+        if (!isBatchReady && !isFinalBatch) {
+          continue;
+        }
+
+        // Single source of truth for the bulk operation
         const bulk =
           await this.opensearchService.performBulkOperation<DatasetClass>(
-            datasets,
+            batch,
             index,
           );
 
-        lastId = datasets[datasets.length - 1]._id;
-
-        // Aggregate bulk stats across batches for internal sync status tracking.
+        // Aggregate bulk stats
         bulkOperationFinalResult.total += bulk.total;
         bulkOperationFinalResult.failed += bulk.failed;
         bulkOperationFinalResult.retry += bulk.retry;
@@ -698,19 +709,19 @@ export class DatasetsService {
         bulkOperationFinalResult.aborted = bulk.aborted;
 
         Logger.log(
-          `Synced ${bulkOperationFinalResult.total} datasets to OpenSearch`,
+          `Synced ${bulkOperationFinalResult.total} datasets to OpenSearch (Final Batch: ${isFinalBatch})`,
           "OpensearchSync",
         );
+
+        batch = [];
       }
 
-      Logger.log(
-        `Sync complete — total: ${bulkOperationFinalResult.total}`,
-        "OpensearchSync",
-      );
-
       return bulkOperationFinalResult;
-    } catch (error) {
-      throw new Error(`OpenSearch sync failed: ${error}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      Logger.error(`Sync failed: ${errorMessage}`, "OpensearchSync");
+      throw error;
     }
   }
 }
