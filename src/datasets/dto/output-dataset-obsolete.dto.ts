@@ -261,7 +261,7 @@ export class OutputDatasetObsoleteDto extends UpdateDatasetObsoleteDto {
     ({ value, obj }) => {
       if (value.runNumber) return value;
       if (!obj?.runNumber) return value;
-      return { runNumber: obj.runNumber, ...value };
+      return { ...value, runNumber: obj.runNumber };
     },
     { toClassOnly: true },
   )
