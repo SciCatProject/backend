@@ -1,0 +1,74 @@
+{
+  "realm": "local-test",
+  "enabled": true,
+  "users": [
+    {
+      "username": "test-username",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "test@test.com",
+      "firstName": "test",
+      "lastName": "user",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test-password",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "additional-authorized-client-test-1",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "aud",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "scicat-client-test",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "additional-authorized-client-test-2",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "aud",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "scicat-client-test",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "scicat-client-test",
+      "secret": "secret",
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false
+    },
+    {
+      "clientId": "untrusted-client",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false
+    }
+  ]
+}

@@ -344,6 +344,12 @@ const configuration = () => {
         operator: process.env.OIDC_USERQUERY_OPERATOR || "or", // Example: "or" or "and"
         filter: oidcUserQueryFilter.split(",").map((v) => v.trim()) ?? [], // Example: "username:username, email:email"
       },
+      additionalAuthorizedParties: process.env
+        .OIDC_ADDITIONAL_AUTHORIZED_PARTIES
+        ? process.env.OIDC_ADDITIONAL_AUTHORIZED_PARTIES.split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : undefined, // Example: "public-client-id" or "client1,client2"
     },
     logbook: {
       enabled:
