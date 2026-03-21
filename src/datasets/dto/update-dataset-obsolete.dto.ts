@@ -21,7 +21,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { TechniqueClass } from "../schemas/technique.schema";
-import { Type, Transform } from "class-transformer";
+import { Type, Transform, Expose } from "class-transformer";
 import { CreateTechniqueDto } from "./create-technique.dto";
 import { RelationshipClass } from "../schemas/relationship.schema";
 import { CreateRelationshipDto } from "./create-relationship.dto";
@@ -334,6 +334,10 @@ export class UpdateDatasetObsoleteDto extends OwnableDto {
   })
   @IsOptional()
   @IsString()
+  @Expose()
+  @Transform(({ value, obj }) => value ?? obj.scientificMetadata?.runNumber, {
+    toClassOnly: true,
+  })
   readonly runNumber?: string;
 }
 
