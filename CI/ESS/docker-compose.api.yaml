@@ -9,7 +9,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     volumes:
-      - ../ESS/local-test-realm.json:/opt/keycloak/data/import/local-test-realm.json
+      - ./local-test-realm.json:/opt/keycloak/data/import/local-test-realm.json
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
       interval: 5s
