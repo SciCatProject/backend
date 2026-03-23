@@ -1009,10 +1009,6 @@ export class SamplesController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
       const canViewPublic = ability.can(
         Action.DatasetReadManyPublic,
         DatasetClass,
@@ -1021,9 +1017,6 @@ export class SamplesController {
         fields.userGroups = user.currentGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
         // fields.sharedWith = user.email;
-      } else if (canViewOwner) {
-        fields.ownerGroup = user.currentGroups ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
       } else if (canViewPublic) {
         fields.isPublished = true;
       }
