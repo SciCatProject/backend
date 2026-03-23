@@ -141,6 +141,7 @@ jobs:
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           cp CI/ESS/local-test-realm.json .
           docker compose up --build -d --wait
+          sleep 40
           npm run test:api
 
       - name: logs
