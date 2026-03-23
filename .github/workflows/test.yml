@@ -141,17 +141,10 @@ jobs:
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           cp CI/ESS/local-test-realm.json .
           docker compose up --build -d --wait
-          for i in $(seq 1 20); do
-            curl -sf http://localhost:8080/realms/local-test/.well-known/openid-configuration && break
-            echo "Waiting for Keycloak realm... attempt $i"
-            sleep 3
-          done
           npm run test:api
 
       - name: logs
         if: failure()
         run: |
           echo "API tests failed. Fetching logs..."
-          docker logs backend-keycloak-1
-          docker logs backend-backend-1  # or whatever your backend container is named
-          docker ps -a
+          docker compose logs backend-keycloak-1

@@ -64,7 +64,7 @@
       "publicClient": false
     },
     {
-      "clientId": "untrusted-client",
+      "clientId": "untrusted-client-test",
       "publicClient": true,
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
