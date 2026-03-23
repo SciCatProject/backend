@@ -148,4 +148,4 @@ jobs:
         if: failure()
         run: |
           echo "API tests failed. Fetching logs..."
-          docker compose logs keycloak
+          docker logs backend-keycloak-1
