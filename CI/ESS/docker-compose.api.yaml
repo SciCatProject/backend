@@ -63,7 +63,7 @@ services:
           ]
         }
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/local-test/.well-known/openid-configuration || exit 1"]
+      test: ["CMD", "wget -q -O- http://localhost:8080/local-test/.well-known/openid-configuration || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10

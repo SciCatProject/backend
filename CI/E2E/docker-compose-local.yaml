@@ -1,5 +1,5 @@
 version: "3.2"
-services:        
+services:
   mongodb:
     image: bitnami/mongodb:latest
     volumes:
