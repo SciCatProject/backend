@@ -698,9 +698,20 @@ It allows customizing how list-based components (e.g., datasets, proposals) disp
 <td>Whether the column is displayed by default.</td>
 <td><code>true</code></td>
 </tr>
+<tr>
+<td><code>sort</code></td>
+<td><code>string</code></td>
+<td>Optional property to define the default sort direction for a specific column. Accepts <code>"asc"</code> or <code>"desc"</code>. <br> <strong>Note:</strong> Only one column in the <code>defaultProposalsListSettings</code> or <code>defaultDatasetsListSettings</code> should have this property defined. If not specified anywhere, the table defaults to sorting by the <code>createdAt</code> column in descending order.</td>
+<td><code>"desc"</code></td>
+</tr>
+<tr>
+<td>---</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
-<hr>
 <h3 id="filters"><strong>Filters</strong><a class="headerlink" href="#filters" title="Permanent link">¶</a></h3>
 <p>Defines which filters appear in the side panel and how they behave.</p>
 <table>
