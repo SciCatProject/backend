@@ -740,8 +740,13 @@ export class PublishedDataV4Controller {
       landingPage,
     } = metadata ?? {};
 
+    const landingPageBase =
+      typeof landingPage === "string" &&
+      (landingPage.startsWith("https://") || landingPage.startsWith("http://"))
+        ? landingPage
+        : `https://${landingPage}`;
     const url = landingPage
-      ? `https://${landingPage}${encodeURIComponent(doi)}`
+      ? `${landingPageBase}${encodeURIComponent(doi)}`
       : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
