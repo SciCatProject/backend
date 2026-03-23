@@ -139,12 +139,6 @@ jobs:
         # Start mongo container and app before running api tests
         run: |
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
-          cp CI/ESS/local-test-realm.json .
+          cp CI/ESS/oauth-mock.json .
           docker compose up --build -d --wait
           npm run test:api
-
-      - name: logs
-        if: failure()
-        run: |
-          echo "API tests failed. Fetching logs..."
-          docker compose logs backend-keycloak-1

@@ -27,7 +27,7 @@ describe("OIDC E2E", () => {
 
   it("should exchange scicat token from main client", async () => {
     const res = await request(keycloakUrl)
-      .post("/realms/local-test/protocol/openid-connect/token")
+      .post("/local-test/token")
       .type("form")
       .send(tokenBody("scicat-client-test"))
       .expect(TestData.EntryValidStatusCode)
@@ -46,7 +46,7 @@ describe("OIDC E2E", () => {
 
   it("should exchange scicat token from first additional authorized client", async () => {
     const res = await request(keycloakUrl)
-      .post("/realms/local-test/protocol/openid-connect/token")
+      .post("/local-test/token")
       .type("form")
       .send(tokenBody("additional-authorized-client-test-1"))
       .expect(TestData.EntryValidStatusCode)
@@ -65,7 +65,7 @@ describe("OIDC E2E", () => {
 
   it("should exchange scicat token from second additional authorized client", async () => {
     const res = await request(keycloakUrl)
-      .post("/realms/local-test/protocol/openid-connect/token")
+      .post("/local-test/token")
       .type("form")
       .send(tokenBody("additional-authorized-client-test-2"))
       .expect(TestData.EntryValidStatusCode)
@@ -84,7 +84,7 @@ describe("OIDC E2E", () => {
 
   it("should reject token exchange from untrusted client", async () => {
     const res = await request(keycloakUrl)
-      .post("/realms/local-test/protocol/openid-connect/token")
+      .post("/local-test/token")
       .type("form")
       .send(tokenBody("untrusted-client-test"))
       .expect(TestData.EntryValidStatusCode)
