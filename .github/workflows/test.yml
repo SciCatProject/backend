@@ -141,7 +141,11 @@ jobs:
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           cp CI/ESS/local-test-realm.json .
           docker compose up --build -d --wait
-          sleep 40
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/realms/local-test/.well-known/openid-configuration && break
+            echo "Waiting for Keycloak realm... attempt $i"
+            sleep 3
+          done
           npm run test:api
 
       - name: logs
