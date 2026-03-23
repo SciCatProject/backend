@@ -140,7 +140,7 @@ jobs:
         run: |
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           cp CI/ESS/local-test-realm.json .
-          docker compose up --build -d --waitNo
+          docker compose up --build -d --wait
           for i in $(seq 1 20); do
             curl -sf http://localhost:8080/realms/local-test/.well-known/openid-configuration && break
             echo "Waiting for Keycloak realm... attempt $i"
