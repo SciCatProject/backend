@@ -141,3 +141,9 @@ jobs:
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
           docker compose up --build -d --wait
           npm run test:api
+
+      - name: logs
+        if: failure()
+        run: |
+          echo "API tests failed. Fetching logs..."
+          docker compose logs keycloak

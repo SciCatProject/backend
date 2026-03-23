@@ -8,7 +8,6 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KEYCLOAK_IMPORT: /opt/keycloak/data/import/local-test-realm.json
     volumes:
       - ./local-test-realm.json:/opt/keycloak/data/import/local-test-realm.json
     healthcheck:
