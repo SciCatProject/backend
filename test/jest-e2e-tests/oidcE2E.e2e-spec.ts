@@ -1,7 +1,16 @@
 import request from "supertest";
 
 describe("OIDC E2E", () => {
-  beforeAll(async () => {});
+  beforeAll(async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:8080/realms/local-test/.well-known/openid-configuration",
+      );
+      console.log("Keycloak reachable, status:", res.status);
+    } catch (e) {
+      console.error("Cannot reach Keycloak:", e);
+    }
+  });
 
   it("should exchange scicat token from main client", async () => {
     const res = await fetch(
