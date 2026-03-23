@@ -1,6 +1,12 @@
 const { TestData } = require("./TestData");
 
+const isCI = process.env.CI === "true";
+
 describe("OIDC E2E", () => {
+  before(function () {
+    if (!isCI) this.skip();
+  });
+
   const keycloakUrl = "http://localhost:8080";
 
   const testUser = {
