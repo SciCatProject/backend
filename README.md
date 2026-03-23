@@ -187,6 +187,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
+| `OIDC_ADDITIONAL_AUTHORIZED_PARTIES` | string | No | Comma-separated list of additional OIDC client IDs allowed to present tokens to this backend. Used for token exchange scenarios where a third-party client obtains a token on behalf of a user. The client ID must appear as the `azp` claim in the token. Example: `additional-client1, additional-client2`. | |
 | `OIDC_CLIENT_SECRET` | string | Yes | Secret to provide to the OIDC service to obtain the user token. Example: Aa1JIw3kv3mQlGFWhRrE3gOdkH6xreAwro. | |
 | `OIDC_CALLBACK_URL` | string | Yes | SciCat callback URL to redirect to after a successful login. Example: http://myscicat/api/v3/oidc/callback. | |
 | `OIDC_SCOPE` | string | Yes | Space-separated list of info returned by the OIDC service. Example: "openid profile email". | |
