@@ -38,7 +38,9 @@ describe("PublishedDataController", () => {
       ],
     }).compile();
 
-    controller = module.get<PublishedDataController>(PublishedDataController);
+    controller = await module.resolve<PublishedDataController>(
+      PublishedDataController,
+    );
   });
 
   it("should be defined", () => {
