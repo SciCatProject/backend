@@ -12,7 +12,7 @@ import { TestData } from "../TestData";
 import { MongoClient } from "mongodb";
 
 ["mongo", "memory"].forEach((store) => {
-  describe(`OIDC test ${store}`, () => {
+  describe(`OIDC session test ${store}`, () => {
     let app: INestApplication;
     let mongoConnection: Connection;
     let mongoClient: MongoClient;

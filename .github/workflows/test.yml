@@ -139,5 +139,5 @@ jobs:
         # Start mongo container and app before running api tests
         run: |
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
-          docker compose up --build -d
+          docker compose up --build -d --wait
           npm run test:api
