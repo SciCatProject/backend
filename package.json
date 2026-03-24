@@ -89,7 +89,8 @@
     },
     "socks": {
       "ip": "^2.0.2"
-    }
+    },
+    "mongodb": "6.20.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
