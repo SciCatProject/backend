@@ -22,7 +22,7 @@ import { JobsModule } from "./jobs/jobs.module";
 import { InstrumentsModule } from "./instruments/instruments.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { join } from "path";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import { handlebarsHelpers } from "./common/handlebars-helpers";
 import { CommonModule } from "./common/common.module";
 import { RabbitMQModule } from "./common/rabbitmq/rabbitmq.module";
