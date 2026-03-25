@@ -257,5 +257,13 @@ export class OutputDatasetObsoleteDto extends UpdateDatasetObsoleteDto {
     description: "JSON object containing the scientific metadata.",
   })
   @Transform(({ value }) => decodeScientificMetadataKeys(value))
+  @Transform(
+    ({ value, obj }) => {
+      if (value.runNumber) return value;
+      if (!obj?.runNumber) return value;
+      return { ...value, runNumber: obj.runNumber };
+    },
+    { toClassOnly: true },
+  )
   declare scientificMetadata?: Record<string, unknown>;
 }
