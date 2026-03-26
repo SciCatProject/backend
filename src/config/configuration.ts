@@ -72,6 +72,7 @@ const configuration = () => {
   const jsonConfigMap: { [key: string]: object | object[] | boolean } = {
     datasetTypes: {},
     proposalTypes: {},
+    opensearchConfig: {},
   };
   const jsonConfigFileList: { [key: string]: string } = {
     frontendConfig:
@@ -84,6 +85,8 @@ const configuration = () => {
     metricsConfig: process.env.METRICS_CONFIG_FILE || "metricsConfig.json",
     publishedDataConfig:
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
+    opensearchConfig:
+      process.env.OPENSEARCH_CONFIG_FILE || "opensearchConfig.json",
   };
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
@@ -98,7 +101,11 @@ const configuration = () => {
         jsonConfigMap[key] = false;
       }
     } else {
-      if (key === "publishedDataConfig") {
+      const configsWithExampleFallback = [
+        "publishedDataConfig",
+        "opensearchConfig",
+      ];
+      if (configsWithExampleFallback.includes(key)) {
         console.warn(
           `Configuration file ${filePath} does not exist. Trying to use the example ${key}.example.json file`,
         );
@@ -378,16 +385,17 @@ const configuration = () => {
       username: process.env.RABBITMQ_USERNAME,
       password: process.env.RABBITMQ_PASSWORD,
     },
-    elasticSearch: {
-      enabled: process.env.ELASTICSEARCH_ENABLED ?? "no",
-      username: process.env.ES_USERNAME,
-      password: process.env.ES_PASSWORD,
-      host: process.env.ES_HOST,
-      refresh: process.env.ES_REFRESH,
-      maxResultWindow: parseInt(process.env.ES_MAX_RESULT || "100000", 10),
-      fieldsLimit: parseInt(process.env.ES_FIELDS_LIMIT || "100000", 10),
-      mongoDBCollection: process.env.MONGODB_COLLECTION,
-      defaultIndex: process.env.ES_INDEX ?? "dataset",
+    opensearch: {
+      enabled: process.env.OPENSEARCH_ENABLED ?? "no",
+      username: process.env.OPENSEARCH_USERNAME ?? "admin",
+      password: process.env.OPENSEARCH_PASSWORD,
+      host: process.env.OPENSEARCH_HOST,
+      refresh: process.env.OPENSEARCH_REFRESH,
+      defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
+      dataSyncBatchSize: parseInt(
+        process.env.OPENSEARCH_DATA_SYNC_BATCH_SIZE || "1000",
+        10,
+      ),
     },
     metrics: {
       // Note: `process.env.METRICS_ENABLED` is directly used for conditional module loading in
@@ -426,6 +434,7 @@ const configuration = () => {
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
+    opensearchConfig: jsonConfigMap.opensearchConfig,
   };
   return merge(config, localconfiguration);
 };
