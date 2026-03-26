@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../HISTORY/">
+        <link rel="prev" href="../metadatakeys-module/">
       
       
-        <link rel="next" href="../opensearch-guidelines/">
+        <link rel="next" href="../release-guidelines/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>MetadataKeys Synchronization Service Overview - SciCat Documentation</title>
+        <title>OpenSearch Integration - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#overview-problem-statement" class="md-skip">
+        <a href="#opensearch-integration" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              MetadataKeys Synchronization Service Overview
+              OpenSearch Integration
             
           </span>
         </div>
@@ -315,6 +315,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../metadatakeys-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MetadataKeys Synchronization Service Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -324,6 +352,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -332,7 +362,7 @@
   <span class="md-ellipsis">
     
   
-    MetadataKeys Synchronization Service Overview
+    OpenSearch Integration
   
 
     
@@ -350,7 +380,7 @@
   <span class="md-ellipsis">
     
   
-    MetadataKeys Synchronization Service Overview
+    OpenSearch Integration
   
 
     
@@ -366,6 +396,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -374,22 +406,77 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview-problem-statement" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview &amp; Problem Statement
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Overview &amp; Problem Statement">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#index-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#query-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query Logic
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Query Logic">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#problem-addressed" class="md-nav__link">
+  <a href="#access-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problem Addressed
+        Access Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#text-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text Search
       
     </span>
   </a>
@@ -402,22 +489,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#module-architecture" class="md-nav__link">
+  <a href="#api-endpoints" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Module Architecture
+        API Endpoints
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Module Architecture">
+    <nav class="md-nav" aria-label="API Endpoints">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#metadatakeyscontroller" class="md-nav__link">
+  <a href="#create-index" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MetadataKeysController
+        Create Index
       
     </span>
   </a>
@@ -425,22 +512,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#metadatakeysservice" class="md-nav__link">
+  <a href="#sync-database" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MetadataKeysService
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MetadataKeysService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permission Layer (Applies to findAll only):
+        Sync Database
       
     </span>
   </a>
@@ -448,10 +523,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
+  <a href="#search" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Service Methods:
+        Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delete Index
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-index-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get Index Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-index-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Index Settings
       
     </span>
   </a>
@@ -460,22 +568,6 @@
         
       </ul>
     </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Usage Example
-      
-    </span>
-  </a>
   
 </li>
       
@@ -483,34 +575,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../opensearch-guidelines/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    OpenSearch Integration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -734,6 +798,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -742,22 +808,77 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview-problem-statement" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview &amp; Problem Statement
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Overview &amp; Problem Statement">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#index-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#query-logic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query Logic
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Query Logic">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#problem-addressed" class="md-nav__link">
+  <a href="#access-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problem Addressed
+        Access Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#text-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text Search
       
     </span>
   </a>
@@ -770,22 +891,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#module-architecture" class="md-nav__link">
+  <a href="#api-endpoints" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Module Architecture
+        API Endpoints
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Module Architecture">
+    <nav class="md-nav" aria-label="API Endpoints">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#metadatakeyscontroller" class="md-nav__link">
+  <a href="#create-index" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MetadataKeysController
+        Create Index
       
     </span>
   </a>
@@ -793,22 +914,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#metadatakeysservice" class="md-nav__link">
+  <a href="#sync-database" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MetadataKeysService
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MetadataKeysService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permission Layer (Applies to findAll only):
+        Sync Database
       
     </span>
   </a>
@@ -816,10 +925,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
+  <a href="#search" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Service Methods:
+        Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delete Index
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get-index-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get Index Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-index-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Index Settings
       
     </span>
   </a>
@@ -828,22 +970,6 @@
         
       </ul>
     </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Usage Example
-      
-    </span>
-  </a>
   
 </li>
       
@@ -864,76 +990,178 @@
 
 
 
-  <h1>MetadataKeys Synchronization Service Overview</h1>
-
-<h2 id="overview-problem-statement">Overview &amp; Problem Statement<a class="headerlink" href="#overview-problem-statement" title="Permanent link">¶</a></h2>
-<p>The Metadata Keys Module is a dedicated standalone component designed to manage and retrieve metadata keys across the platform. This module replaces the legacy GET /datasets/metadataKeys endpoint.</p>
-<h3 id="problem-addressed">Problem Addressed<a class="headerlink" href="#problem-addressed" title="Permanent link">¶</a></h3>
-<p>The previous implementation in the Datasets service lacked a permission-based filtering layer. Because it attempted to return all global keys without ownership validation, it caused:</p>
+<h1 id="opensearch-integration">OpenSearch Integration<a class="headerlink" href="#opensearch-integration" title="Permanent link">¶</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<p>SciCat now includes an OpenSearch integration to support search functionality within the platform. The transition from Elasticsearch to OpenSearch was made following the Elasticsearch license change in order to maintain the use of fully open-source components in the project.</p>
+<p>The current OpenSearch integration supports partial text search for datasets.</p>
+<p>Text search currently targets only the following fields:</p>
 <ul>
-<li>Performance: Significant latency when processing large datasets.</li>
-<li>Stability: Crashes occurred when retrieval limits were missing or improperly configured.</li>
-<li>Risks: Users could see metadata keys they did not have permissions to access.</li>
+<li><code>datasetName</code></li>
+<li><code>description</code></li>
 </ul>
-<h2 id="module-architecture">Module Architecture<a class="headerlink" href="#module-architecture" title="Permanent link">¶</a></h2>
-<p>This module consists of a dedicated Controller and Service layer that implements a robust permission-aware logic.</p>
-<h3 id="metadatakeyscontroller">MetadataKeysController<a class="headerlink" href="#metadatakeyscontroller" title="Permanent link">¶</a></h3>
-<p>Provides the API interface for searching keys. Allowed filters can be found in <code>src/metadata-keys/metadatakeys.service.ts</code> and exmaple can be find in <code>src/metadata-keys/types/metadatakeys-filter-content.ts</code></p>
-<ul>
-<li><code>Endpoint</code>: GET /metadatakeys (replaces /datasets/metadataKeys)</li>
-<li><code>Method</code>: findAll</li>
-<li><code>Endpoint Access</code>: Endpoint can be Accessed by any users</li>
-</ul>
-<h3 id="metadatakeysservice">MetadataKeysService<a class="headerlink" href="#metadatakeysservice" title="Permanent link">¶</a></h3>
-<p>This handles the business logic and talks to the database. It is divided into user-facing search logic and internal data synchronization.</p>
-<h4 id="permission-layer-applies-to-findall-only">Permission Layer (Applies to findAll only):<a class="headerlink" href="#permission-layer-applies-to-findall-only" title="Permanent link">¶</a></h4>
-<p>When a user searches for keys, the service uses accessibleBy to automatically append access filters based on CASL permissions:</p>
-<ul>
-<li><code>Admins</code>: Can search and get all metadata keys in the system.</li>
-<li><code>Authenticated Users</code>: Can only get keys where they are part of the ownerGroup or accessGroups.</li>
-<li><code>Unauthenticated Users</code>: Can only get keys that are marked as isPublished.</li>
-</ul>
-<h4 id="service-methods">Service Methods:<a class="headerlink" href="#service-methods" title="Permanent link">¶</a></h4>
-<ul>
-<li><code>findAll</code>: The only public-facing method. It applies the permission layer and then uses a database aggregation pipeline to find and return the specific keys requested by the user. Every search is limited to 100 results by default, if limit is not provided.</li>
-<li><code>insertManyFromSource</code>: An internal method that takes an original document (like a Dataset), extracts fields from <strong>scientificMetadata</strong>, <strong>metadata</strong>, and <strong>customMetadata</strong>, and creates new records in the Metadata Keys collection.</li>
-<li><code>deleteMany</code>: Removes metadata key entries associated with a source document when that document is deleted from the system.</li>
-<li><code>replaceManyFromSource</code>: Triggered when a source document (e.g., a Dataset or Proposal) is updated. It calls <code>deleteMany</code> and <code>insertManyFromSource</code> sequentially.</li>
-</ul>
-<h2 id="usage-example">Usage Example<a class="headerlink" href="#usage-example" title="Permanent link">¶</a></h2>
-<p>To list all metadata keys associated with a dataset, the user must provide the sourceType and sourceId. If the fields array is provided, only those specific fields will be returned:</p>
+<p>All other filters and queries continue to be executed using MongoDB queries.</p>
+<p>SciCat uses the official OpenSearch JavaScript client <code>@opensearch-project/opensearch@^3.5.1</code> for indexing, synchronization, and search operations. This version is compatible with OpenSearch v3.5.0.</p>
+<p>To be able to start application with OpenSearch you will need to:</p>
+<h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">¶</a></h2>
+<p>To start the application with OpenSearch:</p>
+<ol>
+<li>Run <code>npm run prepare:local</code> to start the OpenSearch cluster as a Docker container.</li>
+<li>Set <code>OPENSEARCH_ENABLED=yes</code> and provide values for all required environment variables: <code>OPENSEARCH_HOST</code>, <code>OPENSEARCH_USERNAME</code>, and <code>OPENSEARCH_PASSWORD</code>.<blockquote>
+<p><strong>Note:</strong> <code>OPENSEARCH_PASSWORD</code> must match <code>OPENSEARCH_INITIAL_ADMIN_PASSWORD</code> set when creating the OpenSearch container.</p>
+</blockquote>
+</li>
+<li>Start the application with <code>npm run start</code>. On successful connection you will see:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>   [Nest] 80126  - 03/17/2026, 3:09:41 PM     LOG [Opensearch] Opensearch Connected
+</code></pre></div>
+<ol>
+<li>Open the Swagger page at <code>http://localhost:3000/explorer</code> and authorize with an <code>admin</code> token.</li>
+<li>Execute <code>POST /opensearch/create-index</code> to create the index.<blockquote>
+<p><strong>Note:</strong> This step can be skipped if you want to use the default index <code>dataset</code>.</p>
+</blockquote>
+</li>
+<li>Execute <code>POST /opensearch/sync-database</code> to sync data from MongoDB into OpenSearch. On success you will see:</li>
+</ol>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"humanreadableName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"total"</span><span class="p">:</span><span class="w"> </span><span class="mi">21670</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"failed"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"retry"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"successful"</span><span class="p">:</span><span class="w"> </span><span class="mi">21670</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"noop"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="mi">4777</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">279159021</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"aborted"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>To retrieve a specific metadata key, use the following filter:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"metadata_key_name"</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
+<h2 id="environment-configuration">Environment Configuration<a class="headerlink" href="#environment-configuration" title="Permanent link">¶</a></h2>
+<p>OpenSearch behavior is controlled using environment variables.
+To enable OpenSearch, set <code>OPENSEARCH_ENABLED=yes</code> and provide values for all required environment variables: <code>OPENSEARCH_HOST</code>, <code>OPENSEARCH_USERNAME</code>, and <code>OPENSEARCH_PASSWORD</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Example</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OPENSEARCH_ENABLED</code></td>
+<td><code>"yes" \| "no"</code></td>
+<td>Controls whether OpenSearch is enabled on application startup. If not provided or set to <code>no</code>, OpenSearch will not be instantiated.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_DEFAULT_INDEX</code></td>
+<td><code>dataset</code></td>
+<td>Specifies the default index. If not provided, a default index named <code>dataset</code> will be created automatically.</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_HOST</code></td>
+<td><code>https://localhost:9200</code></td>
+<td>Specifies the OpenSearch server endpoint.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_USERNAME</code></td>
+<td><code>"admin"</code></td>
+<td>Username for OpenSearch authentication. Defaults to <code>admin</code> in standard deployments but can be configured to use a custom user with appropriate permissions.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_PASSWORD</code></td>
+<td><code>Scicat-password2026</code></td>
+<td>Password used for OpenSearch authentication. Must match <code>OPENSEARCH_INITIAL_ADMIN_PASSWORD</code> used when creating the OpenSearch container.</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_REFRESH</code></td>
+<td><code>"wait_for" \| "false"</code></td>
+<td>Controls index refresh behavior. <code>wait_for</code> waits for the next refresh cycle before returning, which is useful for development and testing. <code>false</code> skips waiting and is recommended for production. Defaults to false.</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_DATA_SYNC_BATCH_SIZE</code></td>
+<td>1000</td>
+<td>Number of documents fetched from MongoDB per batch during OpenSearch data sync. Defaults to 10000</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h2 id="index-configuration">Index Configuration<a class="headerlink" href="#index-configuration" title="Permanent link">¶</a></h2>
+<p>OpenSearch index settings and mappings can be customized using a configuration file.</p>
+<p>An optional <code>opensearchConfig.json</code> file can be mounted to <code>/home/node/app/opensearchConfig.json</code> in the container (or placed in the project root when running locally) to define custom index settings and mappings.</p>
+<p>If not provided, a default configuration will be loaded from <code>opensearchConfig.example.json</code> in the root, supporting partial text search on <code>datasetName</code> and <code>description</code>.</p>
+<p>For full configuration options, see:
+https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/index/</p>
+<h2 id="query-logic">Query Logic<a class="headerlink" href="#query-logic" title="Permanent link">¶</a></h2>
+<p>Search queries follow the process below.</p>
+<h3 id="access-filtering">Access Filtering<a class="headerlink" href="#access-filtering" title="Permanent link">¶</a></h3>
+<p>Before performing text search, results are filtered based on user access permissions:</p>
+<ol>
+<li>If the user belongs to one or more <code>userGroups</code>, these are applied as access filters.</li>
+<li>If the user has no groups and is not an admin, the <code>isPublished</code> filter is applied.</li>
+<li>Admin users bypass group-based access filters, which means queries are executed against a larger dataset. This is a known limitation and may result in slower response times for admin search requests.</li>
+</ol>
+<h3 id="text-search">Text Search<a class="headerlink" href="#text-search" title="Permanent link">¶</a></h3>
+<p>After access filtering, OpenSearch performs a partial text search on the following fields:</p>
+<ul>
+<li><code>datasetName</code></li>
+<li><code>description</code></li>
+</ul>
+<p>These fields are currently hardcoded in the <code>MustFields</code> enum (<code>src/opensearch/providers/fields.enum.ts</code>) and are not configurable.</p>
+<h2 id="api-endpoints">API Endpoints<a class="headerlink" href="#api-endpoints" title="Permanent link">¶</a></h2>
+<p>All OpenSearch endpoints are restricted to admin users.</p>
+<h3 id="create-index">Create Index<a class="headerlink" href="#create-index" title="Permanent link">¶</a></h3>
+<p><strong>POST</strong> <code>/opensearch/create-index</code></p>
+<ul>
+<li><code>index</code> (body, required): Target index name. default: <code>dataset</code></li>
+<li><code>settings</code> (body, optional): Index settings to apply. If not provided, defaults from <code>opensearchConfig.json</code> are used.</li>
+</ul>
+<hr>
+<h3 id="sync-database">Sync Database<a class="headerlink" href="#sync-database" title="Permanent link">¶</a></h3>
+<p><strong>POST</strong> <code>/opensearch/sync-database</code></p>
+<p>Synchronizes datasets from MongoDB to OpenSearch.</p>
+<ul>
+<li><code>index</code> (query, optional): Index name. default: <code>dataset</code></li>
+</ul>
+<hr>
+<h3 id="search">Search<a class="headerlink" href="#search" title="Permanent link">¶</a></h3>
+<p><strong>POST</strong> <code>/opensearch/search</code></p>
+<p>Performs partial text search on datasets.</p>
+<ul>
+<li><code>textQuery</code> (query): Search text (applies to <code>datasetName</code> and <code>description</code>)</li>
+<li><code>index</code> (query, optional): Target index name. default: <code>dataset</code></li>
+<li><code>limit</code> (query, optional): Max results</li>
+<li><code>skip</code> (query, optional): Offset</li>
+</ul>
+<p>Returns matching dataset <code>_id</code>s.</p>
+<hr>
+<h3 id="delete-index">Delete Index<a class="headerlink" href="#delete-index" title="Permanent link">¶</a></h3>
+<p><strong>POST</strong> <code>/opensearch/delete-index</code></p>
+<p>Deletes an index.</p>
+<ul>
+<li><code>index</code> (query): Target index name.</li>
+</ul>
+<hr>
+<h3 id="get-index-configuration">Get Index Configuration<a class="headerlink" href="#get-index-configuration" title="Permanent link">¶</a></h3>
+<p><strong>GET</strong> <code>/opensearch/get-index</code></p>
+<p>Retrieves index settings and mappings.</p>
+<ul>
+<li><code>index</code> (query): Target index name. default: <code>dataset</code></li>
+</ul>
+<hr>
+<h3 id="update-index-settings">Update Index Settings<a class="headerlink" href="#update-index-settings" title="Permanent link">¶</a></h3>
+<p><strong>POST</strong> <code>/opensearch/update-index</code></p>
+<p>Updates index settings. Closes the index, applies the new settings, then reopens it.</p>
+<ul>
+<li><code>index</code> (body, required): Target index name. default: <code>dataset</code></li>
+<li><code>settings</code> (body, optional): Index settings to apply. If not provided, defaults from <code>opensearchConfig.json</code> are used.</li>
+</ul>
+<hr>
+<p>If you encounter performance issues related to OpenSearch, please open a <a href="https://github.com/SciCatProject/backend/issues">GitHub issue</a> or report them at the SciCat meeting.</p>
 
 
 
