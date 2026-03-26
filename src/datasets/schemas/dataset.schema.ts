@@ -125,7 +125,7 @@ export class DatasetClass extends OwnableClass {
     type: String,
     required: false,
     description:
-      "DNS host name of file server hosting sourceFolder, optionally including a protocol e.g. [protocol://]fileserver1.example.com",
+      "DNS host 111 name of file server hosting sourceFolder, optionally including a protocol e.g. [protocol://]fileserver1.example.com",
   })
   @Prop({
     type: String,
