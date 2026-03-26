@@ -22,7 +22,7 @@ export class JobClass extends OwnableClass {
   _id: string;
 
   /**
-   * Globally unique identifier of a job.
+   * Globally unique identifier of a job.2
    */
   @Prop({
     type: String,
