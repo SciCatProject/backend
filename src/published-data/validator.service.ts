@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import addFormats from "ajv-formats";
 import addKeywords from "ajv-keywords";
@@ -6,7 +6,7 @@ import def, {
   DynamicDefaultFunc,
 } from "ajv-keywords/dist/definitions/dynamicDefaults";
 import Ajv2019, { Schema } from "ajv/dist/2019";
-import { isArray, isEmpty, isMap, isNull } from "lodash";
+import { isArray, isEmpty, isMap, isNil } from "lodash";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
@@ -58,11 +58,8 @@ export class ValidatorService {
       { metadataSchema: null, uiSchema: null },
     );
 
-    if (isNull(this.config.metadataSchema)) {
-      throw new HttpException(
-        "Published data schema is not defined in the configuration.",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (isNil(this.config.metadataSchema)) {
+      return;
     }
 
     const modulePath = this.configService.get<string>("ajvCustomDefinitions");
@@ -103,6 +100,10 @@ export class ValidatorService {
       | UpdatePublishedDataV4Dto
       | PartialUpdatePublishedDataV4Dto,
   ) {
+    if (isNil(this.config.metadataSchema)) {
+      return null;
+    }
+
     await this.loadDynamicDefaultFunctions(publishedData);
 
     const validateFn = this.ajv.compile(this.config.metadataSchema as Schema);

@@ -1,10 +1,10 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { ReadOnlyDatasetsService, ValidatorService } from "./validator.service";
+import { ErrorObject } from "ajv";
 
 describe("ValidatorService", () => {
   let service: ValidatorService;
@@ -48,13 +48,10 @@ describe("ValidatorService", () => {
   });
 
   describe("validate", () => {
-    it("should throw INTERNAL_SERVER_ERROR if metadataSchema is missing", async () => {
-      await expect(createService({ metadataSchema: null })).rejects.toThrow(
-        new HttpException(
-          "Published data schema is not defined in the configuration.",
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        ),
-      );
+    it("should be a no-op if metadataSchema is missing", async () => {
+      service = await createService({});
+      const errors = await service.validate({});
+      expect(errors).toBeNull();
     });
 
     it("should return null when metadata is valid", async () => {
@@ -84,8 +81,14 @@ describe("ValidatorService", () => {
       const errors = await service.validate(mockData);
 
       expect(errors).toBeDefined();
-      expect(errors?.length).toBe(1);
-      expect(errors?.[0].keyword).toBe("required");
+      expect(Array.isArray(errors)).toBe(true);
+      const errorList = errors! as ErrorObject<
+        string,
+        Record<string, unknown>,
+        unknown
+      >[];
+      expect(errorList.length).toBe(1);
+      expect(errorList[0].message).toBe("must have required property 'name'");
     });
   });
 
