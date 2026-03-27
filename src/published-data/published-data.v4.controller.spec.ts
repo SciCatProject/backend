@@ -9,6 +9,7 @@ import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataService } from "./published-data.service";
 import { PublishedDataV4Controller } from "./published-data.v4.controller";
 import { PublishedData } from "./schemas/published-data.schema";
+import { ValidatorService } from "./validator.service";
 
 class AttachmentsServiceMock {}
 
@@ -22,6 +23,8 @@ class ProposalsServiceMock {}
 class PublishedDataServiceMock {}
 
 class CaslAbilityFactoryMock {}
+
+class ValidatorServiceMock {}
 
 class ConfigServiceMock {
   get(key: string) {
@@ -69,6 +72,7 @@ describe("PublishedDataController", () => {
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ConfigService, useClass: ConfigServiceMock },
+        { provide: ValidatorService, useClass: ValidatorServiceMock },
       ],
     }).compile();
 
