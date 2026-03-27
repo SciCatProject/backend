@@ -266,4 +266,20 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
+
+  // -------------------------------------
+  // MetadataKeys
+  // -------------------------------------
+  // metadatakeys endpoint authorization
+  MetadataKeysReadEndpoint = "metadatakeys_read_endpoint",
+  // -------------------------------------
+  // metadatakeys data instance authorization
+  MetadataKeysReadInstance = "metadatakeys_read_instance",
+
+  // -------------------------------------
+  // RuntimeConfig
+  // -------------------------------------
+  // runtimeconfig endpoint authorization
+  RuntimeConfigReadEndpoint = "runtimeconfig_read_endpoint",
+  RuntimeConfigUpdateEndpoint = "runtimeconfig_update_endpoint",
 }

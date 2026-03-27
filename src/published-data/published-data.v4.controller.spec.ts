@@ -51,6 +51,10 @@ describe("PublishedDataController", () => {
     ...defaultUrl,
     metadata: { landingPage: "custom-landingpage/" },
   };
+  const customLandingPageWithProtocol: PublishedData = {
+    ...defaultUrl,
+    metadata: { landingPage: "https://custom-landingpage/" },
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -88,6 +92,15 @@ describe("PublishedDataController", () => {
     expect(controller.doiRegistrationJSON(customLandingPage)).toHaveProperty(
       "data.attributes.url",
       `https://${customLandingPage.metadata!.landingPage}${encodeURIComponent(customLandingPage.doi)}`,
+    );
+  });
+
+  it("should not double-prefix https:// when 'landingPage' already includes a protocol", () => {
+    expect(
+      controller.doiRegistrationJSON(customLandingPageWithProtocol),
+    ).toHaveProperty(
+      "data.attributes.url",
+      `${customLandingPageWithProtocol.metadata!.landingPage}${encodeURIComponent(customLandingPageWithProtocol.doi)}`,
     );
   });
 });

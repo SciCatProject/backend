@@ -1,0 +1,64 @@
+{
+  "settings": {
+    "index": {
+      "max_result_window": 2000000,
+      "number_of_replicas": 0
+    },
+    "analysis": {
+      "analyzer": {
+        "autocomplete": {
+          "type": "custom",
+          "tokenizer": "autocomplete",
+          "filter": ["word_delimiter", "lowercase"]
+        },
+        "autocomplete_search": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": ["lowercase"]
+        }
+      },
+      "tokenizer": {
+        "autocomplete": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 150,
+          "token_chars": ["letter", "digit", "symbol", "punctuation"]
+        }
+      },
+      "filter": {
+        "word_delimiter": {
+          "type": "word_delimiter_graph",
+          "split_on_case_change": false,
+          "split_on_numerics": false,
+          "preserve_original": true,
+          "type_table": [". => ALPHA"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "description": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
+      },
+      "datasetName": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "search_analyzer": "autocomplete_search"
+      },
+      "isPublished": {
+        "type": "boolean"
+      },
+      "ownerGroup": {
+        "type": "keyword",
+        "ignore_above": 256
+      },
+      "accessGroups": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  }
+}

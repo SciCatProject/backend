@@ -131,7 +131,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `JWT_SECRET` | string | | The secret for your JWT token, used for authorization. | |
 | `JWT_EXPIRES_IN` | number | Yes | How long, in seconds, the JWT token is valid. | 3600 |
 | `LDAP_URL` | string | Yes | The URL to your LDAP server. | |
-| `LDAP_BIND_DN` | string | Yes | Bind_DN for your LDAP server. | |
+| `LDAP_BIND_DN` | string | Yes | Bind*DN for your LDAP server. | |
 | `LDAP_BIND_CREDENTIALS` | string | Yes | Credentials for your LDAP server. | |
 | `LDAP_SEARCH_BASE` | string | Yes | Search base for your LDAP server. | |
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
@@ -142,59 +142,57 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `OIDC_SCOPE` | string | Yes | Space-separated list of info returned by the OIDC service. Example: "openid profile email". | |
 | `OIDC_SUCCESS_URL` | string | Yes | SciCat Frontend auth-callback URL. Required to pass user credentials to SciCat Frontend after OIDC login. Example: https://myscicatfrontend/auth-callback. Must be `frontend-base-url/auth-callback` or `frontend-base-url/login` for the official SciCat frontend. | |
 | `OIDC_RETURN_URL` | string | Yes | The path segment within the SciCat Frontend to redirect to, passed as query param in `OIDC_SUCCESS_URL` and handled by frontend. Example: /datasets. | |
-| `OIDC_FRONTEND_CLIENTS` | string | Yes | Comma separated list of additional frontend OIDC clients for this backend. Example: scilog,maxiv. Their success and return URLs can be configured by setting `OIDC_${CLIENT}_SUCCESS_URL` (E.g. `OIDC_SCILOG_SUCCESS_URL`) and `OIDC_${CLIENT}_RETURN_URL` | |
-| `OIDC_ACCESS_GROUPS` | string | Yes | Functionality is still unclear. | |
-| `OIDC_ACCESS_GROUPS_PROPERTY` | string | Yes | Target field to get the access groups value from OIDC response. | |
-| `OIDC_USERINFO_MAPPING_FIELD_USERNAME` | string | Yes | Comma-separated list of fields from the OIDC response to use as the user's profile username. Example: `OIDC_USERINFO_MAPPING_FIELD_USERNAME="iss, sub"`. | "preferred_username" \|\| "name" |
-| `OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME` | string | Yes | Field from the OIDC response to use as the user's profile display name. Example: `OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME="preferred_username"`. | "name" |
-| `OIDC_USERINFO_MAPPING_FIELD_EMAIL` | string | Yes | Field from the OIDC response to use as the user's profile email. | "email" |
-| `OIDC_USERINFO_MAPPING_FIELD_FAMILYNAME` | string | Yes | Field from the OIDC response to use as the user's profile family name. | "family_name" |
-| `OIDC_USERINFO_MAPPING_FIELD_ID` | string | Yes | Field from the OIDC response to use as the user's profile ID. | "sub" \|\| "user_id" |
-| `OIDC_USERINFO_MAPPING_FIELD_THUMBNAILPHOTO`| string | Yes | Field from the OIDC response to use as the user's profile thumbnail photo. | "thumbnailPhoto" |
-| `OIDC_USERINFO_MAPPING_FIELD_PROVIDER` | string | Yes | Field from the OIDC response to use as the user's profile provider. | "iss" |
-| `OIDC_USERINFO_MAPPING_FIELD_GROUP` | string | Yes | Field from the OIDC response to use as the user's profile group. | "groups" |
-| `OIDC_USERQUERY_OPERATOR` | string | Yes | Specifies the operator ("or" or "and") for UserModel.findOne queries, determining the logic used to match fields like "username" or "email". Example: `UserModel.findOne({$or: {"username":"testUser", "email":"test@test.com"}})`. | "or" |
-| `OIDC_USERQUERY_FILTER` | string | Yes | Defines key-value pairs for UserModel.findOne queries, using a "key:value" format. Example: `OIDC_USERQUERY_FILTER="username:sub, email:email"`. | "username:username, email:email" |
-| `LOGBOOK_ENABLED` | string | Yes | Flag to enable/disable the Logbook endpoints. Values "yes" or "no". | "no" |
-| `LOGBOOK_BASE_URL` | string | Yes | The base URL to the Logbook API. Only required if Logbook is enabled. | |
-| `METADATA_KEYS_RETURN_LIMIT` | number | Yes | The return limit for the `/Datasets/metadataKeys` endpoint. | |
-| `METADATA_PARENT_INSTANCES_RETURN_LIMIT` | number | Yes | The return limit of Datasets to extract metadata keys from for the `/Datasets/metadataKeys` endpoint. | |
-| `MONGODB_URI` | string | | The URI for your MongoDB instance. | |
-| `OAI_PROVIDER_ROUTE` | string | Yes | URI to OAI provider, used for the `/publisheddata/:id/resync` endpoint. | |
-| `PID_PREFIX` | string | | The facility PID prefix, with trailing slash. | |
-| `PUBLIC_URL_PREFIX` | string | | The base URL to the facility Landing Page. | |
-| `PORT` | number | Yes | The port on which you want to access the app. | 3000 |
-| `RABBITMQ_ENABLED` | string | Yes | Flag to enable/disable RabbitMQ consumer. Values "yes" or "no". | "no" |
-| `RABBITMQ_HOSTNAME` | string | Yes | The hostname of the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
-| `RABBITMQ_USERNAME` | string | Yes | The username used to authenticate to the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
-| `RABBITMQ_PASSWORD` | string | Yes | The password used to authenticate to the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
-| `REGISTER_DOI_URI` | string | | URI to the organization that registers the facility's DOIs. | |
-| `REGISTER_METADATA_URI` | string | | URI to the organization that registers the facility's published data metadata. | |
-| `SITE` | string | | The name of your site. | |
-| `EMAIL_TYPE` | string | Yes | The type of your email provider. Options are "smtp" or "ms365".  | "smtp" |
-| `EMAIL_FROM` | string | Yes | Email address that emails should be sent from. | |
-| `EMAIL_REPLYTO` | string | Yes | Email 'Reply-To' field. | |
-| `SMTP_HOST` | string | Yes | Host of SMTP server. | |
-| `SMTP_MESSAGE_FROM` | string | Yes | (Deprecated) Alternate spelling of EMAIL_FROM.| |
-| `SMTP_PORT` | number | Yes | Port of SMTP server. | 587 |
-| `SMTP_SECURE` | bool | Yes | Use encrypted SMTPS. | "no" |
-| `MS365_TENANT_ID` | string | Yes | Tenant ID for sending emails over Microsoft Graph API. | |
-| `MS365_CLIENT_ID` | string | Yes | Client ID for sending emails over Microsoft Graph API | |
-| `MS365_CLIENT_SECRET` | string | Yes | Client Secret for sending emails over Microsoft Graph API | |
-| `POLICY_PUBLICATION_SHIFT` | integer | Yes | Embargo period expressed in years. | 3 years |
-| `POLICY_RETENTION_SHIFT` | integer | Yes | Retention period (how long the facility will hold on to data) expressed in years. | -1 (indefinitely) |
-| `ELASTICSEARCH_ENABLED` | string | | Flag to enable/disable the Elasticsearch endpoints. Values "yes" or "no". | "no" |
-| `ES_HOST` | string | | Host of Elasticsearch server instance. | |
-| `ES_USERNAME` | string | Yes | Elasticsearch username. | "elastic" |
-| `ES_PASSWORD` | string | | Elasticsearch password. | |
-| `MONGODB_COLLECTION` | string | | Collection name to be mapped into specified Elasticsearch index. Used for data synchronization between MongoDB and Elasticsearch index. | |
-| `ES_MAX_RESULT` | number | | Maximum records that can be indexed into Elasticsearch. | 10000 |
-| `ES_FIELDS_LIMIT` | number | | The total number of fields in an index. | 1000 |
-| `ES_REFRESH` | string | | If set to `wait_for`, Elasticsearch will wait till data is inserted into the specified index before returning a response. | false |
-| `LOGGERS_CONFIG_FILE` | string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |
-| `PROPOSAL_TYPES_FILE` | string | | The file name for proposal types configuration, located in the project root directory. | "proposalTypes.json" |
-| `SWAGGER_PATH` | string | Yes | swaggerPath is the path where the swagger UI will be available. | "explorer"|
-| `MAX_FILE_UPLOAD_SIZE` | string | Yes | Maximum allowed file upload size. | "16mb"|
+| `OIDC_FRONTEND_CLIENTS` | string | Yes | Comma separated list of additional frontend OIDC clients for this backend. Example: scilog,maxiv. Their success and return URLs can be configured by setting `OIDC*${CLIENT}_SUCCESS_URL` (E.g. `OIDC_SCILOG_SUCCESS_URL`) and `OIDC_${CLIENT}\_RETURN_URL`| |
+|`OIDC_ACCESS_GROUPS`| string | Yes | Functionality is still unclear. | |
+|`OIDC_ACCESS_GROUPS_PROPERTY`| string | Yes | Target field to get the access groups value from OIDC response. | |
+|`OIDC_USERINFO_MAPPING_FIELD_USERNAME`| string | Yes | Comma-separated list of fields from the OIDC response to use as the user's profile username. Example:`OIDC_USERINFO_MAPPING_FIELD_USERNAME="iss, sub"`. | "preferred_username" \|\| "name" |
+| `OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME`| string | Yes | Field from the OIDC response to use as the user's profile display name. Example:`OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME="preferred_username"`. | "name" |
+| `OIDC_USERINFO_MAPPING_FIELD_EMAIL`| string | Yes | Field from the OIDC response to use as the user's profile email. | "email" |
+|`OIDC_USERINFO_MAPPING_FIELD_FAMILYNAME`| string | Yes | Field from the OIDC response to use as the user's profile family name. | "family_name" |
+|`OIDC_USERINFO_MAPPING_FIELD_ID`| string | Yes | Field from the OIDC response to use as the user's profile ID. | "sub" \|\| "user_id" |
+|`OIDC_USERINFO_MAPPING_FIELD_THUMBNAILPHOTO`| string | Yes | Field from the OIDC response to use as the user's profile thumbnail photo. | "thumbnailPhoto" |
+| `OIDC_USERINFO_MAPPING_FIELD_PROVIDER`| string | Yes | Field from the OIDC response to use as the user's profile provider. | "iss" |
+|`OIDC_USERINFO_MAPPING_FIELD_GROUP`| string | Yes | Field from the OIDC response to use as the user's profile group. | "groups" |
+|`OIDC_USERQUERY_OPERATOR`| string | Yes | Specifies the operator ("or" or "and") for UserModel.findOne queries, determining the logic used to match fields like "username" or "email". Example:`UserModel.findOne({$or: {"username":"testUser", "email":"test@test.com"}})`. | "or" |
+| `OIDC_USERQUERY_FILTER`| string | Yes | Defines key-value pairs for UserModel.findOne queries, using a "key:value" format. Example:`OIDC_USERQUERY_FILTER="username:sub, email:email"`. | "username:username, email:email" |
+| `LOGBOOK_ENABLED`| string | Yes | Flag to enable/disable the Logbook endpoints. Values "yes" or "no". | "no" |
+|`LOGBOOK_BASE_URL`| string | Yes | The base URL to the Logbook API. Only required if Logbook is enabled. | |
+|`METADATA_KEYS_RETURN_LIMIT`| number | Yes | The return limit for the`/Datasets/metadataKeys`endpoint. | |
+|`METADATA_PARENT_INSTANCES_RETURN_LIMIT`| number | Yes | The return limit of Datasets to extract metadata keys from for the`/Datasets/metadataKeys`endpoint. | |
+|`MONGODB_URI`| string | | The URI for your MongoDB instance. | |
+|`OAI_PROVIDER_ROUTE`| string | Yes | URI to OAI provider, used for the`/publisheddata/:id/resync`endpoint. | |
+|`PID_PREFIX`| string | | The facility PID prefix, with trailing slash. | |
+|`PUBLIC_URL_PREFIX`| string | | The base URL to the facility Landing Page. | |
+|`PORT`| number | Yes | The port on which you want to access the app. | 3000 |
+|`RABBITMQ_ENABLED`| string | Yes | Flag to enable/disable RabbitMQ consumer. Values "yes" or "no". | "no" |
+|`RABBITMQ_HOSTNAME`| string | Yes | The hostname of the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
+|`RABBITMQ_USERNAME`| string | Yes | The username used to authenticate to the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
+|`RABBITMQ_PASSWORD`| string | Yes | The password used to authenticate to the RabbitMQ message broker. Only required if RabbitMQ is enabled. | |
+|`REGISTER_DOI_URI`| string | | URI to the organization that registers the facility's DOIs. | |
+|`REGISTER_METADATA_URI`| string | | URI to the organization that registers the facility's published data metadata. | |
+|`SITE`| string | | The name of your site. | |
+|`EMAIL_TYPE`| string | Yes | The type of your email provider. Options are "smtp" or "ms365".  | "smtp" |
+|`EMAIL_FROM`| string | Yes | Email address that emails should be sent from. | |
+|`EMAIL_REPLYTO`| string | Yes | Email 'Reply-To' field. | |
+|`SMTP_HOST`| string | Yes | Host of SMTP server. | |
+|`SMTP_MESSAGE_FROM`| string | Yes | (Deprecated) Alternate spelling of EMAIL_FROM.| |
+|`SMTP_PORT`| number | Yes | Port of SMTP server. | 587 |
+|`SMTP_SECURE`| bool | Yes | Use encrypted SMTPS. | "no" |
+|`MS365_TENANT_ID`| string | Yes | Tenant ID for sending emails over Microsoft Graph API. | |
+|`MS365_CLIENT_ID`| string | Yes | Client ID for sending emails over Microsoft Graph API | |
+|`MS365_CLIENT_SECRET`| string | Yes | Client Secret for sending emails over Microsoft Graph API | |
+|`POLICY_PUBLICATION_SHIFT`| integer | Yes | Embargo period expressed in years. | 3 years |
+|`POLICY_RETENTION_SHIFT`| integer | Yes | Retention period (how long the facility will hold on to data) expressed in years. | -1 (indefinitely) |
+|`OPENSEARCH_ENABLED`| string | |  Controls whether OpenSearch is enabled on application startup. If not provided or set to `no`, OpenSearch will not be instantiated.| "no" |
+|`OPENSEARCH_DEFAULT_INDEX`| string | |  Specifies the default index. If not provided, a default index named `dataset` will be created automatically.     | "dataset" |
+|`OPENSEARCH_HOST`| string | | Host of Opensearch server instance. | |
+|`OPENSEARCH_USERNAME`| string | Yes | Username for OpenSearch authentication. Defaults to `admin` in standard deployments but can be configured to use a custom user with appropriate permissions. | "admin" |
+|`OPENSEARCH_PASSWORD`| string | | Password used for OpenSearch authentication. Must match `OPENSEARCH_INITIAL_ADMIN_PASSWORD` used when creating the OpenSearch container.  | |
+|`OPENSEARCH_REFRESH`| string | | Controls index refresh behavior. `wait_for`waits for the next refresh cycle before returning, which is useful for development and testing.`false`skips waiting and is recommended for production. Defaults to false. | false |
+|`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |
+|`PROPOSAL_TYPES_FILE`| string | | The file name for proposal types configuration, located in the project root directory. | "proposalTypes.json" |
+|`SWAGGER_PATH`| string | Yes | swaggerPath is the path where the swagger UI will be available. | "explorer"|
+|`MAX_FILE_UPLOAD_SIZE` | string | Yes | Maximum allowed file upload size. | "16mb"|
 
 ## Migrating from the old SciCat Backend
 
