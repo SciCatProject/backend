@@ -296,6 +296,10 @@ const configuration = () => {
       enabled: boolean(process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false),
       accessGroupProperty: process.env?.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
     },
+    accessGroupsLdapPayloadConfig: {
+      enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
+      accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY, // Example: groups
+    },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {
       secret: process.env.EXPRESS_SESSION_SECRET,
@@ -319,6 +323,8 @@ const configuration = () => {
         bindCredentials: process.env.LDAP_BIND_CREDENTIALS || "",
         searchBase: process.env.LDAP_SEARCH_BASE || "",
         searchFilter: process.env.LDAP_SEARCH_FILTER || "",
+        groupSearchBase: process.env.LDAP_GROUP_SEARCH_BASE || "",
+        groupSearchFilter: process.env.LDAP_GROUP_SEARCH_FILTER || "",
         Mode: process.env.LDAP_MODE ?? "ad",
         externalIdAttr: process.env.LDAP_EXTERNAL_ID ?? "sAMAccountName",
         usernameAttr: process.env.LDAP_USERNAME ?? "displayName",
