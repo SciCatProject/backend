@@ -19,7 +19,12 @@ describe("ValidatorService", () => {
     count: jest.fn(),
   };
 
-  beforeEach(async () => {
+  const createService = async (publishedDataConfig: unknown) => {
+    mockConfigService.get.mockImplementation((key: string) => {
+      if (key === "publishedDataConfig") return publishedDataConfig;
+      return null;
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ValidatorService,
@@ -30,20 +35,21 @@ describe("ValidatorService", () => {
       ],
     }).compile();
 
-    service = module.get<ValidatorService>(ValidatorService);
+    return module.get<ValidatorService>(ValidatorService);
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  it("should be defined", () => {
+  it("should be defined", async () => {
+    service = await createService({ metadataSchema: {} });
     expect(service).toBeDefined();
   });
 
   describe("validate", () => {
     it("should throw INTERNAL_SERVER_ERROR if metadataSchema is missing", async () => {
-      mockConfigService.get.mockReturnValue({});
-
-      const mockData = { metadata: {} };
-
-      await expect(service.validate(mockData)).rejects.toThrow(
+      await expect(createService({ metadataSchema: null })).rejects.toThrow(
         new HttpException(
           "Published data schema is not defined in the configuration.",
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -58,10 +64,7 @@ describe("ValidatorService", () => {
         required: ["name"],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       const mockData = { metadata: { name: "abc" } };
       const errors = await service.validate(mockData);
@@ -75,10 +78,7 @@ describe("ValidatorService", () => {
         required: ["name"],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       const mockData = { metadata: { invalidKey: 5 } };
       const errors = await service.validate(mockData);
@@ -100,10 +100,7 @@ describe("ValidatorService", () => {
         ],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       const mockData = { metadata: {} };
       const errors = await service.validate(mockData);
@@ -123,10 +120,7 @@ describe("ValidatorService", () => {
         ],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (service as any).dynamicDefaults.set(
@@ -152,10 +146,7 @@ describe("ValidatorService", () => {
         ],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       mockDataService.count.mockImplementation(() => 6);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,10 +176,7 @@ describe("ValidatorService", () => {
         ],
       };
 
-      mockConfigService.get.mockImplementation((key: string) => {
-        if (key === "publishedDataConfig") return { metadataSchema: schema };
-        return null;
-      });
+      service = await createService({ metadataSchema: schema });
 
       const mockData = { metadata: {} };
       await expect(service.validate(mockData)).rejects.toThrow(
