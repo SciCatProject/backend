@@ -3,6 +3,7 @@ import { AccessGroupFromStaticValuesService } from "./access-group-from-static-v
 import { AccessGroupService } from "./access-group.service";
 import { AccessGroupFromGraphQLApiService } from "./access-group-from-graphql-api-call.service";
 import { AccessGroupFromPayloadService } from "./access-group-from-payload.service";
+import { AccessGroupFromRestApiService } from "./access-group-from-rest-api-call.service";
 import { HttpService } from "@nestjs/axios";
 import { AccessGroupFromMultipleProvidersService } from "./access-group-from-multiple-providers.service";
 import { Logger } from "@nestjs/common";
@@ -22,6 +23,8 @@ export const accessGroupServiceFactory = {
     const accessGroupsOIDCPayloadConfig = configService.get(
       "accessGroupsOIDCPayloadConfig",
     );
+
+    const accessGroupsRestConfig = configService.get("accessGroupsRestConfig");
 
     const accessGroupServices: AccessGroupService[] = [];
     if (accessGroupsStaticConfig?.enabled == true) {
@@ -68,6 +71,23 @@ export const accessGroupServiceFactory = {
             ),
           );
         },
+      );
+    }
+    if (accessGroupsRestConfig?.enabled == true) {
+      Logger.log(
+        JSON.stringify(accessGroupsRestConfig),
+        "loading REST API processor",
+      );
+      accessGroupServices.push(
+        new AccessGroupFromRestApiService(
+          accessGroupsRestConfig.apiUrl,
+          {
+            [accessGroupsRestConfig.authKey]:
+              accessGroupsRestConfig.token.trim(),
+          },
+          accessGroupsRestConfig.userIdField || "userId",
+          new HttpService(),
+        ),
       );
     }
 
