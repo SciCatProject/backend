@@ -126,7 +126,6 @@ export class ValidatorService {
         );
         continue;
       }
-
       switch (implementation.constructor.name) {
         case "Function":
           def.DEFAULTS[name] = implementation;
@@ -136,14 +135,22 @@ export class ValidatorService {
            * Ajv cannot 'await' during validation. To get around this, we run the
            * AsyncFunction now to perform any setup (like DB queries).
            */
-          const syncFunc = await implementation({
-            publishedData: publishedData,
-            proposalService: this.proposalsService as ReadOnlyProposalsService,
-            datasetsService: this.datasetsService as ReadOnlyDatasetsService,
-            attachmentsService: this
-              .attachmentsService as ReadOnlyAttachmentsService,
-          });
-          def.DEFAULTS[name] = () => syncFunc;
+          try {
+            const syncFunc = await implementation({
+              publishedData: publishedData,
+              proposalService: this
+                .proposalsService as ReadOnlyProposalsService,
+              datasetsService: this.datasetsService as ReadOnlyDatasetsService,
+              attachmentsService: this
+                .attachmentsService as ReadOnlyAttachmentsService,
+            });
+            def.DEFAULTS[name] = () => syncFunc;
+          } catch (err) {
+            throw new Error(
+              `Executing dynamicDefaults function '${name}' failed with the following error:`,
+              { cause: err },
+            );
+          }
           break;
       }
     }
