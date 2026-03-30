@@ -102,7 +102,9 @@ export class ProposalsService {
       if (scope?.where) includePipeline.push({ $match: scope.where });
       if (scope?.fields)
         includePipeline.push({
-          $project: parsePipelineProjection(scope.fields as unknown as string[]),
+          $project: parsePipelineProjection(
+            scope.fields as unknown as string[],
+          ),
         });
       if (scope?.limits?.skip)
         includePipeline.push({ $skip: scope.limits.skip });
