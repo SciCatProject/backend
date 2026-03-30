@@ -33,7 +33,6 @@ export type ReadOnlyAttachmentsService = Pick<
 @Injectable()
 export class ValidatorService {
   private ajv: Ajv2019;
-  private static logger: Logger = new Logger(ValidatorService.name);
   private config: PublishedDataConfig;
   private dynamicDefaults: Map<string, DynamicDefaultFunc> = new Map([
     ["currentYear", () => () => new Date().getFullYear()],
@@ -72,9 +71,7 @@ export class ValidatorService {
 
       if (isArray(externalModule.keywords)) {
         for (const definition of externalModule.keywords) {
-          ValidatorService.logger.log(
-            `Adding ajv keyword: '${definition.keyword}'`,
-          );
+          Logger.log(`Adding ajv keyword: '${definition.keyword}'`);
           this.ajv.addKeyword(definition);
         }
       }
@@ -86,10 +83,7 @@ export class ValidatorService {
         ]);
       }
     } catch (error) {
-      ValidatorService.logger.error(
-        `Failed to load module at '${modulePath}'`,
-        error,
-      );
+      Logger.error(`Failed to load module at '${modulePath}'`, error);
       throw error;
     }
   }
@@ -112,7 +106,7 @@ export class ValidatorService {
   }
 
   private loadExternalModule(path: string) {
-    ValidatorService.logger.debug(`Loading custom ajv code at ${path}`);
+    Logger.debug(`Loading custom ajv code at ${path}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const externalModule = require(path);
 
@@ -127,7 +121,7 @@ export class ValidatorService {
   ) {
     for (const [name, implementation] of this.dynamicDefaults.entries()) {
       if (typeof implementation !== "function") {
-        ValidatorService.logger.error(
+        Logger.error(
           `Ignoring dynamic defaults function ${name} should be of type 'function' not '${typeof implementation}'.`,
         );
         continue;
