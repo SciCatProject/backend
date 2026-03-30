@@ -12,13 +12,22 @@ export interface IProposalRelationV4<T = IProposalScopesV4> {
   scope: T;
 }
 
+export type IProposalFiltersV4<T, Y = null> = IFiltersV4<
+  T,
+  Y,
+  (ProposalLookupKeysEnum | IProposalRelationV4)[]
+>;
+
+export type IProposalFiltersV3<T, Y = null> = Omit<
+  IFilters<T, Y>,
+  "include"
+> & {
+  include?: (ProposalLookupKeysEnum | IProposalRelationV4<IProposalScopesV3>)[];
+};
+
 export type IProposalFilters<T, Y = null> =
-  | (IFilters<T, Y> & {
-      include?: (ProposalLookupKeysEnum | IProposalRelationV4<IProposalScopesV3>)[];
-    })
-  | (IFiltersV4<T, Y> & {
-      include?: (ProposalLookupKeysEnum | IProposalRelationV4)[];
-    });
+  | IProposalFiltersV3<T, Y>
+  | IProposalFiltersV4<T, Y>;
 
 export type IProposalScopes = IProposalScopesV3 | IProposalScopesV4;
 

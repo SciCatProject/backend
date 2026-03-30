@@ -406,8 +406,10 @@ export class ProposalsController {
       this.updateFiltersForList(request, rest);
 
     if (include) {
-      const proposalFilters: IProposalFilters<ProposalDocument, IProposalFields> =
-        { ...baseFilters, include };
+      const proposalFilters: IProposalFilters<
+        ProposalDocument,
+        IProposalFields
+      > = { ...baseFilters, include };
       return this.proposalsService.findAllComplete(proposalFilters);
     }
     return this.proposalsService.findAll(baseFilters);

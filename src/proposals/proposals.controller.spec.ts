@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import type { Request } from "express";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -62,7 +63,7 @@ describe("ProposalsController", () => {
   describe("findAll", () => {
     const mockAdminRequest = {
       user: { currentGroups: ["admin"], username: "admin" },
-    } as any;
+    } as unknown as Request;
 
     it("should call findAll when no include is provided", async () => {
       proposalsService.findAll.mockResolvedValue([mockProposal]);
@@ -124,7 +125,7 @@ describe("ProposalsController", () => {
   describe("updateFiltersForList", () => {
     it("should restrict to isPublished when user is not authenticated", () => {
       const result = controller.updateFiltersForList(
-        { user: null } as any,
+        { user: null } as unknown as Request,
         { where: {} },
       );
       expect(result.where?.isPublished).toBe(true);
@@ -133,7 +134,7 @@ describe("ProposalsController", () => {
     it("should not restrict when admin can view all", () => {
       const request = {
         user: { currentGroups: ["admin"] },
-      } as any;
+      } as unknown as Request;
 
       const result = controller.updateFiltersForList(request, { where: {} });
       expect(result.where?.isPublished).toBeUndefined();
