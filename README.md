@@ -174,6 +174,8 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `DOI_SHORT_SUFFIX` | string | | By default `uuidv4` is used to generate the DOI suffix but if this flag is `true` the shorter version of 10 random characters is used as DOI suffix. | |
 | `DOI_USERNAME` | string | | The facility DOI DataCite username. | |
 | `DOI_PASSWORD` | string | | The facility DOI DataCite password. | |
+| `PUBLISHED_DATA_CONFIG_FILE` | string | | Path to the file containing the metadata and UI schemas for PublishedData. | `"publishedDataConfig.json"`  |
+| `AJV_CUSTOM_DEFINITIONS_FILE` | string | | The path to a JavaScript module that defines custom AJV keywords or dynamic defaults functions. | |
 | `EXPRESS_SESSION_SECRET` | string | No | Secret used to set up express session. Required if using OIDC authentication | |
 | `EXPRESS_SESSION_STORE` | string | Yes | Where to store the express session. When "mongo" on mongo else in memory | |
 | `HTTP_MAX_REDIRECTS` | number | Yes | Max redirects for HTTP requests. | 5 |
