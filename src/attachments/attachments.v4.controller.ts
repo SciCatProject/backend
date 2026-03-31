@@ -40,7 +40,6 @@ import {
   IAttachmentFiltersV4,
 } from "./interfaces/attachment-filters.interface";
 
-import { OutputDatasetDto } from "src/datasets/dto/output-dataset.dto";
 import { getSwaggerAttachmentFilterContent } from "./types/attachment-filter-contents";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { CreateAttachmentV4Dto } from "./dto/create-attachment.v4.dto";
@@ -232,7 +231,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputDatasetDto,
+    type: OutputAttachmentV4Dto,
     isArray: true,
     description: "Return the attachments requested",
   })
@@ -279,7 +278,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputDatasetDto,
+    type: OutputAttachmentV4Dto,
     isArray: true,
     description: "Return the attachments requested",
   })
@@ -324,7 +323,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: Attachment,
+    type: OutputAttachmentV4Dto,
     description: "Return attachment with id specified",
   })
   @Get("/:aid")

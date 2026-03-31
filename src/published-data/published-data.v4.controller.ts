@@ -25,7 +25,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { Validator } from "jsonschema";
+import { cloneDeep } from "lodash";
 import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
@@ -36,6 +36,7 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { ILimitsFilter } from "src/common/interfaces/common.interface";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
@@ -50,14 +51,14 @@ import {
   IRegister,
   PublishedDataStatus,
 } from "./interfaces/published-data.interface";
+import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { RegisteredFilterPipe } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
 import {
   PublishedData,
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
-import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
-import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { ValidatorService } from "./validator.service";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -77,6 +78,7 @@ export class PublishedDataV4Controller {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
+    private validatorService: ValidatorService,
   ) {}
 
   @AllowAny()
@@ -222,6 +224,9 @@ export class PublishedDataV4Controller {
     name: "pid",
     description: "Dataset pid used to fetch form data.",
     required: true,
+    type: String,
+    isArray: true,
+    explode: true,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -229,10 +234,11 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string) {
+  async formPopulate(@Query("pid") pid: string[] | string) {
+    pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
     const dataset = (await this.datasetsService.findOne({
-      where: { pid },
+      where: { pid: pid[0] },
     })) as unknown as DatasetClass;
 
     let proposalId;
@@ -261,6 +267,13 @@ export class PublishedDataV4Controller {
     if (attachment) {
       formData.thumbnail = attachment.thumbnail;
     }
+
+    const dto: PartialUpdatePublishedDataV4Dto = {
+      datasetPids: pid,
+      metadata: {},
+    };
+    await this.validatorService.validate(dto);
+    formData.metadata = dto.metadata;
 
     return formData;
   }
@@ -408,7 +421,11 @@ export class PublishedDataV4Controller {
       );
     }
 
-    await this.validateMetadata(publishedData.metadata);
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
+    }
 
     // Make datasets in publishedData datasetPids array public
     const datasetPids = publishedData.datasetPids;
@@ -474,29 +491,6 @@ export class PublishedDataV4Controller {
       { doi: id },
       { status: PublishedDataStatus.AMENDED },
     );
-  }
-
-  async validateMetadata(metadata?: object) {
-    const validator = new Validator();
-    const metadataConfig = await this.getConfig();
-    if (!metadataConfig?.metadataSchema) {
-      throw new HttpException(
-        "Published data schema is not defined in the configuration.",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const validationResult = validator.validate(
-      metadata,
-      metadataConfig.metadataSchema,
-    );
-
-    if (!validationResult.valid) {
-      throw new HttpException(
-        validationResult.errors.map((error) => error.stack),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
   }
 
   // DELETE /publisheddata/:id
@@ -567,14 +561,24 @@ export class PublishedDataV4Controller {
     publishedData.registeredTime = data.registeredTime;
     publishedData.status = data.status;
 
-    await this.validateMetadata(publishedData.metadata);
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
+    }
 
+    const mergePatchRequest = cloneDeep(request);
+    mergePatchRequest.headers["content-type"] = "application/merge-patch+json";
     await Promise.all(
       publishedData.datasetPids.map(async (pid) => {
-        await this.datasetsController.findByIdAndUpdate(request, pid, {
-          isPublished: true,
-          datasetlifecycle: { publishedOn: data.registeredTime },
-        });
+        await this.datasetsController.findByIdAndUpdate(
+          mergePatchRequest,
+          pid,
+          {
+            isPublished: true,
+            datasetlifecycle: { publishedOn: data.registeredTime },
+          },
+        );
       }),
     );
 
@@ -733,8 +737,13 @@ export class PublishedDataV4Controller {
       landingPage,
     } = metadata ?? {};
 
+    const landingPageBase =
+      typeof landingPage === "string" &&
+      (landingPage.startsWith("https://") || landingPage.startsWith("http://"))
+        ? landingPage
+        : `https://${landingPage}`;
     const url = landingPage
-      ? `https://${landingPage}${encodeURIComponent(doi)}`
+      ? `${landingPageBase}${encodeURIComponent(doi)}`
       : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
