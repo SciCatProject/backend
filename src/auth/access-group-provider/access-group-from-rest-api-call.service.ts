@@ -12,7 +12,6 @@ import { AxiosError } from "axios";
  */
 @Injectable()
 export class AccessGroupFromRestApiService extends AccessGroupService {
-  private readonly logger = new Logger(AccessGroupFromRestApiService.name);
   constructor(
     private apiUrl: string,
     private headers: Record<string, string>,
@@ -25,19 +24,14 @@ export class AccessGroupFromRestApiService extends AccessGroupService {
   async getAccessGroups(userPayload: UserPayload): Promise<string[]> {
     const userId = get(userPayload, this.userIdfield) as string;
     if (!userId) {
-      this.logger.error(`User ID not found in payload: ${this.userIdfield}`);
+      Logger.error(`User ID not found in payload: ${this.userIdfield}`);
       return [];
     }
     const url = this.apiUrl.replace("{userId}", userId);
-    this.logger.debug(
-      `Fetching access groups from REST API ${url} with headers: ${JSON.stringify(
-        this.headers,
-      )}`,
-    );
 
     const responseData = await this.callRestApi(url);
     if (!responseData) {
-      this.logger.warn("No access groups returned from REST API");
+      Logger.warn("No access groups returned from REST API");
       return [];
     }
     return responseData;
@@ -54,20 +48,20 @@ export class AccessGroupFromRestApiService extends AccessGroupService {
       );
 
       if (!response || !response.data) {
-        this.logger.warn("No access groups returned from REST API");
+        Logger.warn("No access groups returned from REST API");
         return [];
       }
 
       return response.data;
     } catch (err: unknown) {
       if (err instanceof AxiosError) {
-        this.logger.warn(
+        Logger.warn(
           `Status: ${err.response?.status}, Body: ${JSON.stringify(err.response?.data)}`,
         );
       } else if (err instanceof Error) {
-        this.logger.error(err.message);
+        Logger.error(err.message);
       } else {
-        this.logger.error("Unknown error occurred");
+        Logger.error("Unknown error occurred");
       }
       return [];
     }
