@@ -102,13 +102,33 @@ export class PublishedData extends QueryableClass {
 
   @ApiProperty({
     type: [String],
-    required: true,
+    required: false,
     description:
-      "Array of one or more Dataset persistent identifier (pid) values that" +
-      " make up the published data.",
+      "Array of one or more datasets' persistent identifier values that" +
+      " are part of the published data.",
   })
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String], required: false })
   datasetPids: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of one or more proposals identifier values that" +
+      " are part of the published data.",
+  })
+  @Prop({ type: [String], required: false })
+  proposalIds: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of one or more samples identifier values that" +
+      " are part of the published data.",
+  })
+  @Prop({ type: [String], required: false })
+  sampleIds: string[];
 
   @ApiProperty({
     type: Date,
