@@ -8,9 +8,10 @@ import {
 } from "class-validator";
 import { ApiProperty, ApiTags, PartialType } from "@nestjs/swagger";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
+import { OwnableDto } from "src/common/dto/ownable.dto";
 
 @ApiTags("publishedData")
-export class UpdatePublishedDataV4Dto {
+export class UpdatePublishedDataV4Dto extends OwnableDto {
   @ApiProperty({
     type: String,
     required: true,

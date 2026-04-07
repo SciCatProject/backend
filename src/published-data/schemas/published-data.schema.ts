@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
-import { QueryableClass } from "src/common/schemas/queryable.schema";
 import { v4 as uuidv4 } from "uuid";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
 import crypto from "crypto";
+import { OwnableClass } from "src/common/schemas/ownable.schema";
 
 export type PublishedDataDocument = PublishedData & Document;
 
@@ -15,7 +15,7 @@ export type PublishedDataDocument = PublishedData & Document;
   },
   timestamps: true,
 })
-export class PublishedData extends QueryableClass {
+export class PublishedData extends OwnableClass {
   @Prop({
     type: String,
     unique: true,
