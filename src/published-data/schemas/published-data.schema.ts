@@ -105,7 +105,7 @@ export class PublishedData extends QueryableClass {
     required: false,
     description:
       "Array of one or more datasets' persistent identifier values that" +
-      " are part of the published data.",
+      " are part of the published data record.",
   })
   @Prop({ type: [String], required: false })
   datasetPids: string[];
@@ -115,7 +115,7 @@ export class PublishedData extends QueryableClass {
     required: false,
     description:
       "Array of one or more proposals identifier values that" +
-      " are part of the published data.",
+      " are part of this published data record.",
   })
   @Prop({ type: [String], required: false })
   proposalIds: string[];
@@ -125,7 +125,7 @@ export class PublishedData extends QueryableClass {
     required: false,
     description:
       "Array of one or more samples identifier values that" +
-      " are part of the published data.",
+      " are part of this published data record.",
   })
   @Prop({ type: [String], required: false })
   sampleIds: string[];
@@ -133,7 +133,7 @@ export class PublishedData extends QueryableClass {
   @ApiProperty({
     type: Date,
     required: false,
-    description: "Time when doi is successfully registered",
+    description: "Time when doi is successfully registered with registrar",
   })
   @Prop({ type: Date, index: true, required: false })
   registeredTime?: Date;
