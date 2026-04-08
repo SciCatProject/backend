@@ -93,6 +93,6 @@ jobs:
       - generate-and-upload-sdk
     if: github.event_name != 'push'
     steps:
-      - uses: geekyeggo/delete-artifact@v5
+      - uses: geekyeggo/delete-artifact@v6
         with:
           name: swagger-*
