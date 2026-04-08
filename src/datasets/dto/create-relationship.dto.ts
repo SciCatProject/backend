@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateRelationshipDto {
   @ApiProperty({
@@ -10,11 +10,30 @@ export class CreateRelationshipDto {
   @IsString()
   readonly pid: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
-    required: true,
-    description: "Relationship between this dataset and the related one.",
+    description: "Relationship between this dataset and the related entity.",
+    default: "is related to",
   })
   @IsString()
-  relationship: string;
+  @IsOptional()
+  readonly relationship?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      "Type of the related entity (e.g., 'Dataset', 'Logbook', 'Other').",
+    default: "Other",
+  })
+  @IsString()
+  @IsOptional()
+  readonly relatedEntityType?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: "URL to access the related entity, if applicable.",
+  })
+  @IsString()
+  @IsUrl()
+  readonly url?: string;
 }
