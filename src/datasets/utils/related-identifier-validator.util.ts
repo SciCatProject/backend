@@ -8,9 +8,7 @@ import {
 
 @Injectable()
 @ValidatorConstraint({ name: "relatedIdentifierMatchesType", async: false })
-export class RelatedIdentifierMatchesType
-  implements ValidatorConstraintInterface
-{
+export class RelatedIdentifierMatchesType implements ValidatorConstraintInterface {
   validate(value: unknown, args: ValidationArguments) {
     if (typeof value !== "string") {
       return false;
