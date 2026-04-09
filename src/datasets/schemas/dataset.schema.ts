@@ -481,4 +481,5 @@ export class DatasetClass extends OwnableClass {
 export const DatasetSchema = SchemaFactory.createForClass(DatasetClass);
 
 DatasetSchema.index({ "$**": "text" });
-DatasetSchema.index({ "relationships.pid": 1 });
+DatasetSchema.index({ "relationships.relatedIdentifier": 1 });
+DatasetSchema.index({ "relationships.targetId": 1 });
