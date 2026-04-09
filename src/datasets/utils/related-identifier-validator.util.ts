@@ -5,18 +5,22 @@ import {
   ValidationArguments,
   isURL,
 } from "class-validator";
+import { CreateRelationshipDto } from "../dto/create-relationship.dto";
 
 @Injectable()
-@ValidatorConstraint({ name: "relatedIdentifierMatchesType", async: false })
+@ValidatorConstraint({
+  name: "relatedIdentifierMatchesType",
+  async: false,
+})
 export class RelatedIdentifierMatchesType implements ValidatorConstraintInterface {
   validate(value: unknown, args: ValidationArguments) {
     if (typeof value !== "string") {
       return false;
     }
 
-    const dto = args.object as { relatedIdentifierType?: string };
+    const dto = args.object as Partial<CreateRelationshipDto>;
 
-    switch (dto.relatedIdentifierType) {
+    switch (dto.identifierType) {
       case "URL":
         return isURL(value);
       default:
@@ -25,8 +29,8 @@ export class RelatedIdentifierMatchesType implements ValidatorConstraintInterfac
   }
 
   defaultMessage(args: ValidationArguments) {
-    const dto = args.object as { relatedIdentifierType?: string };
-    const type = dto.relatedIdentifierType ?? "the configured type";
-    return `relatedIdentifier must be a valid ${type} when relatedIdentifierType is set to '${dto.relatedIdentifierType}'.`;
+    const dto = args.object as Partial<CreateRelationshipDto>;
+    const type = dto.identifierType ?? "the configured type";
+    return `identifier must be a valid ${type} when identifierType is set to '${dto.identifierType}'.`;
   }
 }

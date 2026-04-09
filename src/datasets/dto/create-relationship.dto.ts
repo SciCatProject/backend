@@ -11,17 +11,17 @@ export class CreateRelationshipDto {
   })
   @Validate(RelatedIdentifierMatchesType)
   @IsString()
-  readonly relatedIdentifier: string;
+  readonly identifier: string;
 
   @ApiPropertyOptional({
     type: String,
     description:
-      "Type of the related identifier (e.g., 'URL', 'DOI', 'arXiv', 'Other').",
+      "Type of the related identifier (e.g., 'URL', 'DOI', 'arXiv', 'Other'). We may use 'Local' for SciCat identifiers",
     default: "Other",
   })
   @IsString()
   @IsOptional()
-  readonly relatedIdentifierType?: string;
+  readonly identifierType?: string;
 
   @ApiPropertyOptional({
     type: String,
@@ -41,13 +41,14 @@ export class CreateRelationshipDto {
   })
   @IsString()
   @IsOptional()
-  readonly relatedEntityType?: string;
+  readonly entityType?: string;
 
   @ApiPropertyOptional({
     type: String,
-    description: "Identifier of the related entity in the external system.",
+    description:
+      "Identifier of the related entity in the external system. Not used for SciCat-internal relationships.",
   })
   @IsString()
   @IsOptional()
-  readonly targetId?: string;
+  readonly externalId?: string;
 }

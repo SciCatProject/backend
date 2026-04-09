@@ -11,47 +11,44 @@ describe("RelatedIdentifierMatchesType", () => {
     ({
       targetName: "CreateRelationshipDto",
       object,
-      property: "relatedIdentifier",
-      value: object.relatedIdentifier,
+      property: "identifier",
+      value: object.identifier,
       constraints: [],
     }) as ValidationArguments;
 
-  it("validates URL when relatedIdentifierType is URL", () => {
+  it("validates URL when identifierType is URL", () => {
     expect(
       validator.validate(
         "https://example.org/datasets/123",
         makeArgs({
-          relatedIdentifier: "https://example.org/datasets/123",
-          relatedIdentifierType: "URL",
+          identifier: "https://example.org/datasets/123",
+          identifierType: "URL",
         }),
       ),
     ).toBe(true);
   });
 
-  it("rejects invalid URL when relatedIdentifierType is URL", () => {
+  it("rejects invalid URL when identifierType is URL", () => {
     expect(
       validator.validate(
         "noturl/datasets/123",
         makeArgs({
-          relatedIdentifier: "noturl/datasets/123",
-          relatedIdentifierType: "URL",
+          identifier: "noturl/datasets/123",
+          identifierType: "URL",
         }),
       ),
     ).toBe(false);
   });
 
-  it("accepts any string when relatedIdentifierType is missing", () => {
+  it("accepts any string when identifierType is missing", () => {
     expect(
-      validator.validate(
-        "anything123",
-        makeArgs({ relatedIdentifier: "Other" }),
-      ),
+      validator.validate("anything123", makeArgs({ identifier: "Other" })),
     ).toBe(true);
   });
 
   it("provides a descriptive default message", () => {
     const message = validator.defaultMessage(
-      makeArgs({ relatedIdentifier: "foo", relatedIdentifierType: "URL" }),
+      makeArgs({ identifier: "foo", identifierType: "URL" }),
     );
     expect(message).toContain("URL");
   });
