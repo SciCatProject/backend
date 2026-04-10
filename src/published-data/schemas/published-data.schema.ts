@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
-import { QueryableClass } from "src/common/schemas/queryable.schema";
 import { v4 as uuidv4 } from "uuid";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
 import crypto from "crypto";
+import { OwnableClass } from "src/common/schemas/ownable.schema";
 
 export type PublishedDataDocument = PublishedData & Document;
 
@@ -15,7 +15,7 @@ export type PublishedDataDocument = PublishedData & Document;
   },
   timestamps: true,
 })
-export class PublishedData extends QueryableClass {
+export class PublishedData extends OwnableClass {
   @Prop({
     type: String,
     unique: true,
@@ -102,18 +102,38 @@ export class PublishedData extends QueryableClass {
 
   @ApiProperty({
     type: [String],
-    required: true,
+    required: false,
     description:
-      "Array of one or more Dataset persistent identifier (pid) values that" +
-      " make up the published data.",
+      "Array of one or more datasets' persistent identifier values that" +
+      " are part of the published data record.",
   })
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String], required: false })
   datasetPids: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of one or more proposals identifier values that" +
+      " are part of this published data record.",
+  })
+  @Prop({ type: [String], required: false })
+  proposalIds: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of one or more samples identifier values that" +
+      " are part of this published data record.",
+  })
+  @Prop({ type: [String], required: false })
+  sampleIds: string[];
 
   @ApiProperty({
     type: Date,
     required: false,
-    description: "Time when doi is successfully registered",
+    description: "Time when doi is successfully registered with registrar",
   })
   @Prop({ type: Date, index: true, required: false })
   registeredTime?: Date;
