@@ -1,8 +1,8 @@
 //import { AccessGroupService as AccessGroupService } from "./access-group.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { UserPayload } from "../interfaces/userPayload.interface";
 import { AccessGroupService } from "./access-group.service";
+import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 
 /**
  * This service is used to get the access groups from the payload of the IDP.

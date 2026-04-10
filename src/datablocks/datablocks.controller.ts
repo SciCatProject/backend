@@ -234,7 +234,9 @@ export class DatablocksController {
     const user: JWTUser = request.user as JWTUser;
     const abilities = this.caslAbilityFactory.datablockInstanceAccess(user);
 
-    const instance = await this.datablocksService.findOne({ _id: id });
+    const instance = await this.datablocksService.findOne({
+      where: { _id: id },
+    });
     if (!instance) {
       throw new NotFoundException();
     }
@@ -260,7 +262,9 @@ export class DatablocksController {
     @Body() updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock | null> {
     try {
-      const instance = await this.datablocksService.findOne({ _id: id });
+      const instance = await this.datablocksService.findOne({
+        where: { _id: id },
+      });
       const user: JWTUser = request.user as JWTUser;
       const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
 

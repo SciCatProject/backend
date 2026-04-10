@@ -218,7 +218,6 @@ export class DatasetsV4Controller {
   ): IDatasetFiltersV4<DatasetDocument, IDatasetFields> {
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
     const canViewAccess = ability.can(
       Action.DatasetReadManyAccess,
       DatasetClass,
@@ -251,11 +250,6 @@ export class DatasetsV4Controller {
             },
           ];
         }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
       }
     }
 
@@ -495,17 +489,10 @@ export class DatasetsV4Controller {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
 
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
       }
     }
 
@@ -567,15 +554,9 @@ export class DatasetsV4Controller {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
 
       if (canViewAccess) {
         fields.userGroups?.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup?.push(...user.currentGroups);
       }
     }
 
@@ -769,7 +750,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     description: "Id of the dataset to modify",
     type: String,
   })
-  @ApiConsumes("application/merge-patch+json", "application/json")
+  @ApiConsumes("application/json", "application/merge-patch+json")
   @ApiBody({
     description:
       "Fields that needs to be updated in the dataset. Only the fields that needs to be updated have to be passed in.",
