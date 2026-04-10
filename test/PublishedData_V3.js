@@ -169,7 +169,7 @@ describe("1600: PublishedData: Test of access to published data V3", () => {
       .post("/api/v3/PublishedData/" + doi + "/register")
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.SuccessfulPostStatusCode)
       .expect("Content-Type", /json/);
   });
 
