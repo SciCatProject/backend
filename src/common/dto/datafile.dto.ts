@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsObject,
+} from "class-validator";
 
 export class DataFileDto {
   @ApiProperty({
@@ -72,4 +78,13 @@ export class DataFileDto {
   @IsString()
   @IsOptional()
   readonly type: string;
+
+  @ApiProperty({
+    type: Object,
+    required: false,
+    description: "File metadata.",
+  })
+  @IsObject()
+  @IsOptional()
+  readonly metadata: Record<string, unknown>;
 }
