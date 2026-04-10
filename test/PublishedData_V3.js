@@ -5,7 +5,6 @@ const sandbox = require("sinon").createSandbox();
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   idOrigDatablock = null,
   pid = null,
   pidnonpublic = null,
@@ -28,7 +27,7 @@ const nonpublictestdataset = {
   ownerGroup: "examplenonpublicgroup",
 };
 
-describe("1600: PublishedData: Test of access to published data", () => {
+describe("1600: PublishedData: Test of access to published data V3", () => {
   before(async () => {
     db.collection("Dataset").deleteMany({});
     db.collection("PublishedData").deleteMany({});
@@ -58,23 +57,53 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.have.property("affiliation").and.equal(publishedData.affiliation);
-        res.body.should.have.property("creator").and.deep.equal(publishedData.creator);
-        res.body.should.have.property("publisher").and.equal(publishedData.publisher);
-        res.body.should.have.property("publicationYear").and.equal(publishedData.publicationYear);
+        res.body.should.have
+          .property("affiliation")
+          .and.equal(publishedData.affiliation);
+        res.body.should.have
+          .property("creator")
+          .and.deep.equal(publishedData.creator);
+        res.body.should.have
+          .property("publisher")
+          .and.equal(publishedData.publisher);
+        res.body.should.have
+          .property("publicationYear")
+          .and.equal(publishedData.publicationYear);
         res.body.should.have.property("title").and.equal(publishedData.title);
         res.body.should.have.property("url").and.equal(publishedData.url);
-        res.body.should.have.property("abstract").and.equal(publishedData.abstract);
-        res.body.should.have.property("dataDescription").and.equal(publishedData.dataDescription);
-        res.body.should.have.property("resourceType").and.equal(publishedData.resourceType);
-        res.body.should.have.property("numberOfFiles").and.equal(publishedData.numberOfFiles);
-        res.body.should.have.property("sizeOfArchive").and.equal(publishedData.sizeOfArchive);
-        res.body.should.have.property("pidArray").and.deep.equal(publishedData.pidArray);
-        res.body.should.have.property("authors").and.deep.equal(publishedData.authors);
-        res.body.should.have.property("scicatUser").and.equal(publishedData.scicatUser);
-        res.body.should.have.property("thumbnail").and.equal(publishedData.thumbnail);
-        res.body.should.have.property("relatedPublications").and.deep.equal(publishedData.relatedPublications);
-        res.body.should.have.property("downloadLink").and.equal(publishedData.downloadLink);
+        res.body.should.have
+          .property("abstract")
+          .and.equal(publishedData.abstract);
+        res.body.should.have
+          .property("dataDescription")
+          .and.equal(publishedData.dataDescription);
+        res.body.should.have
+          .property("resourceType")
+          .and.equal(publishedData.resourceType);
+        res.body.should.have
+          .property("numberOfFiles")
+          .and.equal(publishedData.numberOfFiles);
+        res.body.should.have
+          .property("sizeOfArchive")
+          .and.equal(publishedData.sizeOfArchive);
+        res.body.should.have
+          .property("pidArray")
+          .and.deep.equal(publishedData.pidArray);
+        res.body.should.have
+          .property("authors")
+          .and.deep.equal(publishedData.authors);
+        res.body.should.have
+          .property("scicatUser")
+          .and.equal(publishedData.scicatUser);
+        res.body.should.have
+          .property("thumbnail")
+          .and.equal(publishedData.thumbnail);
+        res.body.should.have
+          .property("relatedPublications")
+          .and.deep.equal(publishedData.relatedPublications);
+        res.body.should.have
+          .property("downloadLink")
+          .and.equal(publishedData.downloadLink);
         res.body.should.have.property("status").and.equal(publishedData.status);
         doi = encodeURIComponent(res.body["doi"]);
       });
@@ -140,7 +169,7 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .post("/api/v3/PublishedData/" + doi + "/register")
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulPostStatusCode)
+      .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/);
   });
 
@@ -149,7 +178,7 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .get("/api/v3/PublishedData/" + doi)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
+      .expect(TestData.SuccessfulPostStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("status").and.equal("registered");
@@ -216,14 +245,18 @@ describe("1600: PublishedData: Test of access to published data", () => {
   it("0066: should fetch published data with filter", async () => {
     const filter = { where: { creator: "New Creator" } };
     await request(appUrl)
-      .get(`/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`)
+      .get(
+        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.length.should.equal(1);
-        res.body[0].should.have.property("creator").and.deep.equal(["New Creator"]);
+        res.body[0].should.have
+          .property("creator")
+          .and.deep.equal(["New Creator"]);
         res.body[0].should.have.property("thumbnail");
       });
     return request(appUrl)

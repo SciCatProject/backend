@@ -6,7 +6,12 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { ApiProperty, ApiTags, PartialType } from "@nestjs/swagger";
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  ApiTags,
+  PartialType,
+} from "@nestjs/swagger";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
 import { OwnableDto } from "src/common/dto/ownable.dto";
 
@@ -45,27 +50,27 @@ export class UpdatePublishedDataV4Dto extends OwnableDto {
   @IsString({ each: true })
   readonly datasetPids: string[];
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: [String],
-    required: false,
     description:
-      "Array of one or more proposals identifier values that" +
-      " are part of this published data record.",
+      "Array of one or more proposal identifier values that " +
+      "are part of this published data record.",
   })
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  readonly proposalIds: string[];
+  readonly proposalIds?: string[];
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: [String],
-    required: false,
     description:
-      "Array of one or more samples identifier values that" +
-      " are part of this published data record.",
+      "Array of one or more samples identifier values that " +
+      "are part of this published data record.",
   })
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  readonly sampleIds: string[];
+  readonly sampleIds?: string[];
 
   @ApiProperty({
     type: Date,
