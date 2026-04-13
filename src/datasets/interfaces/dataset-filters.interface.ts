@@ -43,6 +43,10 @@ export interface IDatasetFields {
   [key: string]: unknown;
 }
 
+export type IDatasetOpenSearchPipeline = Omit<IDatasetFields, "text"> & {
+  openSearchIdList?: string[];
+};
+
 export type IDatasetScopesV4 =
   | IOrigDatablockFiltersV4<OrigDatablockDocument, IOrigDatablockFields>
   | IFiltersV4<DatablockDocument, IDatablockFields>

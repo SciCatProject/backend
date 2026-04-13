@@ -56,7 +56,7 @@ export class RuntimeConfigController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("runtimeconfig", (ability: AppAbility) =>
-    ability.can(Action.Update, RuntimeConfig),
+    ability.can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig),
   )
   @Put(":id")
   @ApiParam({
