@@ -83,7 +83,7 @@ describe("0700: DerivedDataset: Derived Datasets", () => {
   it("0110: adds a new minimal derived dataset", async () => {
     return request(appUrl)
       .post("/api/v3/Datasets")
-      .send({...TestData.DerivedCorrectMin, sourceFolder: "/data/derived/"})
+      .send({ ...TestData.DerivedCorrectMin, sourceFolder: "/data/derived/" })
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -221,6 +221,7 @@ describe("0700: DerivedDataset: Derived Datasets", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("valid").and.equal(false);
+        res.body.should.have.property("error").and.equal("each value in inputDatasets must be a string; each value in usedSoftware must be a string");
       });
   });
 

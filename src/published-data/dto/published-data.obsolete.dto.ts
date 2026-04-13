@@ -11,12 +11,14 @@ import { PublishedDataStatus } from "../interfaces/published-data.interface";
 import { PublishedData } from "../schemas/published-data.schema";
 import { createDeepMapper } from "src/common/utils/deep-mapper.util";
 
-export const publishedDataV3toV4FieldMap: Record<string, string> = {
+export const publishedDataV3toV4FieldMap: Partial<
+  Record<keyof PublishedDataObsoleteDto & string, string>
+> = {
   pidArray: "datasetPids",
-  creator: "metadata.creators.name",
-  authors: "metadata.contributors.name",
+  creator: "metadata.creators.[].name",
+  authors: "metadata.contributors.[].name",
   publisher: "metadata.publisher.name",
-  relatedPublications: "metadata.relatedIdentifiers.relatedIdentifier",
+  relatedPublications: "metadata.relatedIdentifiers.[].relatedIdentifier",
   affiliation: "metadata.affiliation",
   publicationYear: "metadata.publicationYear",
   url: "metadata.url",

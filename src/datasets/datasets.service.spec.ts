@@ -4,7 +4,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 import { InitialDatasetsService } from "src/initial-datasets/initial-datasets.service";
 import { LogbooksService } from "src/logbooks/logbooks.service";
-import { ElasticSearchService } from "src/elastic-search/elastic-search.service";
 import { DatasetsService } from "./datasets.service";
 import { DatasetClass } from "./schemas/dataset.schema";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
@@ -13,6 +12,8 @@ import { Request } from "express";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { plainToInstance } from "class-transformer";
 import { ProposalsService } from "src/proposals/proposals.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
+import { OpensearchService } from "src/opensearch/opensearch.service";
 
 class InitialDatasetsServiceMock {}
 
@@ -20,7 +21,10 @@ class LogbooksServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
-class ElasticSearchServiceMock {}
+class MetadataKeysServiceMock {
+  insertManyFromSource = jest.fn().mockResolvedValue([]);
+  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
+}
 
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
@@ -118,7 +122,8 @@ describe("DatasetsService", () => {
           useClass: InitialDatasetsServiceMock,
         },
         { provide: LogbooksService, useClass: LogbooksServiceMock },
-        { provide: ElasticSearchService, useClass: ElasticSearchServiceMock },
+        { provide: OpensearchService, useValue: null },
+        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
       ],
