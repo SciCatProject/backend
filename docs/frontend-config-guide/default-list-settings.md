@@ -21,7 +21,7 @@ Defines how each field is displayed in the list table.
 | `width`      | `number`  | Default width of the column.                                                                                                                                                                                                          | `200`               |
 | `format`     | `string`  | Optional property used **only** when `type` is set to `date`. Defines how ISO date strings are displayed (e.g. `yyyy-MM-dd`). <br> it fallsback to `dateFormat` or `yyyy-MM-dd HH:mm` for dataset and `yyyy-MM-dd` for proposal       | `"yyyy-MM-dd"`      |
 | `enabled`    | `boolean` | Whether the column is displayed by default.                                                                                                                                                                                           | `true`              |
-| `sort`     | `string`  | Optional property to define the default sort direction for a specific column. Accepts `"asc"` or `"desc"`. <br> **Note:** Only one column in the `defaultProposalsListSettings` or `defaultDatasetsListSettings` should have this property defined. If not specified anywhere, the table defaults to sorting by the `createdAt` column in descending order. | `"desc"`      |
+
 ---
 
 ### **Filters**

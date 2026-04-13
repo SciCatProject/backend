@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { ValidationError } from "class-validator";
+import { IFullFacets } from "src/elastic-search/interfaces/es-common.type";
 
 export class FullFacetFilters {
   @ApiPropertyOptional()
@@ -22,7 +23,7 @@ class TotalSets {
   totalSets: number;
 }
 
-export class FullFacetResponse {
+export class FullFacetResponse implements IFullFacets {
   @ApiProperty({ type: TotalSets, isArray: true })
   all: [TotalSets];
 

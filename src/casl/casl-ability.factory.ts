@@ -15,6 +15,7 @@ import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { ElasticSearchActions } from "src/elastic-search/dto";
 import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
@@ -30,8 +31,6 @@ import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { accessibleBy } from "@casl/mongoose";
-import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
-import { Opensearch } from "src/opensearch/opensearch.subject";
 
 type Subjects =
   | string
@@ -50,10 +49,9 @@ type Subjects =
       | typeof User
       | typeof UserIdentity
       | typeof UserSettings
-      | typeof Opensearch
+      | typeof ElasticSearchActions
       | typeof Datablock
       | typeof RuntimeConfig
-      | typeof MetadataKeyClass
     >
   | "all";
 type PossibleAbilities = [Action, Subjects];
@@ -76,7 +74,7 @@ export class CaslAbilityFactory {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
     datasets: this.datasetEndpointAccess,
-    opensearch: this.opensearchEndpointAccess,
+    "elastic-search": this.elasticSearchEndpointAccess,
     jobs: this.jobsEndpointAccess,
     instruments: this.instrumentEndpointAccess,
     logbooks: this.logbookEndpointAccess,
@@ -90,7 +88,6 @@ export class CaslAbilityFactory {
     history: this.historyEndpointAccess,
     datablocks: this.datablockEndpointAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -328,7 +325,7 @@ export class CaslAbilityFactory {
     });
   }
 
-  opensearchEndpointAccess(user: JWTUser) {
+  elasticSearchEndpointAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
@@ -340,7 +337,7 @@ export class CaslAbilityFactory {
       /*
         / user that belongs to any of the group listed in ADMIN_GROUPS
         */
-      can(Action.Manage, Opensearch);
+      can(Action.Manage, ElasticSearchActions);
     }
     return build({
       detectSubjectType: (item) =>
@@ -922,7 +919,7 @@ export class CaslAbilityFactory {
       createMongoAbility<PossibleAbilities, Conditions>,
     );
 
-    can(Action.RuntimeConfigReadEndpoint, RuntimeConfig);
+    can(Action.Read, RuntimeConfig);
     if (
       user &&
       user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
@@ -930,22 +927,8 @@ export class CaslAbilityFactory {
       /*
         / user that belongs to any of the group listed in ADMIN_GROUPS
         */
-      can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
+      can(Action.Update, RuntimeConfig);
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metadataKeysEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.MetadataKeysReadEndpoint, MetadataKeyClass);
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -2386,42 +2369,6 @@ export class CaslAbilityFactory {
         can(Action.DatablockUpdateAny, Datablock);
       }
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  metadataKeyInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass);
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-          userGroups: { $in: user.currentGroups },
-        });
-      }
-    }
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,

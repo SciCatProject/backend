@@ -174,8 +174,6 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `DOI_SHORT_SUFFIX` | string | | By default `uuidv4` is used to generate the DOI suffix but if this flag is `true` the shorter version of 10 random characters is used as DOI suffix. | |
 | `DOI_USERNAME` | string | | The facility DOI DataCite username. | |
 | `DOI_PASSWORD` | string | | The facility DOI DataCite password. | |
-| `PUBLISHED_DATA_CONFIG_FILE` | string | | Path to the file containing the metadata and UI schemas for PublishedData. | `"publishedDataConfig.json"`  |
-| `AJV_CUSTOM_DEFINITIONS_FILE` | string | | The path to a JavaScript module that defines custom AJV keywords or dynamic defaults functions. | |
 | `EXPRESS_SESSION_SECRET` | string | No | Secret used to set up express session. Required if using OIDC authentication | |
 | `EXPRESS_SESSION_STORE` | string | Yes | Where to store the express session. When "mongo" on mongo else in memory | |
 | `HTTP_MAX_REDIRECTS` | number | Yes | Max redirects for HTTP requests. | 5 |
@@ -189,7 +187,6 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
-| `OIDC_ADDITIONAL_AUTHORIZED_PARTIES` | string | No | Comma-separated list of additional OIDC client IDs allowed to present tokens to this backend. Used for token exchange scenarios where a third-party client obtains a token on behalf of a user. The client ID must appear as the `azp` claim in the token. Example: `additional-client1, additional-client2`. | |
 | `OIDC_CLIENT_SECRET` | string | Yes | Secret to provide to the OIDC service to obtain the user token. Example: Aa1JIw3kv3mQlGFWhRrE3gOdkH6xreAwro. | |
 | `OIDC_CALLBACK_URL` | string | Yes | SciCat callback URL to redirect to after a successful login. Example: http://myscicat/api/v3/oidc/callback. | |
 | `OIDC_SCOPE` | string | Yes | Space-separated list of info returned by the OIDC service. Example: "openid profile email". | |
@@ -240,13 +237,19 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`MS365_CLIENT_SECRET`| string | Yes | Client Secret for sending emails over Microsoft Graph API | |
 |`POLICY_PUBLICATION_SHIFT`| integer | Yes | Embargo period expressed in years. | 3 years |
 |`POLICY_RETENTION_SHIFT`| integer | Yes | Retention period (how long the facility will hold on to data) expressed in years. | -1 (indefinitely) |
-|`OPENSEARCH_ENABLED`| string | |  Controls whether OpenSearch is enabled on application startup. If not provided or set to `no`, OpenSearch will not be instantiated.| "no" |
-|`OPENSEARCH_DEFAULT_INDEX`| string | |  Specifies the default index. If not provided, a default index named `dataset` will be created automatically.     | "dataset" |
-|`OPENSEARCH_HOST`| string | | Host of Opensearch server instance. | |
-|`OPENSEARCH_USERNAME`| string | Yes | Username for OpenSearch authentication. Defaults to `admin` in standard deployments but can be configured to use a custom user with appropriate permissions. | "admin" |
-|`OPENSEARCH_PASSWORD`| string | | Password used for OpenSearch authentication. Must match `OPENSEARCH_INITIAL_ADMIN_PASSWORD` used when creating the OpenSearch container.  | |
-|`OPENSEARCH_REFRESH`| string | | Controls index refresh behavior. `wait_for`waits for the next refresh cycle before returning, which is useful for development and testing.`false`skips waiting and is recommended for production. Defaults to false. | false |
-|`OPENSEARCH_DATA_SYNC_BATCH_SIZE`| number | | Number of documents fetched from MongoDB per batch during OpenSearch data sync. | 1000 |
+|`ELASTICSEARCH_ENABLED`| string | | Flag to enable/disable the Elasticsearch endpoints. Values "yes" or "no". | "no" |
+|`ES_HOST`| string | | Host of Elasticsearch server instance. |"https://localhost:9200"|
+|`ES_USERNAME`| string | Yes | Elasticsearch username. | "elastic" |
+|`ES_PASSWORD`| string | | Elasticsearch password. |"duo-password"|
+|`ES_PORT`| number | | Elasticsearch port. |9200|
+|`MONGODB_COLLECTION`| string | | Collection name to be mapped into specified Elasticsearch index. Used for data synchronization between MongoDB and Elasticsearch index. |"Dataset"|
+|`ES_MAX_RESULT`| number | Yes | Maximum records that can be indexed into Elasticsearch. | 10000 |
+|`ES_FIELDS_LIMIT`| number | Yes | The total number of fields in an index. | 1000 |
+|`ES_INDEX`| string | | Setting default index for the application |"dataset"|
+|`ES_REFRESH`| string | | If set to`wait_for`, Elasticsearch will wait till data is inserted into the specified index before returning a response. | false |
+|`STACK_VERSION` | string | Yes | Defines the Elasticsearch version to deploy | "8.8.2" |
+|`CLUSTER_NAME` | string | Yes | Sets the name of the Elasticsearch cluster | "es-cluster" |
+|`MEM_LIMIT`| string | Yes | Specifies the max memory for Elasticsearch container (or process) | "4G" |
 |`FRONTEND_CONFIG_FILE`| string | | The file name for frontend configuration, located in the`/src/config`directory by default. | "./src/config/frontend.config.json" |
 |`FRONTEND_THEME_FILE`| string | | The file name for frontend theme, located in the`/src/config`directory by default. | "./src/config/frontend.theme.json" |
 |`LOGGERS_CONFIG_FILE`| string | | The file name for loggers configuration, located in the project root directory. | "loggers.json" |

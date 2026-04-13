@@ -9,7 +9,6 @@ jobConfig.json
 jobConfig.yaml
 metricsConfig.json
 publishedDataConfig.json
-openSearchConfig.json
 
 # Configs
 .env

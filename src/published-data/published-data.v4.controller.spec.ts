@@ -9,7 +9,6 @@ import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataService } from "./published-data.service";
 import { PublishedDataV4Controller } from "./published-data.v4.controller";
 import { PublishedData } from "./schemas/published-data.schema";
-import { ValidatorService } from "./validator.service";
 
 class AttachmentsServiceMock {}
 
@@ -23,8 +22,6 @@ class ProposalsServiceMock {}
 class PublishedDataServiceMock {}
 
 class CaslAbilityFactoryMock {}
-
-class ValidatorServiceMock {}
 
 class ConfigServiceMock {
   get(key: string) {
@@ -54,10 +51,6 @@ describe("PublishedDataController", () => {
     ...defaultUrl,
     metadata: { landingPage: "custom-landingpage/" },
   };
-  const customLandingPageWithProtocol: PublishedData = {
-    ...defaultUrl,
-    metadata: { landingPage: "https://custom-landingpage/" },
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -72,7 +65,6 @@ describe("PublishedDataController", () => {
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ConfigService, useClass: ConfigServiceMock },
-        { provide: ValidatorService, useClass: ValidatorServiceMock },
       ],
     }).compile();
 
@@ -96,15 +88,6 @@ describe("PublishedDataController", () => {
     expect(controller.doiRegistrationJSON(customLandingPage)).toHaveProperty(
       "data.attributes.url",
       `https://${customLandingPage.metadata!.landingPage}${encodeURIComponent(customLandingPage.doi)}`,
-    );
-  });
-
-  it("should not double-prefix https:// when 'landingPage' already includes a protocol", () => {
-    expect(
-      controller.doiRegistrationJSON(customLandingPageWithProtocol),
-    ).toHaveProperty(
-      "data.attributes.url",
-      `${customLandingPageWithProtocol.metadata!.landingPage}${encodeURIComponent(customLandingPageWithProtocol.doi)}`,
     );
   });
 });

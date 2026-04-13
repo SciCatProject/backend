@@ -1,0 +1,27 @@
+version: "3.2"
+services:
+  mongodb:
+    image: bitnami/mongodb:latest
+    volumes:
+      - "mongodb_data:/bitnami"
+    ports:
+      - "27017:27017"
+  scichat-loopback:
+    image: dacat/scichat-loopback:e2e
+    command:
+      [
+        "./wait-for-it.sh",
+        "mongodb:27017",
+        "--",
+        "node",
+        "-r",
+        "dotenv/config",
+        "."
+      ]
+    volumes:
+      - ".env.scichat-loopback:/home/node/app/.env"
+    depends_on:
+      - mongodb
+volumes:
+  mongodb_data:
+    driver: local

@@ -3,12 +3,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 import { ProposalsService } from "./proposals.service";
 import { ProposalClass } from "./schemas/proposal.schema";
-import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
-
-class MetadataKeysServiceMock {
-  insertManyFromSource = jest.fn().mockResolvedValue([]);
-  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
-}
 
 const mockProposal: ProposalClass = {
   proposalId: "ABCDEF",
@@ -53,7 +47,6 @@ describe("ProposalsService", () => {
             exec: jest.fn(),
           },
         },
-        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
       ],
     }).compile();
 

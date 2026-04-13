@@ -16,7 +16,7 @@ import { LdapConfig } from "src/config/configuration";
 @Injectable()
 export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
   constructor(
-    configService: ConfigService,
+    private configService: ConfigService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {

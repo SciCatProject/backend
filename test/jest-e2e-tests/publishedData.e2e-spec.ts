@@ -8,10 +8,6 @@ import request from "supertest";
 import { getToken } from "../LoginUtils";
 import { TestData } from "../TestData";
 import { createTestingApp, createTestingModuleFactory } from "./utlis";
-import { CreateDatasetObsoleteDto } from "src/datasets/dto/create-dataset-obsolete.dto";
-import { DatasetSchema } from "src/datasets/schemas/dataset.schema";
-import { PublishedDataSchema } from "src/published-data/schemas/published-data.schema";
-import { omit } from "lodash";
 
 describe.each([undefined, "", "https://api.test.datacite.org/dois"])(
   "Published data datacite test (url: %p)",
@@ -22,7 +18,6 @@ describe.each([undefined, "", "https://api.test.datacite.org/dois"])(
     let httpService: HttpService;
 
     let doi: string;
-    let dataset: CreateDatasetObsoleteDto;
 
     beforeAll(async () => {
       if (registerDoiUri) {
@@ -45,19 +40,9 @@ describe.each([undefined, "", "https://api.test.datacite.org/dois"])(
     });
 
     beforeAll(async () => {
-      const createDatasetResponse = await request(app.getHttpServer())
-        .post("/api/v3/datasets")
-        .send(TestData.RawCorrectMin)
-        .auth(token, { type: "bearer" })
-        .set("Accept", "application/json")
-        .expect(TestData.EntryCreatedStatusCode);
-      dataset = createDatasetResponse.body;
       await request(app.getHttpServer())
         .post("/api/v4/PublishedData")
-        .send({
-          ...TestData.PublishedDataV4,
-          datasetPids: [createDatasetResponse.body.pid],
-        })
+        .send(TestData.PublishedDataV4)
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${token}` })
         .expect(TestData.EntryCreatedStatusCode)
@@ -68,12 +53,6 @@ describe.each([undefined, "", "https://api.test.datacite.org/dois"])(
     afterAll(async () => {
       if (mongoConnection.db) await mongoConnection.db.dropDatabase();
       await app.close();
-
-      // Remove pre-save hooks added by forFeatureAsync factories to prevent
-      // stale closures from accumulating across describe.each iterations
-      for (const schema of [DatasetSchema, PublishedDataSchema]) {
-        schema.s.hooks._pres.get("save")?.splice(0);
-      }
     });
 
     it("Should register this new published data", async () => {
@@ -95,21 +74,6 @@ describe.each([undefined, "", "https://api.test.datacite.org/dois"])(
         .set({ Authorization: `Bearer ${token}` })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/);
-
-      await request(app.getHttpServer())
-        .get("/api/v3/datasets/" + encodeURIComponent(dataset.pid as string))
-        .auth(token, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          expect(omit(res.body.datasetlifecycle, "publishedOn")).toEqual(
-            omit(dataset!.datasetlifecycle, "publishedOn"),
-          );
-          expect(res.body.isPublished).toEqual(true);
-          expect(res.body.datasetlifecycle.publishedOn).not.toEqual(
-            dataset!.datasetlifecycle.publishedOn,
-          );
-        });
     });
 
     it("Should fetch this new published data", async () => {

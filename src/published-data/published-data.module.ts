@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AttachmentsModule } from "src/attachments/attachments.module";
 import { CaslModule } from "src/casl/casl.module";
-import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
 import { DatasetsModule } from "src/datasets/datasets.module";
 import { ProposalsModule } from "src/proposals/proposals.module";
 import {
@@ -13,12 +12,12 @@ import {
 } from "../common/schemas/generic-history.schema";
 import { PublishedDataController } from "./published-data.controller";
 import { PublishedDataService } from "./published-data.service";
-import { PublishedDataV4Controller } from "./published-data.v4.controller";
 import {
   PublishedData,
   PublishedDataSchema,
 } from "./schemas/published-data.schema";
-import { ValidatorService } from "./validator.service";
+import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
+import { PublishedDataV4Controller } from "./published-data.v4.controller";
 
 @Module({
   imports: [
@@ -66,6 +65,6 @@ import { ValidatorService } from "./validator.service";
     ProposalsModule,
   ],
   controllers: [PublishedDataController, PublishedDataV4Controller],
-  providers: [PublishedDataService, ValidatorService],
+  providers: [PublishedDataService],
 })
 export class PublishedDataModule {}

@@ -194,6 +194,7 @@ export class DatasetsAccessService {
       Action.DatasetReadManyAccess,
       DatasetClass,
     );
+    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
 
     if (!canViewAny) {
       if (canViewAccess) {
@@ -205,6 +206,12 @@ export class DatasetsAccessService {
               { sharedWith: { $in: [currentUser.email] } },
               { isPublished: true },
             ],
+          },
+        });
+      } else if (canViewOwner) {
+        fieldValue.$lookup.pipeline?.unshift({
+          $match: {
+            ownerGroup: { $in: currentUser.currentGroups },
           },
         });
       } else {

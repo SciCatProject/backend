@@ -1,8 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDateString, IsString } from "class-validator";
 import { CreateSampleDto } from "./create-sample.dto";
-import { Transform } from "class-transformer";
-import { decodeScientificMetadataKeys } from "src/common/utils";
 
 export class OutputSampleDto extends CreateSampleDto {
   @ApiProperty({
@@ -43,19 +41,10 @@ export class OutputSampleDto extends CreateSampleDto {
 
   @ApiProperty({
     type: String,
-    required: false,
+    required: true,
     description:
       "Version of the API used when the dataset was created or last updated. API version is defined in code for each release. Managed by the system.",
   })
   @IsString()
-  version?: string;
-
-  @ApiProperty({
-    type: Object,
-    required: false,
-    default: {},
-    description: "JSON object containing the sample characteristics metadata.",
-  })
-  @Transform(({ value }) => decodeScientificMetadataKeys(value))
-  declare sampleCharacteristics?: Record<string, unknown>;
+  version: string;
 }

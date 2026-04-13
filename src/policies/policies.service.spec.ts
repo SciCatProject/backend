@@ -56,7 +56,7 @@ describe("PoliciesService", () => {
       ],
     }).compile();
 
-    service = await module.resolve<PoliciesService>(PoliciesService);
+    service = module.get<PoliciesService>(PoliciesService);
     policyModel = module.get<Model<Policy>>(getModelToken("Policy"));
   });
 

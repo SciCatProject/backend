@@ -501,7 +501,7 @@ export class OrigDatablocksV4Controller {
     description: "Database filters to apply when retrieving origdatablocks",
     required: false,
     type: String,
-    content: getSwaggerOrigDatablockFilterContent(),
+    example: getSwaggerOrigDatablockFilterContent(),
   })
   @ApiResponse({
     status: HttpStatus.OK,

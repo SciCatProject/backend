@@ -45,7 +45,7 @@ describe("SamplesController", () => {
 
   describe("update", () => {
     const sampleId = "sample123";
-    const updateDto: PartialUpdateSampleDto = { description: "Updated Sample" };
+    const updateDto: PartialUpdateSampleDto = { name: "Updated Sample" };
     const mockRequest = {} as Request;
 
     it("should update sample when header is missing", async () => {
@@ -53,21 +53,11 @@ describe("SamplesController", () => {
         _id: sampleId,
         updatedAt: new Date("2023-01-01"),
       } as SampleClass;
-
-      const updatedSample = {
-        ...sample,
-        ...updateDto,
-        toObject: jest.fn().mockReturnValue({ ...sample, ...updateDto }),
-      };
-
-      samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOne.mockResolvedValue(sample);
+      samplesService.update.mockResolvedValue({ ...sample, ...updateDto });
 
       jest
-        .spyOn(
-          controller,
-          "checkPermissionsForSample" as keyof SamplesController,
-        )
+        .spyOn(controller, "checkPermissionsForSample")
         .mockResolvedValue(sample);
 
       const result = await controller.update(
@@ -76,11 +66,11 @@ describe("SamplesController", () => {
         updateDto,
         {},
       );
-      expect(result).toBeDefined();
+      expect(result).toEqual({ ...sample, ...updateDto });
     });
 
     it("should throw NotFoundException if sample not found", async () => {
-      samplesService.findOne = jest.fn().mockResolvedValue(null);
+      samplesService.findOne.mockResolvedValue(null);
 
       await expect(
         controller.update(mockRequest, sampleId, updateDto, {}),
@@ -92,13 +82,10 @@ describe("SamplesController", () => {
         _id: sampleId,
         updatedAt: new Date("2023-01-01"),
       } as SampleClass;
-      samplesService.findOne = jest.fn().mockResolvedValue(sample);
+      samplesService.findOne.mockResolvedValue(sample);
 
       jest
-        .spyOn(
-          controller,
-          "checkPermissionsForSample" as keyof SamplesController,
-        )
+        .spyOn(controller, "checkPermissionsForSample")
         .mockResolvedValue(sample);
 
       const headers = {
@@ -109,24 +96,13 @@ describe("SamplesController", () => {
         controller.update(mockRequest, sampleId, updateDto, headers),
       ).rejects.toThrow(HttpException);
     });
-
     it("should update sample if header date is invalid", async () => {
       const sample = { _id: sampleId, updatedAt: new Date() } as SampleClass;
-
-      const updatedSample = {
-        ...sample,
-        ...updateDto,
-        toObject: jest.fn().mockReturnValue({ ...sample, ...updateDto }),
-      };
-
-      samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOne.mockResolvedValue(sample);
+      samplesService.update.mockResolvedValue({ ...sample, ...updateDto });
 
       jest
-        .spyOn(
-          controller,
-          "checkPermissionsForSample" as keyof SamplesController,
-        )
+        .spyOn(controller, "checkPermissionsForSample")
         .mockResolvedValue(sample);
 
       const headers = {
@@ -139,26 +115,16 @@ describe("SamplesController", () => {
         updateDto,
         headers,
       );
-      expect(result).toBeDefined();
+      expect(result).toEqual({ ...sample, ...updateDto });
     });
 
     it("should update sample if header date is not present", async () => {
       const sample = { _id: sampleId, updatedAt: new Date() } as SampleClass;
-
-      const updatedSample = {
-        ...sample,
-        ...updateDto,
-        toObject: jest.fn().mockReturnValue({ ...sample, ...updateDto }),
-      };
-
-      samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOne.mockResolvedValue(sample);
+      samplesService.update.mockResolvedValue({ ...sample, ...updateDto });
 
       jest
-        .spyOn(
-          controller,
-          "checkPermissionsForSample" as keyof SamplesController,
-        )
+        .spyOn(controller, "checkPermissionsForSample")
         .mockResolvedValue(sample);
 
       const result = await controller.update(
@@ -167,7 +133,7 @@ describe("SamplesController", () => {
         updateDto,
         {},
       );
-      expect(result).toBeDefined();
+      expect(result).toEqual({ ...sample, ...updateDto });
     });
   });
 });

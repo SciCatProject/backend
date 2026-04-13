@@ -5,6 +5,7 @@ const sandbox = require("sinon").createSandbox();
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
+
   idOrigDatablock = null,
   pid = null,
   pidnonpublic = null,
@@ -76,21 +77,6 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       });
   });
 
-  it("0011: formpopulate should return default values for metadata", async () => {
-    return request(appUrl)
-      .get(`/api/v4/PublishedData/formpopulate?pid=${encodeURIComponent(pid)}`)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryValidStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("metadata");
-        res.body.metadata.should.have
-          .property("publicationYear")
-          .and.equal(new Date().getFullYear());
-      });
-  });
-
   it("0015: adds a published data", async () => {
     return request(appUrl)
       .post("/api/v4/PublishedData")
@@ -117,11 +103,9 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
 
   it("0023: should fetch all published data as admin ingestor with fields", async () => {
     const limits = { skip: 0 };
-    const fields = { createdBy: { $regex: "admin", $options: "i" } };
+    const fields = { createdBy: { $regex: "admin", $options: "i" } }
     return request(appUrl)
-      .get(
-        `/api/v4/PublishedData?fields=${encodeURIComponent(JSON.stringify(fields))}&limits=${encodeURIComponent(JSON.stringify(limits))}`,
-      )
+      .get(`/api/v4/PublishedData?fields=${encodeURIComponent(JSON.stringify(fields))}&limits=${encodeURIComponent(JSON.stringify(limits))}`)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
@@ -316,10 +300,10 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
     return request(appUrl)
       .get(
         "/api/v3/Datasets/fullquery" +
-          "?fields=" +
-          encodeURIComponent(JSON.stringify(fields)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
+        "?fields=" +
+        encodeURIComponent(JSON.stringify(fields)) +
+        "&limits=" +
+        encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)
@@ -340,10 +324,10 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
     return request(appUrl)
       .get(
         "/api/v3/Datasets/fullquery" +
-          "?fields=" +
-          encodeURIComponent(JSON.stringify(fields)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
+        "?fields=" +
+        encodeURIComponent(JSON.stringify(fields)) +
+        "&limits=" +
+        encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)
@@ -378,10 +362,10 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne" +
-          "?filter=" +
-          encodeURIComponent(JSON.stringify(filter)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
+        "?filter=" +
+        encodeURIComponent(JSON.stringify(filter)) +
+        "&limits=" +
+        encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)

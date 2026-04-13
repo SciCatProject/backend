@@ -8,11 +8,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   mongodb:
-    image: "mongo:latest"
+    image: "bitnami/mongodb:latest"
     ports:
       - "27017:27017"
     volumes:
-      - "mongodb_data:/data/db"
+      - "mongodb_data:/bitnami"
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh mongodb:27017/test --quiet
       interval: 10s
@@ -63,28 +63,35 @@ services:
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=web"
 
-  opensearch:
-    depends_on:
-      - mongodb
-    image: opensearchproject/opensearch:3.5.0
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.2
     ports:
       - 9200:9200
     environment:
-      - node.name=opensearch
-      - discovery.type=single-node
-      - cluster.name=os-cluster
+      - xpack.security.enabled=false
+      - node.name=es01
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=es-cluster
+      - cluster.initial_master_nodes=es01
       - bootstrap.memory_lock=true
-      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat_default_password_2026
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
-    mem_limit: 4G
+    mem_limit: 1g
     ulimits:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -X GET 'http://es01:9200/_cluster/health?pretty' | grep status | grep -q '\\(green\\|yellow\\)'"
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 4
+
 volumes:
   mongodb_data:
     driver: local
-  opensearch_data:
+  es01:
     driver: local

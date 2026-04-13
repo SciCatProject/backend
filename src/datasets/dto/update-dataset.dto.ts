@@ -11,7 +11,6 @@ import {
   IsDateString,
   IsEmail,
   IsInt,
-  IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
@@ -23,6 +22,7 @@ import {
 import { TechniqueClass } from "../schemas/technique.schema";
 import { Transform, Type } from "class-transformer";
 import { CreateTechniqueDto } from "./create-technique.dto";
+import { RelationshipClass } from "../schemas/relationship.schema";
 import { CreateRelationshipDto } from "./create-relationship.dto";
 import { LifecycleClass } from "../schemas/lifecycle.schema";
 import { HistoryClass } from "../schemas/history.schema";
@@ -77,7 +77,6 @@ export class UpdateDatasetDto extends OwnableDto {
       "Absolute file path on file server containing the files of this dataset, e.g. /some/path/to/sourcefolder. In case of a single file dataset, e.g. HDF5 data, it contains the path up to, but excluding the filename. Trailing slashes are removed.",
   })
   @IsString()
-  @IsNotEmpty()
   readonly sourceFolder: string;
 
   @ApiProperty({
@@ -248,18 +247,17 @@ export class UpdateDatasetDto extends OwnableDto {
 
   // it needs to be discussed if this fields is managed by the user or by the system
   @ApiProperty({
-    type: CreateRelationshipDto,
+    type: RelationshipClass,
     required: false,
     isArray: true,
     default: [],
-    description: `Array of relationships with other entities (possibly external to the catalog).
-      Inspired by DataCite's relatedIdentifier schema: https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/`,
+    description: "Stores the relationships with other datasets.",
   })
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateRelationshipDto)
-  readonly relationships?: CreateRelationshipDto[];
+  readonly relationships?: RelationshipClass[];
 
   @ApiProperty({
     type: LifecycleClass,

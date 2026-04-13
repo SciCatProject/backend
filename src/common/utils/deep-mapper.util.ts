@@ -1,27 +1,26 @@
-import { get, trim } from "lodash";
+import { get } from "lodash";
 
 function mapDeep<T, U>(
   source: T,
-  key: keyof U & string,
-  fieldsMap: Partial<Record<keyof U & string, string>>,
+  key: keyof U | string,
+  fieldsMap: Record<keyof U, keyof T | string>,
 ): T[keyof T] | unknown | null {
   if (!source) return null;
-  if (!fieldsMap[key]) return get(source, key);
   if (get(source, key)) return get(source, key);
-  if (!fieldsMap[key].includes("[]")) return get(source, fieldsMap[key]);
-  const keysList = fieldsMap[key].split("[]");
-  const initialValue = get(source, trim(keysList[0], "."));
-  if (!initialValue) return;
+  const keysList = (fieldsMap[key] as string).split(".");
+  const initialValue = get(source, keysList[0]);
   return keysList.slice(1).reduce((acc, currKey) => {
-    if (!acc) return acc;
-    return acc.map((item: object) => get(item, trim(currKey, ".")));
+    if (Array.isArray(acc)) {
+      return acc.map((item) => get(item, currKey));
+    }
+    return get(acc, currKey);
   }, initialValue);
 }
 
 export function createDeepMapper<T, U>(
-  fieldsMap: Partial<Record<keyof U & string, string>>,
+  fieldsMap: Record<keyof U, keyof T | string>,
 ) {
-  return (source: T, key: string) => {
-    return mapDeep<T, U>(source, key as keyof U & string, fieldsMap);
+  return (source: T, key: keyof U | string) => {
+    return mapDeep<T, U>(source, key, fieldsMap);
   };
 }

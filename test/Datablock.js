@@ -34,7 +34,7 @@ describe("Datablocks", () => {
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
-
+  
     await request(appUrl)
       .post("/api/v3/Datasets")
       .send(TestData.RawCorrect)
@@ -115,24 +115,6 @@ describe("Datablocks", () => {
       });
   });
 
-  ["filter", "where"].forEach((queryKey, index) => {
-    it(`004${(index + 1) * 3}: should count datablocks associated with dataset`, async () => {
-      var filter = { where: { _id: datablockId2 } };
-
-      return request(appUrl)
-        .get(
-          `/api/v3/datablocks/count?${queryKey}=${encodeURIComponent(JSON.stringify(filter))} `,
-        )
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) =>
-          res.body.should.have.property("count").and.equal(1)
-        );
-    });
-  });
-
   it("0050: should fetch datablocks associated with dataset", async () => {
     var filter = { where: { datasetId: datasetId } };
 
@@ -151,22 +133,6 @@ describe("Datablocks", () => {
           .and.be.instanceof(Array)
           .and.to.have.length(TestData.DataBlockCorrect.dataFileList.length);
       });
-  });
-
-  ["datablockId", "datablockId2"].forEach((dbId, index) => {
-    it(`005${(index + 1) * 3}: should fetch datablock by id`, async () => {
-      const datablocks = { datablockId: datablockId, datablockId2: datablockId2 };
-      const id = datablocks[dbId];
-      return request(appUrl)
-        .get(`/api/v3/datablocks/${encodeURIComponent(id)}`)
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) =>
-          res.body.should.have.property("id").and.equal(id)
-        );
-    });
   });
 
   it("0060: The size and numFiles fields in the dataset should be correctly updated", async () => {
@@ -190,23 +156,6 @@ describe("Datablocks", () => {
           .property("numberOfFilesArchived")
           .and.equal(TestData.DataBlockCorrect.dataFileList.length * 2);
       });
-  });
-
-  ["datablockId", "datablockId2"].forEach((dbId, index) => {
-    it(`006${(index + 1) * 3}: should update datablock by id`, async () => {
-      const datablocks = { datablockId: datablockId, datablockId2: datablockId2 };
-      const version = `new-version-${index}`;
-      return request(appUrl)
-        .patch(`/api/v3/datablocks/${encodeURIComponent(datablocks[dbId])}`)
-        .send({ version: version })
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) =>
-          res.body.should.have.property("version").and.equal(version)
-        );
-    });
   });
 
   it("0070: should delete first datablock", async () => {

@@ -1,4 +1,4 @@
-import { UserPayload } from "src/auth/interfaces/userPayload.interface";
+import { UserPayload } from "../interfaces/userPayload.interface";
 
 export abstract class AccessGroupService {
   abstract getAccessGroups(

@@ -290,8 +290,8 @@ export class DatasetClass extends OwnableClass {
     items: { $ref: getSchemaPath(RelationshipClass) },
     required: false,
     default: [],
-    description: `Array of relationships with other entities (possibly external to the catalog).
-      Inspired by DataCite's relatedIdentifier schema: https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/`,
+    description:
+      "Array of relationships with other datasets. It contains relationship type and destination dataset",
   })
   @Prop({ type: [RelationshipSchema], required: false, default: [] })
   relationships?: RelationshipClass[];
@@ -481,5 +481,3 @@ export class DatasetClass extends OwnableClass {
 export const DatasetSchema = SchemaFactory.createForClass(DatasetClass);
 
 DatasetSchema.index({ "$**": "text" });
-DatasetSchema.index({ "relationships.identifier": 1 });
-DatasetSchema.index({ "relationships.externalId": 1 });

@@ -28,8 +28,7 @@ describe("DatasetsController", () => {
       ],
     }).compile();
 
-    controller =
-      await module.resolve<DatasetsV4Controller>(DatasetsV4Controller);
+    controller = module.get<DatasetsV4Controller>(DatasetsV4Controller);
   });
 
   it("should be defined", () => {

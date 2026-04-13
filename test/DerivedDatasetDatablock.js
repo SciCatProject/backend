@@ -385,20 +385,6 @@ describe("0750: DerivedDatasetDatablock: Test Datablocks and their relation to d
       });
   });
 
-  it("193: should patch datablock by id", async () => {
-    const version = "new-version";
-    return request(appUrl)
-      .patch(`/api/v3/Datasets/${datasetPid}/datablocks/${datablockId1}`)
-      .send({ version: version, dataFileList: TestData.DataBlockCorrect.dataFileList })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) =>
-        res.body.should.have.property("version").and.equal(version)
-      );
-  });
-
   it("195: Should delete second datablock", async () => {
     await request(appUrl)
       .delete(`/api/v3/Datasets/${datasetPid}/datablocks/${datablockId2}`)

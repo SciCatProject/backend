@@ -6,7 +6,6 @@ import { SamplesService } from "./samples.service";
 import { SampleClass } from "./schemas/sample.schema";
 import { ScientificRelation } from "src/common/scientific-relation.enum";
 import * as utils from "../common/utils";
-import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 
 jest.mock("../common/utils", () => {
   const mockUtils = jest.requireActual("../common/utils");
@@ -25,11 +24,6 @@ jest.mock("../common/utils", () => {
       .mockReturnValue({ limit: 10, skip: 0, sort: {} }),
   };
 });
-
-class MetadataKeysServiceMock {
-  insertManyFromSource = jest.fn().mockResolvedValue([]);
-  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
-}
 
 const mockSample: SampleClass = {
   _id: "testId",
@@ -66,7 +60,6 @@ describe("SamplesService", () => {
             exec: jest.fn(),
           },
         },
-        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
       ],
     }).compile();
 

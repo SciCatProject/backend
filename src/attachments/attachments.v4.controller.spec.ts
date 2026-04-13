@@ -7,7 +7,6 @@ import { Attachment } from "./schemas/attachment.schema";
 import * as jmp from "json-merge-patch";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { Request } from "express";
 
 describe("AttachmentsController - findOneAndUpdate", () => {
   let controller: AttachmentsV4Controller;
@@ -15,28 +14,25 @@ describe("AttachmentsController - findOneAndUpdate", () => {
 
   const mockAttachment: Attachment = {
     _id: "123",
-    aid: "aid-123",
-    ownerGroup: "group1",
-    accessGroups: ["group1"],
-    isPublished: false,
-    thumbnail: "Test Attachment",
-    caption: "Test Caption",
-    createdBy: "user1",
-    updatedBy: "user1",
-    createdAt: new Date("2025-08-01T10:00:00Z"),
+    name: "Test Attachment",
+    description: "Initial",
     updatedAt: new Date("2025-09-01T10:00:00Z"),
     // other fields...
   };
 
   const mockUpdatedAttachment = {
     ...mockAttachment,
-    caption: "Updated",
+    description: "Updated",
   };
 
   const mockCaslAbilityFactory = {
     createForUser: jest.fn().mockReturnValue({
       can: jest.fn().mockReturnValue(true), // or false depending on test
     }),
+  };
+
+  const mockAttachmentsV4Service = {
+    findOneAndUpdate: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -64,30 +60,25 @@ describe("AttachmentsController - findOneAndUpdate", () => {
 
     // Mock permission check
     jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .spyOn(controller as any, "checkPermissionsForAttachment")
+      .spyOn(controller, "checkPermissionsForAttachment")
       .mockResolvedValue(mockAttachment);
   });
 
   it("should update attachment with application/json", async () => {
-    const dto: PartialUpdateAttachmentV4Dto = { caption: "Updated" };
+    const dto: PartialUpdateAttachmentV4Dto = { description: "Updated" };
+    const headers = { "content-type": "application/json" };
 
-    const req = {
-      headers: { "content-type": "application/json" },
-    } as Partial<Request> as Request;
-    const result = await controller.findOneAndUpdate(req, "123", dto);
+    const result = await controller.findOneAndUpdate({ headers }, "123", dto);
 
     expect(result).toEqual(mockUpdatedAttachment);
     expect(service.findOneAndUpdate).toHaveBeenCalledWith({ _id: "123" }, dto);
   });
 
   it("should update attachment with application/merge-patch+json", async () => {
-    const dto = { caption: "Updated" };
-    const req = {
-      headers: { "content-type": "application/merge-patch+json" },
-    } as Partial<Request> as Request;
+    const dto = { description: null };
+    const headers = { "content-type": "application/merge-patch+json" };
 
-    await controller.findOneAndUpdate(req, "123", dto);
+    await controller.findOneAndUpdate({ headers }, "123", dto);
 
     const expectedPatched = jmp.apply(mockAttachment, dto);
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
@@ -97,16 +88,15 @@ describe("AttachmentsController - findOneAndUpdate", () => {
   });
 
   it("should throw PRECONDITION_FAILED if If-Unmodified-Since is older than updatedAt", async () => {
-    const dto = { caption: "Should Fail" };
+    const dto = { name: "Should Fail" };
+    const headers = {
+      "content-type": "application/json",
+      "if-unmodified-since": "2000-01-01T00:00:00Z",
+    };
 
-    const req = {
-      headers: {
-        "content-type": "application/json",
-        "if-unmodified-since": "2000-01-01T00:00:00Z",
-      },
-    } as Partial<Request> as Request;
-
-    await expect(controller.findOneAndUpdate(req, "123", dto)).rejects.toThrow(
+    await expect(
+      controller.findOneAndUpdate({ headers }, "123", dto),
+    ).rejects.toThrow(
       new HttpException(
         "Resource has been modified on server",
         HttpStatus.PRECONDITION_FAILED,

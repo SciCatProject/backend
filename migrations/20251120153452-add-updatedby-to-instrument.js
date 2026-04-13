@@ -2,9 +2,10 @@ module.exports = {
   async up(db, client) {
     await db
       .collection("Instrument")
-      .updateMany({ updatedBy: { $exists: false } }, [
-        { $set: { updatedBy: "$createdBy" } },
-      ]);
+      .updateMany(
+        { updatedBy: { $exists: false } },
+        [{ $set: { updatedBy: "$createdBy" } }]
+      );
   },
 
   async down(db, client) {

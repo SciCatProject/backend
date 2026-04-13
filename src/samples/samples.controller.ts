@@ -19,8 +19,6 @@ import {
   Header,
   NotFoundException,
   Headers,
-  ClassSerializerInterceptor,
-  SerializeOptions,
 } from "@nestjs/common";
 import { SamplesService } from "./samples.service";
 import { CreateSampleDto } from "./dto/create-sample.dto";
@@ -72,8 +70,6 @@ import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { CountApiResponse } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
 import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
-import { OutputSampleDto } from "./dto/output-sample.dto";
-import { DatasetDocument } from "src/datasets/schemas/dataset.schema";
 
 export class FindByIdAccessResponse {
   @ApiProperty({ type: Boolean })
@@ -83,7 +79,6 @@ export class FindByIdAccessResponse {
 @ApiBearerAuth()
 @ApiTags("samples")
 @Controller("samples")
-@UseInterceptors(ClassSerializerInterceptor)
 export class SamplesController {
   constructor(
     private readonly attachmentsService: AttachmentsService,
@@ -179,23 +174,21 @@ export class SamplesController {
     id: string,
     group: Action,
   ) {
-    const sampleDoc = await this.samplesService.findOne({
+    const sample = await this.samplesService.findOne({
       sampleId: id,
     });
 
-    if (!sampleDoc) {
+    if (!sample) {
       throw new NotFoundException(`Sample: ${id} not found`);
     }
 
-    const sampleObj = sampleDoc.toObject();
-
-    const canDoAction = this.permissionChecker(group, sampleObj, request);
+    const canDoAction = this.permissionChecker(group, sample, request);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized to this sample");
     }
 
-    return sampleObj;
+    return sample;
   }
 
   private checkPermissionsForSampleCreate(
@@ -276,10 +269,6 @@ export class SamplesController {
   )
   @HttpCode(HttpStatus.CREATED)
   @Post()
-  @SerializeOptions({
-    type: OutputSampleDto,
-    excludeExtraneousValues: false,
-  })
   @ApiOperation({
     summary: "It creates a new sample.",
     description:
@@ -291,23 +280,20 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: OutputSampleDto,
+    type: SampleClass,
     description: "Create a new sample and return its representation in SciCat",
   })
   async create(
     @Req() request: Request,
     @Body() createSampleDto: CreateSampleDto,
-  ): Promise<OutputSampleDto> {
+  ): Promise<SampleClass> {
     const sampleDTO = this.checkPermissionsForSampleCreate(
       request,
       createSampleDto,
       Action.SampleCreate,
     );
 
-    const createdSample = await this.samplesService.create(sampleDTO);
-    const sampleObj = (createdSample as SampleDocument).toObject();
-
-    return sampleObj as OutputSampleDto;
+    return this.samplesService.create(sampleDTO);
   }
 
   // GET /samples
@@ -316,10 +302,6 @@ export class SamplesController {
     ability.can(Action.SampleRead, SampleClass),
   )
   @Get()
-  @SerializeOptions({
-    type: OutputSampleDto,
-    excludeExtraneousValues: false,
-  })
   @ApiOperation({
     summary: "It returns a list of samples",
     description:
@@ -335,22 +317,17 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputSampleDto,
+    type: SampleClass,
     isArray: true,
     description: "Return the samples requested",
   })
   async findAll(
     @Req() request: Request,
     @Query("filter") filters?: string,
-  ): Promise<OutputSampleDto[]> {
+  ): Promise<SampleClass[]> {
     const sampleFilters: IFilters<SampleDocument, ISampleFields> =
       this.updateFiltersForList(request, JSON.parse(filters ?? "{}"));
-    const samples = await this.samplesService.findAll(sampleFilters);
-
-    const samplesObj = (samples as SampleDocument[]).map((sample) =>
-      sample.toObject(),
-    );
-    return samplesObj as OutputSampleDto[];
+    return this.samplesService.findAll(sampleFilters);
   }
 
   // GET /samples/count
@@ -416,10 +393,6 @@ export class SamplesController {
     ability.can(Action.SampleRead, SampleClass),
   )
   @Get("/fullquery")
-  @SerializeOptions({
-    type: OutputSampleDto,
-    excludeExtraneousValues: false,
-  })
   @ApiOperation({
     summary: "It returns a list of samples matching the query provided.",
     description:
@@ -445,14 +418,14 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputSampleDto,
+    type: SampleClass,
     isArray: true,
     description: "Return samples requested",
   })
   async fullquery(
     @Req() request: Request,
     @Query() filters: { fields?: string; limits?: string },
-  ): Promise<OutputSampleDto[]> {
+  ): Promise<SampleClass[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
@@ -488,14 +461,7 @@ export class SamplesController {
       fields,
       limits,
     };
-
-    const samples = await this.samplesService.fullquery(parsedFilters);
-
-    const samplesObj = (samples as SampleDocument[]).map((sample) =>
-      sample.toObject(),
-    );
-
-    return samplesObj as OutputSampleDto[];
+    return this.samplesService.fullquery(parsedFilters);
   }
 
   // GET /samples/metadataKeys
@@ -641,10 +607,6 @@ export class SamplesController {
   )
   @Get("/:id")
   @Header("content-type", "application/json")
-  @SerializeOptions({
-    type: OutputSampleDto,
-    excludeExtraneousValues: false,
-  })
   @ApiOperation({
     summary: "It returns the sample requested.",
     description: "It returns the sample requested through the id specified.",
@@ -656,13 +618,13 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputSampleDto,
+    type: SampleClass,
     description: "Return sample with id specified",
   })
   async findById(
     @Req() request: Request,
     @Param("id") id: string,
-  ): Promise<OutputSampleDto | null> {
+  ): Promise<SampleClass | null> {
     const sample = await this.checkPermissionsForSample(
       request,
       id,
@@ -713,10 +675,6 @@ export class SamplesController {
     ),
   )
   @Patch("/:id")
-  @SerializeOptions({
-    type: OutputSampleDto,
-    excludeExtraneousValues: false,
-  })
   @ApiOperation({
     summary: "It updates the sample.",
     description:
@@ -733,7 +691,7 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputSampleDto,
+    type: SampleClass,
     description:
       "Update an existing sample and return its representation in SciCat",
   })
@@ -742,7 +700,7 @@ export class SamplesController {
     @Param("id") id: string,
     @Body() updateSampleDto: PartialUpdateSampleDto,
     @Headers() headers: Record<string, string>,
-  ): Promise<OutputSampleDto | null> {
+  ): Promise<SampleClass | null> {
     const sample = await this.checkPermissionsForSample(
       request,
       id,
@@ -752,14 +710,7 @@ export class SamplesController {
     //checks if the resource is unmodified since clients timestamp
     checkUnmodifiedSince(sample.updatedAt, headers["if-unmodified-since"]);
 
-    const updatedSample = await this.samplesService.update(
-      { sampleId: id },
-      updateSampleDto,
-    );
-
-    const sampleObj = (updatedSample as SampleDocument).toObject();
-
-    return sampleObj as OutputSampleDto;
+    return this.samplesService.update({ sampleId: id }, updateSampleDto);
   }
 
   // DELETE /samples/:id
@@ -1009,6 +960,10 @@ export class SamplesController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
+      const canViewOwner = ability.can(
+        Action.DatasetReadManyOwner,
+        DatasetClass,
+      );
       const canViewPublic = ability.can(
         Action.DatasetReadManyPublic,
         DatasetClass,
@@ -1017,21 +972,19 @@ export class SamplesController {
         fields.userGroups = user.currentGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
         // fields.sharedWith = user.email;
+      } else if (canViewOwner) {
+        fields.ownerGroup = user.currentGroups ?? [];
+        fields.ownerGroup.push(...user.currentGroups);
       } else if (canViewPublic) {
         fields.isPublished = true;
       }
     }
 
-    const datasets = await this.datasetsService.fullquery({
+    const dataset = await this.datasetsService.fullquery({
       where: { sampleId: id },
       fields: fields,
     });
-
-    const datasetsObj = (datasets as DatasetDocument[]).map((dataset) =>
-      dataset.toObject(),
-    );
-
-    return datasetsObj;
+    return dataset;
   }
 
   // PATCH /samples/:id/datasets/:fk

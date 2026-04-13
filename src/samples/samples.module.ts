@@ -12,7 +12,6 @@ import { SamplesController } from "./samples.controller";
 import { SamplesService } from "./samples.service";
 import { SampleClass, SampleSchema } from "./schemas/sample.schema";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
-import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
     AttachmentsModule,
     DatasetsModule,
     ConfigModule,
-    MetadataKeysModule,
     MongooseModule.forFeatureAsync([
       {
         name: SampleClass.name,

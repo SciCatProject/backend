@@ -1,7 +1,6 @@
 {
   "metadataSchema": {
     "type": "object",
-    "dynamicDefaults": { "publicationYear": "currentYear" },
     "properties": {
       "creators": {
         "type": "array",

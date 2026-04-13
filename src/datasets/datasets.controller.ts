@@ -168,7 +168,7 @@ export class DatasetsController {
 
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-
+    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
     const canViewAccess = ability.can(
       Action.DatasetReadManyAccess,
       DatasetClass,
@@ -205,6 +205,11 @@ export class DatasetsController {
             },
           ];
         }
+      } else if (canViewOwner) {
+        mergedFilters.where = {
+          ...mergedFilters.where,
+          ownerGroup: { $in: user.currentGroups },
+        };
       } else if (canViewPublic) {
         mergedFilters.where = {
           ...mergedFilters.where,
@@ -612,7 +617,7 @@ export class DatasetsController {
         documentId: datasetId,
         subsystem: "Dataset",
       }),
-      currentDataset.toObject(),
+      currentDataset,
     ).reverse();
   }
 
@@ -827,7 +832,7 @@ export class DatasetsController {
       | CreateRawDatasetObsoleteDto
       | CreateDerivedDatasetObsoleteDto
       | CreateDatasetDto,
-  ): Promise<{ valid: boolean; error?: string }> {
+  ): Promise<{ valid: boolean }> {
     await this.checkPermissionsForObsoleteDatasetCreate(
       request,
       createDatasetObsoleteDto,
@@ -851,23 +856,12 @@ export class DatasetsController {
     );
     const errorsTestCustomCorrect = await validate(dtoTestCustomCorrect);
 
-    const joinErrors = (errors: ValidationError[]) =>
-      errors
-        .flatMap((err) =>
-          err.constraints ? Object.values(err.constraints) : [],
-        )
-        .join("; ");
+    const valid =
+      errorsTestRawCorrect.length == 0 ||
+      errorsTestDerivedCorrect.length == 0 ||
+      errorsTestCustomCorrect.length == 0;
 
-    let targetErrors: ValidationError[];
-    if (createDatasetObsoleteDto.type === "raw")
-      targetErrors = errorsTestRawCorrect;
-    else if (createDatasetObsoleteDto.type === "derived")
-      targetErrors = errorsTestDerivedCorrect;
-    else targetErrors = errorsTestCustomCorrect;
-
-    if (targetErrors.length > 0)
-      return { valid: false, error: joinErrors(targetErrors) };
-    return { valid: true };
+    return { valid: valid };
   }
 
   // GET /datasets
@@ -969,11 +963,6 @@ export class DatasetsController {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
 
-    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
-      fields: fields,
-      limits: JSON.parse(filters.limits ?? "{}"),
-    };
-
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
 
@@ -982,15 +971,27 @@ export class DatasetsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
+      const canViewOwner = ability.can(
+        Action.DatasetReadManyOwner,
+        DatasetClass,
+      );
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
+      } else if (canViewOwner) {
+        fields.ownerGroup = fields.ownerGroup ?? [];
+        fields.ownerGroup.push(...user.currentGroups);
       } else {
         fields.isPublished = true;
       }
     }
 
-    const datasets = await this.datasetsService.opensearchQuery(parsedFilters);
+    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
+      fields: fields,
+      limits: JSON.parse(filters.limits ?? "{}"),
+    };
+
+    const datasets = await this.datasetsService.fullquery(parsedFilters);
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 
@@ -1052,10 +1053,17 @@ export class DatasetsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
+      const canViewOwner = ability.can(
+        Action.DatasetReadManyOwner,
+        DatasetClass,
+      );
 
       if (canViewAccess) {
         fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
+      } else if (canViewOwner) {
+        fields.ownerGroup = fields.ownerGroup ?? [];
+        fields.ownerGroup.push(...user.currentGroups);
       } else {
         fields.isPublished = true;
       }
@@ -1065,7 +1073,7 @@ export class DatasetsController {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "[]"),
     };
-    return this.datasetsService.opensearchFacet(parsedFilters);
+    return this.datasetsService.fullFacet(parsedFilters);
   }
 
   // GET /datasets/metadataKeys
@@ -1116,14 +1124,31 @@ export class DatasetsController {
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
 
     if (!canViewAny && !fields.isPublished) {
+      // delete fields.isPublished;
+
       const canViewAccess = ability.can(
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
+      const canViewOwner = ability.can(
+        Action.DatasetReadManyOwner,
+        DatasetClass,
+      );
+      // const canViewPublic = ability.can(
+      //   Action.DatasetReadManyPublic,
+      //   DatasetClass,
+      // );
 
       if (canViewAccess) {
         fields.userGroups?.push(...user.currentGroups);
+        // fields.sharedWith = user.email;
+        // fields.isPublished = true; //are they in or?
+      } else if (canViewOwner) {
+        fields.ownerGroup?.push(...user.currentGroups);
       }
+      // else if (canViewPublic) {
+      //   fields.isPublished = true;
+      // }
     }
 
     const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
@@ -2585,7 +2610,7 @@ export class DatasetsController {
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
     const datablockBeforeUpdate = await this.datablocksService.findOne({
-      where: { _id: did },
+      _id: did,
     });
     if (!datablockBeforeUpdate)
       throw new NotFoundException(`datablock: ${did} not found`);
