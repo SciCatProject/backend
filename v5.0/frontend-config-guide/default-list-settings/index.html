@@ -1,0 +1,950 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../developer-guide/contributing/pr-guidelines/">
+      
+      
+        <link rel="next" href="../dynamic-dataset-detail-component/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Frontend config guide - SciCat Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#default-list-filter-configuration-pattern-frontend-configuration-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden="">
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SciCat Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Frontend config guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    SciCat Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SciCat Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About SciCat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/ajv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending Ajv
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/metadatakeys-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MetadataKeys Synchronization Service Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/opensearch-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenSearch Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/release-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Release Version Bump Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/runtime-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Configuration System Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/contributing/pr-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull Request Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend config guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Frontend config guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dynamic-dataset-detail-component/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic Dataset Detail Component - Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../frontend-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Details
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="default-list-filter-configuration-pattern-frontend-configuration-guide">Default List &amp; Filter Configuration Pattern - Frontend Configuration Guide<a class="headerlink" href="#default-list-filter-configuration-pattern-frontend-configuration-guide" title="Permanent link">¶</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
+<p>This guide explains how to configure the List &amp; Side-Panel Configuration Pattern used on the frontend.
+It allows customizing how list-based components (e.g., datasets, proposals) display table columns, side-panel filters, and optional query conditions.</p>
+<p>The configuration should be defined or mounted at the location specified by the environment variable <code>FRONTEND_CONFIG_FILE</code> (default: <code>src/config/frontend.config.json</code>).</p>
+<h2 id="configuration-details">Configuration Details<a class="headerlink" href="#configuration-details" title="Permanent link">¶</a></h2>
+<h3 id="columns"><strong>Columns</strong><a class="headerlink" href="#columns" title="Permanent link">¶</a></h3>
+<p>Defines how each field is displayed in the list table.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Property</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Example / Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>Object key whose value will be displayed in the column.</td>
+<td><code>"datasetName"</code></td>
+</tr>
+<tr>
+<td><code>order</code></td>
+<td><code>number</code></td>
+<td>Position of the column in the table.</td>
+<td><code>2</code></td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>How the value is rendered:<br>• <code>standard</code> – plain text (default)<br>• <code>hoverContent</code> – shows icon with popup/modal when mouseover (for long text)<br>• <code>date</code> – formats ISO date strings; can include a <code>format</code> (e.g. <code>yyyy-MM-dd</code>)</td>
+<td><code>"date"</code></td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td><code>number</code></td>
+<td>Default width of the column.</td>
+<td><code>200</code></td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td><code>string</code></td>
+<td>Optional property used <strong>only</strong> when <code>type</code> is set to <code>date</code>. Defines how ISO date strings are displayed (e.g. <code>yyyy-MM-dd</code>). <br> it fallsback to <code>dateFormat</code> or <code>yyyy-MM-dd HH:mm</code> for dataset and <code>yyyy-MM-dd</code> for proposal</td>
+<td><code>"yyyy-MM-dd"</code></td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td><code>boolean</code></td>
+<td>Whether the column is displayed by default.</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>sort</code></td>
+<td><code>string</code></td>
+<td>Optional property to define the default sort direction for a specific column. Accepts <code>"asc"</code> or <code>"desc"</code>. <br> <strong>Note:</strong> Only one column in the <code>defaultProposalsListSettings</code> or <code>defaultDatasetsListSettings</code> should have this property defined. If not specified anywhere, the table defaults to sorting by the <code>createdAt</code> column in descending order.</td>
+<td><code>"desc"</code></td>
+</tr>
+<tr>
+<td>---</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="filters"><strong>Filters</strong><a class="headerlink" href="#filters" title="Permanent link">¶</a></h3>
+<p>Defines which filters appear in the side panel and how they behave.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Property</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Example / Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>Object key used for filtering.</td>
+<td><code>"creationTime"</code></td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td><code>string</code></td>
+<td>Custom label for the filter. If not provided, it falls back to <code>labelLocalization</code> or <code>key</code>.</td>
+<td><code>"Creation Time"</code></td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>string</code></td>
+<td>Filter input type:<br>• <code>text</code> – <em>deprecated</em> (use search box)<br>• <code>multiSelect</code> – dropdown with multiple options; supports <code>checkBoxFilterClickTrigger</code> for auto-apply<br>• <code>dateRange</code> – calendar or manual from–to input<br>• <code>checkbox</code> – pre-populated list; supports <code>checkBoxFilterClickTrigger</code> for auto-apply</td>
+<td><code>"multiSelect"</code></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>string</code></td>
+<td>Tooltip text for the filter.</td>
+<td><code>"Filter by dataset type"</code></td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td><code>boolean</code></td>
+<td>Whether the filter is active by default.</td>
+<td><code>true</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="conditions"><strong>Conditions</strong><a class="headerlink" href="#conditions" title="Permanent link">¶</a></h3>
+<p>Defines predefined condition filter in the side panel (currently supported only for the dataset table)</p>
+<p>Each condition object has two properties:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Property</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Example / Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>condition</code></td>
+<td><code>object</code></td>
+<td>Contains the filter logic (see sub-properties below)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td><code>boolean</code></td>
+<td>Whether the condition is active by default</td>
+<td><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Condition Object Properties:</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Property</strong></th>
+<th><strong>Type</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Example / Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>–</em></td>
+<td><em>–</em></td>
+<td>Currently supported <strong>only for dataset filters</strong>.</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>lhs</code></td>
+<td><code>string</code></td>
+<td>Metadata key to filter on</td>
+<td><code>"outgassing_values_after_1h"</code></td>
+</tr>
+<tr>
+<td><code>relation</code></td>
+<td><code>string</code></td>
+<td>Comparison operator:<br>• <code>GREATER_THAN</code><br>• <code>GREATER_THAN_OR_EQUAL</code><br>• <code>LESS_THAN</code><br>• <code>LESS_THAN_OR_EQUAL</code><br>• <code>EQUAL_TO</code><br>• <code>RANGE</code></td>
+<td><code>"EQUAL_TO"</code></td>
+</tr>
+<tr>
+<td><code>rhs</code></td>
+<td><code>string</code></td>
+<td>Value to compare against</td>
+<td><code>"3.1e4"</code></td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td><code>string</code></td>
+<td><strong>Optional</strong> unit for the value</td>
+<td><code>"mbar l/s/cm^2"</code></td>
+</tr>
+<tr>
+<td><code>unitsOptions</code></td>
+<td><code>string[]</code></td>
+<td><strong>Optional</strong> A list of allowed units for this condition. When provided, the unit dropdown will be restricted to only these options</td>
+<td><code>["mbar l/s/cm^2", "Pa m^3/s/m^2"]</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["instant"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
