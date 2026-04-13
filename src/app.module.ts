@@ -22,7 +22,7 @@ import { JobsModule } from "./jobs/jobs.module";
 import { InstrumentsModule } from "./instruments/instruments.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { join } from "path";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import { handlebarsHelpers } from "./common/handlebars-helpers";
 import { CommonModule } from "./common/common.module";
 import { RabbitMQModule } from "./common/rabbitmq/rabbitmq.module";
@@ -43,6 +43,9 @@ import {
 import { HistoryModule } from "./history/history.module";
 import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-sensitive-data.interceptor";
 import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.module";
+import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
+import { OidcClientModule } from "./common/openid-client/openid-client.module";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [
@@ -51,8 +54,8 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
       isGlobal: true,
       cache: true,
     }),
-    RuntimeConfigModule,
     AuthModule,
+    OidcClientModule,
     CaslModule,
     AttachmentsModule,
     CommonModule,
@@ -70,6 +73,8 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
     DatasetsModule,
     InitialDatasetsModule,
     InstrumentsModule,
+    MetadataKeysModule,
+    RuntimeConfigModule,
     JobsModule,
     LogbooksModule,
     EventEmitterModule.forRoot(),
@@ -162,6 +167,15 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
       MaskSensitiveDataInterceptorModule,
       (env: NodeJS.ProcessEnv) => env.MASK_PERSONAL_INFO === "yes",
     ),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: "login",
+          ttl: 1000,
+          limit: 1,
+        },
+      ],
+    }),
   ],
   controllers: [],
   providers: [

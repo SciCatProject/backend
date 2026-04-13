@@ -700,6 +700,17 @@ export const createFullqueryFilter = <T>(
 };
 
 const pipelineHandler = {
+  handleOpensearchIdList: <Y>(
+    pipeline: PipelineStage[],
+    fields: Y,
+    key: string,
+  ) => {
+    const match = {
+      $match: { _id: { $in: fields[key as keyof Y] as string[] } },
+    };
+    return pipeline.unshift(match);
+  },
+
   handleTextSearch: <T, Y>(
     pipeline: PipelineStage[],
     model: Model<T>,
@@ -836,11 +847,14 @@ export const createFullfacetPipeline = <T, Y extends object>(
     }
 
     switch (key) {
+      case "openSearchIdList":
+        pipelineHandler.handleOpensearchIdList<Y>(pipeline, fields, key);
+        break;
       case "text":
-        pipelineHandler.handleTextSearch(pipeline, model, fields, key);
+        pipelineHandler.handleTextSearch<T, Y>(pipeline, model, fields, key);
         break;
       case idField:
-        pipelineHandler.handleIdFieldSearch(
+        pipelineHandler.handleIdFieldSearch<T, Y>(
           pipeline,
           model,
           fields,
@@ -849,17 +863,22 @@ export const createFullfacetPipeline = <T, Y extends object>(
         );
         break;
       case "mode":
-        pipelineHandler.handleModeSearch(pipeline, fields, key, idField);
+        pipelineHandler.handleModeSearch<T, Y>(pipeline, fields, key, idField);
         break;
       case "userGroups":
-        pipelineHandler.handleUserGroupSearch(pipeline, model, fields, key);
+        pipelineHandler.handleUserGroupSearch<T, Y>(
+          pipeline,
+          model,
+          fields,
+          key,
+        );
         break;
       case "scientific":
       case "sampleCharacteristics":
-        pipelineHandler.handleScientificQuery(pipeline, fields, key);
+        pipelineHandler.handleScientificQuery<Y>(pipeline, fields, key);
         break;
       default:
-        pipelineHandler.handleGenericSearch(pipeline, model, fields, key);
+        pipelineHandler.handleGenericSearch<T, Y>(pipeline, model, fields, key);
     }
   });
 

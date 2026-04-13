@@ -4,10 +4,53 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
-
   sampleId = null,
   attachmentId = null,
-  datasetId = null;
+  datasetId = null,
+  sampleIdSpecial = null,
+  sampleIdNested = null;
+
+const SampleCorrectWithSpecialMetadataKeys = {
+  ...TestData.SampleCorrect,
+  sampleCharacteristics: {
+    "test field1": {
+      value: "test value",
+      unit: "",
+    },
+    "test.field2": {
+      value: "test value",
+      unit: "",
+    },
+  },
+  description: "Sample with special characters in metadata keys",
+  ownerGroup: "group4",
+  accessGroups: ["group6"],
+};
+
+const SampleCorrectWithNestedMetadata = {
+  ...TestData.SampleCorrect,
+  sampleCharacteristics: {
+    "experiment test": {
+      "nested test1": {
+        value: "Test Value 1",
+        unit: "",
+        type: "string",
+      },
+      "nested.test2": {
+        value: "Test Value 2",
+        unit: "",
+        type: "string",
+      },
+    },
+    regular_field: {
+      value: 1,
+      unit: "",
+    },
+  },
+  description: "Sample with nested metadata",
+  ownerGroup: "group4",
+  accessGroups: ["group6"],
+};
 
 describe("2200: Sample: Simple Sample", () => {
   before(async () => {
@@ -215,5 +258,97 @@ describe("2200: Sample: Simple Sample", () => {
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
       .expect(TestData.SuccessfulDeleteStatusCode)
       .expect("Content-Type", /json/);
+  });
+
+  it("0200: adds sample with special characters in metadata keys", async () => {
+    return request(appUrl)
+      .post("/api/v3/Samples")
+      .send(SampleCorrectWithSpecialMetadataKeys)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("sampleId").and.be.string;
+        sampleIdSpecial = res.body["sampleId"];
+      });
+  });
+
+  it("0210: retrieve sample and verify metadata keys are decoded", async () => {
+    return request(appUrl)
+      .get("/api/v3/Samples/" + sampleIdSpecial)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("sampleCharacteristics");
+        res.body["sampleCharacteristics"].should.have.property("test field1");
+        res.body["sampleCharacteristics"].should.have.property("test.field2");
+      });
+  });
+
+  it("0220: update sample and verify metadata keys are decoded", async () => {
+    const update = {
+      sampleCharacteristics: {
+        "test field1 updated": {
+          value: "test value",
+          unit: "",
+        },
+        "test.field2.updated": {
+          value: "test value",
+          unit: "",
+        },
+      },
+    };
+    return request(appUrl)
+      .patch("/api/v3/Samples/" + sampleIdSpecial)
+      .send(update)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("sampleCharacteristics");
+        res.body["sampleCharacteristics"].should.have.property(
+          "test field1 updated",
+        );
+        res.body["sampleCharacteristics"].should.have.property(
+          "test.field2.updated",
+        );
+      });
+  });
+
+  it("0230: adds sample with nested metadata keys", async () => {
+    return request(appUrl)
+      .post("/api/v3/Samples")
+      .send(SampleCorrectWithNestedMetadata)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("ownerGroup")
+          .and.equal(SampleCorrectWithNestedMetadata.ownerGroup);
+        res.body.should.have.property("sampleId").and.be.string;
+        sampleIdNested = res.body["sampleId"];
+      });
+  });
+
+  it("0240: retrieve sample and verify nested metadata keys are decoded", async () => {
+    return request(appUrl)
+      .get("/api/v3/Samples/" + sampleIdNested)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        const metadata = res.body.sampleCharacteristics;
+
+        metadata.should.have.property("experiment test");
+        metadata["experiment test"].should.have.property("nested test1");
+        metadata["experiment test"].should.have.property("nested.test2");
+      });
   });
 });
