@@ -15,7 +15,7 @@ import {
   PartialUpdatePublishedDataV4Dto,
   UpdatePublishedDataV4Dto,
 } from "./dto/update-published-data.v4.dto";
-import { PublishedDataConfig } from "./interfaces/published-data.interface";
+import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
 
 export type ReadOnlyProposalsService = Pick<
   ProposalsService,
@@ -33,7 +33,7 @@ export type ReadOnlyAttachmentsService = Pick<
 @Injectable()
 export class ValidatorService {
   private ajv: Ajv2019;
-  private config: PublishedDataConfig;
+  private config: PublishedDataConfigDto;
   private dynamicDefaults: Map<string, DynamicDefaultFunc> = new Map([
     ["currentYear", () => () => new Date().getFullYear()],
   ]);
@@ -52,9 +52,9 @@ export class ValidatorService {
     addFormats(this.ajv);
     addKeywords(this.ajv);
 
-    this.config = this.configService.get<PublishedDataConfig>(
+    this.config = this.configService.get<PublishedDataConfigDto>(
       "publishedDataConfig",
-      { metadataSchema: null, uiSchema: null },
+      { metadataSchema: {}, uiSchema: {} },
     );
 
     if (isNil(this.config.metadataSchema)) {
