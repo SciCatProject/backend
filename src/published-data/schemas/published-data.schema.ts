@@ -102,7 +102,7 @@ export class PublishedData extends OwnableClass {
 
   @ApiProperty({
     type: [String],
-    required: false,
+    required: true,
     description:
       "Array of one or more datasets' persistent identifier values that" +
       " are part of the published data record.",
