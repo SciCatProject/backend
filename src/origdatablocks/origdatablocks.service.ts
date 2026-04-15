@@ -4,6 +4,7 @@ import {
   Scope,
   ForbiddenException,
   NotFoundException,
+  PreconditionFailedException,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -341,18 +342,20 @@ export class OrigDatablocksService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto: PartialUpdateOrigDatablockDto,
+    unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     const username = (this.request.user as JWTUser).username;
-    const existingOrigDatablock = await this.origDatablockModel
-      .findOne({ _id: id })
-      .exec();
-    if (!existingOrigDatablock) {
+    const exists = await this.origDatablockModel.exists({ _id: id }).exec();
+    if (!exists) {
       throw new NotFoundException(`OrigDatablock #${id} not found`);
     }
-
+    const filter: FilterQuery<OrigDatablockDocument> = { _id: id };
+    if (unmodifiedSince) {
+      filter.updatedAt = { $lte: unmodifiedSince };
+    }
     const patchedOrigDatablock = await this.origDatablockModel
       .findOneAndUpdate(
-        { _id: id },
+        filter,
         addUpdatedByField(
           updateDatasetDto as UpdateQuery<OrigDatablockDocument>,
           username,
@@ -360,7 +363,11 @@ export class OrigDatablocksService {
         { new: true },
       )
       .exec();
-
+    if (!patchedOrigDatablock) {
+      throw new PreconditionFailedException(
+        `OrigDatablock #${id} has been modified on server since ${unmodifiedSince?.toUTCString()}`,
+      );
+    }
     return patchedOrigDatablock;
   }
 
