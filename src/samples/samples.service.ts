@@ -1,4 +1,10 @@
-import { Injectable, Inject, Scope, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  Inject,
+  Scope,
+  NotFoundException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -172,10 +178,17 @@ export class SamplesService {
     return this.sampleModel.findOne(filter).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<SampleDocument>,
     updateSampleDto: PartialUpdateSampleDto,
+    unmodifiedSince?: Date,
   ): Promise<OutputSampleDto | null> {
+    const exists = await this.sampleModel.exists(filter).exec();
+    if (!exists) {
+      throw new NotFoundException(
+        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
     const username = (this.request.user as JWTUser).username;
     const updateData = addUpdatedByField(updateSampleDto, username);
 
@@ -184,6 +197,10 @@ export class SamplesService {
       updatedBy: username,
       updatedAt: new Date(),
     };
+
+    if (unmodifiedSince) {
+      filter.updatedAt = { $lte: unmodifiedSince };
+    }
 
     const updatedSample = await this.sampleModel
       .findOneAndUpdate(
@@ -194,8 +211,8 @@ export class SamplesService {
       .exec();
 
     if (!updatedSample) {
-      throw new NotFoundException(
-        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      throw new PreconditionFailedException(
+        `Resource #${filter.sampleId} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
       );
     }
 
