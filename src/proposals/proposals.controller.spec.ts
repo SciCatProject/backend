@@ -4,7 +4,7 @@ import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsController } from "./proposals.controller";
 import { ProposalsService } from "./proposals.service";
-import { NotFoundException, HttpException } from "@nestjs/common";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { PartialUpdateProposalDto } from "./dto/update-proposal.dto";
 import { ProposalClass } from "./schemas/proposal.schema";
 
@@ -14,7 +14,7 @@ class DatasetsServiceMock {}
 
 class ProposalsServiceMock {
   findOne = jest.fn();
-  update = jest.fn();
+  findOneAndUpdate = jest.fn();
 }
 
 class CaslAbilityFactoryMock {}
@@ -56,9 +56,14 @@ describe("ProposalsController", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw HttpException if headerDate <= proposal.updatedAt", async () => {
+    it("should throw PreconditionFailedException if proposals service throws it", async () => {
       const proposal = { updatedAt: new Date("2023-01-01") } as ProposalClass;
       proposalsService.findOne.mockResolvedValue(proposal);
+      proposalsService.findOneAndUpdate.mockRejectedValue(
+        new PreconditionFailedException(
+          "Proposal has been modified on server since the provided timestamp",
+        ),
+      ); // Simulate precondition failed
 
       jest
         .spyOn(controller, "checkPermissionsForProposal")
@@ -75,7 +80,13 @@ describe("ProposalsController", () => {
           headers,
           {} as PartialUpdateProposalDto,
         ),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toThrow(PreconditionFailedException);
+
+      expect(proposalsService.findOneAndUpdate).toHaveBeenCalledWith(
+        { proposalId: "proposal-id" },
+        expect.anything(),
+        new Date("2022-12-31"),
+      );
     });
 
     it("should call update and return updated proposal", async () => {
@@ -86,24 +97,26 @@ describe("ProposalsController", () => {
       } as ProposalClass;
 
       proposalsService.findOne.mockResolvedValue(proposal);
-      proposalsService.update.mockResolvedValue(updatedProposal);
+      proposalsService.findOneAndUpdate.mockResolvedValue(updatedProposal);
 
       jest
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {
-        "if-unmodified-since": "2023-01-01",
-      };
-
-      const result = await controller.update({}, "proposal-id", headers, {
-        title: "Updated",
-      });
+      const result = await controller.update(
+        {},
+        "proposal-id",
+        {},
+        {
+          title: "Updated",
+        },
+      );
 
       expect(result).toEqual(updatedProposal);
-      expect(proposalsService.update).toHaveBeenCalledWith(
+      expect(proposalsService.findOneAndUpdate).toHaveBeenCalledWith(
         { proposalId: "proposal-id" },
         { title: "Updated" },
+        undefined,
       );
     });
 
@@ -115,7 +128,7 @@ describe("ProposalsController", () => {
       } as ProposalClass;
 
       proposalsService.findOne.mockResolvedValue(proposal);
-      proposalsService.update.mockResolvedValue(updatedProposal);
+      proposalsService.findOneAndUpdate.mockResolvedValue(updatedProposal);
 
       jest
         .spyOn(controller, "checkPermissionsForProposal")
@@ -138,7 +151,7 @@ describe("ProposalsController", () => {
       } as ProposalClass;
 
       proposalsService.findOne.mockResolvedValue(proposal);
-      proposalsService.update.mockResolvedValue(updatedProposal);
+      proposalsService.findOneAndUpdate.mockResolvedValue(updatedProposal);
 
       jest
         .spyOn(controller, "checkPermissionsForProposal")
