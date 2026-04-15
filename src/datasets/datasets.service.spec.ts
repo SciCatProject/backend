@@ -14,6 +14,8 @@ import { plainToInstance } from "class-transformer";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
+import { REQUEST } from "@nestjs/core";
+import { PreconditionFailedException } from "@nestjs/common";
 
 class InitialDatasetsServiceMock {}
 
@@ -126,6 +128,7 @@ describe("DatasetsService", () => {
         { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
+        { provide: REQUEST, useValue: { user: { username: "tester" } } },
       ],
     }).compile();
 
@@ -171,5 +174,19 @@ describe("DatasetsService", () => {
     expect(
       (scientificMetadata["already%20encoded"] as { value: unknown }).value,
     ).toBe("Already Encoded");
+  });
+
+  it("should throw PreconditionedFailed if no patched dataset is returned (indicating a concurrent modification)", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    const unmodifiedSince = new Date("2021-11-11T12:29:02.083Z");
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(mockDataset) });
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto, unmodifiedSince),
+    ).rejects.toThrow(PreconditionFailedException);
   });
 });

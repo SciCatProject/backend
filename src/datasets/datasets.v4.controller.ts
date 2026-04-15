@@ -42,7 +42,7 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { UTCTimeInterceptor } from "src/common/interceptors/utc-time.interceptor";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
-import { IsRecord, IsValueUnitObject } from "../common/utils";
+import { IsRecord, IsValueUnitObject, parseDate } from "../common/utils";
 import { DatasetsService } from "./datasets.service";
 import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.interceptor";
 import {
@@ -88,7 +88,6 @@ import { HistoryClass } from "./schemas/history.schema";
 import { LifecycleClass } from "./schemas/lifecycle.schema";
 import { RelationshipClass } from "./schemas/relationship.schema";
 import { TechniqueClass } from "./schemas/technique.schema";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -781,12 +780,6 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       Action.DatasetUpdate,
     );
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      foundDataset.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
     if (foundDataset && IsRecord(updateDatasetDto) && IsRecord(foundDataset)) {
       const mismatchedPaths = this.findInvalidValueUnitUpdates(
         updateDatasetDto,
@@ -806,9 +799,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundDataset, updateDatasetDto)
         : updateDatasetDto;
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const updatedDataset = await this.datasetsService.findByIdAndUpdate(
       pid,
       updateDatasetDtoForService,
+      unmodifiedSince,
     );
     return updatedDataset;
   }
