@@ -7,18 +7,12 @@ describe("SearchQueryService", () => {
   const mockSearchQueryWithoutFilters = {
     text: "fake text",
     ownerGroup: ["fake"],
-    creationLocation: ["fake"],
-    type: ["fake"],
-    keywords: ["fake"],
     isPublished: false,
   };
 
   const mockSearcQueryhWitoutText = {
     text: "",
     ownerGroup: ["fake"],
-    creationLocation: ["fake"],
-    type: ["fake"],
-    keywords: ["fake"],
     isPublished: false,
   };
 

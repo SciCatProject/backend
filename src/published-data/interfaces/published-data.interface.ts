@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { FilterQuery } from "mongoose";
-import { PublishedDataDocument } from "../schemas/published-data.schema";
 import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { PublishedDataDocument } from "../schemas/published-data.schema";
 
 export interface IPublishedDataFilters {
   where?: FilterQuery<PublishedDataDocument>;
@@ -32,6 +32,9 @@ export class FormPopulateData {
 
   @ApiPropertyOptional()
   thumbnail?: string;
+
+  @ApiPropertyOptional()
+  metadata?: object;
 }
 
 export interface IRegister {

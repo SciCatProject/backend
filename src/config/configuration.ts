@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import { merge } from "lodash";
-import localconfiguration from "./localconfiguration";
 import { boolean } from "mathjs";
-import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
+import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
+import localconfiguration from "./localconfiguration";
 
 const configuration = () => {
   const accessGroupsStaticValues =
@@ -64,6 +64,8 @@ const configuration = () => {
 
   const jobConfigurationFile = process.env.JOB_CONFIGURATION_FILE || "";
 
+  const ajvCustomDefinitions = process.env.AJV_CUSTOM_DEFINITIONS_FILE || "";
+
   const defaultLogger = {
     type: "DefaultLogger",
     modulePath: "./loggingProviders/defaultLogger",
@@ -72,6 +74,7 @@ const configuration = () => {
   const jsonConfigMap: { [key: string]: object | object[] | boolean } = {
     datasetTypes: {},
     proposalTypes: {},
+    opensearchConfig: {},
   };
   const jsonConfigFileList: { [key: string]: string } = {
     frontendConfig:
@@ -84,6 +87,8 @@ const configuration = () => {
     metricsConfig: process.env.METRICS_CONFIG_FILE || "metricsConfig.json",
     publishedDataConfig:
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
+    opensearchConfig:
+      process.env.OPENSEARCH_CONFIG_FILE || "opensearchConfig.json",
   };
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
@@ -98,7 +103,11 @@ const configuration = () => {
         jsonConfigMap[key] = false;
       }
     } else {
-      if (key === "publishedDataConfig") {
+      const configsWithExampleFallback = [
+        "publishedDataConfig",
+        "opensearchConfig",
+      ];
+      if (configsWithExampleFallback.includes(key)) {
         console.warn(
           `Configuration file ${filePath} does not exist. Trying to use the example ${key}.example.json file`,
         );
@@ -289,6 +298,14 @@ const configuration = () => {
       enabled: boolean(process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false),
       accessGroupProperty: process.env?.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
     },
+    accessGroupsRestConfig: {
+      enabled: boolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
+      authKey:
+        process.env?.ACCESS_GROUPS_SERVICE_REST_AUTH_KEY || "Authorization",
+      token: process.env.ACCESS_GROUPS_SERVICE_REST_AUTH_VALUE,
+      apiUrl: process.env.ACCESS_GROUPS_SERVICE_REST_API_URL,
+      userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
+    },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {
       secret: process.env.EXPRESS_SESSION_SECRET,
@@ -344,6 +361,12 @@ const configuration = () => {
         operator: process.env.OIDC_USERQUERY_OPERATOR || "or", // Example: "or" or "and"
         filter: oidcUserQueryFilter.split(",").map((v) => v.trim()) ?? [], // Example: "username:username, email:email"
       },
+      additionalAuthorizedParties: process.env
+        .OIDC_ADDITIONAL_AUTHORIZED_PARTIES
+        ? process.env.OIDC_ADDITIONAL_AUTHORIZED_PARTIES.split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : undefined, // Example: "public-client-id" or "client1,client2"
     },
     logbook: {
       enabled:
@@ -372,16 +395,17 @@ const configuration = () => {
       username: process.env.RABBITMQ_USERNAME,
       password: process.env.RABBITMQ_PASSWORD,
     },
-    elasticSearch: {
-      enabled: process.env.ELASTICSEARCH_ENABLED ?? "no",
-      username: process.env.ES_USERNAME,
-      password: process.env.ES_PASSWORD,
-      host: process.env.ES_HOST,
-      refresh: process.env.ES_REFRESH,
-      maxResultWindow: parseInt(process.env.ES_MAX_RESULT || "100000", 10),
-      fieldsLimit: parseInt(process.env.ES_FIELDS_LIMIT || "100000", 10),
-      mongoDBCollection: process.env.MONGODB_COLLECTION,
-      defaultIndex: process.env.ES_INDEX ?? "dataset",
+    opensearch: {
+      enabled: process.env.OPENSEARCH_ENABLED ?? "no",
+      username: process.env.OPENSEARCH_USERNAME ?? "admin",
+      password: process.env.OPENSEARCH_PASSWORD,
+      host: process.env.OPENSEARCH_HOST,
+      refresh: process.env.OPENSEARCH_REFRESH,
+      defaultIndex: process.env.OPENSEARCH_DEFAULT_INDEX ?? "dataset",
+      dataSyncBatchSize: parseInt(
+        process.env.OPENSEARCH_DATA_SYNC_BATCH_SIZE || "1000",
+        10,
+      ),
     },
     metrics: {
       // Note: `process.env.METRICS_ENABLED` is directly used for conditional module loading in
@@ -420,6 +444,8 @@ const configuration = () => {
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
+    ajvCustomDefinitions: ajvCustomDefinitions,
+    opensearchConfig: jsonConfigMap.opensearchConfig,
   };
   return merge(config, localconfiguration);
 };

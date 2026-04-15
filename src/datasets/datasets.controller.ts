@@ -969,6 +969,11 @@ export class DatasetsController {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
 
+    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
+      fields: fields,
+      limits: JSON.parse(filters.limits ?? "{}"),
+    };
+
     const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
 
@@ -985,12 +990,7 @@ export class DatasetsController {
       }
     }
 
-    const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
-      fields: fields,
-      limits: JSON.parse(filters.limits ?? "{}"),
-    };
-
-    const datasets = await this.datasetsService.fullquery(parsedFilters);
+    const datasets = await this.datasetsService.opensearchQuery(parsedFilters);
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 
@@ -1065,7 +1065,7 @@ export class DatasetsController {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "[]"),
     };
-    return this.datasetsService.fullFacet(parsedFilters);
+    return this.datasetsService.opensearchFacet(parsedFilters);
   }
 
   // GET /datasets/metadataKeys

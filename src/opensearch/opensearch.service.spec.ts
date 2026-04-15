@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { ElasticSearchService } from "./elastic-search.service";
+import { OpensearchService } from "./opensearch.service";
 import { SearchQueryService } from "./providers/query-builder.service";
 
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -8,23 +8,23 @@ import { DatasetsService } from "src/datasets/datasets.service";
 class SearchQueryServiceMock {}
 class DatasetsServiceMock {}
 
-describe("ElasticSearchService", () => {
-  let service: ElasticSearchService;
+describe("OpensearchService", () => {
+  let service: OpensearchService;
 
   const mockConfigService = {
     get: () => ({
-      "elasticSearch.host": "fake",
-      "elasticSearch.username": "fake",
-      "elasticSearch.password": "fake",
-      "elasticSearch.enabled": "yes",
-      "elasticSearch.defaultIndex": "fake",
+      "opensearch.host": "fake",
+      "opensearch.username": "fake",
+      "opensearch.password": "fake",
+      "opensearch.enabled": "yes",
+      "opensearch.defaultIndex": "fake",
     }),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ElasticSearchService,
+        OpensearchService,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -37,10 +37,10 @@ describe("ElasticSearchService", () => {
       ],
     }).compile();
 
-    service = module.get<ElasticSearchService>(ElasticSearchService);
+    service = module.get<OpensearchService>(OpensearchService);
   });
 
-  it("should properly load ElasticSearchService", () => {
+  it("should properly load OpensearchService", () => {
     expect(service).toBeDefined();
   });
 });
