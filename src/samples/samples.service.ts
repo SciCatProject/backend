@@ -38,10 +38,10 @@ export class SamplesService {
     doc: UpdateQuery<SampleDocument>,
   ): MetadataSourceDoc {
     const source: MetadataSourceDoc = {
-      sourceType: "sample",
-      sourceId: doc.sampleId,
-      ownerGroup: doc.ownerGroup,
-      accessGroups: doc.accessGroups || [],
+      sourceType: this.sampleModel.collection.name,
+      userGroups: Array.from(
+        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
+      ),
       isPublished: doc.isPublished || false,
       metadata: doc.sampleCharacteristics ?? {},
     };
@@ -177,6 +177,14 @@ export class SamplesService {
     updateSampleDto: PartialUpdateSampleDto,
   ): Promise<OutputSampleDto | null> {
     const username = (this.request.user as JWTUser).username;
+    const existingSample = await this.sampleModel.findOne(filter).exec();
+
+    if (!existingSample) {
+      throw new NotFoundException(
+        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
     const updateData = addUpdatedByField(updateSampleDto, username);
 
     const updateDataMongoose = {
@@ -200,6 +208,7 @@ export class SamplesService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(existingSample),
       this.createMetadataKeysInstance(updatedSample),
     );
 
@@ -217,10 +226,9 @@ export class SamplesService {
       );
     }
 
-    this.metadataKeysService.deleteMany({
-      sourceType: "sample",
-      sourceId: deletedSample.sampleId,
-    });
+    this.metadataKeysService.deleteMany(
+      this.createMetadataKeysInstance(deletedSample),
+    );
     return deletedSample;
   }
 }

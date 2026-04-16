@@ -4,14 +4,7 @@ import {
   MetadataKeyClass,
   MetadataKeyDocument,
 } from "./schemas/metadatakey.schema";
-import {
-  DeleteResult,
-  FilterQuery,
-  HydratedDocument,
-  Model,
-  PipelineStage,
-  QueryOptions,
-} from "mongoose";
+import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { isEmpty } from "lodash";
 import {
   addCreatedByFields,
@@ -24,10 +17,8 @@ type ScientificMetadataEntry = {
 };
 
 export type MetadataSourceDoc = {
-  sourceId: string;
   sourceType: string;
-  ownerGroup: string;
-  accessGroups: string[];
+  userGroups: string[];
   isPublished: boolean;
   metadata: Record<string, unknown>;
 };
@@ -58,6 +49,7 @@ export class MetadataKeysService {
         },
       },
     ];
+
     if (!isEmpty(fieldsProjection)) {
       const projection = parsePipelineProjection(fieldsProjection);
       pipeline.push({ $project: projection });
@@ -79,59 +71,96 @@ export class MetadataKeysService {
     return data;
   }
 
-  async deleteMany(
-    filter: FilterQuery<MetadataKeyDocument>,
-  ): Promise<DeleteResult> {
-    const result = await this.metadataKeyModel.deleteMany(filter).exec();
-
-    Logger.log(
-      `MetadataKeys deleted: ${result.deletedCount ?? 0} With filter:`,
-      { filter },
-    );
-
-    return result;
-  }
-
-  async insertManyFromSource(
-    doc: MetadataSourceDoc,
-  ): Promise<HydratedDocument<MetadataKeyDocument>[] | void> {
+  async deleteMany(doc: MetadataSourceDoc): Promise<void> {
     if (isEmpty(doc.metadata)) {
       return;
     }
-    const userGroups = Array.from(
-      new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-    ) as string[];
+    const metadataKeys = Object.keys(doc.metadata);
+    const ids = metadataKeys.map((key) => `${doc.sourceType}_${key}`);
+    const filter = { id: { $in: ids } };
 
-    const isPublished = doc.isPublished;
+    const decrementUsageOp = {
+      updateMany: { filter, update: { $inc: { usageCount: -1 } } },
+    };
+    const deleteUnusedOp = {
+      deleteMany: { filter: { ...filter, usageCount: { $lte: 0 } } },
+    };
 
-    const metadata = doc.metadata ?? {};
-
-    const docs = Object.entries(metadata).map(([key, entry]) => {
-      const createMetadataKeyDto = {
-        _id: `${doc.sourceType}_${doc.sourceId}_${key}`,
-        id: `${doc.sourceType}_${doc.sourceId}_${key}`,
-        sourceType: doc.sourceType,
-        sourceId: doc.sourceId,
-        key,
-        userGroups,
-        isPublished,
-        humanReadableName: (entry as ScientificMetadataEntry).human_name ?? "",
-      };
-      return addCreatedByFields(createMetadataKeyDto, "system");
-    });
+    await this.metadataKeyModel.bulkWrite([decrementUsageOp, deleteUnusedOp]);
 
     Logger.log(
-      `Created ${docs.length} MetadataKeys from source ${doc.sourceType} with ID ${doc.sourceId}`,
+      `Removed or decremented MetadataKeys usageCount from source ${doc.sourceType} for key(s): ${metadataKeys.join(", ")}`,
     );
-
-    return await this.metadataKeyModel.insertMany(docs);
   }
 
-  async replaceManyFromSource(doc: MetadataSourceDoc): Promise<void> {
-    await this.deleteMany({
-      sourceId: doc.sourceId,
-      sourceType: doc.sourceType,
+  async insertManyFromSource(doc: MetadataSourceDoc): Promise<void> {
+    if (isEmpty(doc.metadata)) {
+      return;
+    }
+
+    const metadata = doc.metadata;
+    const userGroups = doc.userGroups;
+
+    const upsertOps = Object.entries(metadata).map(([key, entry]) => {
+      const id = `${doc.sourceType}_${key}`;
+      const humanReadableName =
+        (entry as ScientificMetadataEntry).human_name ?? "";
+      return {
+        updateOne: {
+          filter: { id },
+          update: {
+            $setOnInsert: addCreatedByFields(
+              {
+                _id: id as MetadataKeyDocument["_id"],
+                id,
+                key,
+                sourceType: doc.sourceType,
+                humanReadableName,
+              },
+              "system",
+            ),
+            ...(doc.isPublished && { $set: { isPublished: true } }),
+            $addToSet: { userGroups: { $each: userGroups } },
+            $inc: { usageCount: 1 },
+          },
+          upsert: true,
+        },
+      };
     });
-    await this.insertManyFromSource(doc);
+
+    await this.metadataKeyModel.bulkWrite(upsertOps);
+
+    Logger.log(
+      `Created or incremented MetadataKeys usageCount from source ${doc.sourceType} for key(s): ${Object.keys(metadata).join(", ")}`,
+    );
+  }
+
+  async replaceManyFromSource(
+    oldDoc: MetadataSourceDoc,
+    newDoc: MetadataSourceDoc,
+  ): Promise<void> {
+    const oldKeys = Object.keys(oldDoc.metadata ?? {});
+    const newKeys = Object.keys(newDoc.metadata ?? {});
+
+    const addedKeys = newKeys.filter((k) => !oldKeys.includes(k));
+    const removedKeys = oldKeys.filter((k) => !newKeys.includes(k));
+
+    if (removedKeys.length > 0) {
+      await this.deleteMany({
+        ...oldDoc,
+        metadata: Object.fromEntries(
+          removedKeys.map((k) => [k, oldDoc.metadata[k]]),
+        ),
+      });
+    }
+
+    if (addedKeys.length > 0) {
+      await this.insertManyFromSource({
+        ...newDoc,
+        metadata: Object.fromEntries(
+          addedKeys.map((k) => [k, newDoc.metadata[k]]),
+        ),
+      });
+    }
   }
 }
