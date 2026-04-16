@@ -76,24 +76,20 @@ export class MetadataKeyClass extends QueryableClass {
   sourceType: string;
 
   @ApiProperty({
-    type: String,
-    required: true,
-    description: "Unique identifier of the source item this key is linked to.",
-  })
-  @Prop({
-    type: String,
-    required: true,
-    index: true,
-  })
-  sourceId: string;
-
-  @ApiProperty({
     type: Boolean,
     required: true,
     description: "Flag is true when data are made publicly available.",
   })
-  @Prop({ type: Boolean, required: true })
+  @Prop({ type: Boolean, required: true, default: false })
   isPublished: boolean;
+
+  @ApiProperty({
+    type: Number,
+    description:
+      "Tracks how many sources are using this metadata key. Managed internally.",
+  })
+  @Prop({ type: Number, default: 0 })
+  usageCount: number;
 }
 
 export const MetadataKeySchema = SchemaFactory.createForClass(MetadataKeyClass);

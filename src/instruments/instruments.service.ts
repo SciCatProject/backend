@@ -32,10 +32,10 @@ export class InstrumentsService {
     doc: UpdateQuery<InstrumentDocument>,
   ): MetadataSourceDoc {
     const source: MetadataSourceDoc = {
-      sourceType: "instrument",
-      sourceId: doc.pid,
-      ownerGroup: doc.ownerGroup,
-      accessGroups: doc.accessGroups || [],
+      sourceType: this.instrumentModel.collection.name,
+      userGroups: Array.from(
+        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
+      ),
       isPublished: doc.isPublished || false,
       metadata: doc.customMetadata ?? {},
     };
@@ -96,6 +96,15 @@ export class InstrumentsService {
     updateInstrumentDto: PartialUpdateInstrumentDto,
   ): Promise<Instrument | null> {
     const username = (this.request.user as JWTUser).username;
+    const existingInstrument = await this.instrumentModel
+      .findOne(filter)
+      .exec();
+
+    if (!existingInstrument) {
+      throw new NotFoundException(
+        `Instrument not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
 
     const updatedInstrument = this.instrumentModel
       .findOneAndUpdate(
@@ -117,6 +126,7 @@ export class InstrumentsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(existingInstrument),
       this.createMetadataKeysInstance(updatedInstrument),
     );
 

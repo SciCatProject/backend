@@ -41,10 +41,10 @@ export class ProposalsService {
     doc: UpdateQuery<ProposalDocument>,
   ): MetadataSourceDoc {
     const source: MetadataSourceDoc = {
-      sourceType: "proposal",
-      sourceId: doc.proposalId,
-      ownerGroup: doc.ownerGroup,
-      accessGroups: doc.accessGroups || [],
+      sourceType: this.proposalModel.collection.name,
+      userGroups: Array.from(
+        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
+      ),
       isPublished: doc.isPublished || false,
       metadata: doc.metadata ?? {},
     };
@@ -148,6 +148,13 @@ export class ProposalsService {
     updateProposalDto: PartialUpdateProposalDto,
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
+    const existingProposal = await this.proposalModel.findOne(filter).exec();
+
+    if (!existingProposal) {
+      throw new NotFoundException(
+        `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
 
     const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
@@ -171,6 +178,7 @@ export class ProposalsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(existingProposal),
       this.createMetadataKeysInstance(updatedProposal),
     );
 
@@ -188,10 +196,9 @@ export class ProposalsService {
       );
     }
 
-    this.metadataKeysService.deleteMany({
-      sourceType: "proposal",
-      sourceId: deletedProposal.proposalId,
-    });
+    await this.metadataKeysService.deleteMany(
+      this.createMetadataKeysInstance(deletedProposal),
+    );
 
     return deletedProposal;
   }
