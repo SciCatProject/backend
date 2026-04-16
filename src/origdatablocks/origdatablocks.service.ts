@@ -345,10 +345,6 @@ export class OrigDatablocksService {
     unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     const username = (this.request.user as JWTUser).username;
-    const exists = await this.origDatablockModel.exists({ _id: id }).exec();
-    if (!exists) {
-      throw new NotFoundException(`OrigDatablock #${id} not found`);
-    }
     const filter: FilterQuery<OrigDatablockDocument> = { _id: id };
     if (unmodifiedSince) {
       filter.updatedAt = { $lte: unmodifiedSince };
@@ -364,8 +360,11 @@ export class OrigDatablocksService {
       )
       .exec();
     if (!patchedOrigDatablock) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(`OrigDatablock #${id} not found`);
+      }
       throw new PreconditionFailedException(
-        `OrigDatablock #${id} has been modified on server since ${unmodifiedSince?.toUTCString()}`,
+        `OrigDatablock #${id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
       );
     }
     return patchedOrigDatablock;

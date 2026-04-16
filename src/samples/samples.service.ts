@@ -183,12 +183,6 @@ export class SamplesService {
     updateSampleDto: PartialUpdateSampleDto,
     unmodifiedSince?: Date,
   ): Promise<OutputSampleDto | null> {
-    const exists = await this.sampleModel.exists(filter).exec();
-    if (!exists) {
-      throw new NotFoundException(
-        `Sample not found with filter: ${JSON.stringify(filter)}`,
-      );
-    }
     const username = (this.request.user as JWTUser).username;
     const updateData = addUpdatedByField(updateSampleDto, username);
 
@@ -198,21 +192,27 @@ export class SamplesService {
       updatedAt: new Date(),
     };
 
+    const filterCopy: FilterQuery<SampleDocument> = { ...filter };
     if (unmodifiedSince) {
-      filter.updatedAt = { $lte: unmodifiedSince };
+      filterCopy.updatedAt = { $lte: unmodifiedSince };
     }
 
     const updatedSample = await this.sampleModel
       .findOneAndUpdate(
-        filter,
+        filterCopy,
         { $set: updateDataMongoose },
         { new: true, runValidators: true },
       )
       .exec();
 
     if (!updatedSample) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Sample not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
       throw new PreconditionFailedException(
-        `Resource #${filter.sampleId} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
+        `Sample #${filter.sampleId} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
       );
     }
 

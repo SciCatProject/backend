@@ -104,19 +104,14 @@ export class InstrumentsService {
   ): Promise<Instrument | null> {
     const username = (this.request.user as JWTUser).username;
 
-    const exists = await this.instrumentModel.exists(filter).exec();
-    if (!exists) {
-      throw new NotFoundException(
-        `Instrument not found with filter: ${JSON.stringify(filter)}`,
-      );
-    }
+    const filterCopy: FilterQuery<InstrumentDocument> = { ...filter };
     if (unmodifiedSince) {
-      filter.updatedAt = { $lte: unmodifiedSince };
+      filterCopy.updatedAt = { $lte: unmodifiedSince };
     }
 
-    const updatedInstrument = this.instrumentModel
+    const updatedInstrument = await this.instrumentModel
       .findOneAndUpdate(
-        filter,
+        filterCopy,
         {
           $set: {
             ...addUpdatedByField(updateInstrumentDto, username),
@@ -128,8 +123,13 @@ export class InstrumentsService {
       .exec();
 
     if (!updatedInstrument) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Instrument not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
       throw new PreconditionFailedException(
-        `Resource #${filter._id} has been modified on server since ${unmodifiedSince?.toUTCString()}`,
+        `Instrument #${filter._id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
       );
     }
 

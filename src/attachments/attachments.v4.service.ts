@@ -91,21 +91,15 @@ export class AttachmentsV4Service {
       Logger.warn("No username found for auditing");
       return null;
     }
-    const exists = await this.attachmentModel
-      .exists({ aid: filter._id })
-      .exec();
-    if (!exists) {
-      Logger.warn(`Attachment not found for filter: ${JSON.stringify(filter)}`);
-      return null;
-    }
 
+    const filterCopy: FilterQuery<AttachmentDocument> = { ...filter };
     if (unmodifiedSince) {
-      filter.updatedAt = { $lte: unmodifiedSince };
+      filterCopy.updatedAt = { $lte: unmodifiedSince };
     }
 
     const result = await this.attachmentModel
       .findOneAndUpdate(
-        filter,
+        filterCopy,
         {
           $set: {
             ...updateAttachmentDto,
@@ -118,8 +112,14 @@ export class AttachmentsV4Service {
       .exec();
 
     if (!result) {
+      if (!unmodifiedSince) {
+        Logger.warn(
+          `Attachment not found for filter: ${JSON.stringify(filter)}`,
+        );
+        return null;
+      }
       throw new PreconditionFailedException(
-        `Resource #${filter._id} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
+        `Attachment #${filter._id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
       );
     }
 

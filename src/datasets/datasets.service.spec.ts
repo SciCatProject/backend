@@ -15,7 +15,7 @@ import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
 import { REQUEST } from "@nestjs/core";
-import { PreconditionFailedException } from "@nestjs/common";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 
 class InitialDatasetsServiceMock {}
 
@@ -175,12 +175,19 @@ describe("DatasetsService", () => {
     ).toBe("Already Encoded");
   });
 
+  it("should throw NotFoundException if no document is found for update and no unmodifiedSince is provided", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto),
+    ).rejects.toThrow(NotFoundException);
+  });
+
   it("should throw PreconditionedFailed if no patched dataset is returned (indicating a concurrent modification)", async () => {
     const updateDto = { datasetName: "Updated Name" };
     const unmodifiedSince = new Date("2021-11-11T12:29:02.083Z");
-    model.findOne = jest
-      .fn()
-      .mockReturnValue({ exec: jest.fn().mockReturnValue(mockDataset) });
     model.findOneAndUpdate = jest
       .fn()
       .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
