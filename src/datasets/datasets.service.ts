@@ -102,10 +102,10 @@ export class DatasetsService {
     doc: UpdateQuery<DatasetDocument>,
   ): MetadataSourceDoc {
     const source: MetadataSourceDoc = {
-      sourceType: "dataset",
-      sourceId: doc.pid,
-      ownerGroup: doc.owner,
-      accessGroups: doc.accessGroups || [],
+      sourceType: this.datasetModel.collection.name,
+      userGroups: Array.from(
+        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
+      ),
       isPublished: doc.isPublished || false,
       metadata: doc.scientificMetadata ?? {},
     };
@@ -501,6 +501,7 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(existingDataset),
       this.createMetadataKeysInstance(updatedDataset),
     );
     // we were able to find the dataset and update it
@@ -551,6 +552,7 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(existingDataset),
       this.createMetadataKeysInstance(patchedDataset),
     );
     // we were able to find the dataset and update it
@@ -580,10 +582,9 @@ export class DatasetsService {
     }
 
     // delete metadata keys associated with this dataset
-    await this.metadataKeysService.deleteMany({
-      sourceId: id,
-      sourceType: "dataset",
-    });
+    await this.metadataKeysService.deleteMany(
+      this.createMetadataKeysInstance(deletedDataset),
+    );
 
     return deletedDataset;
   }
