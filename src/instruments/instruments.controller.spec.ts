@@ -5,14 +5,14 @@ import { InstrumentsController } from "./instruments.controller";
 import { InstrumentsService } from "./instruments.service";
 import {
   NotFoundException,
-  HttpException,
   ConflictException,
+  PreconditionFailedException,
 } from "@nestjs/common";
 import { MongoError } from "mongodb";
 
 class InstrumentsServiceMock {
   findOne = jest.fn();
-  update = jest.fn();
+  findOneAndUpdate = jest.fn();
 }
 
 class CaslAbilityFactoryMock {}
@@ -47,7 +47,9 @@ describe("InstrumentsController", () => {
   });
 
   it("should throw NotFoundException if instrument not found", async () => {
-    service.findOne.mockResolvedValue(null);
+    service.findOneAndUpdate.mockImplementation(() => {
+      throw new NotFoundException("Instrument not found");
+    });
 
     await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
       NotFoundException,
@@ -56,14 +58,19 @@ describe("InstrumentsController", () => {
 
   it("should update if header is missing", async () => {
     service.findOne.mockResolvedValue(mockInstrument);
-    service.update.mockResolvedValue({ ...mockInstrument, ...mockUpdateDto });
+    service.findOneAndUpdate.mockResolvedValue({
+      ...mockInstrument,
+      ...mockUpdateDto,
+    });
 
     const result = await controller.update("123", mockUpdateDto, {});
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
   });
 
-  it("should throw PRECONDITION_FAILED if header date <= updatedAt", async () => {
-    service.findOne.mockResolvedValue(mockInstrument);
+  it("should throw PRECONDITION_FAILED if instruments service throws it", async () => {
+    service.findOneAndUpdate.mockImplementation(() => {
+      throw new PreconditionFailedException("Resource has been modified");
+    });
 
     const headers = {
       "if-unmodified-since": "2025-09-01T09:00:00Z",
@@ -71,12 +78,20 @@ describe("InstrumentsController", () => {
 
     await expect(
       controller.update("123", mockUpdateDto, headers),
-    ).rejects.toThrow(HttpException);
+    ).rejects.toThrow(PreconditionFailedException);
+    expect(service.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "123" }),
+      mockUpdateDto,
+      new Date("2025-09-01T09:00:00Z"),
+    );
   });
 
   it("should update if header date > updatedAt", async () => {
     service.findOne.mockResolvedValue(mockInstrument);
-    service.update.mockResolvedValue({ ...mockInstrument, ...mockUpdateDto });
+    service.findOneAndUpdate.mockResolvedValue({
+      ...mockInstrument,
+      ...mockUpdateDto,
+    });
 
     const headers = {
       "if-unmodified-since": "2025-09-02T10:00:00Z",
@@ -88,7 +103,7 @@ describe("InstrumentsController", () => {
 
   it("should throw ConflictException on duplicate key error", async () => {
     service.findOne.mockResolvedValue(mockInstrument);
-    service.update.mockRejectedValue({ code: 11000 } as MongoError);
+    service.findOneAndUpdate.mockRejectedValue({ code: 11000 } as MongoError);
 
     await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
       ConflictException,

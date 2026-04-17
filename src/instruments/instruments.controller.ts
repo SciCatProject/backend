@@ -13,6 +13,7 @@ import {
   ConflictException,
   Headers,
   NotFoundException,
+  PreconditionFailedException,
 } from "@nestjs/common";
 import { MongoError } from "mongodb";
 import { InstrumentsService } from "./instruments.service";
@@ -32,9 +33,8 @@ import { Action } from "src/casl/action.enum";
 import { Instrument, InstrumentDocument } from "./schemas/instrument.schema";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { IFilters } from "src/common/interfaces/common.interface";
-import { filterDescription, filterExample } from "src/common/utils";
+import { filterDescription, filterExample, parseDate } from "src/common/utils";
 import { CountApiResponse } from "src/common/types";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 import { FilterPipe } from "src/common/pipes/filter.pipe";
 
 @ApiBearerAuth()
@@ -161,18 +161,12 @@ export class InstrumentsController {
     @Body() updateInstrumentDto: PartialUpdateInstrumentDto,
     @Headers() headers: Record<string, string>,
   ): Promise<Instrument | null> {
-    const instrument = await this.instrumentsService.findOne({
-      where: { _id: id },
-    });
-    if (!instrument) throw new NotFoundException("Instrument not found");
-
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(instrument.updatedAt, headers["if-unmodified-since"]);
-
+    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
     try {
-      const updatedInstrument = await this.instrumentsService.update(
+      const updatedInstrument = await this.instrumentsService.findOneAndUpdate(
         { _id: id },
         updateInstrumentDto,
+        unmodifiedSince,
       );
 
       return updatedInstrument;
@@ -181,6 +175,11 @@ export class InstrumentsController {
         throw new ConflictException(
           "Instrument with the same unique name already exists",
         );
+      } else if (
+        error instanceof PreconditionFailedException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
       } else {
         throw new InternalServerErrorException(
           "Something went wrong. Please try again later.",

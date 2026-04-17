@@ -59,6 +59,7 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
+  parseDate,
   proposalFullFacetExampleFields,
   proposalsFullQueryDescriptionFields,
   proposalsFullQueryExampleFields,
@@ -72,7 +73,6 @@ import {
   ProposalCountFilters,
 } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 
 @ApiBearerAuth()
 @ApiTags("proposals")
@@ -725,18 +725,17 @@ export class ProposalsController {
     @Headers() headers: Record<string, string>,
     @Body() updateProposalDto: PartialUpdateProposalDto,
   ): Promise<ProposalClass | null> {
-    const proposal = await this.checkPermissionsForProposal(
+    await this.checkPermissionsForProposal(
       request,
       proposalId,
       Action.ProposalsUpdate,
     );
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(proposal.updatedAt, headers["if-unmodified-since"]);
-
-    return this.proposalsService.update(
+    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
+    return this.proposalsService.findOneAndUpdate(
       { proposalId: proposalId },
       updateProposalDto,
+      unmodifiedSince,
     );
   }
 

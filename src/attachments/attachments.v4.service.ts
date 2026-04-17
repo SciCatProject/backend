@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  PreconditionFailedException,
   Scope,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
@@ -81,6 +82,7 @@ export class AttachmentsV4Service {
   async findOneAndUpdate(
     filter: FilterQuery<AttachmentDocument>,
     updateAttachmentDto: PartialUpdateAttachmentV4Dto,
+    unmodifiedSince?: Date,
   ): Promise<Attachment | null> {
     const username = (this.request?.user as JWTUser).username;
 
@@ -90,9 +92,14 @@ export class AttachmentsV4Service {
       return null;
     }
 
+    const filterCopy: FilterQuery<AttachmentDocument> = { ...filter };
+    if (unmodifiedSince) {
+      filterCopy.updatedAt = { $lte: unmodifiedSince };
+    }
+
     const result = await this.attachmentModel
       .findOneAndUpdate(
-        filter,
+        filterCopy,
         {
           $set: {
             ...updateAttachmentDto,
@@ -105,8 +112,15 @@ export class AttachmentsV4Service {
       .exec();
 
     if (!result) {
-      Logger.warn(`Attachment not found for filter: ${JSON.stringify(filter)}`);
-      return null;
+      if (!unmodifiedSince) {
+        Logger.warn(
+          `Attachment not found for filter: ${JSON.stringify(filter)}`,
+        );
+        return null;
+      }
+      throw new PreconditionFailedException(
+        `Attachment #${filter._id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
+      );
     }
 
     return result;
