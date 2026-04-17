@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { QueryableClass } from "../../common/schemas/queryable.schema";
@@ -20,19 +20,20 @@ export class Instrument extends QueryableClass {
     default: function genUUID(): string {
       return (process.env.PID_PREFIX ? process.env.PID_PREFIX : "") + uuidv4();
     },
-    required: true,
+    required: false,
     description: "PID of the instrument.",
   })
   @Prop({
     type: String,
     unique: true,
-    required: true,
+    required: false,
     default: function genUUID(): string {
       return (process.env.PID_PREFIX ? process.env.PID_PREFIX : "") + uuidv4();
     },
   })
   pid: string;
 
+  @ApiHideProperty()
   @Prop({
     type: String,
   })
