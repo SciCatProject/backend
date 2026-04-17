@@ -20,13 +20,13 @@ export class Instrument extends QueryableClass {
     default: function genUUID(): string {
       return (process.env.PID_PREFIX ? process.env.PID_PREFIX : "") + uuidv4();
     },
-    required: false,
+    required: true,
     description: "PID of the instrument.",
   })
   @Prop({
     type: String,
     unique: true,
-    required: false,
+    required: true,
     default: function genUUID(): string {
       return (process.env.PID_PREFIX ? process.env.PID_PREFIX : "") + uuidv4();
     },

@@ -1,15 +1,15 @@
 import { ApiProperty, ApiTags } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UpdateInstrumentDto } from "./update-instrument.dto";
 
 @ApiTags("instruments")
 export class CreateInstrumentDto extends UpdateInstrumentDto {
-  @IsOptional()
   @ApiProperty({
     type: String,
-    required: false,
-    uniqueItems: true,
+    required: true,
   })
+  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   readonly pid: string;
 
