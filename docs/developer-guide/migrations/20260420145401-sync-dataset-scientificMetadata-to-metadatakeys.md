@@ -58,9 +58,9 @@ Each `MetadataKey` document tracks:
 
 ---
 
-## Pipeline walkthrough
+## Migration Pipeline walkthrough
 
-The pipeline uses two datasets as a running example throughout:
+The migration pipeline uses two datasets as a running example throughout:
 
 |           | ownerGroup | accessGroups | isPublished | scientificMetadata keys |
 | --------- | ---------- | ------------ | ----------- | ----------------------- |
