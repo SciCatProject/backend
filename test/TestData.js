@@ -1436,10 +1436,12 @@ const TestData = {
         unit: "mbar l/s/cm^2",
         valueSI: 100000,
         unitSI: "kg / s^3",
+        human_name: "Pressure SI",
       },
       with_number: {
         value: 111,
         unit: "",
+        human_name: "Sample Number",
       },
       with_string: {
         value: "222",
@@ -1458,17 +1460,18 @@ const TestData = {
     owner: faker.internet.username(),
     size: faker.number.int({ min: 0, max: 100000000 }),
     contactEmail: faker.internet.email(),
+    principalInvestigator: faker.internet.username(),
     scientificMetadata: {
       with_key_value: "some text",
       with_unit_and_value_si: {
         value: 100,
         unit: "mbar l/s/cm^2",
-        valueSI: 100000,
-        unitSI: "kg / s^3",
+        human_name: "Pressure SI",
       },
       with_number: {
         value: 111,
         unit: "",
+        human_name: "Sample Number",
       },
       with_string: {
         value: "222",
