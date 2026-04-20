@@ -11,7 +11,6 @@ export class OwnableClass extends QueryableClass {
   @Prop({
     type: String,
     index: true,
-    required: true,
   })
   ownerGroup: string;
 
