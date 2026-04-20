@@ -140,7 +140,7 @@ Extract `key`, `humanReadableName`, and compute `userGroups` as the union of `ow
 { datasetId: "uuid-B", key: "temperature", isPublished: false, humanReadableName: "Temperature", userGroups: ["group-1"] }
 ```
 
-> `ownerGroup` is mandatory field so no null fallback is needed. `accessGroups` is optional so it falls back to `[]`.
+> `ownerGroup` is a mandatory field, so no null fallback is needed. `accessGroups` is optional so it falls back to `[]`.
 
 ---
 
