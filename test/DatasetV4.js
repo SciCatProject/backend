@@ -1331,7 +1331,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "mg",
             valueSI: 0.0006,
             unitSI: "kg",
-            human_name: "Pressure SI",
+            human_name: "Sample Number",
           });
           res.body.scientificMetadata.with_number.should.deep.eq({
             value: 111,
