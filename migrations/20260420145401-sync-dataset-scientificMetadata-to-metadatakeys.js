@@ -46,8 +46,9 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 6: Filter out the empty-string sentinel that comes from ownerGroup
-    // being null/missing. Real group names are never empty strings.
+    // Stage 6: Filter out null and empty-string groups.
+    // Note: datasets with no valid groups are excluded from usageCount.
+    // This is acceptable since ownerGroup is a required field in practice.
     {
       $match: {
         userGroups: { $nin: [null, ""] },
