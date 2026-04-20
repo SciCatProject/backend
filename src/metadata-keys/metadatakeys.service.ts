@@ -119,6 +119,7 @@ export class MetadataKeysService {
             $setOnInsert: addCreatedByFields(
               {
                 _id: id as unknown as MetadataKeyDocument["_id"],
+                id,
                 key,
                 sourceType,
                 humanReadableName,

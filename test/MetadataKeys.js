@@ -60,7 +60,7 @@ async function getMetadataKeys(filter, token) {
 
 async function createDataset(dataset) {
   const res = await request(appUrl)
-    .post("/api/v3/Datasets")
+    .post("/api/v4/datasets")
     .send(dataset)
     .set("Accept", "application/json")
     .set({ Authorization: `Bearer ${accessTokenAdmin}` })
@@ -79,7 +79,7 @@ async function patchDataset(pid, payload) {
 
 async function deleteDataset(pid) {
   return request(appUrl)
-    .delete("/api/v3/Datasets/" + encodeURIComponent(pid))
+    .delete("/api/v4/datasets/" + encodeURIComponent(pid))
     .set("Accept", "application/json")
     .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
     .expect(TestData.SuccessfulDeleteStatusCode);
@@ -87,6 +87,9 @@ async function deleteDataset(pid) {
 
 describe("2000: MetadataKeys: Access Control and Search", () => {
   before(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("MetadataKeys").deleteMany({});
+
     accessTokenAdmin = await utils.getToken(appUrl, {
       username: "adminIngestor",
       password: TestData.Accounts["adminIngestor"]["password"],

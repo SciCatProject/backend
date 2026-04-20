@@ -2,19 +2,15 @@ const SOURCE_COLLECTIONS = ["Dataset"];
 
 function buildPipeline(sourceType) {
   return [
-    // -------------------------------------------------------------------------
     // Stage 1: Only process documents that have scientificMetadata
-    // -------------------------------------------------------------------------
     {
       $match: {
         scientificMetadata: { $exists: true, $type: "object" },
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 2: Flatten scientificMetadata into an array of key/value pairs.
     // Preserve _id as datasetId so we can count unique datasets later.
-    // -------------------------------------------------------------------------
     {
       $project: {
         datasetId: "$_id",
@@ -25,15 +21,11 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 3: One document per (dataset, metadata key)
-    // -------------------------------------------------------------------------
     { $unwind: "$metaArr" },
 
-    // -------------------------------------------------------------------------
     // Stage 4: Shape each (dataset, key) document.
     // userGroups is the union of ownerGroup + accessGroups for this dataset.
-    // -------------------------------------------------------------------------
     {
       $project: {
         datasetId: 1,
@@ -46,12 +38,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 5: One document per (dataset, key, group).
-    // This is the pivot that makes per-group counting possible.
-    // preserveNullAndEmptyArrays keeps datasets with no groups so
-    // usageCount stays accurate even for group-less datasets.
-    // -------------------------------------------------------------------------
     {
       $unwind: {
         path: "$userGroups",
@@ -59,21 +46,17 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 6: Filter out the empty-string sentinel that comes from ownerGroup
     // being null/missing. Real group names are never empty strings.
-    // -------------------------------------------------------------------------
     {
       $match: {
         userGroups: { $nin: [null, ""] },
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 7: Group by (metaKeyId, group).
     // groupCount = how many datasets with this group use this key.
     // datasetIds = set of distinct dataset IDs (for accurate usageCount).
-    // -------------------------------------------------------------------------
     {
       $group: {
         _id: {
@@ -90,12 +73,10 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 8: Group by metaKeyId to reassemble one document per metadata key.
     // userGroupCountsArr will become the userGroupCounts Map.
     // datasetIdSets is a list of per-group dataset ID sets — merged in the
     // next stage to compute total unique dataset count (usageCount).
-    // -------------------------------------------------------------------------
     {
       $group: {
         _id: "$_id.metaKeyId",
@@ -110,11 +91,9 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 9: Final projection.
     // userGroupCounts: [{k,v}] array → plain object (stored as Map in Mongoose).
     // usageCount: union all per-group datasetId sets, count distinct IDs.
-    // -------------------------------------------------------------------------
     {
       $project: {
         _id: 1,
@@ -138,12 +117,10 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // -------------------------------------------------------------------------
     // Stage 10: Merge into MetadataKeys.
     // whenMatched handles the (future) case where multiple SOURCE_COLLECTIONS
     // produce the same _id. Not possible today since sourceType is part of
     // the _id, but kept correct for when more collections are added.
-    // -------------------------------------------------------------------------
     {
       $merge: {
         into: "MetadataKeys",

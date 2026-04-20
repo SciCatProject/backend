@@ -1460,7 +1460,6 @@ const TestData = {
     owner: faker.internet.username(),
     size: faker.number.int({ min: 0, max: 100000000 }),
     contactEmail: faker.internet.email(),
-    principalInvestigator: faker.internet.username(),
     scientificMetadata: {
       with_key_value: "some text",
       with_unit_and_value_si: {
