@@ -1309,7 +1309,6 @@ describe("2500: Datasets v4 tests", () => {
           with_unit_and_value_si: {
             value: 600,
             unit: "mg",
-            human_name: "Sample Number",
           },
         },
       };
@@ -1332,11 +1331,12 @@ describe("2500: Datasets v4 tests", () => {
             unit: "mg",
             valueSI: 0.0006,
             unitSI: "kg",
-            human_name: "Sample Number",
+            human_name: "Pressure SI",
           });
           res.body.scientificMetadata.with_number.should.deep.eq({
             value: 111,
             unit: "",
+            human_name: "Sample Number",
           });
           res.body.datasetlifecycle.should.have
             .property("storageLocation")
