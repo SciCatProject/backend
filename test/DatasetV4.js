@@ -1309,6 +1309,7 @@ describe("2500: Datasets v4 tests", () => {
           with_unit_and_value_si: {
             value: 600,
             unit: "mg",
+            human_name: "Sample Number",
           },
         },
       };
