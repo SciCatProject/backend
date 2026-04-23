@@ -65,6 +65,11 @@ describe("InstrumentsController", () => {
 
     const result = await controller.update("123", mockUpdateDto, {});
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
+    expect(service.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "123" }),
+      mockUpdateDto,
+      undefined,
+    );
   });
 
   it("should throw PRECONDITION_FAILED if instruments service throws it", async () => {
@@ -86,7 +91,7 @@ describe("InstrumentsController", () => {
     );
   });
 
-  it("should update if header date > updatedAt", async () => {
+  it("should update if valid header is provided", async () => {
     service.findOne.mockResolvedValue(mockInstrument);
     service.findOneAndUpdate.mockResolvedValue({
       ...mockInstrument,
@@ -99,6 +104,11 @@ describe("InstrumentsController", () => {
 
     const result = await controller.update("123", mockUpdateDto, headers);
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
+    expect(service.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: "123" }),
+      mockUpdateDto,
+      new Date("2025-09-02T10:00:00Z"),
+    );
   });
 
   it("should throw ConflictException on duplicate key error", async () => {

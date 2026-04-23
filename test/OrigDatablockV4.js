@@ -1,4 +1,5 @@
 "use strict";
+const assert = require("node:assert");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 const { v4: uuidv4 } = require("uuid");
@@ -967,6 +968,44 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
         .then((res) => {
           return processDatasetArray(res.body);
         });
+    });
+  });
+
+  describe("OrigDatablocks v4 optimistic concurrency control tests", () => {
+    it("0800: should fail one request with HTTP 412 when two requests try to update the same origdatablock", async () => {
+      const res = await request(appUrl)
+        .post("/api/v4/origdatablocks")
+        .send({
+          ...TestData.OrigDatablockV4MinCorrect,
+          datasetId: datasetPid,
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
+      const id = encodeURIComponent(res.body._id);
+
+      const [res1, res2] = await Promise.all([
+        request(appUrl)
+          .patch(`/api/v4/origdatablocks/${id}`)
+          .send({ size: 400 })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+        request(appUrl)
+          .patch(`/api/v4/origdatablocks/${id}`)
+          .send({ size: 500 })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+      ]);
+      assert(
+        [res1.statusCode, res2.statusCode].includes(
+          TestData.SuccessfulPatchStatusCode,
+        ),
+        "Neither PATCH request succeeded",
+      );
+      if (res1.status === TestData.SuccessfulPatchStatusCode) {
+        assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+      } else {
+        assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+      }
     });
   });
 });

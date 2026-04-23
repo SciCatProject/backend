@@ -118,6 +118,11 @@ describe("DatasetsController", () => {
       await expect(
         controller.findByIdAndUpdate(mockRequest, "some-pid", {}),
       ).rejects.toThrow(PreconditionFailedException);
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "some-pid",
+        expect.anything(),
+        new Date("2023-01-01T00:00:00Z"),
+      );
     });
 
     it("should throw ForbiddenException if user cannot update", async () => {
@@ -228,6 +233,11 @@ describe("DatasetsController", () => {
       );
 
       expect(result).toEqual(updatedDataset);
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "some-pid",
+        expect.anything(),
+        undefined,
+      );
     });
   });
 });
