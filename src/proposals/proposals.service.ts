@@ -1,8 +1,9 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
+  PreconditionFailedException,
+  BadRequestException,
   Scope,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
@@ -281,15 +282,21 @@ export class ProposalsService {
     return this.proposalModel.findOne(filter).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<ProposalDocument>,
     updateProposalDto: PartialUpdateProposalDto,
+    unmodifiedSince?: Date,
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
 
+    const filterCopy: FilterQuery<ProposalDocument> = { ...filter };
+    if (unmodifiedSince) {
+      filterCopy.updatedAt = { $lte: unmodifiedSince };
+    }
+
     const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
-        filter,
+        filterCopy,
         {
           $set: {
             ...addUpdatedByField(updateProposalDto, username),
@@ -303,8 +310,13 @@ export class ProposalsService {
       .exec();
 
     if (!updatedProposal) {
-      throw new NotFoundException(
-        `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Proposal not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
+      throw new PreconditionFailedException(
+        `Proposal ${filter.proposalId} has been modified on server since ${unmodifiedSince.toISOString()}`,
       );
     }
 
