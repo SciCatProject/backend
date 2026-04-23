@@ -278,12 +278,21 @@ export class MetadataKeysService {
     newDoc: MetadataSourceDoc,
   ): Promise<void> {
     const { sourceType } = newDoc;
-    const ids = sharedKeys.map((k) => {
-      const humanReadableName =
+    const humanNameChangedKeys: string[] = [];
+    const humanNameUnchangedKeys: string[] = [];
+
+    for (const k of sharedKeys) {
+      const oldHumanName =
+        (oldDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
+      const newHumanName =
         (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-      return this.buildId(sourceType, k, humanReadableName);
-    });
-    const filter = { _id: { $in: ids } };
+
+      if (oldHumanName === newHumanName) {
+        humanNameUnchangedKeys.push(k);
+      } else {
+        humanNameChangedKeys.push(k);
+      }
+    }
 
     const addedGroups = newDoc.userGroups.filter(
       (g) => !oldDoc.userGroups.includes(g),
@@ -294,7 +303,17 @@ export class MetadataKeysService {
     const publishedFlippedOn = !oldDoc.isPublished && newDoc.isPublished;
     const hasGroupChanges = addedGroups.length > 0 || removedGroups.length > 0;
 
-    if (hasGroupChanges || publishedFlippedOn) {
+    if (
+      humanNameUnchangedKeys.length > 0 &&
+      (hasGroupChanges || publishedFlippedOn)
+    ) {
+      const ids = humanNameUnchangedKeys.map((k) => {
+        const humanReadableName =
+          (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
+        return this.buildId(sourceType, k, humanReadableName);
+      });
+      const filter = { _id: { $in: ids } };
+
       await this.metadataKeyModel.updateMany(filter, {
         ...(addedGroups.length > 0 && {
           $addToSet: { userGroups: { $each: addedGroups } },
@@ -318,14 +337,6 @@ export class MetadataKeysService {
 
     // humanReadableName is part of _id, so a change means a different document.
     // Treat it as delete the old entry + insert the new one.
-    const humanNameChangedKeys = sharedKeys.filter((k) => {
-      const oldName =
-        (oldDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-      const newName =
-        (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-      return oldName !== newName;
-    });
-
     if (humanNameChangedKeys.length > 0) {
       await Promise.all([
         this.deleteMany({
