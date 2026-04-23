@@ -947,30 +947,6 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     });
   });
 
-  describe("Cleanup after the tests", () => {
-    it("0700: delete all origdatablocks as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/origdatablocks")
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          return processOrigDatablockArray(res.body);
-        });
-    });
-
-    it("0701: delete all datasets as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/datasets")
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          return processDatasetArray(res.body);
-        });
-    });
-  });
-
   describe("OrigDatablocks v4 optimistic concurrency control tests", () => {
     it("0800: should fail one request with HTTP 412 when two requests try to update the same origdatablock", async () => {
       const res = await request(appUrl)
@@ -1006,6 +982,30 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
       } else {
         assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
       }
+    });
+  });
+
+  describe("Cleanup after the tests", () => {
+    it("0900: delete all origdatablocks as archivemanager", async () => {
+      return await request(appUrl)
+        .get("/api/v4/origdatablocks")
+        .auth(accessTokenArchiveManager, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          return processOrigDatablockArray(res.body);
+        });
+    });
+
+    it("0901: delete all datasets as archivemanager", async () => {
+      return await request(appUrl)
+        .get("/api/v4/datasets")
+        .auth(accessTokenArchiveManager, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          return processDatasetArray(res.body);
+        });
     });
   });
 });
