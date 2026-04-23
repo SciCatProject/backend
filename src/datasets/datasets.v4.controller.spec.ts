@@ -110,7 +110,13 @@ describe("DatasetsController (manual instantiate)", () => {
     expect(result.scientificMetadata.temperature.value).toBe(300);
 
     expect(datasetsService.findOne).toHaveBeenCalledWith({ where: { pid } });
-    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      pid,
+      expect.objectContaining({
+        scientificMetadata: { temperature: { value: 300, unit: "K" } },
+      }),
+      new Date("2026-01-01T00:00:00Z"),
+    );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -141,7 +147,13 @@ describe("DatasetsController (manual instantiate)", () => {
     expect(result.scientificMetadata.temperature.value).toBe(305);
 
     expect(datasetsService.findOne).toHaveBeenCalledWith({ where: { pid } });
-    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      pid,
+      expect.objectContaining({
+        scientificMetadata: { temperature: { value: 305, unit: "K" } },
+      }),
+      undefined,
+    );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 
