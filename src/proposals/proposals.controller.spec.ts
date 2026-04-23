@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import type { Request } from "express";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -7,6 +8,7 @@ import { ProposalsService } from "./proposals.service";
 import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { PartialUpdateProposalDto } from "./dto/update-proposal.dto";
 import { ProposalClass } from "./schemas/proposal.schema";
+import { ProposalLookupKeysEnum } from "./types/proposal-lookup";
 
 class AttachmentsServiceMock {}
 
@@ -15,9 +17,25 @@ class DatasetsServiceMock {}
 class ProposalsServiceMock {
   findOne = jest.fn();
   findOneAndUpdate = jest.fn();
+  findAll = jest.fn();
+  findAllComplete = jest.fn();
 }
 
-class CaslAbilityFactoryMock {}
+class CaslAbilityFactoryMock {
+  proposalsInstanceAccess = jest.fn().mockReturnValue({
+    can: jest.fn().mockReturnValue(true),
+  });
+}
+
+const mockProposal: Partial<ProposalClass> = {
+  proposalId: "ABCDEF",
+  title: "Test Proposal",
+  email: "test@example.com",
+  ownerGroup: "testGroup",
+  accessGroups: [],
+  isPublished: false,
+  updatedAt: new Date("2023-01-01"),
+};
 
 describe("ProposalsController", () => {
   let controller: ProposalsController;
@@ -40,6 +58,87 @@ describe("ProposalsController", () => {
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
+  });
+
+  describe("findAll", () => {
+    const mockAdminRequest = {
+      user: { currentGroups: ["admin"], username: "admin" },
+    } as unknown as Request;
+
+    it("should call findAll when no include is provided", async () => {
+      proposalsService.findAll.mockResolvedValue([mockProposal]);
+
+      const result = await controller.findAll(mockAdminRequest, "{}");
+
+      expect(proposalsService.findAll).toHaveBeenCalled();
+      expect(proposalsService.findAllComplete).not.toHaveBeenCalled();
+      expect(result).toEqual([mockProposal]);
+    });
+
+    it("should call findAllComplete when include is provided", async () => {
+      proposalsService.findAllComplete.mockResolvedValue([mockProposal]);
+      const filters = JSON.stringify({
+        where: { proposalId: "ABCDEF" },
+        include: [ProposalLookupKeysEnum.samples],
+      });
+
+      const result = await controller.findAll(mockAdminRequest, filters);
+
+      expect(proposalsService.findAllComplete).toHaveBeenCalled();
+      expect(proposalsService.findAll).not.toHaveBeenCalled();
+      expect(result).toEqual([mockProposal]);
+    });
+
+    it("should pass where filter through to the service", async () => {
+      proposalsService.findAll.mockResolvedValue([]);
+      const filters = JSON.stringify({ where: { proposalId: "TEST123" } });
+
+      await controller.findAll(mockAdminRequest, filters);
+
+      const calledWith = proposalsService.findAll.mock.calls[0][0];
+      expect(calledWith.where).toMatchObject({ proposalId: "TEST123" });
+    });
+
+    it("should pass include and where to findAllComplete", async () => {
+      proposalsService.findAllComplete.mockResolvedValue([]);
+      const filters = JSON.stringify({
+        where: { proposalId: "TEST123" },
+        include: [{ relation: "samples", scope: { limits: { limit: 5 } } }],
+      });
+
+      await controller.findAll(mockAdminRequest, filters);
+
+      const calledWith = proposalsService.findAllComplete.mock.calls[0][0];
+      expect(calledWith.where).toMatchObject({ proposalId: "TEST123" });
+      expect(calledWith.include).toEqual([
+        { relation: "samples", scope: { limits: { limit: 5 } } },
+      ]);
+    });
+
+    it("should handle undefined filters (no query param)", async () => {
+      proposalsService.findAll.mockResolvedValue([]);
+      await controller.findAll(mockAdminRequest, undefined);
+      expect(proposalsService.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe("updateFiltersForList", () => {
+    it("should restrict to isPublished when user is not authenticated", () => {
+      const result = controller.updateFiltersForList(
+        { user: null } as unknown as Request,
+        { where: {} },
+      );
+      expect(result.where?.isPublished).toBe(true);
+    });
+
+    it("should not restrict when admin can view all", () => {
+      const request = {
+        user: { currentGroups: ["admin"] },
+      } as unknown as Request;
+
+      const result = controller.updateFiltersForList(request, { where: {} });
+      expect(result.where?.isPublished).toBeUndefined();
+    });
   });
 
   describe("update", () => {
