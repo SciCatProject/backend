@@ -52,6 +52,9 @@ import {
   IFilters,
   ILimitsFilter,
 } from "src/common/interfaces/common.interface";
+import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
+import { IProposalFilters } from "./interfaces/proposal-relations.interface";
+import { PROPOSAL_LOOKUP_FIELDS } from "./types/proposal-lookup";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidatorOptions } from "class-validator";
 import {
@@ -395,12 +398,21 @@ export class ProposalsController {
   })
   async findAll(
     @Req() request: Request,
-    @Query("filters") filters?: string,
+    @Query("filters", new IncludeValidationPipe(PROPOSAL_LOOKUP_FIELDS))
+    filters?: string,
   ): Promise<ProposalClass[]> {
-    const proposalFilters: IFilters<ProposalDocument, IProposalFields> =
-      this.updateFiltersForList(request, JSON.parse(filters ?? "{}"));
+    const { include, ...rest } = JSON.parse(filters ?? "{}");
+    const baseFilters: IFilters<ProposalDocument, IProposalFields> =
+      this.updateFiltersForList(request, rest);
 
-    return this.proposalsService.findAll(proposalFilters);
+    if (include) {
+      const proposalFilters: IProposalFilters<
+        ProposalDocument,
+        IProposalFields
+      > = { ...baseFilters, include };
+      return this.proposalsService.findAllComplete(proposalFilters);
+    }
+    return this.proposalsService.findAll(baseFilters);
   }
 
   // GET /proposals/count
