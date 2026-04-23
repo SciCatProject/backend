@@ -849,6 +849,38 @@ It should return a synchronous function as ajv will not resolve any <code>Promis
 <span class="w">  </span><span class="p">],</span>
 <span class="p">]);</span>
 </code></pre></div><p></p>
+<h1 id="migration-to-v5x">Migration to v5.x<a class="headerlink" href="#migration-to-v5x" title="Permanent link">¶</a></h1>
+<p>In versions prior to 5.x, the backend automatically populated <code>PublishedData.metadata.publicationYear</code> with the current year if it was omitted during creation.</p>
+<p>Starting with v5.x, this behavior is no longer automatic and must be explicitly defined in your schema. 
+To simplify this transition, a new dynamic default function (<code>currentYear</code>), is available and automatically registered by the backend.</p>
+<p>To maintain the legacy behavior, update your configuration to include the <code>dynamicDefaults</code> property.
+Before v5.x:
+</p><div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"metadataSchema"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="err">...</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+After v5.x:
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"metadataSchema"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"allOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"dynamicDefaults"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"publicationYear"</span><span class="p">:</span><span class="w"> </span><span class="s2">"currentYear"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="err">...</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p></p>
 
 
 
