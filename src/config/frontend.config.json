@@ -14,10 +14,10 @@
       "mat_icon": "",
       "method" : "POST",
       "url": "/api/v4/publisheddata/{{ @doi }}/publish",
-      "authorization": "#datasetOwner && !@isPublished",
+      "enabled": "@status === 'private'",
       "variables" : {
         "doi": "#PublishedDataDoi",
-        "isPublished" : "#Dataset[0]Field[isPublished]"
+        "status": "#PublishedDataStatus"
       },
       "headers": {
         "Content-Type": "application/json",
@@ -33,17 +33,36 @@
       "mat_icon": "",
       "method" : "POST",
       "url": "/api/v4/publisheddata/{{ @doi }}/register",
-      "authorization": "#datasetOwner && @isPublished",
+      "enabled": "@status === 'public'",
       "variables" : {
         "doi": "#PublishedDataDoi",
-        "isPublished" : "#Dataset[0]Field[isPublished]"
+        "status": "#PublishedDataStatus"
       },
       "headers": {
         "Content-Type": "application/json"
       }
+    },
+    {
+      "id": "publish",
+      "description": "This amends the record locally.",
+      "order": 3,
+      "label": "Amend",
+      "type": "xhr",
+      "mat_icon": "",
+      "method" : "POST",
+      "url": "/api/v4/publisheddata/{{ @doi }}/amend",
+      "enabled": "@status === 'registered' && #userIsAdmin",
+      "variables" : {
+        "doi": "#PublishedDataDoi",
+        "status": "#PublishedDataStatus"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "#tokenBearer"
+      }
     }
   ],
-  "statusBannerMessage": " Here we go",
+  "statusBannerMessage": "",
   "statusBannerCode": "INFO",
   "checkBoxFilterClickTrigger": false,
   "accessTokenPrefix": "Bearer ",
