@@ -67,6 +67,7 @@ export interface IDatafileFilter {
   gid?: string;
   perm?: string;
   type?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export type IFiltersV4<T, Y = null, Z = string> = Pick<
