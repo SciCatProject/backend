@@ -26,7 +26,7 @@ const mockUser: User = {
     _id: "testId",
     id: "testId",
     externalSettings: {
-      filters: [
+      fe_dataset_table_filters: [
         { type: "LocationFilterComponent", visible: true },
         { type: "PidFilterComponent", visible: true },
         { type: "PidFilterContainsComponent", visible: false },
@@ -37,7 +37,7 @@ const mockUser: User = {
         { type: "DateRangeFilterComponent", visible: true },
         { type: "TextFilterComponent", visible: true },
       ],
-      conditions: [],
+      fe_dataset_table_conditions: [],
     },
     datasetCount: 25,
     jobCount: 25,
@@ -68,7 +68,7 @@ const mockUserSettings: UserSettings = {
   _id: "testId",
   id: "testId",
   externalSettings: {
-    filters: [
+    fe_dataset_table_filters: [
       { type: "LocationFilterComponent", visible: true },
       { type: "PidFilterComponent", visible: true },
       { type: "PidFilterContainsComponent", visible: false },
@@ -79,7 +79,7 @@ const mockUserSettings: UserSettings = {
       { type: "DateRangeFilterComponent", visible: true },
       { type: "TextFilterComponent", visible: true },
     ],
-    conditions: [],
+    fe_dataset_table_conditions: [],
   },
   datasetCount: 25,
   jobCount: 25,

@@ -62,9 +62,11 @@ const mockUserSettings = {
   datasetCount: 25,
   jobCount: 25,
   externalSettings: {
-    filters: [{ LocationFilter: true }, { PidFilter: true }],
-    conditions: [{ field: "status", value: "active", operator: "equals" }],
-    columns: [],
+    fe_dataset_table_filters: [{ LocationFilter: true }, { PidFilter: true }],
+    fe_dataset_table_conditions: [
+      { field: "status", value: "active", operator: "equals" },
+    ],
+    fe_dataset_table_columns: [],
   },
 };
 
@@ -112,13 +114,23 @@ describe("UsersController", () => {
 
     // Assert
     expect(result).toEqual(mockUserSettings);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
   });
 
@@ -129,11 +141,11 @@ describe("UsersController", () => {
     const updatedSettings = {
       ...mockUserSettings,
       externalSettings: {
-        filters: [{ PidFilter: true }],
-        conditions: [
+        fe_dataset_table_filters: [{ PidFilter: true }],
+        fe_dataset_table_conditions: [
           { field: "status", value: "inactive", operator: "equals" },
         ],
-        columns: [],
+        fe_dataset_table_columns: [],
       },
     };
 
@@ -161,14 +173,23 @@ describe("UsersController", () => {
     );
 
     expect(result).toEqual(expectedResponse);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown[]>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown[]>)
-        .length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
   });
 
