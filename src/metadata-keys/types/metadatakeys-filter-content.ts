@@ -9,8 +9,8 @@ const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
     type: "object",
     example: {
       sourceType: "dataset",
-      sourceId: "datasetId",
       key: "metadata_key_name",
+      humanReadableName: "Metadata Key Name",
     },
   },
   include: {},

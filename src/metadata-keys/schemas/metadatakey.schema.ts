@@ -76,28 +76,40 @@ export class MetadataKeyClass extends QueryableClass {
   sourceType: string;
 
   @ApiProperty({
-    type: String,
-    required: true,
-    description: "Unique identifier of the source item this key is linked to.",
-  })
-  @Prop({
-    type: String,
-    required: true,
-    index: true,
-  })
-  sourceId: string;
-
-  @ApiProperty({
     type: Boolean,
     required: true,
     description: "Flag is true when data are made publicly available.",
   })
-  @Prop({ type: Boolean, required: true })
+  @Prop({ type: Boolean, required: true, default: false })
   isPublished: boolean;
+
+  @ApiProperty({
+    type: Number,
+    description:
+      "Tracks how many sources are using this metadata key. Managed internally.",
+  })
+  @Prop({ type: Number, default: 0 })
+  usageCount: number;
+
+  @ApiProperty({
+    type: Object,
+    description:
+      "Tracks how many datasets per user group reference this metadata key. " +
+      "Used to safely remove groups from userGroups when the last dataset " +
+      "contributing that group is deleted or updated. " +
+      "e.g. { 'groupA': 3, 'groupB': 1 } means 3 datasets with groupA and 1 with groupB use this key.",
+  })
+  @Prop({ type: Map, of: Number, default: {} })
+  userGroupCounts: Map<string, number>;
 }
 
 export const MetadataKeySchema = SchemaFactory.createForClass(MetadataKeyClass);
 
-MetadataKeySchema.index({ sourceType: 1, sourceId: 1 });
+MetadataKeySchema.index({ sourceType: 1, isPublished: 1, key: 1 });
+MetadataKeySchema.index({
+  sourceType: 1,
+  isPublished: 1,
+  humanReadableName: 1,
+});
 MetadataKeySchema.index({ sourceType: 1, userGroups: 1, key: 1 });
 MetadataKeySchema.index({ sourceType: 1, userGroups: 1, humanReadableName: 1 });

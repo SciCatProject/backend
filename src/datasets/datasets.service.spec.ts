@@ -96,6 +96,15 @@ const mockDataset: DatasetClass = {
   dataQualityMetrics: 1,
 };
 
+const mockDatasetModel = function (data: DatasetClass) {
+  return {
+    ...data,
+    save: jest.fn().mockResolvedValue(data),
+    toObject: jest.fn().mockReturnValue(data),
+  };
+};
+mockDatasetModel.collection = { name: "Dataset" };
+
 describe("DatasetsService", () => {
   let service: DatasetsService;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -107,13 +116,7 @@ describe("DatasetsService", () => {
         ConfigService,
         {
           provide: getModelToken("DatasetClass"),
-          useValue: function (data: DatasetClass) {
-            return {
-              ...data,
-              save: jest.fn().mockResolvedValue(data),
-              toObject: jest.fn().mockReturnValue(data),
-            };
-          },
+          useValue: mockDatasetModel,
         },
         DatasetsService,
         DatasetsAccessService,
