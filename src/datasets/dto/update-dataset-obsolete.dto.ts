@@ -23,7 +23,6 @@ import {
 import { TechniqueClass } from "../schemas/technique.schema";
 import { Type, Transform } from "class-transformer";
 import { CreateTechniqueDto } from "./create-technique.dto";
-import { RelationshipClass } from "../schemas/relationship.schema";
 import { CreateRelationshipDto } from "./create-relationship.dto";
 import { LifecycleClass } from "../schemas/lifecycle.schema";
 import { encodeScientificMetadataKeys } from "src/common/utils";
@@ -246,17 +245,18 @@ export class UpdateDatasetObsoleteDto extends OwnableDto {
 
   // it needs to be discussed if this fields is managed by the user or by the system
   @ApiProperty({
-    type: "array",
-    items: { $ref: getSchemaPath(RelationshipClass) },
+    type: CreateRelationshipDto,
     required: false,
+    isArray: true,
     default: [],
-    description: "Stores the relationships with other datasets.",
+    description: `Array of relationships with other entities (possibly external to the catalog).
+      Inspired by DataCite's relatedIdentifier schema: https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/`,
   })
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateRelationshipDto)
-  readonly relationships?: RelationshipClass[];
+  readonly relationships?: CreateRelationshipDto[];
 
   @ApiProperty({
     type: LifecycleClass,

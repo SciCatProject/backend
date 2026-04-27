@@ -47,8 +47,3 @@ export enum PublishedDataStatus {
   REGISTERED = "registered",
   AMENDED = "amended",
 }
-
-export interface PublishedDataConfig {
-  metadataSchema: unknown;
-  uiSchema: unknown;
-}

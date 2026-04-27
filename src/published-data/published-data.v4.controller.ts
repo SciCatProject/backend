@@ -59,6 +59,7 @@ import {
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
 import { ValidatorService } from "./validator.service";
+import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -83,6 +84,10 @@ export class PublishedDataV4Controller {
 
   @AllowAny()
   @Get("config")
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PublishedDataConfigDto,
+  })
   async getConfig(): Promise<Record<string, unknown> | null> {
     return this.publishedDataService.getConfig();
   }
