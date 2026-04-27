@@ -2272,7 +2272,7 @@ export class CaslAbilityFactory {
         )
       ) {
         // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
+        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
         //
 
         can(Action.AttachmentCreateInstance, Attachment);
