@@ -196,8 +196,8 @@ export class MetadataKeysService {
    * Called when a dataset is updated.
    *
    * Diffs the old and new metadata to produce three disjoint key sets:
-   *   - added:   only in newDoc → insertManyFromSource
-   *   - removed: only in oldDoc → deleteMany
+   *   - added:   only in newDoc(after change) → insertManyFromSource
+   *   - removed: only in oldDoc(before change) → deleteMany
    *   - shared:  in both       → updateSharedKeys (handles group / isPublished
    *                              / humanReadableName changes)
    *
