@@ -15,7 +15,7 @@ export class AccessGroupFromPayloadService extends AccessGroupService {
 
   async getAccessGroups(userPayload: UserPayload): Promise<string[]> {
     //const defaultAccessGroups: string[] = [];
-    let accessGroups: string[] = [];
+    const accessGroups: string[] = [];
 
     const accessGroupsProperty = userPayload.accessGroupProperty;
     if (accessGroupsProperty) {
@@ -24,7 +24,7 @@ export class AccessGroupFromPayloadService extends AccessGroupService {
         payload !== undefined &&
         Array.isArray(payload[accessGroupsProperty])
       ) {
-        for (var group of payload[accessGroupsProperty]) {
+        for (const group of payload[accessGroupsProperty]) {
           if (typeof group === "string") {
             accessGroups.push(group);
           }

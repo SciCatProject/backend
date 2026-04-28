@@ -13,7 +13,7 @@ export class AccessGroupFromLdapService extends AccessGroupService {
   }
 
   async getAccessGroups(userPayload: UserPayload): Promise<string[]> {
-    let accessGroups: string[] = [];
+    const accessGroups: string[] = [];
 
     const accessGroupsProperty = userPayload.accessGroupProperty;
     if (accessGroupsProperty) {
@@ -24,9 +24,9 @@ export class AccessGroupFromLdapService extends AccessGroupService {
       ) {
         for (const group of payload[accessGroupsProperty]) {
           if (
-              typeof group === "object" &&
-              "cn" in group &&
-              typeof group["cn"] === "string"
+            typeof group === "object" &&
+            "cn" in group &&
+            typeof group["cn"] === "string"
           ) {
             accessGroups.push(group["cn"]);
           }

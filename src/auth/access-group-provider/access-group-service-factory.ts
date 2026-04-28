@@ -54,9 +54,7 @@ export const accessGroupServiceFactory = {
         JSON.stringify(accessGroupsLdapPayloadConfig),
         "loading ldap processor",
       );
-      accessGroupServices.push(
-        new AccessGroupFromLdapService(configService),
-      );
+      accessGroupServices.push(new AccessGroupFromLdapService(configService));
     }
 
     if (accessGroupsGraphQlConfig?.enabled == true) {

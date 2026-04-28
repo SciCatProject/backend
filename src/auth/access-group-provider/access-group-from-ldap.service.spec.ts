@@ -34,13 +34,13 @@ describe("AccessGroupFromPayloadService", () => {
       payload: {
         _groups: [
           {
-            dn: 'cn=test_group,cn=groups,cn=accounts,dc=example,dc=com',
-            cn: 'testgroup',
+            dn: "cn=test_group,cn=groups,cn=accounts,dc=example,dc=com",
+            cn: "testgroup",
           },
           {
-            dn: 'cn=example_group,cn=groups,cn=accounts,dc=example,dc=com',
-            cn: 'examplegroup',
-          }
+            dn: "cn=example_group,cn=groups,cn=accounts,dc=example,dc=com",
+            cn: "examplegroup",
+          },
         ],
       },
     };
