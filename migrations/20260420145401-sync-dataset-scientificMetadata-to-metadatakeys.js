@@ -2,14 +2,7 @@ const SOURCE_COLLECTIONS = ["Dataset"];
 
 function buildPipeline(sourceType) {
   return [
-    // Stage 1: Only process documents that have scientificMetadata
-    {
-      $match: {
-        scientificMetadata: { $exists: true, $type: "object" },
-      },
-    },
-
-    // Stage 2: Flatten scientificMetadata into an array of key/value pairs.
+    // Stage 1: Flatten scientificMetadata into an array of key/value pairs.
     // Preserve _id as datasetId so we can count unique datasets later.
     {
       $project: {
@@ -21,10 +14,10 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 3: One document per (dataset, metadata key)
+    // Stage 2: One document per (dataset, metadata key)
     { $unwind: "$metaArr" },
 
-    // Stage 4: Shape each (dataset, key) document.
+    // Stage 3: Shape each (dataset, key) document.
     // userGroups is the union of ownerGroup + accessGroups for this dataset.
     {
       $project: {
@@ -38,7 +31,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 5: One document per (dataset, key, group).
+    // Stage 4: One document per (dataset, key, group).
     {
       $unwind: {
         path: "$userGroups",
@@ -46,7 +39,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 6: Filter out null and empty-string groups.
+    // Stage 5: Filter out null and empty-string groups.
     // Note: datasets with no valid groups are excluded from usageCount.
     // This is acceptable since ownerGroup is a required field in practice.
     {
@@ -55,7 +48,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 7: Group by (metaKeyId, group).
+    // Stage 6: Group by (metaKeyId, group).
     // groupCount = how many datasets with this group use this key.
     // datasetIds = set of distinct dataset IDs (for accurate usageCount).
     {
@@ -74,7 +67,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 8: Group by metaKeyId to reassemble one document per metadata key.
+    // Stage 7: Group by metaKeyId to reassemble one document per metadata key.
     // userGroupCountsArr will become the userGroupCounts Map.
     // datasetIdSets is a list of per-group dataset ID sets — merged in the
     // next stage to compute total unique dataset count (usageCount).
@@ -92,7 +85,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 9: Final projection.
+    // Stage 8: Final projection.
     // userGroupCounts: [{k,v}] array → plain object (stored as Map in Mongoose).
     // usageCount: union all per-group datasetId sets, count distinct IDs.
     {
@@ -220,6 +213,7 @@ function buildPipeline(sourceType) {
 
 module.exports = {
   async up(db) {
+    const BATCH_SIZE = 10000;
     const start = Date.now();
     const elapsed = () => `${((Date.now() - start) / 1000).toFixed(1)}s`;
 
@@ -245,24 +239,44 @@ module.exports = {
         `[${elapsed()}] Processing ${total.toLocaleString()} documents from ${collection}...`,
       );
 
-      const timer = setInterval(
-        () =>
-          console.log(
-            `[${elapsed()}] ${collection} migration still running...`,
-          ),
-        5000,
-      );
+      let lastId = null;
+      let processed = 0;
 
-      try {
+      while (true) {
+        const match = {
+          scientificMetadata: { $exists: true, $type: "object" },
+          ...(lastId && { _id: { $gt: lastId } }),
+        };
+
+        const batch = await db
+          .collection(collection)
+          .find(match)
+          .sort({ _id: 1 })
+          .limit(BATCH_SIZE)
+          .project({ _id: 1 })
+          .toArray();
+
+        if (batch.length === 0) break;
+
+        const batchIds = batch.map((d) => d._id);
+
         await db
           .collection(collection)
-          .aggregate(buildPipeline(collection), {
-            allowDiskUse: true,
-            maxTimeMS: 0,
-          })
+          .aggregate(
+            [
+              { $match: { _id: { $in: batchIds } } },
+              ...buildPipeline(collection).slice(1),
+            ],
+            { allowDiskUse: true, maxTimeMS: 0 },
+          )
           .toArray();
-      } finally {
-        clearInterval(timer);
+
+        lastId = batch[batch.length - 1]._id;
+        processed += batch.length;
+
+        console.log(
+          `[${elapsed()}] ${collection}: ${processed.toLocaleString()}/${total.toLocaleString()}`,
+        );
       }
 
       console.log(`[${elapsed()}] ✅ ${collection} done`);

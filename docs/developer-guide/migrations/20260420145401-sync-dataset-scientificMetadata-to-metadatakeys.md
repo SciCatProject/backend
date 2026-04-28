@@ -69,18 +69,7 @@ The migration pipeline uses two datasets as a running example throughout:
 
 ---
 
-### Stage 1 — Filter
-
-Keep only documents where `scientificMetadata` exists and is an object.
-
-```
-Input:  all Dataset documents
-Output: documents where scientificMetadata exists
-```
-
----
-
-### Stage 2 — Flatten scientificMetadata
+### Stage 1 — Flatten scientificMetadata
 
 Expose `_id` as `datasetId` and convert `scientificMetadata` from an object to an array of `{k, v}` pairs using `$objectToArray`.
 
@@ -112,7 +101,7 @@ Expose `_id` as `datasetId` and convert `scientificMetadata` from an object to a
 
 ---
 
-### Stage 3 — Unwind metaArr
+### Stage 2 — Unwind metaArr
 
 One document per `(dataset, metadata key)`.
 
@@ -126,7 +115,7 @@ Output: 2 documents
 
 ---
 
-### Stage 4 — Shape each (dataset, key) document
+### Stage 3 — Shape each (dataset, key) document
 
 Extract `key`, `humanReadableName`, and compute `userGroups` as the union of `ownerGroup` and `accessGroups`.
 
@@ -144,7 +133,7 @@ Extract `key`, `humanReadableName`, and compute `userGroups` as the union of `ow
 
 ---
 
-### Stage 5 — Unwind userGroups
+### Stage 4 — Unwind userGroups
 
 One document per `(dataset, key, group)`. This is the pivot that makes per-group counting possible.
 
@@ -164,7 +153,7 @@ Output
 
 ---
 
-### Stage 6 — Filter null userGroups
+### Stage 5 — Filter null userGroups
 
 Drop documents where `userGroups` is `null`. This only occurs when `preserveNullAndEmptyArrays` retains a document from a dataset that had no groups at all.
 
@@ -175,7 +164,7 @@ Output: only documents where userGroups is a real group name
 
 ---
 
-### Stage 7 — Group by (metaKeyId, group)
+### Stage 6 — Group by (metaKeyId, group)
 
 Each bucket is one unique `(key, humanReadableName, group)` combination.
 `groupCount` = how many datasets with this group reference this key.
@@ -199,7 +188,7 @@ Output (4 buckets — one per unique metaKeyId + group)
 
 ---
 
-### Stage 8 — Group by metaKeyId
+### Stage 7 — Group by metaKeyId
 
 Reassemble one document per metadata key by collecting the per-group buckets from stage 7.
 
@@ -229,7 +218,7 @@ Output (2 documents — one per unique key)
 
 ---
 
-### Stage 9 — Final projection
+### Stage 8 — Final projection
 
 - `userGroupCounts`: converts `[{k, v}]` array to a plain object (Mongoose stores this as a `Map`)
 - `usageCount`: unions all per-group `datasetId` sets and counts distinct IDs
@@ -259,7 +248,7 @@ Output (2 documents — one per unique key)
 
 ---
 
-### Stage 10 — Merge into MetadataKeys
+### Stage 9 — Merge into MetadataKeys
 
 - `whenNotMatched: insert` — new documents are inserted as-is
 - `whenMatched` — additively merges counts when two `SOURCE_COLLECTIONS` produce the same `_id`
