@@ -111,7 +111,7 @@ function buildPipeline(sourceType) {
       },
     },
 
-    // Stage 10: Merge into MetadataKeys.
+    // Stage 9: Merge into MetadataKeys.
     // whenMatched handles the (future) case where multiple SOURCE_COLLECTIONS
     // produce the same _id. Not possible today since sourceType is part of
     // the _id, but kept correct for when more collections are added.
