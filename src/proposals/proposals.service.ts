@@ -290,7 +290,7 @@ export class ProposalsService {
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
 
-    const filterQuery = withOCCFilter(filter);
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
 
     const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
