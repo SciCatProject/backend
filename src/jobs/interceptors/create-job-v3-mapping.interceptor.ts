@@ -15,6 +15,12 @@ import { UsersService } from "src/users/users.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { JobsControllerUtils } from "src/jobs/jobs.controller.utils";
+import { omit } from "lodash";
+import { CreateJobAuth } from "../types/jobs-auth.enum";
+import { DatasetDocument } from "src/datasets/schemas/dataset.schema";
+import { ConfigService } from "@nestjs/config";
+import { AccessGroupsType } from "src/config/configuration";
+import { FilterQuery } from "mongoose";
 
 interface JobParams {
   datasetList: DatasetListDto[];
@@ -29,12 +35,18 @@ interface JobParams {
  */
 @Injectable()
 export class CreateJobV3MappingInterceptor implements NestInterceptor {
+  adminUsers: Set<string>;
   constructor(
     @Inject(UsersService) readonly usersService: UsersService,
     @Inject(DatasetsService) readonly datasetsService: DatasetsService,
     @Inject(JobConfigService) readonly jobConfigService: JobConfigService,
+    @Inject(ConfigService) readonly configService: ConfigService,
     private readonly jobsControllerUtils: JobsControllerUtils,
-  ) {}
+  ) {
+    this.adminUsers = new Set(
+      this.configService.get<AccessGroupsType>("accessGroups")?.admin ?? [],
+    );
+  }
 
   async intercept(
     context: ExecutionContext,
@@ -47,108 +59,115 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     const jobConfig = this.jobsControllerUtils.getJobTypeConfiguration(
       dtoV3.type,
     );
-    if (jobConfig) {
-      // ensure datasetList comes from a top level field in the dto and not from jobParams
-      if (
-        dtoV3.jobParams &&
-        Object.keys(dtoV3.jobParams).includes("datasetList")
-      ) {
-        delete dtoV3.jobParams.datasetList;
-      }
-      const jobParams: JobParams = {
-        datasetList: dtoV3.datasetList ?? [],
-        ...dtoV3.jobParams,
-      };
-      // to preserve the executionTime field, if provided, add it to jobParams
-      if (dtoV3.executionTime) {
-        jobParams.executionTime = dtoV3.executionTime;
-      }
-      // to preserve the jobStatusMessage field, if provided, add it to jobParams
-      if (dtoV3.jobStatusMessage) {
-        jobParams.jobStatusMessage = dtoV3.jobStatusMessage;
-      }
-      // assign jobParams and contactEmail to the new body
-      let newBody: CreateJobDto = {
-        type: dtoV3.type,
-        jobParams: jobParams,
-      };
-      if (dtoV3.emailJobInitiator || requestUser) {
-        newBody = {
-          ...newBody,
-          contactEmail: dtoV3.emailJobInitiator ?? requestUser.email,
-        };
-      }
-      // ensure compatibility with the FE, which provides the username field in jobParams
-      // and compatibility with v4 which requires ownerUser in the dto of jobs created by normal users
-      // if username is not provided, use the username from the request user
-      let jobUser: JWTUser | null = null;
-      if (Object.keys(jobParams).includes("username")) {
-        const jwtUser = await this.usersService.findByUsername2JWTUser(
-          jobParams.username as string,
-        );
-        jobUser = jwtUser;
-      } else if (requestUser) {
-        jobUser = requestUser;
-      }
-      if (jobUser) {
-        newBody = {
-          ...newBody,
-          ownerUser: jobUser?.username,
-        };
-      }
-      // ensure compatibility with v4 which requires ownerGroup in the dto of jobs created by normal user
-      if (Object.keys(jobParams).includes("ownerGroup")) {
-        newBody = {
-          ...newBody,
-          ownerGroup: jobParams.ownerGroup as string,
-        };
-      } else if (Array.isArray(jobParams.datasetList)) {
-        if (jobConfig.create.auth === "#datasetAccess") {
-          let isAllPublished = true;
-          const datasetGroups = [];
-          for (const datasetDto of jobParams.datasetList) {
-            if (datasetDto.pid) {
-              const dataset = await this.datasetsService.findOne({
-                where: { pid: datasetDto.pid },
-              });
-              isAllPublished =
-                isAllPublished && (dataset?.isPublished ?? false);
-              datasetGroups.push([
-                ...(dataset?.accessGroups ?? []),
-                dataset?.ownerGroup,
-              ]);
-            }
-          }
-          const commonGroups = intersection([
-            ...datasetGroups,
-            jobUser?.currentGroups ?? [],
-          ]);
-          if (isAllPublished) {
-            newBody = {
-              ...newBody,
-              ownerGroup: jobUser?.currentGroups?.[0],
-            };
-          } else if (commonGroups.length > 0) {
-            newBody = {
-              ...newBody,
-              ownerGroup: commonGroups[0],
-            };
-          }
-        } else if (jobConfig.create.auth !== "#datasetPublic") {
-          if (jobParams.datasetList.length > 0) {
-            const dataset = await this.datasetsService.findOne({
-              where: { pid: jobParams.datasetList[0].pid },
-            });
-            newBody = {
-              ...newBody,
-              ownerGroup: dataset?.ownerGroup,
-            };
-          }
-        }
-      }
-      request.body = newBody;
-    }
+    if (!jobConfig) return next.handle();
+    const jobParams: JobParams = this.buildJobParams(dtoV3);
+    const newBody: CreateJobDto = {
+      type: dtoV3.type,
+      jobParams: jobParams,
+    };
+    if (dtoV3.emailJobInitiator || requestUser)
+      newBody.contactEmail = dtoV3.emailJobInitiator ?? requestUser.email;
+    // ensure compatibility with the FE, which provides the username field in jobParams
+    // and compatibility with v4 which requires ownerUser in the dto of jobs created by normal users
+    // if username is not provided, use the username from the request user
+    const jobUser: JWTUser | null = await this.buildOwnerUser(
+      jobParams,
+      requestUser,
+    );
+    if (jobUser) newBody.ownerUser = jobUser?.username;
+    // ensure compatibility with v4 which requires ownerGroup in the dto of jobs created by normal user
+    const ownerGroup = await this.buildOwnerGroup(
+      jobParams,
+      jobConfig.create.auth,
+      jobUser?.currentGroups ?? null,
+    );
+    if (ownerGroup) newBody.ownerGroup = ownerGroup;
+    request.body = newBody;
     return next.handle();
+  }
+
+  private async buildOwnerUser(jobParams: JobParams, requestUser: JWTUser) {
+    if ("username" in jobParams) {
+      const jwtUser = await this.usersService.findByUsername2JWTUser(
+        jobParams.username as string,
+      );
+      return jwtUser;
+    }
+    if (requestUser) return requestUser;
+    return null;
+  }
+
+  private buildJobParams(dtoV3: CreateJobDtoV3) {
+    // ensure datasetList comes from a top level field in the dto and not from jobParams
+    const jobParams: JobParams = {
+      ...omit(dtoV3.jobParams ?? {}, ["datasetList"]),
+      datasetList: dtoV3.datasetList ?? [],
+    };
+    // to preserve the executionTime field, if provided, add it to jobParams
+    if (dtoV3.executionTime) jobParams.executionTime = dtoV3.executionTime;
+    // to preserve the jobStatusMessage field, if provided, add it to jobParams
+    if (dtoV3.jobStatusMessage)
+      jobParams.jobStatusMessage = dtoV3.jobStatusMessage;
+    return jobParams;
+  }
+
+  private async buildOwnerGroup(
+    jobParams: JobParams,
+    jobConfigCreateAuth: string,
+    jobUserCurrentGroups: string[] | null,
+  ): Promise<string | undefined> {
+    if ("ownerGroup" in jobParams) return jobParams.ownerGroup as string;
+    const datasetList = jobParams.datasetList;
+    if (datasetList.length === 0) return undefined;
+    const datasetPid = datasetList.map((datasetDto) => datasetDto.pid);
+    if (jobConfigCreateAuth === CreateJobAuth.DatasetPublic) return undefined;
+    const datasetsFilter: FilterQuery<DatasetDocument> = {
+      where: { pid: { $in: datasetPid } },
+      fields: ["ownerGroup"],
+    };
+    const isAdmin = jobUserCurrentGroups?.some((group) =>
+      this.adminUsers.has(group),
+    );
+    if (jobConfigCreateAuth === CreateJobAuth.DatasetOwner && !isAdmin)
+      datasetsFilter.where.ownerGroup = { $in: jobUserCurrentGroups ?? [] };
+    if (jobConfigCreateAuth === CreateJobAuth.DatasetAccess) {
+      datasetsFilter.where.$or = [
+        { isPublished: true },
+        { ownerGroup: { $in: jobUserCurrentGroups ?? [] } },
+        { accessGroups: { $in: jobUserCurrentGroups ?? [] } },
+      ];
+      datasetsFilter.fields.push("isPublished", "accessGroups");
+    }
+    const datasets = await this.datasetsService.findAll(datasetsFilter);
+    if (datasets.length !== datasetList.length) return undefined;
+    if (datasets.length === 0) return undefined;
+    if (
+      jobConfigCreateAuth === CreateJobAuth.DatasetAccess &&
+      datasets.every((dataset) => dataset?.isPublished)
+    )
+      return jobUserCurrentGroups?.[0];
+    if (jobConfigCreateAuth === CreateJobAuth.DatasetOwner && isAdmin)
+      return datasets[0].ownerGroup;
+    const commonGroups = this.buildCommonGroups(datasets, jobUserCurrentGroups);
+    if (commonGroups.length > 0) return commonGroups[0];
+    return undefined;
+  }
+
+  private buildCommonGroups(
+    datasets: DatasetDocument[],
+    jobUserCurrentGroups: string[] | null,
+  ): string[] {
+    const datasetGroups = datasets
+      .filter((dataset) => !dataset.isPublished)
+      .map((dataset) => [
+        ...(dataset?.accessGroups ?? []),
+        dataset?.ownerGroup,
+      ]);
+    const commonGroups = intersection([
+      ...datasetGroups,
+      jobUserCurrentGroups ?? [],
+    ]);
+    return commonGroups;
   }
 }
 
