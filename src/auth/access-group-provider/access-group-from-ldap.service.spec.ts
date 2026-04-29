@@ -1,10 +1,10 @@
 import { ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserPayload } from "../interfaces/userPayload.interface";
-import { AccessGroupFromPayloadService } from "./access-group-from-payload.service";
+import { AccessGroupFromLdapService } from "./access-group-from-ldap.service";
 
-describe("AccessGroupFromPayloadService", () => {
-  let service: AccessGroupFromPayloadService;
+describe("AccessGroupFromLdapService", () => {
+  let service: AccessGroupFromLdapService;
 
   const mockConfigService = {
     get: () => "access_group_property",
@@ -12,14 +12,14 @@ describe("AccessGroupFromPayloadService", () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AccessGroupFromPayloadService, ConfigService],
+      providers: [AccessGroupFromLdapService, ConfigService],
     })
       .overrideProvider(ConfigService)
       .useValue(mockConfigService)
       .compile();
 
-    service = module.get<AccessGroupFromPayloadService>(
-      AccessGroupFromPayloadService,
+    service = module.get<AccessGroupFromLdapService>(
+      AccessGroupFromLdapService,
     );
   });
 
