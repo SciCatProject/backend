@@ -520,6 +520,13 @@ export class DatasetsService {
       | PartialUpdateDatasetWithHistoryDto,
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
+    const existingDataset = await this.datasetModel.findOne({ pid: id }).exec();
+    // check if we were able to find the dataset
+    if (!existingDataset) {
+      // no luck. we need to create a new dataset
+      throw new NotFoundException(`Dataset #${id} not found`);
+    }
+
     const username = (this.request.user as JWTUser).username;
 
     // NOTE: When doing findByIdAndUpdate in mongoose it does reset the subdocuments to default values if no value is provided
