@@ -423,6 +423,29 @@ export class CaslAbilityFactory {
         can(Action.AttachmentCreateEndpoint, Attachment);
         can(Action.AttachmentUpdateEndpoint, Attachment);
         can(Action.AttachmentDeleteEndpoint, Attachment);
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.attachmentPrivileged.includes(g),
+        )
+      ) {
+        // -------------------------------------
+        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
+        //
+        can(Action.AttachmentCreateEndpoint, Attachment);
+        can(Action.AttachmentUpdateEndpoint, Attachment);
+        can(Action.AttachmentDeleteEndpoint, Attachment);
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.attachment.includes(g),
+        ) ||
+        this.accessGroups?.attachment.includes("#all")
+      ) {
+        // -------------------------------------
+        // users belonging to any of the group listed in ATTACHMENT_GROUPS
+        //
+        can(Action.AttachmentCreateEndpoint, Attachment);
+        can(Action.AttachmentUpdateEndpoint, Attachment);
+        can(Action.AttachmentDeleteEndpoint, Attachment);
       }
     }
 
@@ -2249,7 +2272,7 @@ export class CaslAbilityFactory {
         )
       ) {
         // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
+        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
         //
 
         can(Action.AttachmentCreateInstance, Attachment);
