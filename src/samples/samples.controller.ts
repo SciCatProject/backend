@@ -61,6 +61,7 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
+  parseDate,
   samplesFullQueryDescriptionFields,
   samplesFullQueryExampleFields,
 } from "src/common/utils";
@@ -71,7 +72,6 @@ import { CreateSubAttachmentV3Dto } from "src/attachments/dto-obsolete/create-su
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { CountApiResponse } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 import { OutputSampleDto } from "./dto/output-sample.dto";
 import { DatasetDocument } from "src/datasets/schemas/dataset.schema";
 
@@ -743,18 +743,14 @@ export class SamplesController {
     @Body() updateSampleDto: PartialUpdateSampleDto,
     @Headers() headers: Record<string, string>,
   ): Promise<OutputSampleDto | null> {
-    const sample = await this.checkPermissionsForSample(
-      request,
-      id,
-      Action.SampleUpdate,
-    );
+    await this.checkPermissionsForSample(request, id, Action.SampleUpdate);
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(sample.updatedAt, headers["if-unmodified-since"]);
+    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
 
-    const updatedSample = await this.samplesService.update(
+    const updatedSample = await this.samplesService.findOneAndUpdate(
       { sampleId: id },
       updateSampleDto,
+      unmodifiedSince,
     );
 
     const sampleObj = (updatedSample as SampleDocument).toObject();

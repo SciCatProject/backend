@@ -1,7 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AttachmentsV4Controller } from "./attachments.v4.controller";
 import { AttachmentsV4Service } from "./attachments.v4.service";
-import { HttpException, HttpStatus } from "@nestjs/common";
+import {
+  HttpException,
+  HttpStatus,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { PartialUpdateAttachmentV4Dto } from "./dto/update-attachment.v4.dto";
 import { Attachment } from "./schemas/attachment.schema";
 import * as jmp from "json-merge-patch";
@@ -78,7 +82,11 @@ describe("AttachmentsController - findOneAndUpdate", () => {
     const result = await controller.findOneAndUpdate(req, "123", dto);
 
     expect(result).toEqual(mockUpdatedAttachment);
-    expect(service.findOneAndUpdate).toHaveBeenCalledWith({ _id: "123" }, dto);
+    expect(service.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: "123" },
+      dto,
+      undefined,
+    );
   });
 
   it("should update attachment with application/merge-patch+json", async () => {
@@ -93,10 +101,11 @@ describe("AttachmentsController - findOneAndUpdate", () => {
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: "123" },
       expectedPatched,
+      undefined,
     );
   });
 
-  it("should throw PRECONDITION_FAILED if If-Unmodified-Since is older than updatedAt", async () => {
+  it("should throw PRECONDITION_FAILED if attachments service throws it", async () => {
     const dto = { caption: "Should Fail" };
 
     const req = {
@@ -106,11 +115,22 @@ describe("AttachmentsController - findOneAndUpdate", () => {
       },
     } as Partial<Request> as Request;
 
+    jest.spyOn(service, "findOneAndUpdate").mockImplementation(() => {
+      throw new PreconditionFailedException(
+        "Resource has been modified on server",
+      );
+    });
+
     await expect(controller.findOneAndUpdate(req, "123", dto)).rejects.toThrow(
       new HttpException(
         "Resource has been modified on server",
         HttpStatus.PRECONDITION_FAILED,
       ),
+    );
+    expect(service.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: "123" },
+      expect.any(Object),
+      new Date("2000-01-01T00:00:00Z"),
     );
   });
 });

@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
   Optional,
+  PreconditionFailedException,
   Scope,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -72,6 +73,7 @@ import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
+import { withOCCFilter } from "./utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -508,27 +510,24 @@ export class DatasetsService {
   }
 
   // PATCH dataset
-  // we update only the fields that have been modified on an existing dataset
+  // We update only the fields that have been modified on an existing dataset.
+  // If unmodifiedSince is provided, we only update if the dataset has not been modified since the provided date
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto:
       | PartialUpdateDatasetDto
       | PartialUpdateDatasetWithHistoryDto,
+    unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
-    const existingDataset = await this.datasetModel.findOne({ pid: id }).exec();
-    // check if we were able to find the dataset
-    if (!existingDataset) {
-      // no luck. we need to create a new dataset
-      throw new NotFoundException(`Dataset #${id} not found`);
-    }
-
     const username = (this.request.user as JWTUser).username;
 
     // NOTE: When doing findByIdAndUpdate in mongoose it does reset the subdocuments to default values if no value is provided
     // https://stackoverflow.com/questions/57324321/mongoose-overwriting-data-in-mongodb-with-default-values-in-subdocuments
+    let queryFilter: FilterQuery<DatasetDocument> = { pid: id };
+    queryFilter = withOCCFilter(queryFilter, unmodifiedSince);
     const patchedDataset = await this.datasetModel
       .findOneAndUpdate(
-        { pid: id },
+        queryFilter,
         addUpdatedByField(
           updateDatasetDto as UpdateQuery<DatasetDocument>,
           username,
@@ -537,9 +536,14 @@ export class DatasetsService {
       )
       .exec();
 
-    // check if we were able to find the dataset and update it
+    // check if we were able to find the dataset (matching the precondition, if supplied) and update it
     if (!patchedDataset) {
-      throw new NotFoundException(`Dataset #${id} not found`);
+      if (!unmodifiedSince) {
+        throw new NotFoundException(`Dataset #${id} not found`);
+      }
+      throw new PreconditionFailedException(
+        `Dataset #${id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
+      );
     }
 
     if (this.opensearchService) {
