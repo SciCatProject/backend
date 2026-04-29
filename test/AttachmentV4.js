@@ -1,4 +1,5 @@
 "use strict";
+const assert = require("node:assert");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 const { v4: uuidv4 } = require("uuid");
@@ -222,6 +223,41 @@ describe("Attachments v4 tests", () => {
           res.body.should.be.a("object");
           res.body.should.have.property("aid");
         });
+    });
+  });
+
+  describe("Optimistic concurrency control tests", () => {
+    it("0510: should fail one request with HTTP 412 when two requests try to update the same attachment", async () => {
+      const res = await request(appUrl)
+        .post("/api/v4/attachments")
+        .send({ ...TestData.AttachmentCorrectV4, aid: uuidv4() })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
+      const aid = encodeURIComponent(res.body.aid);
+
+      const [res1, res2] = await Promise.all([
+        request(appUrl)
+          .patch(`/api/v4/attachments/${aid}`)
+          .send({ caption: "Updated caption 1" })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+        request(appUrl)
+          .patch(`/api/v4/attachments/${aid}`)
+          .send({ caption: "Updated caption 2" })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+      ]);
+      assert(
+        [res1.statusCode, res2.statusCode].includes(
+          TestData.SuccessfulPatchStatusCode,
+        ),
+        "Neither PATCH request succeeded",
+      );
+      if (res1.status === TestData.SuccessfulPatchStatusCode) {
+        assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+      } else {
+        assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+      }
     });
   });
 

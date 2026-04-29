@@ -1,4 +1,10 @@
-import { Injectable, Inject, Scope, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  Inject,
+  Scope,
+  NotFoundException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, UpdateQuery } from "mongoose";
 import { IFilters } from "src/common/interfaces/common.interface";
@@ -18,6 +24,7 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class InstrumentsService {
@@ -91,9 +98,10 @@ export class InstrumentsService {
     return this.instrumentModel.findOne(whereFilter, fieldsProjection).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<InstrumentDocument>,
     updateInstrumentDto: PartialUpdateInstrumentDto,
+    unmodifiedSince?: Date,
   ): Promise<Instrument | null> {
     const username = (this.request.user as JWTUser).username;
     const existingInstrument = await this.instrumentModel
@@ -106,9 +114,11 @@ export class InstrumentsService {
       );
     }
 
-    const updatedInstrument = this.instrumentModel
+    const queryFilter = withOCCFilter(filter, unmodifiedSince);
+
+    const updatedInstrument = await this.instrumentModel
       .findOneAndUpdate(
-        filter,
+        queryFilter,
         {
           $set: {
             ...addUpdatedByField(updateInstrumentDto, username),
@@ -120,8 +130,13 @@ export class InstrumentsService {
       .exec();
 
     if (!updatedInstrument) {
-      throw new NotFoundException(
-        `Instrument not found with filter: ${JSON.stringify(filter)}`,
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Instrument not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
+      throw new PreconditionFailedException(
+        `Instrument #${filter._id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
       );
     }
 

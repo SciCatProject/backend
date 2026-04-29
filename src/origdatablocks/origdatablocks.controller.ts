@@ -1,4 +1,3 @@
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 import {
   Controller,
   Get,
@@ -42,7 +41,7 @@ import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
-import { filterDescription, filterExample } from "src/common/utils";
+import { filterDescription, filterExample, parseDate } from "src/common/utils";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateRawDatasetObsoleteDto } from "src/datasets/dto/create-raw-dataset-obsolete.dto";
@@ -646,21 +645,16 @@ export class OrigDatablocksController {
     @Param("id") id: string,
     @Body() updateOrigDatablockDto: PartialUpdateOrigDatablockDto,
   ): Promise<OrigDatablock | null> {
-    const datablock = await this.checkPermissionsForOrigDatablock(
+    await this.checkPermissionsForOrigDatablock(
       request,
       id,
       Action.OrigdatablockUpdate,
     );
-
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      datablock.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
       id,
       updateOrigDatablockDto,
+      unmodifiedSince,
     );
     if (!origdatablock) {
       throw new NotFoundException("Datablock not found");

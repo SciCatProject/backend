@@ -1,8 +1,9 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
+  PreconditionFailedException,
+  BadRequestException,
   Scope,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
@@ -46,6 +47,7 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
@@ -281,9 +283,10 @@ export class ProposalsService {
     return this.proposalModel.findOne(filter).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<ProposalDocument>,
     updateProposalDto: PartialUpdateProposalDto,
+    unmodifiedSince?: Date,
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
     const existingProposal = await this.proposalModel.findOne(filter).exec();
@@ -294,9 +297,11 @@ export class ProposalsService {
       );
     }
 
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
+
     const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
-        filter,
+        filterQuery,
         {
           $set: {
             ...addUpdatedByField(updateProposalDto, username),
@@ -310,8 +315,13 @@ export class ProposalsService {
       .exec();
 
     if (!updatedProposal) {
-      throw new NotFoundException(
-        `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Proposal not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
+      throw new PreconditionFailedException(
+        `Proposal ${filter.proposalId} has been modified on server since ${unmodifiedSince.toISOString()}`,
       );
     }
 
