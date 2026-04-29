@@ -73,6 +73,7 @@ import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
+import { withOCCFilter } from "./utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -522,10 +523,8 @@ export class DatasetsService {
 
     // NOTE: When doing findByIdAndUpdate in mongoose it does reset the subdocuments to default values if no value is provided
     // https://stackoverflow.com/questions/57324321/mongoose-overwriting-data-in-mongodb-with-default-values-in-subdocuments
-    const queryFilter: FilterQuery<DatasetDocument> = { pid: id };
-    if (unmodifiedSince !== undefined) {
-      queryFilter.updatedAt = { $lte: unmodifiedSince };
-    }
+    let queryFilter: FilterQuery<DatasetDocument> = { pid: id };
+    queryFilter = withOCCFilter(queryFilter, unmodifiedSince);
     const patchedDataset = await this.datasetModel
       .findOneAndUpdate(
         queryFilter,

@@ -46,6 +46,7 @@ import {
 } from "./types/origdatablock-lookup";
 import { isEmpty } from "lodash";
 import { CountApiResponse } from "src/common/types";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class OrigDatablocksService {
@@ -345,10 +346,8 @@ export class OrigDatablocksService {
     unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     const username = (this.request.user as JWTUser).username;
-    const filter: FilterQuery<OrigDatablockDocument> = { _id: id };
-    if (unmodifiedSince) {
-      filter.updatedAt = { $lte: unmodifiedSince };
-    }
+    let filter: FilterQuery<OrigDatablockDocument> = { _id: id };
+    filter = withOCCFilter(filter, unmodifiedSince);
     const patchedOrigDatablock = await this.origDatablockModel
       .findOneAndUpdate(
         filter,

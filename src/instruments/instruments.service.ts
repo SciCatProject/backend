@@ -24,6 +24,7 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class InstrumentsService {
@@ -104,14 +105,11 @@ export class InstrumentsService {
   ): Promise<Instrument | null> {
     const username = (this.request.user as JWTUser).username;
 
-    const filterCopy: FilterQuery<InstrumentDocument> = { ...filter };
-    if (unmodifiedSince) {
-      filterCopy.updatedAt = { $lte: unmodifiedSince };
-    }
+    const queryFilter = withOCCFilter(filter, unmodifiedSince);
 
     const updatedInstrument = await this.instrumentModel
       .findOneAndUpdate(
-        filterCopy,
+        queryFilter,
         {
           $set: {
             ...addUpdatedByField(updateInstrumentDto, username),

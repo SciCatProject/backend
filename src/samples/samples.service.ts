@@ -30,6 +30,7 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class SamplesService {
@@ -192,14 +193,11 @@ export class SamplesService {
       updatedAt: new Date(),
     };
 
-    const filterCopy: FilterQuery<SampleDocument> = { ...filter };
-    if (unmodifiedSince) {
-      filterCopy.updatedAt = { $lte: unmodifiedSince };
-    }
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
 
     const updatedSample = await this.sampleModel
       .findOneAndUpdate(
-        filterCopy,
+        filterQuery,
         { $set: updateDataMongoose },
         { new: true, runValidators: true },
       )

@@ -20,6 +20,7 @@ import {
 import { CreateAttachmentV4Dto } from "./dto/create-attachment.v4.dto";
 import { PartialUpdateAttachmentV4Dto } from "./dto/update-attachment.v4.dto";
 import { Attachment, AttachmentDocument } from "./schemas/attachment.schema";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AttachmentsV4Service {
@@ -92,14 +93,11 @@ export class AttachmentsV4Service {
       return null;
     }
 
-    const filterCopy: FilterQuery<AttachmentDocument> = { ...filter };
-    if (unmodifiedSince) {
-      filterCopy.updatedAt = { $lte: unmodifiedSince };
-    }
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
 
     const result = await this.attachmentModel
       .findOneAndUpdate(
-        filterCopy,
+        filterQuery,
         {
           $set: {
             ...updateAttachmentDto,

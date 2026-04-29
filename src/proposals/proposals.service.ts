@@ -47,6 +47,7 @@ import {
   MetadataKeysService,
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
@@ -289,14 +290,11 @@ export class ProposalsService {
   ): Promise<ProposalClass | null> {
     const username = (this.request.user as JWTUser).username;
 
-    const filterCopy: FilterQuery<ProposalDocument> = { ...filter };
-    if (unmodifiedSince) {
-      filterCopy.updatedAt = { $lte: unmodifiedSince };
-    }
+    const filterQuery = withOCCFilter(filter);
 
     const updatedProposal = await this.proposalModel
       .findOneAndUpdate(
-        filterCopy,
+        filterQuery,
         {
           $set: {
             ...addUpdatedByField(updateProposalDto, username),
