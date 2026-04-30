@@ -255,6 +255,17 @@ Output (2 documents — one per unique key)
 
 > This is not triggered today since `sourceType` is part of `_id`, making collisions between collections impossible. It is kept correct for when `Proposal`, `Sample`, or other collections are added as sources.
 
+**Group cap behaviour**
+
+When merging, if the existing document's `usageCount` exceeds `MAX_USER_GROUPS_PER_METADATA_KEY`:
+
+- `userGroups` is frozen — no new groups are added
+- `userGroupCounts` is frozen — no new counts are merged
+- `isPublished` is forced to `true` — key remains publicly discoverable
+- `usageCount` continues to increment regardless
+
+This prevents unbounded document growth while ensuring heavily-used keys remain visible to all users via `isPublished: true`.
+
 ```js
 // whenMatched userGroupCounts example
 // existing: { "group-1": 3, "group-2": 1 }

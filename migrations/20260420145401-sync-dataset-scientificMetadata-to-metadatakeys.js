@@ -1,4 +1,6 @@
 const SOURCE_COLLECTIONS = ["Dataset"];
+const BATCH_SIZE = 10000;
+const MAX_USER_GROUPS_PER_METADATA_KEY = 1000;
 
 function buildPipeline(sourceType) {
   return [
@@ -131,72 +133,94 @@ function buildPipeline(sourceType) {
                   updatedBy: { $literal: "migration" },
                   updatedAt: { $toDate: "$$NOW" },
 
-                  // Merge group arrays
+                  isPublished: {
+                    $cond: {
+                      if: {
+                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
+                      },
+                      then: true,
+                      else: { $or: ["$isPublished", "$$new.isPublished"] },
+                    },
+                  },
+
                   userGroups: {
-                    $setUnion: ["$userGroups", "$$new.userGroups"],
+                    $cond: {
+                      if: {
+                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
+                      },
+                      then: "$userGroups",
+                      else: { $setUnion: ["$userGroups", "$$new.userGroups"] },
+                    },
                   },
 
                   // Additively merge userGroupCounts — sum counts per group
                   // across both the existing and incoming documents.
                   userGroupCounts: {
-                    $arrayToObject: {
-                      $map: {
-                        input: {
-                          $setUnion: [
-                            {
-                              $map: {
-                                input: { $objectToArray: "$userGroupCounts" },
-                                as: "e",
-                                in: "$$e.k",
-                              },
-                            },
-                            {
-                              $map: {
-                                input: {
-                                  $objectToArray: "$$new.userGroupCounts",
+                    $cond: {
+                      if: {
+                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
+                      },
+                      then: "$userGroupCounts",
+                      else: {
+                        $arrayToObject: {
+                          $map: {
+                            input: {
+                              $setUnion: [
+                                {
+                                  $map: {
+                                    input: {
+                                      $objectToArray: "$userGroupCounts",
+                                    },
+                                    as: "e",
+                                    in: "$$e.k",
+                                  },
                                 },
-                                as: "e",
-                                in: "$$e.k",
+                                {
+                                  $map: {
+                                    input: {
+                                      $objectToArray: "$$new.userGroupCounts",
+                                    },
+                                    as: "e",
+                                    in: "$$e.k",
+                                  },
+                                },
+                              ],
+                            },
+                            as: "group",
+                            in: {
+                              k: "$$group",
+                              v: {
+                                $add: [
+                                  {
+                                    $ifNull: [
+                                      {
+                                        $getField: {
+                                          field: "$$group",
+                                          input: "$userGroupCounts",
+                                        },
+                                      },
+                                      0,
+                                    ],
+                                  },
+                                  {
+                                    $ifNull: [
+                                      {
+                                        $getField: {
+                                          field: "$$group",
+                                          input: "$$new.userGroupCounts",
+                                        },
+                                      },
+                                      0,
+                                    ],
+                                  },
+                                ],
                               },
                             },
-                          ],
-                        },
-                        as: "group",
-                        in: {
-                          k: "$$group",
-                          v: {
-                            $add: [
-                              {
-                                $ifNull: [
-                                  {
-                                    $getField: {
-                                      field: "$$group",
-                                      input: "$userGroupCounts",
-                                    },
-                                  },
-                                  0,
-                                ],
-                              },
-                              {
-                                $ifNull: [
-                                  {
-                                    $getField: {
-                                      field: "$$group",
-                                      input: "$$new.userGroupCounts",
-                                    },
-                                  },
-                                  0,
-                                ],
-                              },
-                            ],
                           },
                         },
                       },
                     },
                   },
-
-                  // Any source being published makes the key published
-                  isPublished: { $or: ["$isPublished", "$$new.isPublished"] },
 
                   // Add incoming dataset count to existing
                   usageCount: { $add: ["$usageCount", "$$new.usageCount"] },
@@ -213,7 +237,6 @@ function buildPipeline(sourceType) {
 
 module.exports = {
   async up(db) {
-    const BATCH_SIZE = 10000;
     const start = Date.now();
     const elapsed = () => `${((Date.now() - start) / 1000).toFixed(1)}s`;
 
