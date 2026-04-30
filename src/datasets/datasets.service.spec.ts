@@ -178,11 +178,11 @@ describe("DatasetsService", () => {
     ).toBe("Already Encoded");
   });
 
-  it("should throw NotFoundException if no document is found for update and no unmodifiedSince is provided", async () => {
+  it("should throw NotFoundException if no document is found", async () => {
     const updateDto = { datasetName: "Updated Name" };
-    model.findOneAndUpdate = jest
+    model.findOne = jest
       .fn()
-      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
     await expect(
       service.findByIdAndUpdate("testId", updateDto),
     ).rejects.toThrow(NotFoundException);
@@ -191,6 +191,9 @@ describe("DatasetsService", () => {
   it("should throw PreconditionedFailed if no patched dataset is returned (indicating a concurrent modification)", async () => {
     const updateDto = { datasetName: "Updated Name" };
     const unmodifiedSince = new Date("2021-11-11T12:29:02.083Z");
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockDataset) });
     model.findOneAndUpdate = jest
       .fn()
       .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
