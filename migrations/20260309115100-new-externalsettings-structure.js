@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 module.exports = {
   async up(db, client) {
     await db.collection("UserSetting").updateMany(
@@ -12,5 +11,8 @@ module.exports = {
     );
 
     console.log("Successfully migrated UserSetting structure");
+  },
+  async down(db, client) {
+    // no path backward
   },
 };
