@@ -265,7 +265,7 @@ module.exports = {
           .aggregate(
             [
               { $match: { _id: { $in: batchIds } } },
-              ...buildPipeline(collection).slice(1),
+              ...buildPipeline(collection),
             ],
             { allowDiskUse: true, maxTimeMS: 0 },
           )
