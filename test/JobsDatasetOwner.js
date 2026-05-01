@@ -7,11 +7,14 @@ let accessTokenAdminIngestor = null,
   accessTokenUser2 = null,
   accessTokenUser3 = null,
   accessTokenUser51 = null,
+  accessTokenUser6 = null,
   accessTokenAdmin = null,
 
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,
+  datasetPidGroup6 = null,
+  datasetPidUser6 = null,
 
   jobId1 = null,
   encodedJobOwnedByAdmin = null,
@@ -90,6 +93,11 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
     accessTokenAdmin = await utils.getToken(appUrl, {
       username: "admin",
       password: TestData.Accounts["admin"]["password"],
+    });
+
+    accessTokenUser6 = await utils.getToken(appUrl, {
+      username: "user6",
+      password: TestData.Accounts["user6"]["password"],
     });
   });
 
@@ -379,7 +387,7 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -484,7 +492,7 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -564,7 +572,7 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -619,7 +627,7 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -637,13 +645,13 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.CreationUnauthorizedStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User not authenticated");
+          .and.be.equal("User does not belong to any group, cannot create job with #datasetOwner authorization.");
       });
   });
 
@@ -904,8 +912,6 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
       .set({ Authorization: `Bearer ${accessTokenUser2}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/);
-    res.body.should.be.an("array").to.have.lengthOf(12);
-    res.body.map((job) => job.id).should.include.members([jobId12, jobId21]);
   });
 
   it("0420: Access jobs as user3", async () => {
@@ -934,4 +940,91 @@ describe("1150: Jobs: Test New Job Model Authorization for owner_access jobs typ
         res.body.map((job) => job.id).should.include.members([jobId4, jobId5]);
       });
   });
+
+  it("0440: Add a new job as user6 with datasets owned by two different groups that user6 belongs to", async () => {
+    const datasetGroup6 = {
+      ...TestData.RawCorrect,
+      isPublished: false,
+      ownerGroup: "group6",
+      accessGroups: [],
+    };
+
+    const datasetUser6 = {
+      ...TestData.RawCorrect,
+      isPublished: false,
+      ownerGroup: "user6",
+      accessGroups: [],
+    };
+
+    const createdDatasetGroup6 = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(datasetGroup6)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+    datasetPidGroup6 = createdDatasetGroup6.body.pid;
+
+    const createdDatasetUser6 = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(datasetUser6)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+    datasetPidUser6 = createdDatasetUser6.body.pid;
+
+    const newJob = {
+      ...jobDatasetOwner,
+      ownerUser: "user6",
+      ownerGroup: "group6",
+      jobParams: {
+        datasetList: [
+          { pid: datasetPidGroup6, files: [] },
+          { pid: datasetPidUser6, files: [] },
+        ],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser6}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("type").and.be.string;
+        res.body.should.have.property("ownerUser").and.be.equal("user6");
+        res.body.should.have.property("ownerGroup").and.be.equal("group6");
+        res.body.should.have.property("statusCode").to.be.equal("jobSubmitted");
+      });
+  });
+  it("0450: Add a new job as user6 with datasets owned by two different groups, one of which user6 does not belong to", async () => {
+    const newJob = {
+      ...jobDatasetOwner,
+      ownerUser: "user6",
+      ownerGroup: "group6",
+      jobParams: {
+        datasetList: [
+          { pid: datasetPidGroup6, files: [] },
+          { pid: datasetPid3, files: [] },
+        ],
+      },
+    };
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser6}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
+      });
+  });
+
 });

@@ -3,6 +3,7 @@ const { faker } = require("@faker-js/faker");
 const _ = require("lodash");
 
 const RawTestAccounts = require("../test/config/functionalAccounts.json");
+const { UnprocessableEntityException } = require("@nestjs/common");
 const TestAccounts = Object.fromEntries(
   RawTestAccounts.map((account) => [account.username, account]),
 );
@@ -29,6 +30,7 @@ const TestData = {
   CreationUnauthorizedStatusCode: 401,
   ConflictStatusCode: 409,
   PreconditionFailedStatusCode: 412,
+  UnprocessableEntityStatusCode: 422,
   FailedDependencyStatusCode: 424,
   ApplicationErrorStatusCode: 500,
   LoginSuccessfulStatusCode: 201,
