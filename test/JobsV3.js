@@ -1195,7 +1195,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -1477,7 +1477,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         .send(newJob)
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${accessTokenUser51}` })
-        .expect(TestData.BadRequestStatusCode)
+        .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/)
     } finally {
       await db.collection("UserIdentity").deleteOne({ _id: userIdentity2.insertedId })
