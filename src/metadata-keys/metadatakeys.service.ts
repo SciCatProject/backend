@@ -28,6 +28,14 @@ export type MetadataSourceDoc = {
 const RECOMPUTE_USER_GROUPS_STAGE = [
   {
     $set: {
+      userGroupCounts: {
+        $arrayToObject: {
+          $filter: {
+            input: { $objectToArray: "$userGroupCounts" },
+            cond: { $gt: ["$$this.v", 0] },
+          },
+        },
+      },
       userGroups: {
         $map: {
           input: {
@@ -110,39 +118,28 @@ export class MetadataKeysService {
     const ops = Object.entries(metadata).map(([key, entry]) => {
       const humanReadableName =
         (entry as ScientificMetadataEntry).human_name ?? "";
-      const id = this.buildId(sourceType, key, humanReadableName);
 
-      return {
-        updateOne: {
-          filter: { _id: id },
-          update: {
-            $setOnInsert: addCreatedByFields(
-              {
-                _id: id as unknown as MetadataKeyDocument["_id"],
-                id,
-                key,
-                sourceType,
-                humanReadableName,
-              },
-              "system",
-            ),
-            $set: {
-              // Only ever set to true inline. The false case is handled
-              // by the reconciliation cronjob since it transitions rarely.
-              ...(isPublished && { isPublished: true }),
-            },
-            $addToSet: { userGroups: { $each: userGroups } },
-            $inc: {
-              usageCount: 1,
-              ...this.groupCountDeltas(userGroups, 1),
-            },
+      return this.metadataKeyModel.findOneAndUpdate(
+        { sourceType, key, humanReadableName },
+        {
+          $setOnInsert: addCreatedByFields(
+            { key, sourceType, humanReadableName },
+            "system",
+          ),
+          $set: {
+            ...(isPublished && { isPublished: true }),
           },
-          upsert: true,
+          $addToSet: { userGroups: { $each: userGroups } },
+          $inc: {
+            usageCount: 1,
+            ...this.groupCountDeltas(userGroups, 1),
+          },
         },
-      };
+        { upsert: true },
+      );
     });
 
-    await this.metadataKeyModel.bulkWrite(ops);
+    await Promise.all(ops);
 
     Logger.log(
       `Upserted MetadataKeys for ${sourceType}: ${Object.keys(metadata).join(", ")}`,
@@ -158,34 +155,34 @@ export class MetadataKeysService {
    *      (drops any group whose count reached zero)
    *   3. Delete entries no longer referenced by any dataset
    *
-   * usageCount is the authoritative deletion signal because a dataset
-   * with no userGroups and isPublished: false would be invisible to
-   * both userGroupCounts and isPublished checks.
+
    */
   async deleteMany(doc: MetadataSourceDoc): Promise<void> {
     if (isEmpty(doc.metadata)) return;
 
     const { sourceType, userGroups, metadata } = doc;
     const keys = Object.keys(metadata);
-    const ids = keys.map((key) => {
+    const filters = keys.map((key) => {
       const humanReadableName =
         (metadata[key] as ScientificMetadataEntry)?.human_name ?? "";
-      return this.buildId(sourceType, key, humanReadableName);
+      return this.buildFilter(sourceType, key, humanReadableName);
     });
-    const filter = { _id: { $in: ids } };
+    const queryFilter = { $or: filters };
 
-    await this.metadataKeyModel.updateMany(filter, {
+    await this.metadataKeyModel.updateMany(queryFilter, {
       $inc: {
         usageCount: -1,
         ...this.groupCountDeltas(userGroups, -1),
       },
     });
 
-    await this.metadataKeyModel.updateMany(filter, RECOMPUTE_USER_GROUPS_STAGE);
+    await this.metadataKeyModel.updateMany(
+      queryFilter,
+      RECOMPUTE_USER_GROUPS_STAGE,
+    );
 
     await this.metadataKeyModel.deleteMany({
-      ...filter,
-      usageCount: { $lte: 0 },
+      $and: [queryFilter, { usageCount: { $lte: 0 } }],
     });
 
     Logger.log(
@@ -236,12 +233,12 @@ export class MetadataKeysService {
     ]);
   }
 
-  private buildId(
+  private buildFilter(
     sourceType: string,
     key: string,
     humanReadableName: string,
-  ): string {
-    return `${sourceType}_${key}_${humanReadableName}`;
+  ): FilterQuery<MetadataKeyDocument> {
+    return { sourceType, key, humanReadableName };
   }
 
   /**
@@ -307,14 +304,15 @@ export class MetadataKeysService {
       humanNameUnchangedKeys.length > 0 &&
       (hasGroupChanges || publishedFlippedOn)
     ) {
-      const ids = humanNameUnchangedKeys.map((k) => {
+      const filters = humanNameUnchangedKeys.map((k) => {
         const humanReadableName =
           (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-        return this.buildId(sourceType, k, humanReadableName);
+        return this.buildFilter(sourceType, k, humanReadableName);
       });
-      const filter = { _id: { $in: ids } };
 
-      await this.metadataKeyModel.updateMany(filter, {
+      const queryFilter = { $or: filters };
+
+      await this.metadataKeyModel.updateMany(queryFilter, {
         ...(addedGroups.length > 0 && {
           $addToSet: { userGroups: { $each: addedGroups } },
         }),
@@ -329,7 +327,7 @@ export class MetadataKeysService {
       // Recompute userGroups to drop groups whose count reached zero
       if (removedGroups.length > 0) {
         await this.metadataKeyModel.updateMany(
-          filter,
+          queryFilter,
           RECOMPUTE_USER_GROUPS_STAGE,
         );
       }

@@ -7,7 +7,7 @@ const modelMock = {
   aggregate: jest
     .fn()
     .mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
-  bulkWrite: jest.fn().mockResolvedValue({}),
+  findOneAndUpdate: jest.fn().mockResolvedValue({}),
   updateMany: jest.fn().mockResolvedValue({}),
   deleteMany: jest.fn().mockResolvedValue({}),
 };
@@ -122,88 +122,70 @@ describe("MetadataKeysService", () => {
     it("does nothing when metadata is empty", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, metadata: {} });
 
-      expect(modelMock.bulkWrite).not.toHaveBeenCalled();
+      expect(modelMock.findOneAndUpdate).not.toHaveBeenCalled();
     });
 
-    it("calls bulkWrite with one updateOne per metadata key", async () => {
+    it("calls findOneAndUpdate once per metadata key", async () => {
       await service.insertManyFromSource(BASE_DOC);
-
-      expect(modelMock.bulkWrite).toHaveBeenCalledTimes(1);
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      expect(ops).toHaveLength(2);
-      expect(ops.every((op: object) => "updateOne" in op)).toBe(true);
+      expect(modelMock.findOneAndUpdate).toHaveBeenCalledTimes(2);
     });
 
-    it("builds correct _id from sourceType + key + humanReadableName", async () => {
+    it("builds correct filter from sourceType + key + humanReadableName", async () => {
       await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      const ids = ops.map(
-        (op: { updateOne: { filter: { _id: string } } }) =>
-          op.updateOne.filter._id,
-      );
-
-      expect(ids).toContain("Dataset_temperature_Temperature");
-      expect(ids).toContain("Dataset_pressure_"); // no human_name
-    });
-
-    it("sets upsert: true on every operation", async () => {
-      await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      expect(
-        ops.every(
-          (op: { updateOne: { upsert: boolean } }) =>
-            op.updateOne.upsert === true,
-        ),
-      ).toBe(true);
+      const calls = modelMock.findOneAndUpdate.mock.calls;
+      const filters = calls.map((call: unknown[]) => call[0]);
+      expect(filters).toContainEqual({
+        sourceType: "Dataset",
+        key: "temperature",
+        humanReadableName: "Temperature",
+      });
+      expect(filters).toContainEqual({
+        sourceType: "Dataset",
+        key: "pressure",
+        humanReadableName: "",
+      });
     });
 
     it("increments usageCount and per-group counts", async () => {
       await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      const { $inc } = ops[0].updateOne.update;
-
-      expect($inc.usageCount).toBe(1);
-      expect($inc["userGroupCounts.group-1"]).toBe(1);
-      expect($inc["userGroupCounts.group-2"]).toBe(1);
+      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(update.$inc.usageCount).toBe(1);
+      expect(update.$inc["userGroupCounts.group-1"]).toBe(1);
+      expect(update.$inc["userGroupCounts.group-2"]).toBe(1);
     });
 
     it("adds userGroups via $addToSet", async () => {
       await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      const { $addToSet } = ops[0].updateOne.update;
-
-      expect($addToSet.userGroups.$each).toEqual(["group-1", "group-2"]);
+      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(update.$addToSet.userGroups.$each).toEqual(["group-1", "group-2"]);
     });
 
     it("sets isPublished when dataset is published", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, isPublished: true });
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      expect(ops[0].updateOne.update.$set.isPublished).toBe(true);
+      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(update.$set.isPublished).toBe(true);
     });
 
     it("does not set isPublished when dataset is not published", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, isPublished: false });
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      expect(ops[0].updateOne.update.$set.isPublished).toBeUndefined();
+      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(update.$set.isPublished).toBeUndefined();
     });
 
     it("uses $setOnInsert for immutable fields", async () => {
       await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      const { $setOnInsert } = ops[0].updateOne.update;
-
-      expect($setOnInsert).toMatchObject({
+      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(update.$setOnInsert).toMatchObject({
         key: expect.any(String),
         sourceType: "Dataset",
         humanReadableName: expect.any(String),
       });
+    });
+
+    it("sets upsert: true", async () => {
+      await service.insertManyFromSource(BASE_DOC);
+      const [, , options] = modelMock.findOneAndUpdate.mock.calls[0];
+      expect(options.upsert).toBe(true);
     });
   });
 
@@ -244,19 +226,27 @@ describe("MetadataKeysService", () => {
       expect(firstUpdate.$inc["userGroupCounts.group-2"]).toBe(-1);
     });
 
-    it("targets correct _ids based on metadata keys and humanReadableName", async () => {
+    it("targets correct filter based on metadata keys and humanReadableName", async () => {
       await service.deleteMany(BASE_DOC);
 
       const [firstFilter] = modelMock.updateMany.mock.calls[0];
-      expect(firstFilter._id.$in).toContain("Dataset_temperature_Temperature");
-      expect(firstFilter._id.$in).toContain("Dataset_pressure_");
+      expect(firstFilter.$or).toContainEqual({
+        sourceType: "Dataset",
+        key: "temperature",
+        humanReadableName: "Temperature",
+      });
+      expect(firstFilter.$or).toContainEqual({
+        sourceType: "Dataset",
+        key: "pressure",
+        humanReadableName: "",
+      });
     });
 
     it("deletes documents where usageCount <= 0", async () => {
       await service.deleteMany(BASE_DOC);
 
       const [deleteFilter] = modelMock.deleteMany.mock.calls[0];
-      expect(deleteFilter.usageCount).toEqual({ $lte: 0 });
+      expect(deleteFilter.$and[1].usageCount).toEqual({ $lte: 0 });
     });
 
     it("recompute stage uses $set with $objectToArray on userGroupCounts", async () => {
