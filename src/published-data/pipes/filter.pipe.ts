@@ -18,7 +18,7 @@ class AppendFieldsToFilterPipe implements PipeTransform {
     const filter = value.filter ?? {};
 
     if ("text" in value.fields) {
-      const search = value.fields.text;
+      const search = String(value.fields.text ?? "").trim();
       delete value.fields.text;
       (value.fields as FilterQuery<PublishedDataDocument>).$text = {
         $search: search,
