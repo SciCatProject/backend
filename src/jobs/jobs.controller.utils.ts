@@ -43,6 +43,8 @@ import {
 import { toObject } from "src/config/job-config/actions/actionutils";
 import { loadDatasets } from "src/config/job-config/actions/actionutils";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { validate } from "class-validator";
+import { plainToInstance } from "class-transformer";
 
 @Injectable()
 export class JobsControllerUtils {
@@ -81,63 +83,30 @@ export class JobsControllerUtils {
       JobParams.DatasetList
     ] as Array<DatasetListDto>;
     // check that datasetList is a non empty array
-    if (!Array.isArray(datasetList)) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: "Invalid dataset list",
-        },
-        HttpStatus.BAD_REQUEST,
+    if (!Array.isArray(datasetList))
+      throw new UnprocessableEntityException("Invalid dataset list");
+    if (datasetList.length == 0)
+      throw new UnprocessableEntityException(
+        "List of passed datasets is empty.",
       );
-    }
-    if (datasetList.length == 0) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: "List of passed datasets is empty.",
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     // check that datasetList is of type DatasetListDto[]
-    const datasetListDtos: DatasetListDto[] = datasetList.map((item) => {
-      return Object.assign(new DatasetListDto(), item);
-    });
-    const allowedKeys = [JobParams.Pid, JobParams.Files] as string[];
-    for (const datasetListDto of datasetListDtos) {
-      const keys = Object.keys(datasetListDto);
-      if (
-        keys.length !== 2 ||
-        !keys.every((key) => allowedKeys.includes(key))
-      ) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message:
-              "Dataset list is expected to contain sets of pid and files.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (typeof datasetListDto[JobParams.Pid] !== "string") {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "In datasetList each 'pid' field should be a string.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (!Array.isArray(datasetListDto[JobParams.Files])) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "In datasetList each 'files' field should be an array.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+    const datasetListDtos: DatasetListDto[] = plainToInstance(
+      DatasetListDto,
+      datasetList,
+    );
+    const nestedErrors = await Promise.all(
+      datasetListDtos.map((dto) => validate(dto)),
+    );
+    const validateErrors = nestedErrors.flat();
+    if (validateErrors.length > 0) {
+      const minimalErrors = validateErrors.map(({ property, constraints }) => ({
+        property,
+        constraints,
+      }));
+      throw new UnprocessableEntityException(
+        "Invalid dataset list. " + JSON.stringify(minimalErrors),
+      );
     }
 
     // check that all requested pids exist
@@ -152,33 +121,22 @@ export class JobsControllerUtils {
    * Check that the dataset pids are valid
    */
   async checkDatasetPids(datasetList: DatasetListDto[]): Promise<void> {
-    interface condition {
-      where: {
-        pid: { $in: string[] };
-      };
-    }
-
     const datasetIds = datasetList.map((x) => x.pid);
-    const filter: condition = {
+    const filter: FilterQuery<DatasetClass> = {
       where: {
         pid: { $in: datasetIds },
       },
+      fields: ["pid"],
     };
 
-    const findDatasetsById = await this.datasetsService.findAll(filter);
-    const findIds = findDatasetsById.map(({ pid }) => pid);
-    const nonExistIds = datasetIds.filter((x) => !findIds.includes(x));
+    const datasets = await this.datasetsService.findAll(filter);
+    const findIds = new Set(datasets.map(({ pid }) => pid));
+    const nonExistIds = datasetIds.filter((x) => !findIds.has(x));
 
-    if (nonExistIds.length != 0) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: `Datasets with pid ${nonExistIds} do not exist.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return;
+    if (nonExistIds.length == 0) return;
+    throw new UnprocessableEntityException(
+      `Datasets with pid ${nonExistIds} do not exist.`,
+    );
   }
 
   /**
@@ -187,74 +145,36 @@ export class JobsControllerUtils {
   async checkDatasetFiles(datasetList: DatasetListDto[]): Promise<void> {
     const datasetsToCheck = datasetList.filter((x) => x.files.length > 0);
     const ids = datasetsToCheck.map((x) => x.pid);
-    if (ids.length > 0) {
-      const filter = {
-        fields: {
-          pid: true,
-          datasetId: true,
-          dataFileList: true,
-        },
-        where: {
-          pid: {
-            $in: ids,
-          },
-        },
-      };
-      // Indexing originDataBlock with pid and create set of files for each dataset
-      const datasets = await this.datasetsService.findAll(filter);
-      // Include origdatablocks
-      let datasetOrigDatablocks: OrigDatablock[] = [];
-      await Promise.all(
-        datasets.map(async (dataset) => {
-          datasetOrigDatablocks = await this.origDatablocksService.findAll({
-            where: { datasetId: dataset.pid },
-          });
-        }),
-      );
-      const result: Record<string, Set<string>> = datasets.reduce(
-        (acc: Record<string, Set<string>>, dataset) => {
-          // Using Set make searching more efficient
-          const files = datasetOrigDatablocks.reduce((acc, block) => {
-            block.dataFileList.forEach((file) => {
-              acc.add(file.path);
-            });
-            return acc;
-          }, new Set<string>());
-          acc[dataset.pid] = files;
-          return acc;
-        },
-        {},
-      );
-      // Get a list of requested files that were not found
-      const checkResults = datasetsToCheck.reduce(
-        (acc: { pid: string; nonExistFiles: string[] }[], x) => {
-          const pid = x.pid;
-          const referenceFiles = result[pid];
-          const nonExistFiles = x.files.filter((f) => !referenceFiles.has(f));
-          if (nonExistFiles.length > 0) {
-            acc.push({ pid, nonExistFiles });
-          }
-          return acc;
-        },
-        [],
-      );
-      if (checkResults.length > 0) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "At least one requested file could not be found.",
-            error: JSON.stringify(
-              checkResults.map(({ pid, nonExistFiles }) => ({
-                pid,
-                nonExistFiles,
-              })),
-            ),
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    }
-    return;
+    if (ids.length == 0) return;
+    // Indexing originDataBlock with pid and create set of files for each dataset
+    const datasetOrigDatablocks: OrigDatablock[] =
+      await this.origDatablocksService.findAll({
+        where: { datasetId: { $in: ids } },
+        fields: ["datasetId", "dataFileList.path"],
+      });
+
+    const origsMappedByDatasetId = datasetOrigDatablocks.reduce(
+      (acc, orig) => {
+        const set = (acc[orig.datasetId] ??= new Set<string>());
+        orig.dataFileList.forEach((file) => set.add(file.path));
+        return acc;
+      },
+      {} as Record<string, Set<string>>,
+    );
+    // Get a list of requested files that were not found
+    const checkResults = datasetsToCheck
+      .map(({ pid, files }) => {
+        const referenceFiles = origsMappedByDatasetId[pid] ?? new Set<string>();
+        const nonExistFiles = files.filter((f) => !referenceFiles.has(f));
+        return { pid, nonExistFiles };
+      })
+      .filter((result) => result.nonExistFiles.length > 0);
+
+    if (checkResults.length == 0) return;
+    throw new UnprocessableEntityException({
+      message: "At least one requested file could not be found.",
+      error: JSON.stringify(checkResults),
+    });
   }
 
   /**
