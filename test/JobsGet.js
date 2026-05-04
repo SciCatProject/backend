@@ -741,4 +741,134 @@ describe("1165: Jobs test filters and access", () => {
         j3.datasetDetails.should.be.an("array").to.have.lengthOf(3);
       });
   });
+
+  it("0120: Create job with a datasetList item missing pid should return 422 and validation error", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [{ files: [] }],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+      });
+  });
+
+  it("0130: Create job with a datasetList item with empty pid should return 422 and validation error", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [{ pid: "", files: [] }],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+      });
+  });
+
+  it("0140: Create job with a datasetList item with non-string pid should return 422 and validation error", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [{ pid: 12345, files: [] }],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+      });
+  });
+
+  it("0150: Create job with a datasetList item with non-array files should return 422 and validation error", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [{ pid: datasetPid1, files: "not-an-array" }],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+      });
+  });
+
+  it("0160: Create job with a datasetList item with non-string entries in files array should return 422 and validation error", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [{ pid: datasetPid1, files: [123, 456] }],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+      });
+  });
+
+  it("0170: Create job with multiple datasetList items where one has an invalid pid should return 422 and validation error listing the failing property", async () => {
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send({
+        type: "dataset_access",
+        ownerUser: "admin",
+        ownerGroup: "admin",
+        jobParams: {
+          datasetList: [
+            { pid: datasetPid1, files: [] },
+            { pid: "", files: [] },
+          ],
+        },
+      })
+      .set("Accept", "application/json")
+      .auth(accessTokenAdmin, { type: "bearer" })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message");
+        res.body.message.should.contain("Invalid dataset list.");
+        res.body.message.should.contain("pid");
+      });
+  });
 });
