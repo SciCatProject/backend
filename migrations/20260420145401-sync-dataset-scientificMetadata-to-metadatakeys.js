@@ -1,6 +1,5 @@
 const SOURCE_COLLECTIONS = ["Dataset"];
 const BATCH_SIZE = 10000;
-const MAX_USER_GROUPS_PER_METADATA_KEY = 1000;
 
 function buildPipeline(sourceType) {
   return [
@@ -87,12 +86,26 @@ function buildPipeline(sourceType) {
       },
     },
 
+    {
+      $addFields: {
+        metaKeyId: "$_id", // metaKeyId is needed for the $merge stage for deduplication, but will be removed in the final updateMany
+        generatedId: {
+          $function: {
+            body: "function() { return UUID().toString().replace('UUID(\"', '').replace('\")', ''); }",
+            args: [],
+            lang: "js",
+          },
+        },
+      },
+    },
+
     // Stage 8: Final projection.
     // userGroupCounts: [{k,v}] array → plain object (stored as Map in Mongoose).
     // usageCount: union all per-group datasetId sets, count distinct IDs.
     {
       $project: {
-        _id: 1,
+        _id: "$generatedId",
+        metaKeyId: 1,
         key: 1,
         sourceType: { $literal: sourceType },
         humanReadableName: 1,
@@ -120,7 +133,7 @@ function buildPipeline(sourceType) {
     {
       $merge: {
         into: "MetadataKeys",
-        on: "_id",
+        on: "metaKeyId",
         whenMatched: [
           {
             $replaceWith: {
@@ -128,94 +141,71 @@ function buildPipeline(sourceType) {
                 "$$new",
                 {
                   // Preserve original audit fields
+                  _id: "$_id",
                   createdAt: { $ifNull: ["$createdAt", "$$new.createdAt"] },
                   createdBy: { $ifNull: ["$createdBy", "$$new.createdBy"] },
                   updatedBy: { $literal: "migration" },
                   updatedAt: { $toDate: "$$NOW" },
-
-                  isPublished: {
-                    $cond: {
-                      if: {
-                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
-                      },
-                      then: true,
-                      else: { $or: ["$isPublished", "$$new.isPublished"] },
-                    },
-                  },
-
+                  isPublished: { $or: ["$isPublished", "$$new.isPublished"] },
                   userGroups: {
-                    $cond: {
-                      if: {
-                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
-                      },
-                      then: "$userGroups",
-                      else: { $setUnion: ["$userGroups", "$$new.userGroups"] },
-                    },
+                    $setUnion: ["$userGroups", "$$new.userGroups"],
                   },
 
                   // Additively merge userGroupCounts — sum counts per group
                   // across both the existing and incoming documents.
                   userGroupCounts: {
-                    $cond: {
-                      if: {
-                        $gt: ["$usageCount", MAX_USER_GROUPS_PER_METADATA_KEY],
-                      },
-                      then: "$userGroupCounts",
-                      else: {
-                        $arrayToObject: {
-                          $map: {
-                            input: {
-                              $setUnion: [
-                                {
-                                  $map: {
-                                    input: {
-                                      $objectToArray: "$userGroupCounts",
-                                    },
-                                    as: "e",
-                                    in: "$$e.k",
-                                  },
+                    $arrayToObject: {
+                      $map: {
+                        input: {
+                          $setUnion: [
+                            {
+                              $map: {
+                                input: {
+                                  $objectToArray: "$userGroupCounts",
                                 },
-                                {
-                                  $map: {
-                                    input: {
-                                      $objectToArray: "$$new.userGroupCounts",
-                                    },
-                                    as: "e",
-                                    in: "$$e.k",
-                                  },
-                                },
-                              ],
-                            },
-                            as: "group",
-                            in: {
-                              k: "$$group",
-                              v: {
-                                $add: [
-                                  {
-                                    $ifNull: [
-                                      {
-                                        $getField: {
-                                          field: "$$group",
-                                          input: "$userGroupCounts",
-                                        },
-                                      },
-                                      0,
-                                    ],
-                                  },
-                                  {
-                                    $ifNull: [
-                                      {
-                                        $getField: {
-                                          field: "$$group",
-                                          input: "$$new.userGroupCounts",
-                                        },
-                                      },
-                                      0,
-                                    ],
-                                  },
-                                ],
+                                as: "e",
+                                in: "$$e.k",
                               },
                             },
+                            {
+                              $map: {
+                                input: {
+                                  $objectToArray: "$$new.userGroupCounts",
+                                },
+                                as: "e",
+                                in: "$$e.k",
+                              },
+                            },
+                          ],
+                        },
+                        as: "group",
+                        in: {
+                          k: "$$group",
+                          v: {
+                            $add: [
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: "$$group",
+                                      input: "$userGroupCounts",
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: "$$group",
+                                      input: "$$new.userGroupCounts",
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
+                            ],
                           },
                         },
                       },
@@ -242,6 +232,11 @@ module.exports = {
 
     // Wipe MetadataKeys collection first to ensure a clean state
     const deleted = await db.collection("MetadataKeys").deleteMany({});
+
+    await db
+      .collection("MetadataKeys")
+      .createIndex({ metaKeyId: 1 }, { unique: true });
+
     console.log(
       `[${elapsed()}] Cleared ${deleted.deletedCount} existing MetadataKeys`,
     );
@@ -304,6 +299,11 @@ module.exports = {
 
       console.log(`[${elapsed()}] ✅ ${collection} done`);
     }
+
+    await db.collection("MetadataKeys").dropIndex("metaKeyId_1");
+    await db
+      .collection("MetadataKeys")
+      .updateMany({}, [{ $set: { id: "$_id" } }, { $unset: ["metaKeyId"] }]);
 
     const result = await db.collection("MetadataKeys").countDocuments();
     console.log(
