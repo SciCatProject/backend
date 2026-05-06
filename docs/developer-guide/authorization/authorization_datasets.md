@@ -30,7 +30,7 @@ How the different levels of authorization translate into data conditions applied
 
 - Public
   - isPublished = true
-- Access (condition ar applied in logical _or_)
+- Access (conditions are applied in logical _or_)
   - isPublished = true
   - ownerGroup is one of the groups that the user belongs
   - accessGroups are one of the groups that the user belongs
