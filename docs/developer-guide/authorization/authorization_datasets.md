@@ -133,7 +133,7 @@ A user can belong to multiple groups listed in multiple special permissions. The
 ## Priorities
 
 This section lists the connected special permissions groups in order of importance.
-A user will acquire the permissions from the special permissions groups to the most right in the list, he/she belongs to.
+A user will acquire the permissions from the special permissions groups up to the rightmost group in the list they belong to.
 
 - Read
   - Anonymous -> Authenticated -> Dataset Read Privileged -> Admin
