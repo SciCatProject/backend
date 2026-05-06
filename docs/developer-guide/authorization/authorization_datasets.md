@@ -48,15 +48,18 @@ How the different level of authorization translates in data condition applied by
 - Read
   - GET Datasets
   - GET Datasets/fullquery
-  - GET Datasets/fullfacet
+  - GET Datasets/fullfacets
   - GET Datasets/metadataKeys
   - GET Datasets/count
   - GET Datasets/findOne
   - GET Datasets/_pid_
+  - GET Datasets/_pid_/datasetlifecycle
+  - GET Datasets/_pid_/logbook
 - Update
   - PATCH Datasets/_pid_
   - PUT Datasets/_pid_
   - POST Datasets/_pid_/appendToArrayField
+  - PATCH Datasets/_pid_/datasetlifecycle
 - Delete
   - DELETE Datasets/_pid_
 
@@ -119,7 +122,7 @@ If a user belongs to one of the groups which is listed to any special permission
 When the cell is empty in the following table, the permissions listed in the standard users table are applied.
 A user can belong to multiple groups listed in multiple special permissions. The union of all the permissions is applied.
 
-| Operation | Endpoint Authorization | Dataset Read Privileged | Dataset Create Basic | Dataset Create Extended | Dataset Create Privileged | Dataset Update Basic | Dataset Update Privileged | Admin | Dataset Delete Basic | Dataset Delete Privilieged | Delete | Notes |
+| Operation | Endpoint Authorization | Dataset Read Privileged | Dataset Create Basic | Dataset Create Extended | Dataset Create Privileged | Dataset Update Basic | Dataset Update Privileged | Admin | Dataset Delete Basic | Dataset Delete Privileged | Delete | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Create | _DatasetCreate_ | | Owner, w/o PID<br/>_DatasetCreateOwnerNoPid_ | Owner, w/ PID<br/>_DatasetCreateOwnerWithPid_ | Any<br/>_DatasetCreateAny_ | | | Any<br/>_DatasetCreateAny_ | | | | |
 | Read | _DatasetRead_ | Any<br/>_DatasetReadAny_ | | | | | Any<br/>_DatasetReadyAny_ | | |
@@ -140,3 +143,29 @@ A user will acquire the permissions from the special permissions groups to the m
   - Anonymous -> Authenticated -> Dataset Update Basic -> Dataset Update Privileged -> Admin
 - Delete
   - Anonymous -> Authenticated -> Dataset Delete Basic -> Dataset Delete Privileged -> Delete
+
+## Environmental Variables
+
+The following list present the environmental variables that should be configured to setup the special groups listed in the previous sections.
+Each variable is a comma separated list of the users' groups that acquired the special permissions linked to the special group.
+
+- DATASET_READ_PRIVILEGED_GROUPS: groups with __Dataset Read Privileged__ permissions
+- DATASET_CREATE_BASIC_GROUPS: groups with __Dataset Create Basic__ permissions
+- DATASET_CREATE_EXTENDED_GROUPS: groups with __Dataset Create Extended__ permissions
+- DATASET_CREATE_PRIVILEGED_GROUPS: groups with __Dataset Create Privileged__ permissions
+- DATASET_UPDATE_BASIC_GROUPS: groups with __Dataset Update Basic__ permissions
+- DATASET_UPDATE_PRIVILEGED_GROUPS: groups with __Dataset Update Privileged__ permissions
+- DATASET_DELETE_BASIC_GROUPS: groups with __Dataset Delete Basic__ permissions
+- DATASET_DELETE_PRIVILEGED_GROUPS: groups with __Dataset Delete Privileged__ permissions
+- ADMIN_GROUPS: groups with __Admin__ permissions. This variable effects all the sub-systems.
+- DELETE_GROUPS: groups with __Delete__ permissions. This variable effects all the sub-systems.
+
+## Legacy
+
+The legacy datasets special permissions environment variables are marked obsolete and will be removed in the future.
+In the meantime, they are mapped to the matching new variable.
+Here is the map:
+
+- Create Dataset Groups ( CREATE_DATASET_GROUP ) -> Dataset Create Basic
+- Create Dataset with PID Group ( CREATE_DATASET_WITH_PID_GROUP ) -> Dataset Create Extended
+- Create Dataset Privileged ( CREATE_DATASET_PRIVIELEGED_GROUP ) -> Dataset Create Privileged
