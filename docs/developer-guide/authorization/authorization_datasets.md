@@ -26,7 +26,7 @@ This is the list of the permissions methods available for datasets and all their
 
 ### Implementation
 
-How the different level of authorization translates in data condition applied by the backend.
+How the different levels of authorization translate into data conditions applied by the backend.
 
 - Public
   - isPublished = true
