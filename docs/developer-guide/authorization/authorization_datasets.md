@@ -1,17 +1,15 @@
 # Datasets Authorization
 
-## CASL ability actions
+This is the list of the permissions available for datasets and all their endpoints
 
-This is the list of the permissions methods available for datasets and all their endpoints
-
-### Endpoint authorization
+## Endpoint authorization
 
 - DatasetCreate
 - DatasetRead
 - DatasetUpdate
 - DatasetDelete
 
-### Instance authorization
+## Instance authorization
 
 - DatasetCreateOwnerNoPid
 - DatasetCreateOwnerWithPid
@@ -24,7 +22,7 @@ This is the list of the permissions methods available for datasets and all their
 - DetasetDeleteOwner
 - DatasetDeleteAny
 
-### Implementation
+## Implementation
 
 How the different level of authorization translates in data condition applied by the backend.
 
@@ -32,15 +30,15 @@ How the different level of authorization translates in data condition applied by
   - isPublished = true
 - Access (condition ar applied in logical _or_)
   - isPublished = true
-  - ownerGroup is one of the groups that the user belongs
-  - accessGroups are one of the groups that the user belongs
+  - the user belongs to the group listed in the _ownerGroup_ field
+  - the user belongs to one of the groups listed in the _accessGroups_ field
   - _sharedWith contains the user's email_ (obsolete, it will removed)
 - Owner
-  - ownerGroup is one of the groups that the user belongs
+  - the user belongs to the group listed in the _ownerGroup_ field
 - Any
   - User can perform the action to any dataset
 
-### Operation to endpoints map
+## Operation to endpoints map
 
 - Create
   - POST Datasets
@@ -63,7 +61,7 @@ How the different level of authorization translates in data condition applied by
 - Delete
   - DELETE Datasets/_pid_
 
-### Authorization standard users
+## Authorization standard users
 
 | Operation | Endpoint Authorization | Anonymous | Authenticated User | Notes |
 | --------- | ---------------------- | --------- | ------------------ | ----- |
@@ -73,15 +71,15 @@ How the different level of authorization translates in data condition applied by
 | | | | | |
 | DELETE | _DatasetDelete_ | __no__ | __no__ | |
 
-### Special permissions groups
+## Special permissions groups
 
 - Dataset Create Basic (DsCB)  
-  These groups are allowed to create datasets for any of the group they belong to, although they are not allowed to assigned the pid to the new dataset.
+  These groups are allowed to create datasets for any of the groups they belong to, although they are not allowed to assign the pid to the new dataset.
   Default: _#nogroup_  
   Special values:
   - _#all_ : all groups are allowed to create datasets with pid assigned by the system.
 - Dataset Create Extended (DsCE)  
-  These groups are allowed to create datasets for any of the group they belong to, and they can assign the pid to the new dataset.  
+  These groups are allowed to create datasets for any of the groups they belong to, and they can assign the pid to the new dataset.  
   Default: _#nogroup_  
   Special values:
   - _#all_ : all groups are allowed to create datasets with explicit pid.
@@ -100,7 +98,7 @@ How the different level of authorization translates in data condition applied by
   - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
   - _#DsCE_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
 - Dataset Update Privileged (DsUP)  
-  These groups are allowed to update any datasets independently from the ownerhip.  
+  These groups are allowed to update any datasets independently from the ownership.  
   Default: _#nogroup_  
   Special values:
   - _#DsCP_ : all groups listed in _Dataset Create Privileged_ are allowed to update any datasets.
@@ -116,7 +114,7 @@ How the different level of authorization translates in data condition applied by
   Special values:
   - _#DsCP_ : all groups listed in _Dataset Create Privileged_ are allowed to update any datasets.
 
-### Authorization special permissions groups
+## Authorization special permissions groups
 
 If a user belongs to one of the groups which is listed to any special permission, the permissions listed in this table override the standard permissions.  
 When the cell is empty in the following table, the permissions listed in the standard users table are applied.
