@@ -1,4 +1,4 @@
-# Datasets Authoorization
+# Datasets Authorization
 
 ## CASL ability actions
 
