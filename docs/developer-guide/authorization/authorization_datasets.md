@@ -21,7 +21,7 @@ This is the list of the permissions methods available for datasets and all their
 - DatasetReadAny
 - DatasetUpdateOwner
 - DatasetUpdateAny
-- DetasetDeleteOwner
+- DatasetDeleteOwner
 - DatasetDeleteAny
 
 ### Implementation
