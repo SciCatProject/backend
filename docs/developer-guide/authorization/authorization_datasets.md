@@ -118,7 +118,7 @@ How the different levels of authorization translate into data conditions applied
 
 ### Authorization special permissions groups
 
-If a user belongs to one of the groups which is listed to any special permission, the permissions listed in this table override the standard permissions.  
+If a user belongs to one of the groups which is listed in any special permission, the permissions listed in this table override the standard permissions.  
 When the cell is empty in the following table, the permissions listed in the standard users table are applied.
 A user can belong to multiple groups listed in multiple special permissions. The union of all the permissions is applied.
 
