@@ -41,7 +41,7 @@ export class UpdatePublishedDataV4Dto extends OwnableDto {
 
   @ApiProperty({
     type: [String],
-    required: false,
+    required: true,
     description:
       "Array of one or more datasets' persistent identifier values that" +
       " are part of this published data record.",

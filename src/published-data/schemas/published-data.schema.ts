@@ -107,7 +107,7 @@ export class PublishedData extends OwnableClass {
       "Array of one or more datasets' persistent identifier values that" +
       " are part of the published data record.",
   })
-  @Prop({ type: [String], required: false })
+  @Prop({ type: [String], required: true })
   datasetPids: string[];
 
   @ApiProperty({
@@ -118,7 +118,7 @@ export class PublishedData extends OwnableClass {
       " are part of this published data record.",
   })
   @Prop({ type: [String], required: false })
-  proposalIds: string[];
+  proposalIds?: string[];
 
   @ApiProperty({
     type: [String],
@@ -128,7 +128,7 @@ export class PublishedData extends OwnableClass {
       " are part of this published data record.",
   })
   @Prop({ type: [String], required: false })
-  sampleIds: string[];
+  sampleIds?: string[];
 
   @ApiProperty({
     type: Date,
