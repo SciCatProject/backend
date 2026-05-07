@@ -1,4 +1,5 @@
 "use strict";
+const assert = require("node:assert");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 
@@ -350,5 +351,39 @@ describe("2200: Sample: Simple Sample", () => {
         metadata["experiment test"].should.have.property("nested test1");
         metadata["experiment test"].should.have.property("nested.test2");
       });
+  });
+
+  it("0300: should fail one request with HTTP 412 when two requests try to update the same sample", async () => {
+    const res = await request(appUrl)
+      .post("/api/v3/Samples")
+      .send(TestData.SampleCorrect)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+    const id = res.body.sampleId;
+
+    const [res1, res2] = await Promise.all([
+      request(appUrl)
+        .patch(`/api/v3/Samples/${id}`)
+        .send({ description: "Updated description 1" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+      request(appUrl)
+        .patch(`/api/v3/Samples/${id}`)
+        .send({ description: "Updated description 2" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+    ]);
+    assert(
+      [res1.statusCode, res2.statusCode].includes(
+        TestData.SuccessfulPatchStatusCode,
+      ),
+      "Neither PATCH request succeeded",
+    );
+    if (res1.status === TestData.SuccessfulPatchStatusCode) {
+      assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+    } else {
+      assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+    }
   });
 });

@@ -82,3 +82,41 @@ export const dynamicDefaults = new Map([
   ],
 ]);
 ```
+
+# Migration to v5.x
+
+In versions prior to 5.x, the backend automatically populated `PublishedData.metadata.publicationYear` with the current year if it was omitted during creation.
+
+Starting with v5.x, this behavior is no longer automatic and must be explicitly defined in your schema. 
+To simplify this transition, a new dynamic default function (`currentYear`), is available and automatically registered by the backend.
+
+To maintain the legacy behavior, update your configuration to include the `dynamicDefaults` property.
+Before v5.x:
+```json
+{
+  "metadataSchema": {
+    "type": "object",
+    "properties": {
+      ...
+    }
+  }
+}
+```
+After v5.x:
+```json
+{
+  "metadataSchema": {
+    "allOf": [
+      {
+        "dynamicDefaults": { "publicationYear": "currentYear" }
+      },
+      {
+        "type": "object",
+        "properties": {
+        ...
+        }
+      }
+    ]
+  }
+}
+```

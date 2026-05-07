@@ -52,6 +52,9 @@ import {
   IFilters,
   ILimitsFilter,
 } from "src/common/interfaces/common.interface";
+import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
+import { IProposalFilters } from "./interfaces/proposal-relations.interface";
+import { PROPOSAL_LOOKUP_FIELDS } from "./types/proposal-lookup";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidatorOptions } from "class-validator";
 import {
@@ -59,6 +62,7 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
+  parseDate,
   proposalFullFacetExampleFields,
   proposalsFullQueryDescriptionFields,
   proposalsFullQueryExampleFields,
@@ -72,7 +76,6 @@ import {
   ProposalCountFilters,
 } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 
 @ApiBearerAuth()
 @ApiTags("proposals")
@@ -395,12 +398,21 @@ export class ProposalsController {
   })
   async findAll(
     @Req() request: Request,
-    @Query("filters") filters?: string,
+    @Query("filters", new IncludeValidationPipe(PROPOSAL_LOOKUP_FIELDS))
+    filters?: string,
   ): Promise<ProposalClass[]> {
-    const proposalFilters: IFilters<ProposalDocument, IProposalFields> =
-      this.updateFiltersForList(request, JSON.parse(filters ?? "{}"));
+    const { include, ...rest } = JSON.parse(filters ?? "{}");
+    const baseFilters: IFilters<ProposalDocument, IProposalFields> =
+      this.updateFiltersForList(request, rest);
 
-    return this.proposalsService.findAll(proposalFilters);
+    if (include) {
+      const proposalFilters: IProposalFilters<
+        ProposalDocument,
+        IProposalFields
+      > = { ...baseFilters, include };
+      return this.proposalsService.findAllComplete(proposalFilters);
+    }
+    return this.proposalsService.findAll(baseFilters);
   }
 
   // GET /proposals/count
@@ -725,18 +737,17 @@ export class ProposalsController {
     @Headers() headers: Record<string, string>,
     @Body() updateProposalDto: PartialUpdateProposalDto,
   ): Promise<ProposalClass | null> {
-    const proposal = await this.checkPermissionsForProposal(
+    await this.checkPermissionsForProposal(
       request,
       proposalId,
       Action.ProposalsUpdate,
     );
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(proposal.updatedAt, headers["if-unmodified-since"]);
-
-    return this.proposalsService.update(
+    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
+    return this.proposalsService.findOneAndUpdate(
       { proposalId: proposalId },
       updateProposalDto,
+      unmodifiedSince,
     );
   }
 

@@ -28,6 +28,7 @@ const TestData = {
   NotFoundStatusCode: 404,
   CreationUnauthorizedStatusCode: 401,
   ConflictStatusCode: 409,
+  PreconditionFailedStatusCode: 412,
   FailedDependencyStatusCode: 424,
   ApplicationErrorStatusCode: 500,
   LoginSuccessfulStatusCode: 201,
@@ -50,7 +51,7 @@ const TestData = {
     datasetCount: 10,
     jobCount: 25,
     externalSettings: {
-      columns: [
+      fe_dataset_table_columns: [
         {
           name: "select",
           order: 0,
@@ -58,12 +59,12 @@ const TestData = {
           enabled: true,
         },
       ],
-      filters: [
+      fe_dataset_table_filters: [
         {
           LocationFilter: true,
         },
       ],
-      conditions: [
+      fe_dataset_table_conditions: [
         {
           condition: {
             lhs: "test",

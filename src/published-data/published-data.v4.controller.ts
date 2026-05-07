@@ -190,7 +190,7 @@ export class PublishedDataV4Controller {
   ) {
     const jsonFilters: IPublishedDataFilters = filter?.filter ?? {};
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
       request.user as JWTUser,
     );
 

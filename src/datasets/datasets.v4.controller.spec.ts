@@ -7,6 +7,7 @@ import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { HttpModule } from "@nestjs/axios";
 import { PartialUpdateDatasetDto } from "./dto/update-dataset.dto";
 import { Request } from "express";
+import { PreconditionFailedException } from "@nestjs/common";
 
 class DatasetsServiceMock {}
 
@@ -109,7 +110,13 @@ describe("DatasetsController (manual instantiate)", () => {
     expect(result.scientificMetadata.temperature.value).toBe(300);
 
     expect(datasetsService.findOne).toHaveBeenCalledWith({ where: { pid } });
-    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      pid,
+      expect.objectContaining({
+        scientificMetadata: { temperature: { value: 300, unit: "K" } },
+      }),
+      new Date("2026-01-01T00:00:00Z"),
+    );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -140,7 +147,13 @@ describe("DatasetsController (manual instantiate)", () => {
     expect(result.scientificMetadata.temperature.value).toBe(305);
 
     expect(datasetsService.findOne).toHaveBeenCalledWith({ where: { pid } });
-    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      pid,
+      expect.objectContaining({
+        scientificMetadata: { temperature: { value: 305, unit: "K" } },
+      }),
+      undefined,
+    );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -157,7 +170,11 @@ describe("DatasetsController (manual instantiate)", () => {
       },
       user: mockUser,
     } as unknown as Request;
-
+    datasetsService.findByIdAndUpdate.mockImplementation(() => {
+      throw new PreconditionFailedException(
+        "Resource has been modified on server since the date provided in header.",
+      );
+    });
     const promise = controller.findByIdAndUpdate(req, pid, updateDto);
 
     await expect(promise).rejects.toThrow(
@@ -165,7 +182,13 @@ describe("DatasetsController (manual instantiate)", () => {
     );
 
     expect(datasetsService.findOne).toHaveBeenCalledWith({ where: { pid } });
-    expect(datasetsService.findByIdAndUpdate).not.toHaveBeenCalled();
+    expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      pid,
+      expect.objectContaining({
+        scientificMetadata: { temperature: { value: 310, unit: "K" } },
+      }),
+      new Date("2024-12-31T12:00:00Z"),
+    );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
 });

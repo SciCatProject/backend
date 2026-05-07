@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class OwnableDto {
   @ApiProperty({
@@ -8,6 +8,7 @@ export class OwnableDto {
     description: "Name of the group owning this item.",
   })
   @IsString()
+  @IsNotEmpty()
   readonly ownerGroup: string;
 
   @ApiProperty({
