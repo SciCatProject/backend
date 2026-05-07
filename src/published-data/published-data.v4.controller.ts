@@ -101,7 +101,6 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
-    console.log("published data v4 create");
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
