@@ -146,35 +146,9 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
       datasets.every((dataset) => dataset?.isPublished)
     )
       return jobUserCurrentGroups?.[0];
-    if (jobConfigCreateAuth === CreateJobAuth.DatasetOwner && isAdmin)
-      return datasets[0].ownerGroup;
-    const commonGroups = this.buildCommonGroups(datasets, jobUserCurrentGroups);
-    if (commonGroups.length > 0) return commonGroups[0];
-    return undefined;
+    const nonPublishedDatasets = datasets.filter(
+      (dataset) => !dataset?.isPublished,
+    );
+    return nonPublishedDatasets[0].ownerGroup;
   }
-
-  private buildCommonGroups(
-    datasets: DatasetDocument[],
-    jobUserCurrentGroups: string[] | null,
-  ): string[] {
-    const datasetGroups = datasets
-      .filter((dataset) => !dataset.isPublished)
-      .map((dataset) => [
-        ...(dataset?.accessGroups ?? []),
-        dataset?.ownerGroup,
-      ]);
-    const commonGroups = intersection([
-      ...datasetGroups,
-      jobUserCurrentGroups ?? [],
-    ]);
-    return commonGroups;
-  }
-}
-
-function intersection<T>(arrays: T[][]): T[] {
-  if (arrays.length === 0) return [];
-  return arrays.reduce((a, b) => {
-    const setB = new Set(b);
-    return a.filter((x) => setB.has(x));
-  });
 }
