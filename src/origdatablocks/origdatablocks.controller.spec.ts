@@ -22,6 +22,7 @@ class CaslAbilityFactoryMock {}
 describe("OrigDatablocksController", () => {
   let controller: OrigDatablocksController;
   let origDatablocksService: OrigDatablocksServiceMock;
+  let datasetsService: DatasetsServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,10 +38,10 @@ describe("OrigDatablocksController", () => {
     controller = module.get<OrigDatablocksController>(OrigDatablocksController);
     origDatablocksService = module.get<OrigDatablocksService>(
       OrigDatablocksService,
-    );
-
-    // Mock internal methods to isolate the handler under test
-    controller["updateDatasetSizeAndFiles"] = jest.fn();
+    ) as unknown as OrigDatablocksServiceMock;
+    datasetsService = module.get<DatasetsService>(
+      DatasetsService,
+    ) as unknown as DatasetsServiceMock;
   });
 
   it("should be defined", () => {
@@ -57,6 +58,11 @@ describe("OrigDatablocksController", () => {
       updatedAt: new Date(Date.now() - 1000),
       datasetId: "ds1",
     };
+
+    beforeEach(() => {
+      // Isolate the update handler from the side-effect helper
+      controller["updateDatasetSizeAndFiles"] = jest.fn();
+    });
 
     it("should throw NotFoundException if datablock not found before update", async () => {
       origDatablocksService.findOne.mockResolvedValue(null);
@@ -165,61 +171,35 @@ describe("OrigDatablocksController", () => {
   });
 
   describe("updateDatasetSizeAndFiles", () => {
-    let controllerWithRealMethod: OrigDatablocksController;
-    let realOrigDatablocksService: OrigDatablocksServiceMock;
-    let realDatasetsService: DatasetsServiceMock;
-
-    beforeEach(async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        controllers: [OrigDatablocksController],
-        imports: [ConfigModule],
-        providers: [
-          {
-            provide: OrigDatablocksService,
-            useClass: OrigDatablocksServiceMock,
-          },
-          { provide: DatasetsService, useClass: DatasetsServiceMock },
-          { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
-        ],
-      }).compile();
-
-      controllerWithRealMethod = module.get<OrigDatablocksController>(
-        OrigDatablocksController,
-      );
-      realOrigDatablocksService = module.get<OrigDatablocksService>(
-        OrigDatablocksService,
-      ) as unknown as OrigDatablocksServiceMock;
-      realDatasetsService = module.get<DatasetsService>(
-        DatasetsService,
-      ) as unknown as DatasetsServiceMock;
-    });
-
     it("should use aggregateSizeAndFileCount and update the dataset", async () => {
-      realOrigDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+      origDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
         size: 2000,
         numberOfFiles: 5,
       });
 
-      await controllerWithRealMethod["updateDatasetSizeAndFiles"]("testPid");
+      await controller["updateDatasetSizeAndFiles"]("testPid");
 
       expect(
-        realOrigDatablocksService.aggregateSizeAndFileCount,
+        origDatablocksService.aggregateSizeAndFileCount,
       ).toHaveBeenCalledWith("testPid");
-      expect(realDatasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
         "testPid",
-        { size: 2000, numberOfFiles: 5 },
+        {
+          size: 2000,
+          numberOfFiles: 5,
+        },
       );
     });
 
     it("should propagate zero totals when no origdatablocks exist", async () => {
-      realOrigDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+      origDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
         size: 0,
         numberOfFiles: 0,
       });
 
-      await controllerWithRealMethod["updateDatasetSizeAndFiles"]("emptyPid");
+      await controller["updateDatasetSizeAndFiles"]("emptyPid");
 
-      expect(realDatasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
         "emptyPid",
         { size: 0, numberOfFiles: 0 },
       );

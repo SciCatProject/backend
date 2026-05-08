@@ -393,7 +393,9 @@ export class OrigDatablocksService {
           $group: {
             _id: null,
             size: { $sum: "$size" },
-            numberOfFiles: { $sum: { $size: "$dataFileList" } },
+            numberOfFiles: {
+              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
+            },
           },
         },
       ])
