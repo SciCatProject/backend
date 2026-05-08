@@ -125,7 +125,7 @@ A user can belong to multiple groups listed in multiple special permissions. The
 | Create | _DatasetCreate_ | | Owner, w/o PID<br/>_DatasetCreateOwnerNoPid_ | Owner, w/ PID<br/>_DatasetCreateOwnerWithPid_ | Any<br/>_DatasetCreateAny_ | | | Any<br/>_DatasetCreateAny_ | | | | |
 | Read | _DatasetRead_ | Any<br/>_DatasetReadAny_ | | | | | Any<br/>_DatasetReadAny_ | | |
 | Update | _DatasetUpdate_ | | | | | Owner<br/>_DatasetUpdateOwner_ | Any<br/>_DatasetUpdateAny_ | Any<br/>_DatasetUpdateAny_ | | | | |
-| | | | | | | | | |
+| | | | | | | | | | | | | |
 | Delete | _DatasetDelete_ | | | | | | | | Own<br/>_DatasetDeleteOwner_ | Any<br/>_DatasetDeleteAny_ | Any<br/>_DatasetDeleteAny_ | |
 
 ## Priorities
@@ -167,3 +167,110 @@ Here is the map:
 - Create Dataset Groups ( CREATE_DATASET_GROUP ) -> Dataset Create Basic
 - Create Dataset with PID Group ( CREATE_DATASET_WITH_PID_GROUP ) -> Dataset Create Extended
 - Create Dataset Privileged ( CREATE_DATASET_PRIVIELEGED_GROUP ) -> Dataset Create Privileged
+
+## Use cases and configuration examples
+
+This section includes few of the many use cases that the community as come across, found them informative.
+Each use case provides the settings for each special permissions groups in isolation. 
+In a production setup, each special permissions groups will contain a list of multiple group that is the union of each individual case.
+
+### Data ingestion with creation only
+
+#### Description
+
+We need a functional account that allows the ingestion process to create datasets for any group so it can ingest datasets independently from who owns them.  
+
+#### Configuration
+
+##### Accounts
+
+- username: ingestor
+- group: ingestor
+
+##### Special permissions groups
+
+- DATASET_READ_PRIVILEGED_GROUPS = ""
+- DATASET_CREATE_BASIC_GROUPS = ""
+- DATASET_CREATE_EXTENDED_GROUPS = ""
+- DATASET_CREATE_PRIVILEGED_GROUPS = "ingestor"
+- DATASET_UPDATE_BASIC_GROUPS = ""
+- DATASET_UPDATE_PRIVILEGED_GROUPS = ""
+- DATASET_DELETE_BASIC_GROUPS = ""
+- DATASET_DELETE_PRIVILEGED_GROUP = ""
+- ADMIN_GROUPS = ""
+- DELETE_GROUPS = ""
+
+### Data ingestion with creation and update
+
+#### Description
+
+We need a functional account that allows the ingestion process to create and update datasets for any group so it can ingest datasets independently from who owns them and also perform additional updates at a later time.  
+
+#### Configuration
+
+##### Accounts
+
+- username: ingestor
+- group: ingestor
+
+##### Special permissions groups
+
+- DATASET_READ_PRIVILEGED_GROUPS = ""
+- DATASET_CREATE_BASIC_GROUPS = ""
+- DATASET_CREATE_EXTENDED_GROUPS = ""
+- DATASET_CREATE_PRIVILEGED_GROUPS = "ingestor"
+- DATASET_UPDATE_BASIC_GROUPS = ""
+- DATASET_UPDATE_PRIVILEGED_GROUPS = "ingestor"
+- DATASET_DELETE_BASIC_GROUPS = ""
+- DATASET_DELETE_PRIVILEGED_GROUP = ""
+- ADMIN_GROUPS = ""
+- DELETE_GROUPS = ""
+
+### Post Ingestion tasks workflow
+
+#### Description
+
+We need to set up a workflow to run post ingestions task. The process needs to be able to list any dataset that has a specific value in their keywords field independently from the group who owns the dataset. Once the list is retrieved, the process will perform the set tasks (like determining end of embargo period, performing some aggregation or statistic on the data) and save the results back in the dataset as additional scientific metadata.
+
+##### Accounts
+
+- username: post_ingestion_tasks
+- group: post_ingestion_tasks
+
+##### Special permissions groups
+
+- DATASET_READ_PRIVILEGED_GROUPS = "post_ingestion_tasks"
+- DATASET_CREATE_BASIC_GROUPS = ""
+- DATASET_CREATE_EXTENDED_GROUPS = ""
+- DATASET_CREATE_PRIVILEGED_GROUPS = ""
+- DATASET_UPDATE_BASIC_GROUPS = ""
+- DATASET_UPDATE_PRIVILEGED_GROUPS = "post_ingestion_tasks"
+- DATASET_DELETE_BASIC_GROUPS = ""
+- DATASET_DELETE_PRIVILEGED_GROUP = ""
+- ADMIN_GROUPS = ""
+- DELETE_GROUPS = ""
+
+### Automatic workflow to delete obsolete datasets
+
+#### Description
+
+We need to set up a workflow to delete datasets that are more than 10 years old and are marked with the keyword _obsolete_.
+The process needs to list all datasets that contains the valu e_obsolete_ in the keywords field and have creation time older than 10 years from today. Once the list has been retrieved, it has to iterate through and execute a delte command on each dataset.
+
+##### Accounts
+
+- username: delete_obsolete_datasets
+- group: delete_obsolete_datasets
+
+##### Special permissions groups
+
+- DATASET_READ_PRIVILEGED_GROUPS = "delete_obsolete_datasets"
+- DATASET_CREATE_BASIC_GROUPS = ""
+- DATASET_CREATE_EXTENDED_GROUPS = ""
+- DATASET_CREATE_PRIVILEGED_GROUPS = ""
+- DATASET_UPDATE_BASIC_GROUPS = ""
+- DATASET_UPDATE_PRIVILEGED_GROUPS = ""
+- DATASET_DELETE_BASIC_GROUPS = ""
+- DATASET_DELETE_PRIVILEGED_GROUP = "delete_obsolete_datasets"
+- ADMIN_GROUPS = ""
+- DELETE_GROUPS = ""
