@@ -10,9 +10,12 @@ import { Request } from "express";
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
   findByIdAndUpdate = jest.fn();
+  aggregateSizeAndFileCount = jest.fn();
 }
 
-class DatasetsServiceMock {}
+class DatasetsServiceMock {
+  findByIdAndUpdate = jest.fn();
+}
 
 class CaslAbilityFactoryMock {}
 
@@ -36,7 +39,7 @@ describe("OrigDatablocksController", () => {
       OrigDatablocksService,
     );
 
-    // Mock internal methods
+    // Mock internal methods to isolate the handler under test
     controller["updateDatasetSizeAndFiles"] = jest.fn();
   });
 
@@ -158,6 +161,68 @@ describe("OrigDatablocksController", () => {
           "ds1",
         );
       });
+    });
+  });
+
+  describe("updateDatasetSizeAndFiles", () => {
+    let controllerWithRealMethod: OrigDatablocksController;
+    let realOrigDatablocksService: OrigDatablocksServiceMock;
+    let realDatasetsService: DatasetsServiceMock;
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [OrigDatablocksController],
+        imports: [ConfigModule],
+        providers: [
+          {
+            provide: OrigDatablocksService,
+            useClass: OrigDatablocksServiceMock,
+          },
+          { provide: DatasetsService, useClass: DatasetsServiceMock },
+          { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
+        ],
+      }).compile();
+
+      controllerWithRealMethod = module.get<OrigDatablocksController>(
+        OrigDatablocksController,
+      );
+      realOrigDatablocksService = module.get<OrigDatablocksService>(
+        OrigDatablocksService,
+      ) as unknown as OrigDatablocksServiceMock;
+      realDatasetsService = module.get<DatasetsService>(
+        DatasetsService,
+      ) as unknown as DatasetsServiceMock;
+    });
+
+    it("should use aggregateSizeAndFileCount and update the dataset", async () => {
+      realOrigDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+        size: 2000,
+        numberOfFiles: 5,
+      });
+
+      await controllerWithRealMethod["updateDatasetSizeAndFiles"]("testPid");
+
+      expect(
+        realOrigDatablocksService.aggregateSizeAndFileCount,
+      ).toHaveBeenCalledWith("testPid");
+      expect(realDatasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "testPid",
+        { size: 2000, numberOfFiles: 5 },
+      );
+    });
+
+    it("should propagate zero totals when no origdatablocks exist", async () => {
+      realOrigDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+        size: 0,
+        numberOfFiles: 0,
+      });
+
+      await controllerWithRealMethod["updateDatasetSizeAndFiles"]("emptyPid");
+
+      expect(realDatasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "emptyPid",
+        { size: 0, numberOfFiles: 0 },
+      );
     });
   });
 });
