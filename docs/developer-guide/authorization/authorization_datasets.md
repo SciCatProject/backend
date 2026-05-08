@@ -73,42 +73,42 @@ How the different levels of authorization translate into data conditions applied
 
 ## Special permissions groups
 
-- Dataset Create Basic (DsCB)  
+- __Dataset Create Basic__ (DsCB)  
   These groups are allowed to create datasets for any of the groups they belong to, although they are not allowed to assign the pid to the new dataset.
   Default: _#nogroup_  
   Special values:
   - _#all_ : all groups are allowed to create datasets with pid assigned by the system.
-- Dataset Create Extended (DsCE)  
+- __Dataset Create Extended__ (DsCE)  
   These groups are allowed to create datasets for any of the groups they belong to, and they can assign the pid to the new dataset.  
   Default: _#nogroup_  
   Special values:
   - _#all_ : all groups are allowed to create datasets with explicit pid.
-- Dataset Create Privileged (DsCP)  
+- __Dataset Create Privileged__ (DsCP)  
   These groups are allowed to create datasets for any group, and they can also assign the pid to the new dataset.  
   Default: _#nogroup_  
   Special values:
   - _#all_ : all groups are allowed to create datasets with pid assigned by the system
-- Dataset Read Privileged (DsRP)  
+- __Dataset Read Privileged__ (DsRP)  
   These groups are allowed to read all datasets independently from the ownership.  
   Default: _#nogroup_
-- Dataset Update Basic (DsUB)  
+- __Dataset Update Basic__ (DsUB)  
   These groups are allowed to update only datasets they own.  
   Default: _#nogroup_  
   Special values:
   - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
   - _#DsCE_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
-- Dataset Update Privileged (DsUP)  
+- __Dataset Update Privileged__ (DsUP)  
   These groups are allowed to update any datasets independently from the ownership.  
   Default: _#nogroup_  
   Special values:
   - _#DsCP_ : all groups listed in _Dataset Create Privileged_ are allowed to update any datasets.
-- Dataset Delete Basic (DsDB)  
+- __Dataset Delete Basic__ (DsDB)  
   These groups are allowed to delete only the datasets they own.  
   Default: _#nogroup_  
   Special values:
   - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
   - _#DsCE_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
-- Dataset Delete Privileged (DsDP)  
+- __Dataset Delete Privileged__ (DsDP)  
   These groups are allowed to delete any dataset independently of the ownership.  
   Default: _#nogroup_  
   Special values:
