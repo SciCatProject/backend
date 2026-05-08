@@ -171,7 +171,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -195,7 +195,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -397,7 +397,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(jobCreateDtoForUser51)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
