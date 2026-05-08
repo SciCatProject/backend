@@ -40,7 +40,6 @@ import { IOrigDatablockFields } from "./interfaces/origdatablocks.interface";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
 import { filterDescription, filterExample, parseDate } from "src/common/utils";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
@@ -213,22 +212,10 @@ export class OrigDatablocksController {
   }
 
   async updateDatasetSizeAndFiles(pid: string) {
-    // updates datasets size
-    const parsedFilters: IFilters<OrigDatablockDocument, IOrigDatablockFields> =
-      { where: { datasetId: pid } };
-    const datasetOrigdatablocks =
-      await this.origDatablocksService.findAll(parsedFilters);
+    const { size, numberOfFiles } =
+      await this.origDatablocksService.aggregateSizeAndFileCount(pid);
 
-    const updateDatasetDto: PartialUpdateDatasetDto = {
-      size: datasetOrigdatablocks
-        .map((od) => od.size)
-        .reduce((ps, a) => ps + a, 0),
-      numberOfFiles: datasetOrigdatablocks
-        .map((od) => od.dataFileList.length)
-        .reduce((ps, a) => ps + a, 0),
-    };
-
-    await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto);
+    await this.datasetsService.findByIdAndUpdate(pid, { size, numberOfFiles });
   }
 
   @UseGuards(PoliciesGuard)

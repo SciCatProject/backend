@@ -382,4 +382,22 @@ export class OrigDatablocksService {
       .exec();
     return { count };
   }
+
+  async aggregateSizeAndFileCount(
+    datasetId: string,
+  ): Promise<{ size: number; numberOfFiles: number }> {
+    const [result] = await this.origDatablockModel
+      .aggregate<{ size: number; numberOfFiles: number }>([
+        { $match: { datasetId } },
+        {
+          $group: {
+            _id: null,
+            size: { $sum: "$size" },
+            numberOfFiles: { $sum: { $size: "$dataFileList" } },
+          },
+        },
+      ])
+      .exec();
+    return result ?? { size: 0, numberOfFiles: 0 };
+  }
 }
