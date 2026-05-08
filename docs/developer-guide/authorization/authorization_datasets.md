@@ -123,7 +123,7 @@ A user can belong to multiple groups listed in multiple special permissions. The
 | Operation | Endpoint Authorization | Dataset Read Privileged | Dataset Create Basic | Dataset Create Extended | Dataset Create Privileged | Dataset Update Basic | Dataset Update Privileged | Admin | Dataset Delete Basic | Dataset Delete Privileged | Delete | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Create | _DatasetCreate_ | | Owner, w/o PID<br/>_DatasetCreateOwnerNoPid_ | Owner, w/ PID<br/>_DatasetCreateOwnerWithPid_ | Any<br/>_DatasetCreateAny_ | | | Any<br/>_DatasetCreateAny_ | | | | |
-| Read | _DatasetRead_ | Any<br/>_DatasetReadAny_ | | | | | Any<br/>_DatasetReadAny_ | | |
+| Read | _DatasetRead_ | Any<br/>_DatasetReadAny_ | | | | | | Any<br/>_DatasetReadAny_ | | |
 | Update | _DatasetUpdate_ | | | | | Owner<br/>_DatasetUpdateOwner_ | Any<br/>_DatasetUpdateAny_ | Any<br/>_DatasetUpdateAny_ | | | | |
 | | | | | | | | | | | | | |
 | Delete | _DatasetDelete_ | | | | | | | | Own<br/>_DatasetDeleteOwner_ | Any<br/>_DatasetDeleteAny_ | Any<br/>_DatasetDeleteAny_ | |
