@@ -109,3 +109,5 @@ export class Datablock extends OwnableClass {
 }
 
 export const DatablockSchema = SchemaFactory.createForClass(Datablock);
+
+DatablockSchema.index({ datasetId: 1 });
