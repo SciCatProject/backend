@@ -268,7 +268,7 @@ const configuration = () => {
         : [],
       //End of History
 
-      updateDatasetLifecycle: updateDatasetLifecycleGroups,
+      updateDatasetLifecycle: updateDatasetLifecycleGroups.split(",").map((v) => v.trim()),
       policy: policyGroups.split(",").map((v) => v.trim()),
       proposal: proposalGroups.split(",").map((v) => v.trim()),
       sample: sampleGroups.split(",").map((v) => v.trim()),
