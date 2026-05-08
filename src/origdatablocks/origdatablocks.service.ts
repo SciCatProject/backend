@@ -398,6 +398,8 @@ export class OrigDatablocksService {
         },
       ])
       .exec();
-    return result ?? { size: 0, numberOfFiles: 0 };
+    return result
+      ? { size: result.size, numberOfFiles: result.numberOfFiles }
+      : { size: 0, numberOfFiles: 0 };
   }
 }
