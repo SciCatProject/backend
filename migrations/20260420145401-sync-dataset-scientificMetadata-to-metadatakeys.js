@@ -3,8 +3,6 @@ const BATCH_SIZE = 10000;
 
 function buildPipeline(sourceType) {
   return [
-    // Stage 1: Flatten scientificMetadata into an array of key/value pairs.
-    // Preserve _id as datasetId so we can count unique datasets later.
     {
       $project: {
         datasetId: "$_id",
@@ -14,12 +12,7 @@ function buildPipeline(sourceType) {
         metaArr: { $objectToArray: "$scientificMetadata" },
       },
     },
-
-    // Stage 2: One document per (dataset, metadata key)
     { $unwind: "$metaArr" },
-
-    // Stage 3: Shape each (dataset, key) document.
-    // userGroups is the union of ownerGroup + accessGroups for this dataset.
     {
       $project: {
         datasetId: 1,
@@ -31,27 +24,11 @@ function buildPipeline(sourceType) {
         },
       },
     },
-
-    // Stage 4: One document per (dataset, key, group).
     {
       $unwind: {
         path: "$userGroups",
-        preserveNullAndEmptyArrays: true,
       },
     },
-
-    // Stage 5: Filter out null and empty-string groups.
-    // Note: datasets with no valid groups are excluded from usageCount.
-    // This is acceptable since ownerGroup is a required field in practice.
-    {
-      $match: {
-        userGroups: { $nin: [null, ""] },
-      },
-    },
-
-    // Stage 6: Group by (metaKeyId, group).
-    // groupCount = how many datasets with this group use this key.
-    // datasetIds = set of distinct dataset IDs (for accurate usageCount).
     {
       $group: {
         _id: {
@@ -67,11 +44,6 @@ function buildPipeline(sourceType) {
         datasetIds: { $addToSet: "$datasetId" },
       },
     },
-
-    // Stage 7: Group by metaKeyId to reassemble one document per metadata key.
-    // userGroupCountsArr will become the userGroupCounts Map.
-    // datasetIdSets is a list of per-group dataset ID sets — merged in the
-    // next stage to compute total unique dataset count (usageCount).
     {
       $group: {
         _id: "$_id.metaKeyId",
@@ -85,10 +57,9 @@ function buildPipeline(sourceType) {
         datasetIdSets: { $push: "$datasetIds" },
       },
     },
-
     {
       $addFields: {
-        metaKeyId: "$_id", // metaKeyId is needed for the $merge stage for deduplication, but will be removed in the final updateMany
+        metaKeyId: "$_id",
         generatedId: {
           $function: {
             body: "function() { return UUID().toString().replace('UUID(\"', '').replace('\")', ''); }",
@@ -98,10 +69,6 @@ function buildPipeline(sourceType) {
         },
       },
     },
-
-    // Stage 8: Final projection.
-    // userGroupCounts: [{k,v}] array → plain object (stored as Map in Mongoose).
-    // usageCount: union all per-group datasetId sets, count distinct IDs.
     {
       $project: {
         _id: "$generatedId",
@@ -125,11 +92,6 @@ function buildPipeline(sourceType) {
         createdAt: { $toDate: "$$NOW" },
       },
     },
-
-    // Stage 9: Merge into MetadataKeys.
-    // whenMatched handles the (future) case where multiple SOURCE_COLLECTIONS
-    // produce the same _id. Not possible today since sourceType is part of
-    // the _id, but kept correct for when more collections are added.
     {
       $merge: {
         into: "MetadataKeys",
@@ -137,85 +99,7 @@ function buildPipeline(sourceType) {
         whenMatched: [
           {
             $replaceWith: {
-              $mergeObjects: [
-                "$$new",
-                {
-                  // Preserve original audit fields
-                  _id: "$_id",
-                  createdAt: { $ifNull: ["$createdAt", "$$new.createdAt"] },
-                  createdBy: { $ifNull: ["$createdBy", "$$new.createdBy"] },
-                  updatedBy: { $literal: "migration" },
-                  updatedAt: { $toDate: "$$NOW" },
-                  isPublished: { $or: ["$isPublished", "$$new.isPublished"] },
-                  userGroups: {
-                    $setUnion: ["$userGroups", "$$new.userGroups"],
-                  },
-
-                  // Additively merge userGroupCounts — sum counts per group
-                  // across both the existing and incoming documents.
-                  userGroupCounts: {
-                    $arrayToObject: {
-                      $map: {
-                        input: {
-                          $setUnion: [
-                            {
-                              $map: {
-                                input: {
-                                  $objectToArray: "$userGroupCounts",
-                                },
-                                as: "e",
-                                in: "$$e.k",
-                              },
-                            },
-                            {
-                              $map: {
-                                input: {
-                                  $objectToArray: "$$new.userGroupCounts",
-                                },
-                                as: "e",
-                                in: "$$e.k",
-                              },
-                            },
-                          ],
-                        },
-                        as: "group",
-                        in: {
-                          k: "$$group",
-                          v: {
-                            $add: [
-                              {
-                                $ifNull: [
-                                  {
-                                    $getField: {
-                                      field: "$$group",
-                                      input: "$userGroupCounts",
-                                    },
-                                  },
-                                  0,
-                                ],
-                              },
-                              {
-                                $ifNull: [
-                                  {
-                                    $getField: {
-                                      field: "$$group",
-                                      input: "$$new.userGroupCounts",
-                                    },
-                                  },
-                                  0,
-                                ],
-                              },
-                            ],
-                          },
-                        },
-                      },
-                    },
-                  },
-
-                  // Add incoming dataset count to existing
-                  usageCount: { $add: ["$usageCount", "$$new.usageCount"] },
-                },
-              ],
+              $mergeObjects: ["$$new", { _id: "$_id" }],
             },
           },
         ],
