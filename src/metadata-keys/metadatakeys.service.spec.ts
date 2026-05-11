@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MetadataKeysService, MetadataSourceDoc } from "./metadatakeys.service";
@@ -7,7 +8,7 @@ const modelMock = {
   aggregate: jest
     .fn()
     .mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
-  findOneAndUpdate: jest.fn().mockResolvedValue({}),
+  bulkWrite: jest.fn().mockResolvedValue({}),
   updateMany: jest.fn().mockResolvedValue({}),
   deleteMany: jest.fn().mockResolvedValue({}),
 };
@@ -86,6 +87,44 @@ describe("MetadataKeysService", () => {
       );
     });
 
+    it("applies default sort when no limits provided", async () => {
+      await service.findAll({}, {});
+
+      const [pipeline] = modelMock.aggregate.mock.calls[0];
+      expect(pipeline).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ $sort: { createdAt: -1 } }),
+        ]),
+      );
+    });
+
+    it("applies default sort when limits provided without sort", async () => {
+      await service.findAll({ limits: { limit: 10, skip: 0 } }, {});
+
+      const [pipeline] = modelMock.aggregate.mock.calls[0];
+      expect(pipeline).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ $sort: { createdAt: -1 } }),
+        ]),
+      );
+    });
+
+    it("uses provided sort when specified", async () => {
+      await service.findAll(
+        { limits: { limit: 10, skip: 0, sort: { key: "asc" } } },
+        {},
+      );
+
+      const [pipeline] = modelMock.aggregate.mock.calls[0];
+      expect(pipeline).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            $sort: expect.objectContaining({ key: 1 }),
+          }),
+        ]),
+      );
+    });
+
     it("omits $project stage when no fields specified", async () => {
       await service.findAll({}, {});
 
@@ -94,12 +133,15 @@ describe("MetadataKeysService", () => {
       expect(hasProject).toBe(false);
     });
 
-    it("omits $sort stage when no sort specified", async () => {
-      await service.findAll({ limits: { limit: 10, skip: 0 } }, {});
+    it("sort stage comes before skip and limit", async () => {
+      await service.findAll({}, {});
 
       const [pipeline] = modelMock.aggregate.mock.calls[0];
-      const hasSort = pipeline.some((s: object) => "$sort" in s);
-      expect(hasSort).toBe(false);
+      const sortIndex = pipeline.findIndex((s: object) => "$sort" in s);
+      const skipIndex = pipeline.findIndex((s: object) => "$skip" in s);
+      const limitIndex = pipeline.findIndex((s: object) => "$limit" in s);
+      expect(sortIndex).toBeLessThan(skipIndex);
+      expect(sortIndex).toBeLessThan(limitIndex);
     });
 
     it("returns aggregation results", async () => {
@@ -122,18 +164,21 @@ describe("MetadataKeysService", () => {
     it("does nothing when metadata is empty", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, metadata: {} });
 
-      expect(modelMock.findOneAndUpdate).not.toHaveBeenCalled();
+      expect(modelMock.bulkWrite).not.toHaveBeenCalled();
     });
 
-    it("calls findOneAndUpdate once per metadata key", async () => {
+    it("calls bulkWrite with one op per metadata key", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      expect(modelMock.findOneAndUpdate).toHaveBeenCalledTimes(2);
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      expect(ops).toHaveLength(2);
     });
 
     it("builds correct filter from sourceType + key + humanReadableName", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      const calls = modelMock.findOneAndUpdate.mock.calls;
-      const filters = calls.map((call: unknown[]) => call[0]);
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const filters = ops.map((op: any) => op.updateOne.filter);
       expect(filters).toContainEqual({
         sourceType: "Dataset",
         key: "temperature",
@@ -148,7 +193,9 @@ describe("MetadataKeysService", () => {
 
     it("increments usageCount and per-group counts", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
       expect(update.$inc.usageCount).toBe(1);
       expect(update.$inc["userGroupCounts.group-1"]).toBe(1);
       expect(update.$inc["userGroupCounts.group-2"]).toBe(1);
@@ -156,25 +203,33 @@ describe("MetadataKeysService", () => {
 
     it("adds userGroups via $addToSet", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
       expect(update.$addToSet.userGroups.$each).toEqual(["group-1", "group-2"]);
     });
 
     it("sets isPublished when dataset is published", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, isPublished: true });
-      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
-      expect(update.$set.isPublished).toBe(true);
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
+      expect(update.$max.isPublished).toBe(true);
     });
 
     it("does not set isPublished when dataset is not published", async () => {
       await service.insertManyFromSource({ ...BASE_DOC, isPublished: false });
-      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
-      expect(update.$set.isPublished).toBeUndefined();
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
+      expect(update.$max?.isPublished).toBeFalsy();
     });
 
     it("uses $setOnInsert for immutable fields", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      const [, update] = modelMock.findOneAndUpdate.mock.calls[0];
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
       expect(update.$setOnInsert).toMatchObject({
         key: expect.any(String),
         sourceType: "Dataset",
@@ -184,8 +239,9 @@ describe("MetadataKeysService", () => {
 
     it("sets upsert: true", async () => {
       await service.insertManyFromSource(BASE_DOC);
-      const [, , options] = modelMock.findOneAndUpdate.mock.calls[0];
-      expect(options.upsert).toBe(true);
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      expect(ops[0].updateOne.upsert).toBe(true);
     });
   });
 
@@ -197,12 +253,17 @@ describe("MetadataKeysService", () => {
     it("does nothing when metadata is empty", async () => {
       await service.deleteMany({ ...BASE_DOC, metadata: {} });
 
+      expect(modelMock.bulkWrite).not.toHaveBeenCalled();
       expect(modelMock.updateMany).not.toHaveBeenCalled();
       expect(modelMock.deleteMany).not.toHaveBeenCalled();
     });
 
-    it("runs three operations in order: decrement → recompute → delete", async () => {
+    it("runs operations in order: decrement → recompute → delete", async () => {
       const callOrder: string[] = [];
+      modelMock.bulkWrite.mockImplementation(() => {
+        callOrder.push("bulkWrite");
+        return Promise.resolve({});
+      });
       modelMock.updateMany.mockImplementation(() => {
         callOrder.push("updateMany");
         return Promise.resolve({});
@@ -214,16 +275,17 @@ describe("MetadataKeysService", () => {
 
       await service.deleteMany(BASE_DOC);
 
-      expect(callOrder).toEqual(["updateMany", "updateMany", "deleteMany"]);
+      expect(callOrder).toEqual(["bulkWrite", "updateMany", "deleteMany"]);
     });
 
     it("decrements usageCount and per-group counts", async () => {
       await service.deleteMany(BASE_DOC);
 
-      const [, firstUpdate] = modelMock.updateMany.mock.calls[0];
-      expect(firstUpdate.$inc.usageCount).toBe(-1);
-      expect(firstUpdate.$inc["userGroupCounts.group-1"]).toBe(-1);
-      expect(firstUpdate.$inc["userGroupCounts.group-2"]).toBe(-1);
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
+      expect(update.$inc.usageCount).toBe(-1);
+      expect(update.$inc["userGroupCounts.group-1"]).toBe(-1);
+      expect(update.$inc["userGroupCounts.group-2"]).toBe(-1);
     });
 
     it("targets correct filter based on metadata keys and humanReadableName", async () => {
@@ -249,12 +311,18 @@ describe("MetadataKeysService", () => {
       expect(deleteFilter.$and[1].usageCount).toEqual({ $lte: 0 });
     });
 
-    it("recompute stage uses $set with $objectToArray on userGroupCounts", async () => {
+    it("recompute stage uses $set with userGroups defined", async () => {
       await service.deleteMany(BASE_DOC);
 
-      // second updateMany call is the RECOMPUTE_USER_GROUPS_STAGE
-      const [, recomputeStage] = modelMock.updateMany.mock.calls[1];
-      expect(recomputeStage[0].$set.userGroups).toBeDefined();
+      const [, recomputeStage] = modelMock.updateMany.mock.calls[0];
+      expect(recomputeStage[1].$set.userGroups).toBeDefined();
+    });
+
+    it("does not set upsert on decrement ops", async () => {
+      await service.deleteMany(BASE_DOC);
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      expect(ops[0].updateOne.upsert).toBe(false);
     });
   });
 
@@ -263,55 +331,35 @@ describe("MetadataKeysService", () => {
   // -------------------------------------------------------------------------
 
   describe("replaceManyFromSource", () => {
-    it("calls insertManyFromSource for keys only in newDoc", async () => {
-      const insertSpy = jest
-        .spyOn(service, "insertManyFromSource")
-        .mockResolvedValue();
-
-      const oldDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc = {
-        ...BASE_DOC,
-        metadata: {
-          temperature: { human_name: "Temperature" },
-          wavelength: {},
-        },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      expect(insertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { wavelength: {} } }),
-      );
-    });
-
-    it("calls deleteMany for keys only in oldDoc", async () => {
-      const deleteSpy = jest.spyOn(service, "deleteMany").mockResolvedValue();
-
-      const oldDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temperature" }, pressure: {} },
-      };
-      const newDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      expect(deleteSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { pressure: {} } }),
-      );
-    });
-
-    it("does not call deleteMany or insertManyFromSource for shared unchanged keys", async () => {
+    it("calls deleteMany with oldDoc then insertManyFromSource with newDoc", async () => {
       const deleteSpy = jest.spyOn(service, "deleteMany").mockResolvedValue();
       const insertSpy = jest
         .spyOn(service, "insertManyFromSource")
         .mockResolvedValue();
 
+      await service.replaceManyFromSource(BASE_DOC, BASE_DOC);
+
+      expect(deleteSpy).toHaveBeenCalledWith(BASE_DOC);
+      expect(insertSpy).toHaveBeenCalledWith(BASE_DOC);
+    });
+
+    it("calls deleteMany before insertManyFromSource", async () => {
+      const callOrder: string[] = [];
+      jest.spyOn(service, "deleteMany").mockImplementation(async () => {
+        callOrder.push("deleteMany");
+      });
+      jest
+        .spyOn(service, "insertManyFromSource")
+        .mockImplementation(async () => {
+          callOrder.push("insertManyFromSource");
+        });
+
+      await service.replaceManyFromSource(BASE_DOC, BASE_DOC);
+
+      expect(callOrder).toEqual(["deleteMany", "insertManyFromSource"]);
+    });
+
+    it("net usageCount is zero for unchanged keys", async () => {
       const doc = {
         ...BASE_DOC,
         metadata: { temperature: { human_name: "Temperature" } },
@@ -319,177 +367,14 @@ describe("MetadataKeysService", () => {
 
       await service.replaceManyFromSource(doc, doc);
 
-      expect(deleteSpy).not.toHaveBeenCalled();
-      expect(insertSpy).not.toHaveBeenCalled();
-    });
-
-    it("handles all three buckets simultaneously", async () => {
-      const deleteSpy = jest.spyOn(service, "deleteMany").mockResolvedValue();
-      const insertSpy = jest
-        .spyOn(service, "insertManyFromSource")
-        .mockResolvedValue();
-
-      const oldDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temperature" }, pressure: {} },
-      };
-      const newDoc = {
-        ...BASE_DOC,
-        metadata: {
-          temperature: { human_name: "Temperature" },
-          wavelength: {},
-        },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      // pressure removed → deleteMany
-      expect(deleteSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { pressure: {} } }),
+      const allOps = modelMock.bulkWrite.mock.calls.flatMap(
+        ([ops]: any) => ops,
       );
-      // wavelength added → insertManyFromSource
-      expect(insertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { wavelength: {} } }),
+      const totalUsageCountDelta = allOps.reduce(
+        (sum: number, op: any) => sum + op.updateOne.update.$inc.usageCount,
+        0,
       );
-    });
-
-    it("does nothing when both docs have empty metadata", async () => {
-      const deleteSpy = jest.spyOn(service, "deleteMany").mockResolvedValue();
-      const insertSpy = jest
-        .spyOn(service, "insertManyFromSource")
-        .mockResolvedValue();
-
-      const empty = { ...BASE_DOC, metadata: {} };
-      await service.replaceManyFromSource(empty, empty);
-
-      expect(deleteSpy).not.toHaveBeenCalled();
-      expect(insertSpy).not.toHaveBeenCalled();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // updateSharedKeys (tested via replaceManyFromSource)
-  // -------------------------------------------------------------------------
-
-  describe("updateSharedKeys (via replaceManyFromSource)", () => {
-    it("increments added groups and decrements removed groups", async () => {
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-1"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-2"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      const [, update] = modelMock.updateMany.mock.calls[0];
-      expect(update.$inc["userGroupCounts.group-2"]).toBe(1);
-      expect(update.$inc["userGroupCounts.group-1"]).toBe(-1);
-    });
-
-    it("runs RECOMPUTE_USER_GROUPS_STAGE when groups are removed", async () => {
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-1", "group-2"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-1"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      // two updateMany calls: one for the $inc, one for RECOMPUTE
-      expect(modelMock.updateMany).toHaveBeenCalledTimes(2);
-    });
-
-    it("does not run RECOMPUTE_USER_GROUPS_STAGE when only groups are added", async () => {
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-1"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        userGroups: ["group-1", "group-2"],
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      // only one updateMany — no RECOMPUTE needed when nothing is removed
-      expect(modelMock.updateMany).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets isPublished when it flips from false to true", async () => {
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        isPublished: false,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        isPublished: true,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      const [, update] = modelMock.updateMany.mock.calls[0];
-      expect(update.$set.isPublished).toBe(true);
-    });
-
-    it("does not touch isPublished when it flips from true to false", async () => {
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        isPublished: true,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        isPublished: false,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      // no group changes and no publishedFlippedOn → updateMany not called at all
-      expect(modelMock.updateMany).not.toHaveBeenCalled();
-    });
-
-    it("treats humanReadableName change as delete + insert", async () => {
-      const deleteSpy = jest.spyOn(service, "deleteMany").mockResolvedValue();
-      const insertSpy = jest
-        .spyOn(service, "insertManyFromSource")
-        .mockResolvedValue();
-
-      const oldDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temperature" } },
-      };
-      const newDoc: MetadataSourceDoc = {
-        ...BASE_DOC,
-        metadata: { temperature: { human_name: "Temp (renamed)" } },
-      };
-
-      await service.replaceManyFromSource(oldDoc, newDoc);
-
-      expect(deleteSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          metadata: { temperature: { human_name: "Temperature" } },
-        }),
-      );
-      expect(insertSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          metadata: { temperature: { human_name: "Temp (renamed)" } },
-        }),
-      );
+      expect(totalUsageCountDelta).toBe(0);
     });
   });
 });

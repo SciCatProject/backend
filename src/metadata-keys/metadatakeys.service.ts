@@ -36,14 +36,13 @@ const RECOMPUTE_USER_GROUPS_STAGE = [
           },
         },
       },
+    },
+  },
+  {
+    $set: {
       userGroups: {
         $map: {
-          input: {
-            $filter: {
-              input: { $objectToArray: "$userGroupCounts" },
-              cond: { $gt: ["$$this.v", 0] },
-            },
-          },
+          input: { $objectToArray: "$userGroupCounts" },
           as: "entry",
           in: "$$entry.k",
         },
@@ -65,10 +64,11 @@ export class MetadataKeysService {
   ): Promise<MetadataKeyClass[]> {
     const whereFilter: FilterQuery<MetadataKeyDocument> = filter.where ?? {};
     const fieldsProjection: string[] = filter.fields ?? {};
-    const limits: QueryOptions<MetadataKeyDocument> = filter.limits ?? {
-      limit: 100,
-      skip: 0,
-      sort: { createdAt: "desc" },
+
+    const limits: QueryOptions<MetadataKeyDocument> = {
+      limit: filter.limits?.limit ?? 100,
+      skip: filter.limits?.skip ?? 0,
+      sort: filter.limits?.sort ?? { createdAt: "desc" },
     };
 
     const pipeline: PipelineStage[] = [
@@ -100,157 +100,79 @@ export class MetadataKeysService {
     return data;
   }
 
-  /**
-   * Called when a dataset is created or gains new metadata keys.
-   *
-   * For each key:
-   * - Creates a new MetadataKey entry if none exists (upsert)
-   * - Increments usageCount and per-group reference counts
-   * - Adds new groups to the userGroups query array
-   * - Sets isPublished if the source dataset is published (never unsets inline)
-   * - Updates humanReadableName to the latest value
-   */
   async insertManyFromSource(doc: MetadataSourceDoc): Promise<void> {
-    if (isEmpty(doc.metadata)) return;
-
-    const { sourceType, userGroups, isPublished, metadata } = doc;
-
-    const ops = Object.entries(metadata).map(([key, entry]) => {
-      const humanReadableName =
-        (entry as ScientificMetadataEntry).human_name ?? "";
-
-      return this.metadataKeyModel.findOneAndUpdate(
-        { sourceType, key, humanReadableName },
-        {
-          $setOnInsert: addCreatedByFields(
-            { key, sourceType, humanReadableName },
-            "system",
-          ),
-          $set: {
-            ...(isPublished && { isPublished: true }),
-          },
-          $addToSet: { userGroups: { $each: userGroups } },
-          $inc: {
-            usageCount: 1,
-            ...this.groupCountDeltas(userGroups, 1),
-          },
-        },
-        { upsert: true },
-      );
-    });
-
-    await Promise.all(ops);
-
-    Logger.log(
-      `Upserted MetadataKeys for ${sourceType}: ${Object.keys(metadata).join(", ")}`,
-    );
+    await this.adjustCounts(doc, 1);
   }
 
-  /**
-   * Called when a dataset is deleted or loses metadata keys.
-   *
-   * Three-step process to ensure groups are safely removed:
-   *   1. Decrement usageCount and per-group reference counts
-   *   2. Recompute userGroups array from the updated counts
-   *      (drops any group whose count reached zero)
-   *   3. Delete entries no longer referenced by any dataset
-   *
-
-   */
   async deleteMany(doc: MetadataSourceDoc): Promise<void> {
-    if (isEmpty(doc.metadata)) return;
-
-    const { sourceType, userGroups, metadata } = doc;
-    const keys = Object.keys(metadata);
-    const filters = keys.map((key) => {
-      const humanReadableName =
-        (metadata[key] as ScientificMetadataEntry)?.human_name ?? "";
-      return this.buildFilter(sourceType, key, humanReadableName);
-    });
-    const queryFilter = { $or: filters };
-
-    await this.metadataKeyModel.updateMany(queryFilter, {
-      $inc: {
-        usageCount: -1,
-        ...this.groupCountDeltas(userGroups, -1),
-      },
-    });
-
-    await this.metadataKeyModel.updateMany(
-      queryFilter,
-      RECOMPUTE_USER_GROUPS_STAGE,
-    );
-
-    await this.metadataKeyModel.deleteMany({
-      $and: [queryFilter, { usageCount: { $lte: 0 } }],
-    });
-
-    Logger.log(
-      `Decremented or deleted MetadataKeys for ${sourceType}: ${keys.join(", ")}`,
-    );
+    await this.adjustCounts(doc, -1);
   }
-  /**
-   * Called when a dataset is updated.
-   *
-   * Diffs the old and new metadata to produce three disjoint key sets:
-   *   - added:   only in newDoc(after change) → insertManyFromSource
-   *   - removed: only in oldDoc(before change) → deleteMany
-   *   - shared:  in both       → updateSharedKeys (handles group / isPublished
-   *                              / humanReadableName changes)
-   *
-   * The three sets are disjoint by _id so Promise.all is safe.
-   */
+
   async replaceManyFromSource(
     oldDoc: MetadataSourceDoc,
     newDoc: MetadataSourceDoc,
   ): Promise<void> {
-    const oldKeys = Object.keys(oldDoc.metadata ?? {});
-    const newKeys = Object.keys(newDoc.metadata ?? {});
-
-    const addedKeys = newKeys.filter((k) => !oldKeys.includes(k));
-    const removedKeys = oldKeys.filter((k) => !newKeys.includes(k));
-    const sharedKeys = newKeys.filter((k) => oldKeys.includes(k));
-
-    await Promise.all([
-      removedKeys.length > 0 &&
-        this.deleteMany({
-          ...oldDoc,
-          metadata: Object.fromEntries(
-            removedKeys.map((k) => [k, oldDoc.metadata[k]]),
-          ),
-        }),
-
-      addedKeys.length > 0 &&
-        this.insertManyFromSource({
-          ...newDoc,
-          metadata: Object.fromEntries(
-            addedKeys.map((k) => [k, newDoc.metadata[k]]),
-          ),
-        }),
-
-      sharedKeys.length > 0 &&
-        this.updateSharedKeys(sharedKeys, oldDoc, newDoc),
-    ]);
+    await this.deleteMany(oldDoc);
+    await this.insertManyFromSource(newDoc);
   }
 
-  private buildFilter(
-    sourceType: string,
-    key: string,
-    humanReadableName: string,
-  ): FilterQuery<MetadataKeyDocument> {
-    return { sourceType, key, humanReadableName };
+  private async adjustCounts(
+    doc: MetadataSourceDoc,
+    delta: 1 | -1,
+  ): Promise<void> {
+    if (isEmpty(doc.metadata)) return;
+
+    const { sourceType, userGroups, isPublished, metadata } = doc;
+
+    const filters = Object.entries(metadata).map(([key, entry]) => {
+      const humanReadableName =
+        (entry as ScientificMetadataEntry).human_name ?? "";
+      return { sourceType, key, humanReadableName };
+    });
+
+    const queryFilter = { $or: filters };
+
+    const ops = filters.map(({ sourceType, key, humanReadableName }) => ({
+      updateOne: {
+        filter: { sourceType, key, humanReadableName },
+        update: {
+          $inc: {
+            usageCount: delta,
+            ...this.groupCountDeltas(userGroups, delta),
+          },
+          ...(delta === 1 && {
+            $max: { isPublished },
+            $addToSet: { userGroups: { $each: userGroups } },
+            $setOnInsert: addCreatedByFields(
+              { key, sourceType, humanReadableName },
+              "system",
+            ),
+          }),
+        },
+        upsert: delta === 1,
+      },
+    }));
+
+    await this.metadataKeyModel.bulkWrite(ops);
+
+    if (delta === -1) {
+      // UpdateMany is necessary here because the bulkWrite above only decrements userGroupCounts
+      // but cannot remove zero-count groups from userGroups in the same operation.
+      await this.metadataKeyModel.updateMany(
+        queryFilter,
+        RECOMPUTE_USER_GROUPS_STAGE,
+      );
+
+      await this.metadataKeyModel.deleteMany({
+        $and: [queryFilter, { usageCount: { $lte: 0 } }],
+      });
+    }
+
+    Logger.log(
+      `${delta === 1 ? "Upserted" : "Decremented or deleted"} MetadataKeys for ${sourceType}: ${Object.keys(metadata).join(", ")}`,
+    );
   }
 
-  /**
-   * Builds $inc paths for per-group reference counts.
-   *
-   * groupCountDeltas(["groupA", "groupB"], 1)
-   *   => { "userGroupCounts.groupA": 1, "userGroupCounts.groupB": 1 }
-   *
-   * MongoDB's dot-notation $inc creates the key if missing and increments
-   * if it already exists, making this safe for both first-time and
-   * subsequent upserts.
-   */
   private groupCountDeltas(
     groups: string[],
     delta: 1 | -1,
@@ -258,98 +180,5 @@ export class MetadataKeysService {
     return Object.fromEntries(
       groups.map((g) => [`userGroupCounts.${g}`, delta]),
     );
-  }
-
-  /**
-   * Handles keys present in both the old and new dataset version.
-   *
-   * Checks three things that may have changed independently:
-   *   1. userGroups — increments added groups, decrements removed groups,
-   *      then recomputes the userGroups array from the updated counts
-   *   2. isPublished — only sets true inline; false is left to the cronjob
-   *   3. humanReadableName — updated per-key where it differs
-   */
-  private async updateSharedKeys(
-    sharedKeys: string[],
-    oldDoc: MetadataSourceDoc,
-    newDoc: MetadataSourceDoc,
-  ): Promise<void> {
-    const { sourceType } = newDoc;
-    const humanNameChangedKeys: string[] = [];
-    const humanNameUnchangedKeys: string[] = [];
-
-    for (const k of sharedKeys) {
-      const oldHumanName =
-        (oldDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-      const newHumanName =
-        (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-
-      if (oldHumanName === newHumanName) {
-        humanNameUnchangedKeys.push(k);
-      } else {
-        humanNameChangedKeys.push(k);
-      }
-    }
-
-    const addedGroups = newDoc.userGroups.filter(
-      (g) => !oldDoc.userGroups.includes(g),
-    );
-    const removedGroups = oldDoc.userGroups.filter(
-      (g) => !newDoc.userGroups.includes(g),
-    );
-    const publishedFlippedOn = !oldDoc.isPublished && newDoc.isPublished;
-    const hasGroupChanges = addedGroups.length > 0 || removedGroups.length > 0;
-
-    if (
-      humanNameUnchangedKeys.length > 0 &&
-      (hasGroupChanges || publishedFlippedOn)
-    ) {
-      const filters = humanNameUnchangedKeys.map((k) => {
-        const humanReadableName =
-          (newDoc.metadata[k] as ScientificMetadataEntry)?.human_name ?? "";
-        return this.buildFilter(sourceType, k, humanReadableName);
-      });
-
-      const queryFilter = { $or: filters };
-
-      await this.metadataKeyModel.updateMany(queryFilter, {
-        ...(addedGroups.length > 0 && {
-          $addToSet: { userGroups: { $each: addedGroups } },
-        }),
-        $inc: {
-          ...(addedGroups.length > 0 && this.groupCountDeltas(addedGroups, 1)),
-          ...(removedGroups.length > 0 &&
-            this.groupCountDeltas(removedGroups, -1)),
-        },
-        ...(publishedFlippedOn && { $set: { isPublished: true } }),
-      });
-
-      // Recompute userGroups to drop groups whose count reached zero
-      if (removedGroups.length > 0) {
-        await this.metadataKeyModel.updateMany(
-          queryFilter,
-          RECOMPUTE_USER_GROUPS_STAGE,
-        );
-      }
-    }
-
-    // humanReadableName is part of _id, so a change means a different document.
-    // Treat it as delete the old entry + insert the new one.
-    if (humanNameChangedKeys.length > 0) {
-      await Promise.all([
-        this.deleteMany({
-          ...oldDoc,
-          metadata: Object.fromEntries(
-            humanNameChangedKeys.map((k) => [k, oldDoc.metadata[k]]),
-          ),
-        }),
-        this.insertManyFromSource({
-          ...newDoc,
-          metadata: Object.fromEntries(
-            humanNameChangedKeys.map((k) => [k, newDoc.metadata[k]]),
-          ),
-        }),
-      ]);
-    }
   }
 }
