@@ -102,13 +102,16 @@ function generateScientificMetadata() {
     if (useRandomKey) {
       const key = randomUniqueKey();
       if (!metadata[key]) {
-        const humanName = Math.random() < 0.5 && {
-          human_name: randomString(randomInt(5, 15)),
-        };
+        const humanName =
+          Math.random() < 0.5
+            ? {
+                human_name: randomString(randomInt(5, 15)),
+              }
+            : {};
         metadata[key] = {
           value: randomInt(1, 999999),
           unit: randomItem(UNITS),
-          ...(humanName !== false && humanName),
+          ...humanName,
         };
       }
     } else {
@@ -117,11 +120,13 @@ function generateScientificMetadata() {
       if (!metadata[key]) {
         // 50% chance of human_name
         const humanName =
-          Math.random() < 0.5 && randomItem(HUMAN_NAMES_MAP[key]);
+          Math.random() < 0.5
+            ? { human_name: randomItem(HUMAN_NAMES_MAP[key]) }
+            : {};
         metadata[key] = {
           value: randomInt(1, 999999),
           unit: randomItem(UNITS),
-          ...(humanName !== false && { human_name: humanName }),
+          ...humanName,
         };
       }
     }
