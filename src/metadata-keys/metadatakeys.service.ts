@@ -136,6 +136,9 @@ export class MetadataKeysService {
       updateOne: {
         filter: { sourceType, key, humanReadableName },
         update: {
+          $set: {
+            updatedAt: new Date(),
+          },
           $inc: {
             usageCount: delta,
             ...this.groupCountDeltas(userGroups, delta),
@@ -143,10 +146,7 @@ export class MetadataKeysService {
           ...(delta === 1 && {
             $max: { isPublished },
             $addToSet: { userGroups: { $each: userGroups } },
-            $setOnInsert: addCreatedByFields(
-              { key, sourceType, humanReadableName },
-              "system",
-            ),
+            $setOnInsert: addCreatedByFields({}, "system"),
           }),
         },
         upsert: delta === 1,

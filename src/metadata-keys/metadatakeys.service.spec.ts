@@ -225,18 +225,6 @@ describe("MetadataKeysService", () => {
       expect(update.$max?.isPublished).toBeFalsy();
     });
 
-    it("uses $setOnInsert for immutable fields", async () => {
-      await service.insertManyFromSource(BASE_DOC);
-
-      const [ops] = modelMock.bulkWrite.mock.calls[0];
-      const { update } = ops[0].updateOne;
-      expect(update.$setOnInsert).toMatchObject({
-        key: expect.any(String),
-        sourceType: "Dataset",
-        humanReadableName: expect.any(String),
-      });
-    });
-
     it("sets upsert: true", async () => {
       await service.insertManyFromSource(BASE_DOC);
 
