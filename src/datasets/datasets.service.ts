@@ -67,13 +67,14 @@ import {
   MetadataSourceDoc,
 } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
-import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
-import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
+
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 import { withOCCFilter } from "./utils/occ-util";
+import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
+import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
+import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
