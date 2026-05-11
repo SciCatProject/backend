@@ -9,13 +9,7 @@ import {
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { InjectModel } from "@nestjs/mongoose";
-import {
-  FilterQuery,
-  Model,
-  PipelineStage,
-  QueryOptions,
-  UpdateQuery,
-} from "mongoose";
+import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import {
   createFullfacetPipeline,
@@ -26,6 +20,7 @@ import {
   parsePipelineSort,
   addCreatedByFields,
   addUpdatedByField,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { isEmpty } from "lodash";
 import {
@@ -43,10 +38,7 @@ import { IProposalFields } from "./interfaces/proposal-filters.interface";
 import { ProposalClass, ProposalDocument } from "./schemas/proposal.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateMeasurementPeriodDto } from "./dto/create-measurement-period.dto";
-import {
-  MetadataKeysService,
-  MetadataSourceDoc,
-} from "src/metadata-keys/metadatakeys.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -177,20 +169,6 @@ export class ProposalsService {
     }
   }
 
-  private createMetadataKeysInstance(
-    doc: UpdateQuery<ProposalDocument>,
-  ): MetadataSourceDoc {
-    const source: MetadataSourceDoc = {
-      sourceType: this.proposalModel.collection.name,
-      userGroups: Array.from(
-        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-      ),
-      isPublished: doc.isPublished || false,
-      metadata: doc.metadata ?? {},
-    };
-    return source;
-  }
-
   async create(createProposalDto: CreateProposalDto): Promise<ProposalClass> {
     const username = (this.request.user as JWTUser).username;
     if (createProposalDto.MeasurementPeriodList) {
@@ -208,7 +186,10 @@ export class ProposalsService {
     const savedProposal = await createdProposal.save();
 
     this.metadataKeysService.insertManyFromSource(
-      this.createMetadataKeysInstance(savedProposal),
+      createMetadataKeysInstance(
+        this.proposalModel.collection.name,
+        savedProposal,
+      ),
     );
     return savedProposal;
   }
@@ -326,8 +307,14 @@ export class ProposalsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(existingProposal),
-      this.createMetadataKeysInstance(updatedProposal),
+      createMetadataKeysInstance(
+        this.proposalModel.collection.name,
+        existingProposal,
+      ),
+      createMetadataKeysInstance(
+        this.proposalModel.collection.name,
+        updatedProposal,
+      ),
     );
 
     return updatedProposal;
@@ -345,7 +332,10 @@ export class ProposalsService {
     }
 
     await this.metadataKeysService.deleteMany(
-      this.createMetadataKeysInstance(deletedProposal),
+      createMetadataKeysInstance(
+        this.proposalModel.collection.name,
+        deletedProposal,
+      ),
     );
 
     return deletedProposal;

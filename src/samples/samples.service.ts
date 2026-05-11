@@ -9,7 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, QueryOptions, UpdateQuery } from "mongoose";
+import { FilterQuery, Model, QueryOptions } from "mongoose";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IFilters } from "src/common/interfaces/common.interface";
 import {
@@ -19,6 +19,7 @@ import {
   extractMetadataKeys,
   parseLimitFilters,
   decodeMetadataKeyStrings,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { CreateSampleDto } from "./dto/create-sample.dto";
 import { PartialUpdateSampleDto } from "./dto/update-sample.dto";
@@ -26,10 +27,7 @@ import { ISampleFields } from "./interfaces/sample-filters.interface";
 import { SampleClass, SampleDocument } from "./schemas/sample.schema";
 import { CountApiResponse } from "src/common/types";
 import { OutputSampleDto } from "./dto/output-sample.dto";
-import {
-  MetadataKeysService,
-  MetadataSourceDoc,
-} from "src/metadata-keys/metadatakeys.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -41,20 +39,6 @@ export class SamplesService {
     @Inject(REQUEST) private request: Request,
   ) {}
 
-  private createMetadataKeysInstance(
-    doc: UpdateQuery<SampleDocument>,
-  ): MetadataSourceDoc {
-    const source: MetadataSourceDoc = {
-      sourceType: this.sampleModel.collection.name,
-      userGroups: Array.from(
-        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-      ),
-      isPublished: doc.isPublished || false,
-      metadata: doc.sampleCharacteristics ?? {},
-    };
-    return source;
-  }
-
   async create(createSampleDto: CreateSampleDto): Promise<SampleClass> {
     const username = (this.request.user as JWTUser).username;
     const createdSample = new this.sampleModel(
@@ -63,7 +47,7 @@ export class SamplesService {
     const savedSample = await createdSample.save();
 
     this.metadataKeysService.insertManyFromSource(
-      this.createMetadataKeysInstance(savedSample),
+      createMetadataKeysInstance(this.sampleModel.collection.name, savedSample),
     );
 
     return savedSample;
@@ -223,8 +207,14 @@ export class SamplesService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(existingSample),
-      this.createMetadataKeysInstance(updatedSample),
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        existingSample,
+      ),
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        updatedSample,
+      ),
     );
 
     return updatedSample;
@@ -242,7 +232,10 @@ export class SamplesService {
     }
 
     this.metadataKeysService.deleteMany(
-      this.createMetadataKeysInstance(deletedSample),
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        deletedSample,
+      ),
     );
     return deletedSample;
   }

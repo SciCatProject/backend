@@ -36,6 +36,7 @@ import {
   parsePipelineProjection,
   parsePipelineSort,
   decodeMetadataKeyStrings,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { DatasetsAccessService } from "./datasets-access.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
@@ -62,10 +63,7 @@ import {
   DatasetLookupKeysEnum,
 } from "./types/dataset-lookup";
 import { ProposalsService } from "src/proposals/proposals.service";
-import {
-  MetadataKeysService,
-  MetadataSourceDoc,
-} from "src/metadata-keys/metadatakeys.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
 import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
@@ -97,20 +95,6 @@ export class DatasetsService {
       this.configService.get<string>("opensearch.enabled") === "yes" || false;
     this.osSyncBatchSize =
       this.configService.get<number>("opensearch.dataSyncBatchSize") || 1000;
-  }
-
-  private createMetadataKeysInstance(
-    doc: UpdateQuery<DatasetDocument>,
-  ): MetadataSourceDoc {
-    const source: MetadataSourceDoc = {
-      sourceType: this.datasetModel.collection.name,
-      userGroups: Array.from(
-        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-      ),
-      isPublished: doc.isPublished || false,
-      metadata: doc.scientificMetadata ?? {},
-    };
-    return source;
   }
 
   addLookupFields(
@@ -217,7 +201,10 @@ export class DatasetsService {
     }
 
     this.metadataKeysService.insertManyFromSource(
-      this.createMetadataKeysInstance(savedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        savedDataset,
+      ),
     );
 
     return savedDataset;
@@ -502,8 +489,14 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(existingDataset),
-      this.createMetadataKeysInstance(updatedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        existingDataset,
+      ),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        updatedDataset,
+      ),
     );
     // we were able to find the dataset and update it
     return updatedDataset;
@@ -560,8 +553,14 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(existingDataset),
-      this.createMetadataKeysInstance(patchedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        existingDataset,
+      ),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        patchedDataset,
+      ),
     );
     // we were able to find the dataset and update it
     return patchedDataset;
@@ -591,7 +590,10 @@ export class DatasetsService {
 
     // delete metadata keys associated with this dataset
     await this.metadataKeysService.deleteMany(
-      this.createMetadataKeysInstance(deletedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        deletedDataset,
+      ),
     );
 
     return deletedDataset;

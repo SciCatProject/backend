@@ -6,13 +6,14 @@ import {
   PreconditionFailedException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, UpdateQuery } from "mongoose";
+import { FilterQuery, Model } from "mongoose";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import {
   parseLimitFilters,
   addCreatedByFields,
   addUpdatedByField,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { CreateInstrumentDto } from "./dto/create-instrument.dto";
 import { PartialUpdateInstrumentDto } from "./dto/update-instrument.dto";
@@ -20,10 +21,7 @@ import { Instrument, InstrumentDocument } from "./schemas/instrument.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
-import {
-  MetadataKeysService,
-  MetadataSourceDoc,
-} from "src/metadata-keys/metadatakeys.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -35,29 +33,17 @@ export class InstrumentsService {
     @Inject(REQUEST) private request: Request,
   ) {}
 
-  private createMetadataKeysInstance(
-    doc: UpdateQuery<InstrumentDocument>,
-  ): MetadataSourceDoc {
-    const source: MetadataSourceDoc = {
-      sourceType: this.instrumentModel.collection.name,
-      userGroups: Array.from(
-        new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-      ),
-      isPublished: doc.isPublished || false,
-      metadata: doc.customMetadata ?? {},
-    };
-    return source;
-  }
-
   async create(createInstrumentDto: CreateInstrumentDto): Promise<Instrument> {
     const username = (this.request.user as JWTUser).username;
     const createdInstrument = new this.instrumentModel(
       addCreatedByFields<CreateInstrumentDto>(createInstrumentDto, username),
     );
     const savedInstrument = await createdInstrument.save();
-
     await this.metadataKeysService.insertManyFromSource(
-      this.createMetadataKeysInstance(savedInstrument),
+      createMetadataKeysInstance(this.instrumentModel.collection.name, {
+        ...savedInstrument.toObject(),
+        isPublished: true,
+      }),
     );
 
     return savedInstrument;
@@ -141,8 +127,14 @@ export class InstrumentsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(existingInstrument),
-      this.createMetadataKeysInstance(updatedInstrument),
+      createMetadataKeysInstance(this.instrumentModel.collection.name, {
+        ...existingInstrument.toObject(),
+        isPublished: true,
+      }),
+      createMetadataKeysInstance(this.instrumentModel.collection.name, {
+        ...updatedInstrument.toObject(),
+        isPublished: true,
+      }),
     );
 
     return updatedInstrument;
@@ -160,7 +152,10 @@ export class InstrumentsService {
     }
 
     await this.metadataKeysService.deleteMany(
-      this.createMetadataKeysInstance(deletedInstrument),
+      createMetadataKeysInstance(
+        this.instrumentModel.collection.name,
+        deletedInstrument,
+      ),
     );
 
     return deletedInstrument;
