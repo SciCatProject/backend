@@ -129,7 +129,7 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
       return payload[userattr] as string;
     }
     throw new InternalServerErrorException(
-      "usernameAttr incorrectly configured",
+      "usernameAttr incorrectly configured: s" + userattr,
     );
   }
 
