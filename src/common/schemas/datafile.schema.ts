@@ -94,6 +94,17 @@ export class DataFile {
     required: false,
   })
   type?: string;
+
+  @ApiProperty({
+    type: Object,
+    required: false,
+    description: "File metadata.",
+  })
+  @Prop({
+    type: Object,
+    required: false,
+  })
+  metadata?: Record<string, unknown>;
 }
 
 export const DataFileSchema = SchemaFactory.createForClass(DataFile);

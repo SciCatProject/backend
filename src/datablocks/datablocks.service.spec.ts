@@ -29,6 +29,9 @@ const mockDatablock: Datablock = {
       uid: "testUid",
       gid: "testGid",
       perm: "testPerm",
+      metadata: {
+        key: "value",
+      },
     },
   ],
 };
