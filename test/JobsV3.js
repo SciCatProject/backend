@@ -9,6 +9,8 @@ let accessTokenAdminIngestor = null,
 
   datasetPid1 = null,
   datasetPid2 = null,
+  datasetPid3 = null,
+  datasetPid4 = null,
   datablockId1 = null,
   datablockId2 = null,
   datablockId3 = null,
@@ -42,6 +44,22 @@ const dataset2 = {
   isPublished: true,
   ownerGroup: "group5",
   accessGroups: ["group1"],
+};
+
+const dataset3 = {
+  ...TestData.RawCorrect,
+  isPublished: false,
+  ownerGroup: "group1",
+  accessGroups: [],
+};
+
+// Published dataset with no accessGroups: used to verify that published datasets
+// are excluded from the #datasetAccess group intersection (they don't block access).
+const dataset4 = {
+  ...TestData.RawCorrect,
+  isPublished: true,
+  ownerGroup: "group1",
+  accessGroups: [],
 };
 
 const jobOwnerAccess = {
@@ -121,6 +139,39 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       });
   });
 
+  it("0026: Add dataset 4 as Admin Ingestor", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(dataset4)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("ownerGroup").and.equal("group1");
+        res.body.should.have.property("isPublished").and.equal(true);
+        res.body.should.have.property("pid").and.be.string;
+        datasetPid4 = res.body["pid"];
+      });
+  });
+
+  it("0025: Add dataset 3 as Admin Ingestor", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(dataset3)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("ownerGroup").and.equal("group1");
+        res.body.should.have.property("type").and.equal("raw");
+        res.body.should.have.property("isPublished").and.equal(false);
+        res.body.should.have.property("pid").and.be.string;
+        datasetPid3 = res.body["pid"];
+      });
+  });
+
   it("0021: Add via /api/v3 a new job with invalid type, as a user from ADMIN_GROUPS, which should fail", async () => {
     const newJob = {
       type: "invalid_type",
@@ -171,7 +222,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -195,7 +246,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -397,7 +448,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(jobCreateDtoForUser51)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -1144,15 +1195,39 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
           .and.be.equal(
-            "Invalid new job. User owning the job should match user logged in.",
+            "Invalid new job. Owner group should be specified.",
           );
+      });
+  });
+
+  it("0365: Add via /api/v3 an owner_access job with datasets from different owner groups, which should fail", async () => {
+    const newJob = {
+      ...jobOwnerAccess,
+      datasetList: [
+        { pid: datasetPid1, files: [] },
+        { pid: datasetPid3, files: [] },
+      ],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal("Invalid new job. Owner group should be specified.");
       });
   });
 
@@ -1243,6 +1318,37 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("id");
+      });
+  });
+
+  it("0415: Add via /api/v3 a dataset_access job as user5.1 with a locked published dataset and an owned non-published dataset, which should succeed because published datasets are excluded from the group intersection", async () => {
+    // dataset4: published, ownerGroup=group1, accessGroups=[] — "locked" published dataset
+    // dataset1: non-published, ownerGroup=group5, accessGroups=[group1] — user5.1 owns via group5
+    // Old behaviour (published included in intersection):
+    //   intersection([group1], [group5, group1], [group5]) = [] → no ownerGroup → 422
+    // New behaviour (published excluded):
+    //   intersection([group5, group1], [group5]) = [group5] → ownerGroup=group5 → 201
+    const newJob = {
+      ...jobDatasetAccess,
+      datasetList: [
+        { pid: datasetPid4, files: [] },
+        { pid: datasetPid1, files: [] },
+      ],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("id");
+        res.body.should.have.property("type").and.be.string;
+        res.body.should.have
+          .property("datasetList")
+          .that.deep.equals(newJob.datasetList);
       });
   });
 
@@ -1371,7 +1477,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         .send(newJob)
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${accessTokenUser51}` })
-        .expect(TestData.BadRequestStatusCode)
+        .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/)
     } finally {
       await db.collection("UserIdentity").deleteOne({ _id: userIdentity2.insertedId })
