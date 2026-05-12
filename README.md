@@ -191,6 +191,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_GROUP_SEARCH_BASE` | string | Yes | Search base for the user groups. | |
 | `LDAP_GROUP_SEARCH_FILTER` | string | Yes | Search filter for the user groups. | |
 | `LDAP_ACCESS_GROUPS_PROPERTY`| string | Yes | Target field to get the access groups value from Ldap response. | |
+| `LDAP_USERNAME_ATTR`| string | Yes | Target field to get the username from the Ldap response. Defaults to displayName. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
 | `OIDC_ADDITIONAL_AUTHORIZED_PARTIES` | string | No | Comma-separated list of additional OIDC client IDs allowed to present tokens to this backend. Used for token exchange scenarios where a third-party client obtains a token on behalf of a user. The client ID must appear as the `azp` claim in the token. Example: `additional-client1, additional-client2`. | |

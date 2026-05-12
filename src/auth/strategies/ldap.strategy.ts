@@ -16,7 +16,7 @@ import { LdapConfig } from "src/config/configuration";
 @Injectable()
 export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
   constructor(
-    configService: ConfigService,
+    private configService: ConfigService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {
@@ -29,10 +29,11 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
   ): Promise<Omit<User, "password">> {
     // add exception if displayName is empty
 
+    const username = this.getUsername(payload);
     const userFilter: FilterQuery<UserDocument> = {
       $or: [
-        { username: `ldap.${payload.displayName}` },
-        { username: payload.displayName as string },
+        { username: `ldap.${username}` },
+        { username: username as string },
         { email: payload.mail as string },
       ],
     };
@@ -40,7 +41,7 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
 
     if (!userExists) {
       const createUser: CreateUserDto = {
-        username: payload.displayName as string, //`ldap.${payload.displayName}`,
+        username: username as string,
         email: payload.mail as string,
         authStrategy: "ldap",
       };
@@ -67,9 +68,9 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
         credentials: {},
         externalId: payload.sAMAccountName as string,
         profile: {
-          displayName: payload.displayName as string,
+          displayName: username as string,
           email: payload.mail as string,
-          username: payload.displayName as string,
+          username: username as string,
           thumbnailPhoto: payload.thumbnailPhoto
             ? "data:image/jpeg;base64," +
               Buffer.from(payload.thumbnailPhoto as string, "binary").toString(
@@ -122,13 +123,24 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
     return user;
   }
 
+  private getUsername(payload: Record<string, unknown>) {
+    const userattr = this.configService.get<string>("usernameAttr") as string;
+    if (userattr in payload) {
+      return payload[userattr] as string;
+    }
+    throw new InternalServerErrorException(
+      "usernameAttr incorrectly configured",
+    );
+  }
+
   getProfile(payload: Record<string, unknown>) {
     type ldapProfile = Profile & UserProfile;
     const profile = {} as ldapProfile;
+    const username = this.getUsername(payload);
 
-    profile.displayName = payload.displayName as string;
+    profile.displayName = username as string;
     profile.email = payload.mail as string;
-    profile.username = payload.displayName as string;
+    profile.username = username as string;
     profile.thumbnailPhoto = payload.thumbnailPhoto
       ? "data:image/jpeg;base64," +
         Buffer.from(payload.thumbnailPhoto as string, "binary").toString(

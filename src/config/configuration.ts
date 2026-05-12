@@ -337,7 +337,7 @@ const configuration = () => {
         groupSearchFilter: process.env.LDAP_GROUP_SEARCH_FILTER || "",
         Mode: process.env.LDAP_MODE ?? "ad",
         externalIdAttr: process.env.LDAP_EXTERNAL_ID ?? "sAMAccountName",
-        usernameAttr: process.env.LDAP_USERNAME ?? "displayName",
+        usernameAttr: process.env.LDAP_USERNAME_ATTR ?? "displayName",
       },
     },
     oidc: {
