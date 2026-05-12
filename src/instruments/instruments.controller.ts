@@ -61,7 +61,7 @@ export class InstrumentsController {
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
-          "Instrument with the same unique name already exists",
+          "Instrument with the same unique name or PID already exists",
         );
       } else {
         throw new InternalServerErrorException(
