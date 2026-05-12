@@ -1437,10 +1437,12 @@ const TestData = {
         unit: "mbar l/s/cm^2",
         valueSI: 100000,
         unitSI: "kg / s^3",
+        human_name: "Pressure SI",
       },
       with_number: {
         value: 111,
         unit: "",
+        human_name: "Sample Number",
       },
       with_string: {
         value: "222",
@@ -1464,12 +1466,12 @@ const TestData = {
       with_unit_and_value_si: {
         value: 100,
         unit: "mbar l/s/cm^2",
-        valueSI: 100000,
-        unitSI: "kg / s^3",
+        human_name: "Pressure SI",
       },
       with_number: {
         value: 111,
         unit: "",
+        human_name: "Sample Number",
       },
       with_string: {
         value: "222",

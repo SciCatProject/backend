@@ -36,6 +36,7 @@ import {
   parsePipelineProjection,
   parsePipelineSort,
   decodeMetadataKeyStrings,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { DatasetsAccessService } from "./datasets-access.service";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
@@ -62,19 +63,15 @@ import {
   DatasetLookupKeysEnum,
 } from "./types/dataset-lookup";
 import { ProposalsService } from "src/proposals/proposals.service";
-import {
-  MetadataKeysService,
-  MetadataSourceDoc,
-} from "src/metadata-keys/metadatakeys.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
-import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
-import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers";
+import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
+import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
+import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 import { withOCCFilter } from "./utils/occ-util";
-
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -98,20 +95,6 @@ export class DatasetsService {
       this.configService.get<string>("opensearch.enabled") === "yes" || false;
     this.osSyncBatchSize =
       this.configService.get<number>("opensearch.dataSyncBatchSize") || 1000;
-  }
-
-  private createMetadataKeysInstance(
-    doc: UpdateQuery<DatasetDocument>,
-  ): MetadataSourceDoc {
-    const source: MetadataSourceDoc = {
-      sourceType: "dataset",
-      sourceId: doc.pid,
-      ownerGroup: doc.owner,
-      accessGroups: doc.accessGroups || [],
-      isPublished: doc.isPublished || false,
-      metadata: doc.scientificMetadata ?? {},
-    };
-    return source;
   }
 
   addLookupFields(
@@ -218,7 +201,10 @@ export class DatasetsService {
     }
 
     this.metadataKeysService.insertManyFromSource(
-      this.createMetadataKeysInstance(savedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        savedDataset,
+      ),
     );
 
     return savedDataset;
@@ -503,7 +489,14 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(updatedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        existingDataset,
+      ),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        updatedDataset,
+      ),
     );
     // we were able to find the dataset and update it
     return updatedDataset;
@@ -520,6 +513,11 @@ export class DatasetsService {
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
     const username = (this.request.user as JWTUser).username;
+
+    const existingDataset = await this.datasetModel.findOne({ pid: id }).exec();
+    if (!existingDataset) {
+      throw new NotFoundException(`Dataset #${id} not found`);
+    }
 
     // NOTE: When doing findByIdAndUpdate in mongoose it does reset the subdocuments to default values if no value is provided
     // https://stackoverflow.com/questions/57324321/mongoose-overwriting-data-in-mongodb-with-default-values-in-subdocuments
@@ -539,7 +537,7 @@ export class DatasetsService {
     // check if we were able to find the dataset (matching the precondition, if supplied) and update it
     if (!patchedDataset) {
       if (!unmodifiedSince) {
-        throw new NotFoundException(`Dataset #${id} not found`);
+        throw new NotFoundException(`Dataset #${id} failed to update.`);
       }
       throw new PreconditionFailedException(
         `Dataset #${id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
@@ -555,7 +553,14 @@ export class DatasetsService {
     }
 
     await this.metadataKeysService.replaceManyFromSource(
-      this.createMetadataKeysInstance(patchedDataset),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        existingDataset,
+      ),
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        patchedDataset,
+      ),
     );
     // we were able to find the dataset and update it
     return patchedDataset;
@@ -584,10 +589,12 @@ export class DatasetsService {
     }
 
     // delete metadata keys associated with this dataset
-    await this.metadataKeysService.deleteMany({
-      sourceId: id,
-      sourceType: "dataset",
-    });
+    await this.metadataKeysService.deleteMany(
+      createMetadataKeysInstance(
+        this.datasetModel.collection.name,
+        deletedDataset,
+      ),
+    );
 
     return deletedDataset;
   }

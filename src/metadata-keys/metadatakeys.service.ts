@@ -4,14 +4,7 @@ import {
   MetadataKeyClass,
   MetadataKeyDocument,
 } from "./schemas/metadatakey.schema";
-import {
-  DeleteResult,
-  FilterQuery,
-  HydratedDocument,
-  Model,
-  PipelineStage,
-  QueryOptions,
-} from "mongoose";
+import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { isEmpty } from "lodash";
 import {
   addCreatedByFields,
@@ -24,13 +17,39 @@ type ScientificMetadataEntry = {
 };
 
 export type MetadataSourceDoc = {
-  sourceId: string;
   sourceType: string;
-  ownerGroup: string;
-  accessGroups: string[];
+  userGroups: string[];
   isPublished: boolean;
   metadata: Record<string, unknown>;
 };
+
+// Recomputes the userGroups string array from userGroupCounts after a decrement.
+// Retains only group names whose reference count is still above zero.
+const RECOMPUTE_USER_GROUPS_STAGE = [
+  {
+    $set: {
+      userGroupCounts: {
+        $arrayToObject: {
+          $filter: {
+            input: { $objectToArray: "$userGroupCounts" },
+            cond: { $gt: ["$$this.v", 0] },
+          },
+        },
+      },
+    },
+  },
+  {
+    $set: {
+      userGroups: {
+        $map: {
+          input: { $objectToArray: "$userGroupCounts" },
+          as: "entry",
+          in: "$$entry.k",
+        },
+      },
+    },
+  },
+];
 
 @Injectable({ scope: Scope.REQUEST })
 export class MetadataKeysService {
@@ -45,10 +64,11 @@ export class MetadataKeysService {
   ): Promise<MetadataKeyClass[]> {
     const whereFilter: FilterQuery<MetadataKeyDocument> = filter.where ?? {};
     const fieldsProjection: string[] = filter.fields ?? {};
-    const limits: QueryOptions<MetadataKeyDocument> = filter.limits ?? {
-      limit: 100,
-      skip: 0,
-      sort: { createdAt: "desc" },
+
+    const limits: QueryOptions<MetadataKeyDocument> = {
+      limit: filter.limits?.limit ?? 100,
+      skip: filter.limits?.skip ?? 0,
+      sort: filter.limits?.sort ?? { createdAt: "desc" },
     };
 
     const pipeline: PipelineStage[] = [
@@ -58,6 +78,7 @@ export class MetadataKeysService {
         },
       },
     ];
+
     if (!isEmpty(fieldsProjection)) {
       const projection = parsePipelineProjection(fieldsProjection);
       pipeline.push({ $project: projection });
@@ -79,59 +100,85 @@ export class MetadataKeysService {
     return data;
   }
 
-  async deleteMany(
-    filter: FilterQuery<MetadataKeyDocument>,
-  ): Promise<DeleteResult> {
-    const result = await this.metadataKeyModel.deleteMany(filter).exec();
-
-    Logger.log(
-      `MetadataKeys deleted: ${result.deletedCount ?? 0} With filter:`,
-      { filter },
-    );
-
-    return result;
+  async insertManyFromSource(doc: MetadataSourceDoc): Promise<void> {
+    await this.adjustCounts(doc, 1);
   }
 
-  async insertManyFromSource(
+  async deleteMany(doc: MetadataSourceDoc): Promise<void> {
+    await this.adjustCounts(doc, -1);
+  }
+
+  async replaceManyFromSource(
+    oldDoc: MetadataSourceDoc,
+    newDoc: MetadataSourceDoc,
+  ): Promise<void> {
+    await this.deleteMany(oldDoc);
+    await this.insertManyFromSource(newDoc);
+  }
+
+  private async adjustCounts(
     doc: MetadataSourceDoc,
-  ): Promise<HydratedDocument<MetadataKeyDocument>[] | void> {
-    if (isEmpty(doc.metadata)) {
-      return;
-    }
-    const userGroups = Array.from(
-      new Set([doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(Boolean)),
-    ) as string[];
+    delta: 1 | -1,
+  ): Promise<void> {
+    if (isEmpty(doc.metadata)) return;
 
-    const isPublished = doc.isPublished;
+    const { sourceType, userGroups, isPublished, metadata } = doc;
 
-    const metadata = doc.metadata ?? {};
-
-    const docs = Object.entries(metadata).map(([key, entry]) => {
-      const createMetadataKeyDto = {
-        _id: `${doc.sourceType}_${doc.sourceId}_${key}`,
-        id: `${doc.sourceType}_${doc.sourceId}_${key}`,
-        sourceType: doc.sourceType,
-        sourceId: doc.sourceId,
-        key,
-        userGroups,
-        isPublished,
-        humanReadableName: (entry as ScientificMetadataEntry).human_name ?? "",
-      };
-      return addCreatedByFields(createMetadataKeyDto, "system");
+    const filters = Object.entries(metadata).map(([key, entry]) => {
+      const humanReadableName =
+        (entry as ScientificMetadataEntry).human_name ?? "";
+      return { sourceType, key, humanReadableName };
     });
+
+    const queryFilter = { $or: filters };
+
+    const ops = filters.map(({ sourceType, key, humanReadableName }) => ({
+      updateOne: {
+        filter: { sourceType, key, humanReadableName },
+        update: {
+          $set: {
+            updatedAt: new Date(),
+          },
+          $inc: {
+            usageCount: delta,
+            ...this.groupCountDeltas(userGroups, delta),
+          },
+          ...(delta === 1 && {
+            $max: { isPublished },
+            $addToSet: { userGroups: { $each: userGroups } },
+            $setOnInsert: addCreatedByFields({}, "system"),
+          }),
+        },
+        upsert: delta === 1,
+      },
+    }));
+
+    await this.metadataKeyModel.bulkWrite(ops);
+
+    if (delta === -1) {
+      // UpdateMany is necessary here because the bulkWrite above only decrements userGroupCounts
+      // but cannot remove zero-count groups from userGroups in the same operation.
+      await this.metadataKeyModel.updateMany(
+        queryFilter,
+        RECOMPUTE_USER_GROUPS_STAGE,
+      );
+
+      await this.metadataKeyModel.deleteMany({
+        $and: [queryFilter, { usageCount: { $lte: 0 } }],
+      });
+    }
 
     Logger.log(
-      `Created ${docs.length} MetadataKeys from source ${doc.sourceType} with ID ${doc.sourceId}`,
+      `${delta === 1 ? "Upserted" : "Decremented or deleted"} MetadataKeys for ${sourceType}: ${Object.keys(metadata).join(", ")}`,
     );
-
-    return await this.metadataKeyModel.insertMany(docs);
   }
 
-  async replaceManyFromSource(doc: MetadataSourceDoc): Promise<void> {
-    await this.deleteMany({
-      sourceId: doc.sourceId,
-      sourceType: doc.sourceType,
-    });
-    await this.insertManyFromSource(doc);
+  private groupCountDeltas(
+    groups: string[],
+    delta: 1 | -1,
+  ): Record<string, number> {
+    return Object.fromEntries(
+      groups.map((g) => [`userGroupCounts.${g}`, delta]),
+    );
   }
 }

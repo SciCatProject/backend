@@ -12,6 +12,7 @@ import {
 import { ScientificRelation } from "./scientific-relation.enum";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
 import { isPlainObject, mapValues, omit, pickBy, some } from "lodash";
+import { MetadataSourceDoc } from "src/metadata-keys/metadatakeys.service";
 
 // add Å to mathjs accepted units as equivalent to angstrom
 const isAlphaOriginal = Unit.isValidAlpha;
@@ -1342,4 +1343,35 @@ export function parseDate(dateString?: string): Date | undefined {
   if (!dateString) return undefined;
   const parsedDate = new Date(dateString);
   return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+}
+
+export function createMetadataKeysInstance(
+  sourceType: string,
+  doc: {
+    ownerGroup?: string;
+    accessGroups?: string[];
+    isPublished?: boolean;
+    scientificMetadata?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+    customMetadata?: Record<string, unknown>;
+    sampleCharacteristics?: Record<string, unknown>;
+  },
+): MetadataSourceDoc {
+  return {
+    sourceType,
+    userGroups: Array.from(
+      new Set(
+        [doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(
+          Boolean,
+        ) as string[],
+      ),
+    ),
+    isPublished: doc.isPublished ?? false,
+    metadata:
+      doc.scientificMetadata ??
+      doc.metadata ??
+      doc.customMetadata ??
+      doc.sampleCharacteristics ??
+      {},
+  };
 }

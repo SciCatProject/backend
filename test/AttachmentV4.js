@@ -3,7 +3,6 @@ const assert = require("node:assert");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 const { v4: uuidv4 } = require("uuid");
-const request = require("supertest");
 
 let accessTokenAdminIngestor = null,
   accessTokenUser1 = null,
