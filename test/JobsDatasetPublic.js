@@ -330,7 +330,7 @@ describe("1160: Jobs: Test New Job Model Authorization for public_access jobs ty
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -384,7 +384,7 @@ describe("1160: Jobs: Test New Job Model Authorization for public_access jobs ty
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 
@@ -431,7 +431,7 @@ describe("1160: Jobs: Test New Job Model Authorization for public_access jobs ty
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Unauthorized to create this job.");
+          .and.be.equal("User does not have access to all datasets, cannot create job.");
       });
   });
 });

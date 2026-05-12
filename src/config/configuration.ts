@@ -277,9 +277,13 @@ const configuration = () => {
       attachmentPrivileged: attachmentPrivilegedGroups
         .split(",")
         .map((v) => v.trim()),
-      createJobPrivileged: createJobPrivilegedGroups,
-      updateJobPrivileged: updateJobPrivilegedGroups,
-      deleteJob: deleteJobGroups,
+      createJobPrivileged: createJobPrivilegedGroups
+        .split(",")
+        .map((v) => v.trim()),
+      updateJobPrivileged: updateJobPrivilegedGroups
+        .split(",")
+        .map((v) => v.trim()),
+      deleteJob: deleteJobGroups.split(",").map((v) => v.trim()),
     },
     datasetCreationValidationEnabled: boolean(datasetCreationValidationEnabled),
     datasetCreationValidationRegex: datasetCreationValidationRegex,
