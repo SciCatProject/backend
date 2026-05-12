@@ -6,16 +6,14 @@ import { AccessGroupFromLdapService } from "./access-group-from-ldap.service";
 describe("AccessGroupFromLdapService", () => {
   let service: AccessGroupFromLdapService;
 
-  const mockConfigService = {
-    get: () => "access_group_property",
-  };
+  const mockAccessService = new AccessGroupFromLdapService("cn");
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [AccessGroupFromLdapService, ConfigService],
     })
-      .overrideProvider(ConfigService)
-      .useValue(mockConfigService)
+      .overrideProvider(AccessGroupFromLdapService)
+      .useValue(mockAccessService)
       .compile();
 
     service = module.get<AccessGroupFromLdapService>(
@@ -30,7 +28,6 @@ describe("AccessGroupFromLdapService", () => {
   it("Should resolve access groups", async () => {
     const userPayload = {
       userId: "test_user",
-      accessGroupProperty: "_groups",
       payload: {
         _groups: [
           {

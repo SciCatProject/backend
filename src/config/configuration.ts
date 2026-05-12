@@ -308,7 +308,7 @@ const configuration = () => {
     },
     accessGroupsLdapPayloadConfig: {
       enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
-      accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY, // Example: groups
+      accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY || "cn", // Examples: "cn" or "ou"
     },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {

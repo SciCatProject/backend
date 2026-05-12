@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { UserPayload } from "../interfaces/userPayload.interface";
 import { AccessGroupService } from "./access-group.service";
 
@@ -8,27 +7,24 @@ import { AccessGroupService } from "./access-group.service";
  */
 @Injectable()
 export class AccessGroupFromLdapService extends AccessGroupService {
-  constructor(private configService: ConfigService) {
+  constructor(private accessGroupProperty: string) {
     super();
   }
 
   async getAccessGroups(userPayload: UserPayload): Promise<string[]> {
     const accessGroups: string[] = [];
 
-    const accessGroupsProperty = userPayload.accessGroupProperty;
+    const accessGroupsProperty = this.accessGroupProperty;
     if (accessGroupsProperty) {
       const payload: Record<string, unknown> | undefined = userPayload.payload;
-      if (
-        payload !== undefined &&
-        Array.isArray(payload[accessGroupsProperty])
-      ) {
-        for (const group of payload[accessGroupsProperty]) {
+      if (payload !== undefined && Array.isArray(payload["_groups"])) {
+        for (const group of payload["_groups"]) {
           if (
             typeof group === "object" &&
-            "cn" in group &&
-            typeof group["cn"] === "string"
+            accessGroupsProperty in group &&
+            typeof group[accessGroupsProperty] === "string"
           ) {
-            accessGroups.push(group["cn"]);
+            accessGroups.push(group[accessGroupsProperty]);
           }
         }
       }

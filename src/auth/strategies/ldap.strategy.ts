@@ -21,7 +21,6 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
     private accessGroupService: AccessGroupService,
   ) {
     const ldapOptions = configService.get<LdapConfig>("ldap")!;
-
     super(ldapOptions);
   }
 
@@ -58,7 +57,6 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
         userId: user.id as string,
         username: user.username,
         email: user.email,
-        accessGroupProperty: "_groups",
         payload: payload,
       };
       const accessGroups =
@@ -101,7 +99,6 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
         userId: user.id as string,
         username: user.username,
         email: user.email,
-        accessGroupProperty: "_groups",
         payload: payload,
       };
       const userIdentity = await this.usersService.findByIdUserIdentity(
