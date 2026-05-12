@@ -124,6 +124,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `ACCESS_GROUPS_STATIC_ENABLED` | string | Yes | Flag to enable/disable automatic assignment of predefined access groups to all users. | true |
 | `ACCESS_GROUPS_STATIC_VALUES` | string | Yes | Comma-separated list of access groups automatically assigned to all users. Example: "scicat, user". | |
 | `ACCESS_GROUPS_OIDCPAYLOAD_ENABLED` | string | Yes | Flag to enable/disable fetching access groups directly from OIDC response. Requires specifying a field via `OIDC_ACCESS_GROUPS_PROPERTY` to extract access groups. | false |
+| `ACCESS_GROUPS_LDAPPAYLOAD_ENABLED` | string | Yes | Flag to enable/disable fetching access groups directly from Ldap response. Requires specifying a field via `LDAP_ACCESS_GROUPS_PROPERTY` to extract access groups. | false |
 | `DOI_PREFIX` | string | | The facility DOI prefix, with trailing slash. | |
 | `EXPRESS_SESSION_SECRET` | string | No | Secret used to set up express session. Required if using OIDC authentication | |
 | `HTTP_MAX_REDIRECTS` | number | Yes | Max redirects for HTTP requests. | 5 |
@@ -137,6 +138,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
 | `LDAP_GROUP_SEARCH_BASE` | string | Yes | Search base for the user groups. | |
 | `LDAP_GROUP_SEARCH_FILTER` | string | Yes | Search filter for the user groups. | |
+| `LDAP_ACCESS_GROUPS_PROPERTY`| string | Yes | Target field to get the access groups value from Ldap response. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
 | `OIDC_CLIENT_SECRET` | string | Yes | Secret to provide to the OIDC service to obtain the user token. Example: Aa1JIw3kv3mQlGFWhRrE3gOdkH6xreAwro. | |
