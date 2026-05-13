@@ -15,13 +15,16 @@ import { LdapConfig } from "src/config/configuration";
 
 @Injectable()
 export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
+  readonly ldapOptions: LdapConfig;
+
   constructor(
-    private configService: ConfigService,
+    configService: ConfigService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {
     const ldapOptions = configService.get<LdapConfig>("ldap")!;
     super(ldapOptions);
+    this.ldapOptions = ldapOptions;
   }
 
   async validate(
@@ -124,12 +127,12 @@ export class LdapStrategy extends PassportStrategy(Strategy, "ldap") {
   }
 
   private getUsername(payload: Record<string, unknown>) {
-    const userattr = this.configService.get<string>("usernameAttr") as string;
+    const userattr = this.ldapOptions.server.usernameAttr;
     if (userattr in payload) {
       return payload[userattr] as string;
     }
     throw new InternalServerErrorException(
-      "usernameAttr incorrectly configured: s" + userattr,
+      "usernameAttr incorrectly configured: " + userattr,
     );
   }
 
