@@ -831,6 +831,7 @@ your own <em>functionalAccounts.json</em> file.</p>
 | <code>ACCESS_GROUPS_STATIC_ENABLED</code> | string | Yes | Flag to enable/disable automatic assignment of predefined access groups to all users. | true |
 | <code>ACCESS_GROUPS_STATIC_VALUES</code> | string | Yes | Comma-separated list of access groups automatically assigned to all users. Example: "scicat, user". | |
 | <code>ACCESS_GROUPS_OIDCPAYLOAD_ENABLED</code> | string | Yes | Flag to enable/disable fetching access groups directly from OIDC response. Requires specifying a field via <code>OIDC_ACCESS_GROUPS_PROPERTY</code> to extract access groups. | false |
+| <code>ACCESS_GROUPS_LDAPPAYLOAD_ENABLED</code> | string | Yes | Flag to enable/disable fetching access groups directly from Ldap response. Requires specifying a field via <code>LDAP_ACCESS_GROUPS_PROPERTY</code> to extract access groups. | false |
 | <code>DOI_PREFIX</code> | string | | The facility DOI prefix, with trailing slash. | |
 | <code>EXPRESS_SESSION_SECRET</code> | string | No | Secret used to set up express session. Required if using OIDC authentication | |
 | <code>HTTP_MAX_REDIRECTS</code> | number | Yes | Max redirects for HTTP requests. | 5 |
@@ -842,6 +843,10 @@ your own <em>functionalAccounts.json</em> file.</p>
 | <code>LDAP_BIND_CREDENTIALS</code> | string | Yes | Credentials for your LDAP server. | |
 | <code>LDAP_SEARCH_BASE</code> | string | Yes | Search base for your LDAP server. | |
 | <code>LDAP_SEARCH_FILTER</code> | string | Yes | Search filter for your LDAP server. | |
+| <code>LDAP_GROUP_SEARCH_BASE</code> | string | Yes | Search base for the user groups. | |
+| <code>LDAP_GROUP_SEARCH_FILTER</code> | string | Yes | Search filter for the user groups. | |
+| <code>LDAP_ACCESS_GROUPS_PROPERTY</code>| string | Yes | Target field to get the access groups value from Ldap response. | |
+| <code>LDAP_USERNAME_ATTR</code>| string | Yes | Target field to get the username from the Ldap response. Defaults to displayName. | |
 | <code>OIDC_ISSUER</code> | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | <code>OIDC_CLIENT_ID</code> | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
 | <code>OIDC_CLIENT_SECRET</code> | string | Yes | Secret to provide to the OIDC service to obtain the user token. Example: Aa1JIw3kv3mQlGFWhRrE3gOdkH6xreAwro. | |
