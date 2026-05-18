@@ -195,9 +195,16 @@ export class JobsService {
       JobDocument,
       IJobFields
     >(this.jobModel, "id", fields, facets);
-    pipeline.unshift({
-      $match: access,
-    });
+
+    const firstStage = pipeline[0] as { $match: Record<string, unknown> };
+
+    if (fields["text"]) {
+      pipeline.splice(0, 1, { $match: { $and: [access, firstStage.$match] } });
+    } else {
+      pipeline.unshift({
+        $match: access,
+      });
+    }
     return await this.jobModel.aggregate(pipeline).exec();
   }
 
