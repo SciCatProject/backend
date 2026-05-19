@@ -1,5 +1,5 @@
 ---
-title: Authentication refactor plan (phase 1)
+title: Authorization refactor plan (phase 1)
 audience: Technical
 created_by: Copilot
 created_on: 2026-05-19
