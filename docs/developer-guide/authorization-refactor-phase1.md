@@ -7,7 +7,7 @@ created_on: 2026-05-19
 
 ## Scope
 
-This document captures the **current authentication logic** and the **phase 1 refactor standards**.
+This document captures the **current authorization logic** and the **phase 1 refactor standards**.
 
 Phase 1 is scoped to CASL authorization in backend services and controllers.
 
