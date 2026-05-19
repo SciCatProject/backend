@@ -28,7 +28,7 @@ export const SUBJECTS = {
   DatasetOrigdatablock: DatasetClass,
   DatasetDatablock: DatasetClass,
 
-  // Standalong resource types
+  // Standalone resource types
   Attachment: Attachment,
   Datablock: Datablock,
   Instrument: Instrument,
