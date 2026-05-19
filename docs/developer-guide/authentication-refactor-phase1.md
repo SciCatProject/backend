@@ -15,7 +15,7 @@ Out of scope for phase 1:
 
 - OpenSearch / ElasticSearch authorization refactor
 
-## Current authentication logic (baseline)
+## Current authorization logic (baseline)
 
 ### Current structure summary
 
@@ -68,7 +68,7 @@ Additional manual filter injection exists in `src/datasets/datasets-access.servi
 
 ### Objectives
 
-- Keep refactor scoped to authentication/authorization.
+- Keep refactor scoped to authorization.
 - Move to JSON-driven CASL policy configuration from a single policy file.
 - Validate policy JSON with JSON Schema validator (existing validator stack).
 - Reduce auth logic to two layers:
