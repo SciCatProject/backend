@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "endpoints": {
+    "defaults": [
+      { "action": "read", "subject": "Dataset" },
+      { "action": "read", "subject": "Proposal" },
+      { "action": "read", "subject": "PublishedData" },
+      { "action": "read", "subject": "Sample" },
+      { "action": "read", "subject": "Instrument" }
+    ],
+    "groups": {
+      "admin": {
+        "can": [
+          { "action": "manage", "subject": "all" }
+        ],
+        "cannot": []
+      },
+      "ingestor": {
+        "can": [
+          { "action": "create", "subject": "Dataset" },
+          { "action": "read",   "subject": "Dataset" },
+          { "action": "update", "subject": "Dataset" },
+          { "action": "create", "subject": "DatasetOrigdatablock" },
+          { "action": "create", "subject": "DatasetDatablock" }
+        ],
+        "cannot": []
+      },
+      "user": {
+        "can": [
+          { "action": "read", "subject": "Dataset" },
+          { "action": "read", "subject": "Proposal" }
+        ],
+        "cannot": []
+      }
+    }
+  },
+  "instance": {
+    "defaults": {
+      "can": [
+        {
+          "action": "read",
+          "subject": "Dataset",
+          "conditions": { "isPublished": true }
+        },
+        {
+          "action": "read",
+          "subject": "Proposal",
+          "conditions": { "isPublished": true }
+        },
+        {
+          "action": "read",
+          "subject": "Sample",
+          "conditions": { "isPublished": true }
+        }
+      ],
+      "cannot": []
+    },
+    "groups": {
+      "admin": {
+        "can": [
+          { "action": "manage", "subject": "all" }
+        ],
+        "cannot": []
+      },
+      "ingestor": {
+        "can": [
+          {
+            "action": "create",
+            "subject": "Dataset",
+            "conditions": { "ownerGroup": "{{user.currentGroups}}" }
+          },
+          {
+            "action": "read",
+            "subject": "Dataset",
+            "conditions": { "ownerGroup": "{{user.currentGroups}}" }
+          },
+          {
+            "action": "update",
+            "subject": "Dataset",
+            "conditions": { "ownerGroup": "{{user.currentGroups}}" }
+          }
+        ],
+        "cannot": []
+      },
+      "user": {
+        "can": [
+          {
+            "action": "read",
+            "subject": "Dataset",
+            "conditions": { "ownerGroup": "{{user.currentGroups}}" }
+          },
+          {
+            "action": "read",
+            "subject": "Dataset",
+            "conditions": { "isPublished": true }
+          },
+          {
+            "action": "read",
+            "subject": "Proposal",
+            "conditions": { "ownerGroup": "{{user.currentGroups}}" }
+          }
+        ],
+        "cannot": []
+      }
+    }
+  }
+}

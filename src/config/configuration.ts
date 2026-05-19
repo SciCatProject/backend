@@ -64,6 +64,8 @@ const configuration = () => {
 
   const jobConfigurationFile = process.env.JOB_CONFIGURATION_FILE || "";
 
+  const authPolicyFile = process.env.AUTH_POLICY_FILE || "auth-policy.json";
+
   const ajvCustomDefinitions = process.env.AJV_CUSTOM_DEFINITIONS_FILE || "";
 
   const defaultLogger = {
@@ -221,6 +223,7 @@ const configuration = () => {
     },
     swaggerPath: process.env.SWAGGER_PATH || "explorer",
     jobConfigurationFile: jobConfigurationFile,
+    authPolicyFile: authPolicyFile,
     jobDefaultStatusCode: process.env.JOB_DEFAULT_STATUS_CODE || "jobSubmitted",
     jobDefaultStatusMessage:
       process.env.JOB_DEFAULT_STATUS_MESSAGE || "Job submitted.",
