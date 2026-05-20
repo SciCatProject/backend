@@ -246,7 +246,7 @@ We need to set up a workflow to run post ingestions task. The process needs to b
 - DATASET_UPDATE_BASIC_GROUPS = ""
 - DATASET_UPDATE_PRIVILEGED_GROUPS = "post_ingestion_tasks"
 - DATASET_DELETE_BASIC_GROUPS = ""
-- DATASET_DELETE_PRIVILEGED_GROUP = ""
+- DATASET_DELETE_PRIVILEGED_GROUPS = ""
 - ADMIN_GROUPS = ""
 - DELETE_GROUPS = ""
 
