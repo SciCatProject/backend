@@ -112,7 +112,7 @@ How the different levels of authorization translate into data conditions applied
   These groups are allowed to delete any dataset independently of the ownership.  
   Default: _#nogroup_  
   Special values:
-  - _#DsCP_ : all groups listed in _Dataset Create Privileged_ are allowed to update any datasets.
+  - _#DsCP_ : all groups listed in _Dataset Create Privileged_ are allowed to delete any datasets.
 
 ## Authorization special permissions groups
 
