@@ -170,7 +170,7 @@ Here is the map:
 
 ## Use cases and configuration examples
 
-This section includes few of the many use cases that the community as come across, found them informative.
+This section includes few of the many use cases that the community has come across, found them informative.
 Each use case provides the settings for each special permissions groups in isolation. 
 In a production setup, each special permissions groups will contain a list of multiple group that is the union of each individual case.
 
