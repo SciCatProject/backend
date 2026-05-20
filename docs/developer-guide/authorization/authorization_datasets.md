@@ -32,7 +32,7 @@ How the different levels of authorization translate into data conditions applied
   - isPublished = true
   - the user belongs to the group listed in the _ownerGroup_ field
   - the user belongs to one of the groups listed in the _accessGroups_ field
-  - _sharedWith contains the user's email_ (obsolete, it will removed)
+  - _sharedWith contains the user's email_ (obsolete, it will be removed)
 - Owner
   - the user belongs to the group listed in the _ownerGroup_ field
 - Any
