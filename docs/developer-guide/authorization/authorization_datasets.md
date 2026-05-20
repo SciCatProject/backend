@@ -46,7 +46,7 @@ How the different levels of authorization translate into data conditions applied
 - Read
   - GET Datasets
   - GET Datasets/fullquery
-  - GET Datasets/fullfacets
+  - GET Datasets/fullfacet
   - GET Datasets/metadataKeys
   - GET Datasets/count
   - GET Datasets/findOne
