@@ -155,8 +155,8 @@ Each variable is a comma separated list of the users' groups that acquired the s
 - DATASET_UPDATE_PRIVILEGED_GROUPS: groups with __Dataset Update Privileged__ permissions
 - DATASET_DELETE_BASIC_GROUPS: groups with __Dataset Delete Basic__ permissions
 - DATASET_DELETE_PRIVILEGED_GROUPS: groups with __Dataset Delete Privileged__ permissions
-- ADMIN_GROUPS: groups with __Admin__ permissions. This variable effects all the sub-systems.
-- DELETE_GROUPS: groups with __Delete__ permissions. This variable effects all the sub-systems.
+- ADMIN_GROUPS: groups with __Admin__ permissions. This variable affects all the sub-systems.
+- DELETE_GROUPS: groups with __Delete__ permissions. This variable affects all the sub-systems.
 
 ## Legacy
 
