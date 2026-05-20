@@ -196,7 +196,7 @@ We need a functional account that allows the ingestion process to create dataset
 - DATASET_UPDATE_BASIC_GROUPS = ""
 - DATASET_UPDATE_PRIVILEGED_GROUPS = ""
 - DATASET_DELETE_BASIC_GROUPS = ""
-- DATASET_DELETE_PRIVILEGED_GROUP = ""
+- DATASET_DELETE_PRIVILEGED_GROUPS = ""
 - ADMIN_GROUPS = ""
 - DELETE_GROUPS = ""
 
