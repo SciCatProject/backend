@@ -255,7 +255,7 @@ We need to set up a workflow to run post ingestions task. The process needs to b
 #### Description
 
 We need to set up a workflow to delete datasets that are more than 10 years old and are marked with the keyword _obsolete_.
-The process needs to list all datasets that contains the valu e_obsolete_ in the keywords field and have creation time older than 10 years from today. Once the list has been retrieved, it has to iterate through and execute a delte command on each dataset.
+The process needs to list all datasets that contains the value _obsolete_ in the keywords field and have creation time older than 10 years from today. Once the list has been retrieved, it has to iterate through and execute a delete command on each dataset.
 
 ##### Accounts
 
