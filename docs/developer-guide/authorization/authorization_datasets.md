@@ -147,16 +147,16 @@ A user will acquire the permissions from the special permissions groups up to th
 The following list present the environmental variables that should be configured to setup the special groups listed in the previous sections.
 Each variable is a comma separated list of the users' groups that acquired the special permissions linked to the special group.
 
-- DATASET_READ_PRIVILEGED_GROUPS: groups with __Dataset Read Privileged__ permissions
-- DATASET_CREATE_BASIC_GROUPS: groups with __Dataset Create Basic__ permissions
-- DATASET_CREATE_EXTENDED_GROUPS: groups with __Dataset Create Extended__ permissions
-- DATASET_CREATE_PRIVILEGED_GROUPS: groups with __Dataset Create Privileged__ permissions
-- DATASET_UPDATE_BASIC_GROUPS: groups with __Dataset Update Basic__ permissions
-- DATASET_UPDATE_PRIVILEGED_GROUPS: groups with __Dataset Update Privileged__ permissions
-- DATASET_DELETE_BASIC_GROUPS: groups with __Dataset Delete Basic__ permissions
-- DATASET_DELETE_PRIVILEGED_GROUPS: groups with __Dataset Delete Privileged__ permissions
-- ADMIN_GROUPS: groups with __Admin__ permissions. This variable affects all the sub-systems.
-- DELETE_GROUPS: groups with __Delete__ permissions. This variable affects all the sub-systems.
+- __DATASET_READ_PRIVILEGED_GROUPS__: groups with __Dataset Read Privileged__ permissions
+- __DATASET_CREATE_BASIC_GROUPS__: groups with __Dataset Create Basic__ permissions
+- __DATASET_CREATE_EXTENDED_GROUPS__: groups with __Dataset Create Extended__ permissions
+- __DATASET_CREATE_PRIVILEGED_GROUPS__: groups with __Dataset Create Privileged__ permissions
+- __DATASET_UPDATE_BASIC_GROUPS__: groups with __Dataset Update Basic__ permissions
+- __DATASET_UPDATE_PRIVILEGED_GROUPS__: groups with __Dataset Update Privileged__ permissions
+- __DATASET_DELETE_BASIC_GROUPS__: groups with __Dataset Delete Basic__ permissions
+- __DATASET_DELETE_PRIVILEGED_GROUPS__: groups with __Dataset Delete Privileged__ permissions
+- __ADMIN_GROUPS__: groups with __Admin__ permissions. This variable affects all the sub-systems.
+- __DELETE_GROUPS__: groups with __Delete__ permissions. This variable affects all the sub-systems.
 
 ## Legacy
 
