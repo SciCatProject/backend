@@ -56,6 +56,9 @@ export enum Action {
   InstrumentUpdate = "instrument_update",
   InstrumentDelete = "instrument_delete",
 
+  // MetadataKeys
+  MetadataKeysRead = "metadatakeys_read",
+
   // Users
   UserCreate = "user_create",
   UserRead = "user_read",
@@ -196,15 +199,6 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
-
-  // -------------------------------------
-  // MetadataKeys
-  // -------------------------------------
-  // metadatakeys endpoint authorization
-  MetadataKeysReadEndpoint = "metadatakeys_read_endpoint",
-  // -------------------------------------
-  // metadatakeys data instance authorization
-  MetadataKeysReadInstance = "metadatakeys_read_instance",
 
   // -------------------------------------
   // RuntimeConfig

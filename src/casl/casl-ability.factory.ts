@@ -80,6 +80,7 @@ export class CaslAbilityFactory {
     datasets: this.datasetAccess,
     instruments: this.instrumentAccess,
     logbooks: this.logbookAccess,
+    metadataKeys: this.metadataKeyAccess,
     opensearch: this.opensearchAccess,
     policies: this.policyAccess,
     users: this.userAccess,
@@ -91,7 +92,6 @@ export class CaslAbilityFactory {
     samples: this.samplesEndpointAccess,
     history: this.historyEndpointAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -736,6 +736,43 @@ export class CaslAbilityFactory {
     });
   }
 
+  metadataKeyAccess(user:JWTUser) {
+    const { can, build } = new AbilityBuilder(
+      createMongoAbility<PossibleAbilities, Conditions>,
+    );
+
+    if (!user) {
+      /**
+       * Unauthenticated user
+       */
+      can(Action.MetadataKeysRead, MetadataKeyClass, {
+        isPublished: true,
+      });
+    } else {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+        can(Action.MetadataKeysRead, MetadataKeyClass);
+      } else {
+        /**
+         * Authenticated user not belonging to special group
+         */
+        can(Action.MetadataKeysRead, MetadataKeyClass, {
+          userGroups: { $in: user.currentGroups },
+        });
+      }
+    }
+
+
+    return build({
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<Subjects>,
+    });
+  }
+
   opensearchAccess(user:JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1332,20 +1369,6 @@ export class CaslAbilityFactory {
         */
       can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metadataKeysEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.MetadataKeysReadEndpoint, MetadataKeyClass);
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -2161,42 +2184,6 @@ export class CaslAbilityFactory {
       // -------------------------------------
 
       can(Action.AccessAny, PublishedData);
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  metadataKeyInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass);
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-          userGroups: { $in: user.currentGroups },
-        });
-      }
     }
 
     return build({

@@ -42,7 +42,7 @@ export class MetadataKeysV4Controller {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("metadataKeys", (ability: AppAbility) =>
-    ability.can(Action.MetadataKeysReadEndpoint, MetadataKeyClass),
+    ability.can(Action.MetadataKeysRead, MetadataKeyClass),
   )
   @Get()
   @ApiOperation({ summary: "List metadata keys by text query" })
@@ -78,10 +78,10 @@ export class MetadataKeysV4Controller {
   ) {
     const user: JWTUser = request.user as JWTUser;
     const parsedFilter = JSON.parse(filter ?? "{}");
-    const abilities = this.caslAbilityFactory.metadataKeyInstanceAccess(user);
+    const abilities = this.caslAbilityFactory.metadataKeyAccess(user);
     const accessFilter = accessibleBy(
       abilities,
-      Action.MetadataKeysReadInstance,
+      Action.MetadataKeysRead,
     ).ofType(MetadataKeyClass);
 
     return this.metadatakeysService.findAll(parsedFilter, accessFilter);
