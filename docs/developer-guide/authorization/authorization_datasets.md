@@ -106,8 +106,8 @@ How the different levels of authorization translate into data conditions applied
   These groups are allowed to delete only the datasets they own.  
   Default: _#nogroup_  
   Special values:
-  - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
-  - _#DsCE_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
+  - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to delete the datasets they own.
+  - _#DsCE_ : all groups listed in _Dataset Create Extended_ are allowed to delete the datasets they own.
 - __Dataset Delete Privileged__ (DsDP)  
   These groups are allowed to delete any dataset independently of the ownership.  
   Default: _#nogroup_  
