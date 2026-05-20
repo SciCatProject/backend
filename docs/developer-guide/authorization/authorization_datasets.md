@@ -96,7 +96,7 @@ How the different levels of authorization translate into data conditions applied
   Default: _#nogroup_  
   Special values:
   - _#DsCB_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
-  - _#DsCE_ : all groups listed in _Dataset Create Basic_ are allowed to update the datasets they own.
+  - _#DsCE_ : all groups listed in _Dataset Create Extended_ are allowed to update the datasets they own.
 - __Dataset Update Privileged__ (DsUP)  
   These groups are allowed to update any datasets independently from the ownership.  
   Default: _#nogroup_  
