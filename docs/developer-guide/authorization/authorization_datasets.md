@@ -271,6 +271,6 @@ The process needs to list all datasets that contains the valu e_obsolete_ in the
 - DATASET_UPDATE_BASIC_GROUPS = ""
 - DATASET_UPDATE_PRIVILEGED_GROUPS = ""
 - DATASET_DELETE_BASIC_GROUPS = ""
-- DATASET_DELETE_PRIVILEGED_GROUP = "delete_obsolete_datasets"
+- DATASET_DELETE_PRIVILEGED_GROUPS = "delete_obsolete_datasets"
 - ADMIN_GROUPS = ""
 - DELETE_GROUPS = ""
