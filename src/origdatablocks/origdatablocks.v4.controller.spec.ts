@@ -4,7 +4,7 @@ import { OrigDatablocksService } from "src/origdatablocks/origdatablocks.service
 import { DatasetsService } from "src/datasets/datasets.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { ConfigModule } from "@nestjs/config";
-import { NotFoundException, HttpException } from "@nestjs/common";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { Request } from "express";
 
 class OrigDatablocksServiceMock {
@@ -81,11 +81,14 @@ describe("OrigDatablocksV4Controller", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw HttpException if header date is older than updatedAt", async () => {
+    it("should throw HttpException if service throws exception (when header date is older than updatedAt)", async () => {
       jest.spyOn(origDatablocksService, "findOne").mockResolvedValue({
         ...mockDatablock,
         updatedAt: new Date(),
       });
+      origDatablocksService.findByIdAndUpdate.mockRejectedValue(
+        new PreconditionFailedException("Resource has been modified on server"),
+      );
 
       const mockRequest = {
         user: { id: "user123" },
@@ -100,7 +103,12 @@ describe("OrigDatablocksV4Controller", () => {
 
       await expect(
         controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toThrow(PreconditionFailedException);
+      expect(origDatablocksService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "db123",
+        mockUpdateDto,
+        new Date(mockRequest.headers["if-unmodified-since"] as string),
+      );
     });
 
     it("should throw NotFoundException if update returns null", async () => {

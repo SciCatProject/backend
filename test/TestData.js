@@ -28,6 +28,7 @@ const TestData = {
   NotFoundStatusCode: 404,
   CreationUnauthorizedStatusCode: 401,
   ConflictStatusCode: 409,
+  PreconditionFailedStatusCode: 412,
   FailedDependencyStatusCode: 424,
   ApplicationErrorStatusCode: 500,
   LoginSuccessfulStatusCode: 201,

@@ -57,8 +57,8 @@ import {
   ALLOWED_ATTACHMENT_KEYS,
   ALLOWED_ATTACHMENT_FILTER_KEYS,
 } from "./types/attachment-lookup";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
+import { parseDate } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiExtraModels(AttachmentRelationshipClass)
@@ -385,15 +385,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      foundAttachment.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
       updateAttachmentDtoForservice,
+      unmodifiedSince,
     );
   }
 

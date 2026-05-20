@@ -66,6 +66,7 @@ import {
   filterDescription,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
+  parseDate,
 } from "src/common/utils";
 import { AccessGroupsType } from "src/config/configuration";
 import { DatablocksService } from "src/datablocks/datablocks.service";
@@ -121,7 +122,6 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { DATASET_LOOKUP_FIELDS } from "./types/dataset-lookup";
 import { getSwaggerDatasetFilterContentV3 } from "./types/dataset-filter-content.v3";
 import { Filter } from "./decorators/filter.decorator";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -1336,12 +1336,6 @@ export class DatasetsController {
       throw new NotFoundException();
     }
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      foundDataset.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
     // NOTE: Default validation pipe does not validate union types. So we need custom validation.
     let dtoType;
     switch (foundDataset.type) {
@@ -1384,8 +1378,13 @@ export class DatasetsController {
       validatedUpdateDatasetObsoleteDto,
     ) as UpdateDatasetDto;
 
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const res = this.convertCurrentToObsoleteSchema(
-      await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto),
+      await this.datasetsService.findByIdAndUpdate(
+        pid,
+        updateDatasetDto,
+        unmodifiedSince,
+      ),
     );
     return res;
   }

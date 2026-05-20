@@ -268,7 +268,9 @@ const configuration = () => {
         : [],
       //End of History
 
-      updateDatasetLifecycle: updateDatasetLifecycleGroups,
+      updateDatasetLifecycle: updateDatasetLifecycleGroups
+        .split(",")
+        .map((v) => v.trim()),
       policy: policyGroups.split(",").map((v) => v.trim()),
       proposal: proposalGroups.split(",").map((v) => v.trim()),
       sample: sampleGroups.split(",").map((v) => v.trim()),
@@ -306,6 +308,10 @@ const configuration = () => {
       apiUrl: process.env.ACCESS_GROUPS_SERVICE_REST_API_URL,
       userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
     },
+    accessGroupsLdapPayloadConfig: {
+      enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
+      accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY || "cn", // Examples: "cn" or "ou"
+    },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {
       secret: process.env.EXPRESS_SESSION_SECRET,
@@ -329,9 +335,11 @@ const configuration = () => {
         bindCredentials: process.env.LDAP_BIND_CREDENTIALS || "",
         searchBase: process.env.LDAP_SEARCH_BASE || "",
         searchFilter: process.env.LDAP_SEARCH_FILTER || "",
+        groupSearchBase: process.env.LDAP_GROUP_SEARCH_BASE || "",
+        groupSearchFilter: process.env.LDAP_GROUP_SEARCH_FILTER || "",
         Mode: process.env.LDAP_MODE ?? "ad",
         externalIdAttr: process.env.LDAP_EXTERNAL_ID ?? "sAMAccountName",
-        usernameAttr: process.env.LDAP_USERNAME ?? "displayName",
+        usernameAttr: process.env.LDAP_USERNAME_ATTR ?? "displayName",
       },
     },
     oidc: {

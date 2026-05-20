@@ -1,4 +1,5 @@
 "use strict";
+const assert = require("node:assert");
 const { faker } = require("@faker-js/faker");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
@@ -386,5 +387,56 @@ describe("1500: Proposal: Simple Proposal", () => {
       .then((res) => {
         return processArray(res.body);
       });
+  });
+});
+
+describe("1600: Proposal: Optimistic concurrency control tests", () => {
+  before(async () => {
+    accessTokenProposalIngestor = await utils.getToken(appUrl, {
+      username: "proposalIngestor",
+      password: TestData.Accounts["proposalIngestor"]["password"],
+    });
+    accessTokenAdminIngestor = await utils.getToken(appUrl, {
+      username: "adminIngestor",
+      password: TestData.Accounts["adminIngestor"]["password"],
+    });
+  });
+
+  it("should fail one request with HTTP 412 when two requests try to update the same proposal", async () => {
+    const newProposal = {
+      ...TestData.ProposalCorrectMin,
+      proposalId: faker.string.numeric(8),
+    };
+    const res = await request(appUrl)
+      .post("/api/v3/Proposals")
+      .send(newProposal)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenProposalIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+    const id = encodeURIComponent(res.body.proposalId);
+
+    const [res1, res2] = await Promise.all([
+      request(appUrl)
+        .patch(`/api/v3/Proposals/${id}`)
+        .send({ title: "Updated title 1" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+      request(appUrl)
+        .patch(`/api/v3/Proposals/${id}`)
+        .send({ title: "Updated title 2" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+    ]);
+    assert(
+      [res1.statusCode, res2.statusCode].includes(
+        TestData.SuccessfulPatchStatusCode,
+      ),
+      "Neither PATCH request succeeded",
+    );
+    if (res1.status === TestData.SuccessfulPatchStatusCode) {
+      assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+    } else {
+      assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+    }
   });
 });

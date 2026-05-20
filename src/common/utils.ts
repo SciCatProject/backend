@@ -1337,3 +1337,9 @@ export function decodeScientificMetadataKeys(
 export function decodeMetadataKeyStrings(keys: string[]): string[] {
   return keys.map((key) => decodeURIComponentExtended(key));
 }
+
+export function parseDate(dateString?: string): Date | undefined {
+  if (!dateString) return undefined;
+  const parsedDate = new Date(dateString);
+  return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+}

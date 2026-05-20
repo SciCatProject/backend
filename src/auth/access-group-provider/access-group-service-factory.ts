@@ -4,6 +4,7 @@ import { AccessGroupService } from "./access-group.service";
 import { AccessGroupFromGraphQLApiService } from "./access-group-from-graphql-api-call.service";
 import { AccessGroupFromPayloadService } from "./access-group-from-payload.service";
 import { AccessGroupFromRestApiService } from "./access-group-from-rest-api-call.service";
+import { AccessGroupFromLdapService } from "./access-group-from-ldap.service";
 import { HttpService } from "@nestjs/axios";
 import { AccessGroupFromMultipleProvidersService } from "./access-group-from-multiple-providers.service";
 import { Logger } from "@nestjs/common";
@@ -22,6 +23,9 @@ export const accessGroupServiceFactory = {
     );
     const accessGroupsOIDCPayloadConfig = configService.get(
       "accessGroupsOIDCPayloadConfig",
+    );
+    const accessGroupsLdapPayloadConfig = configService.get(
+      "accessGroupsLdapPayloadConfig",
     );
 
     const accessGroupsRestConfig = configService.get("accessGroupsRestConfig");
@@ -43,6 +47,18 @@ export const accessGroupServiceFactory = {
       );
       accessGroupServices.push(
         new AccessGroupFromPayloadService(configService),
+      );
+    }
+    if (accessGroupsLdapPayloadConfig?.enabled == true) {
+      Logger.log(
+        JSON.stringify(accessGroupsLdapPayloadConfig),
+        "loading ldap processor",
+      );
+
+      accessGroupServices.push(
+        new AccessGroupFromLdapService(
+          accessGroupsLdapPayloadConfig?.accessGroupProperty,
+        ),
       );
     }
 
