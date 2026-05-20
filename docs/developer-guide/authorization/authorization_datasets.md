@@ -87,7 +87,7 @@ How the different levels of authorization translate into data conditions applied
   These groups are allowed to create datasets for any group, and they can also assign the pid to the new dataset.  
   Default: _#nogroup_  
   Special values:
-  - _#all_ : all groups are allowed to create datasets with pid assigned by the system
+  - _#all_ : all groups can create datasets with for any group with explicit pid. 
 - __Dataset Read Privileged__ (DsRP)  
   These groups are allowed to read all datasets independently from the ownership.  
   Default: _#nogroup_
