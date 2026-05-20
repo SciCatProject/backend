@@ -375,8 +375,7 @@ export class ProposalsController {
 
     if (!user) {
       fields.isPublished = true;
-    }
-    if (!canViewAny && canView) {
+    } else if (!canViewAny && canView && !fields.isPublished) {
       fields.userGroups = fields.userGroups ?? [];
       fields.userGroups.push(...user.currentGroups);
     }
@@ -433,8 +432,7 @@ export class ProposalsController {
 
     if (!user) {
       fields.isPublished = true;
-    }
-    if (!canViewAny && canView) {
+    } else if (!canViewAny && canView && !fields.isPublished) {
       fields.userGroups = fields.userGroups ?? [];
       fields.userGroups.push(...user.currentGroups);
     }
@@ -487,8 +485,7 @@ export class ProposalsController {
 
     if (!user) {
       fields.isPublished = true;
-    }
-    if (!canViewAny && canView) {
+    } else if (!canViewAny && canView && !fields.isPublished) {
       fields.userGroups = fields.userGroups ?? [];
       fields.userGroups.push(...user.currentGroups);
     }

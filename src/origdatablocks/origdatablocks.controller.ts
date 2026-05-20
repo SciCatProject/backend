@@ -342,13 +342,11 @@ export class OrigDatablocksController {
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
     const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!canViewAny) {
-      if (!user) {
-        fields.isPublished = true;
-      } else if (canView) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters = {
@@ -397,13 +395,11 @@ export class OrigDatablocksController {
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
     const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!canViewAny) {
-      if (!user) {
-        fields.isPublished = true;
-      } else if (canView) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters = {
@@ -446,13 +442,11 @@ export class OrigDatablocksController {
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
     const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!canViewAny) {
-      if (!user) {
-        fields.isPublished = true;
-      } else if (canView) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters = {
@@ -489,13 +483,11 @@ export class OrigDatablocksController {
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
     const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!canViewAny) {
-      if (!user) {
-        fields.isPublished = true;
-      } else if (canView) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters = {

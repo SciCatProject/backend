@@ -84,11 +84,11 @@ export class CaslAbilityFactory {
     origdatablocks: this.origDatablockAccess,
     policies: this.policyAccess,
     proposals: this.proposalAccess,
+    samples: this.sampleAccess,
     users: this.userAccess,
 
     jobs: this.jobsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
-    samples: this.samplesEndpointAccess,
     history: this.historyEndpointAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
   };
@@ -1085,6 +1085,148 @@ export class CaslAbilityFactory {
       createMongoAbility<PossibleAbilities, Conditions>,
     );
     
+    if (!user) {
+      /**
+       * Unauthenticated user
+       */
+      can(Action.SampleRead, SampleClass, {
+        isPublished: true,
+      });
+      can(Action.SampleAttachmentRead, SampleClass, {
+        isPublished: true,
+      });
+    } else {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        /**
+         * User belonging to DELETE_GROUPS
+         */
+        can(Action.SampleDelete, SampleClass);
+        can(Action.SampleAttachmentDelete, SampleClass);
+      }
+
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+        can(Action.AccessAny, SampleClass);
+
+        can(Action.SampleCreate, SampleClass);
+        can(Action.SampleRead, SampleClass);
+        can(Action.SampleUpdate, SampleClass);
+
+        can(Action.SampleAttachmentCreate, SampleClass);
+        can(Action.SampleAttachmentRead, SampleClass);
+        can(Action.SampleAttachmentUpdate, SampleClass);
+        can(Action.SampleAttachmentDelete, SampleClass);
+      } else if (
+        user.currentGroups.some((g) =>
+          this.accessGroups?.samplePrivileged.includes(g),
+        )
+      ) {
+        /**
+         * User belonging to SAMPLE_PRIVILEGED_GROUPS
+         */
+        can(Action.SampleCreate, SampleClass);
+        can(Action.SampleRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          isPublished: true,
+        });
+        can(Action.SampleUpdate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+
+        can(Action.SampleAttachmentCreate, SampleClass);
+        can(Action.SampleAttachmentRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          isPublished: true,
+        });
+        can(Action.SampleAttachmentUpdate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentDelete, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      } else if (
+        user.currentGroups.some((g) => this.accessGroups?.sample.includes(g)) ||
+        this.accessGroups?.sample.includes("#all")
+      ) {
+        /**
+         * User belonging to SAMPLE_PRIVILEGED_GROUPS
+         */
+        can(Action.SampleCreate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          isPublished: true,
+        });
+        can(Action.SampleUpdate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        
+        can(Action.SampleAttachmentCreate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          isPublished: true,
+        });
+        can(Action.SampleAttachmentUpdate, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentDelete, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+      } else {
+        /**
+         * Authenticated user not belonging to special group
+         */
+        can(Action.SampleRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleRead, SampleClass, {
+          isPublished: true,
+        });
+
+        can(Action.SampleAttachmentRead, SampleClass, {
+          ownerGroup: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          accessGroups: { $in: user.currentGroups },
+        });
+        can(Action.SampleAttachmentRead, SampleClass, {
+          isPublished: true,
+        });
+      }
+    }
+
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -1516,120 +1658,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  samplesEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      // -------------------------------------
-      // unauthenticated users
-      // -------------------------------------
-
-      can(Action.SampleRead, SampleClass);
-      cannot(Action.SampleCreate, SampleClass);
-      cannot(Action.SampleUpdate, SampleClass);
-      cannot(Action.SampleDelete, SampleClass);
-      can(Action.SampleAttachmentRead, SampleClass);
-      cannot(Action.SampleAttachmentCreate, SampleClass);
-      cannot(Action.SampleAttachmentUpdate, SampleClass);
-      cannot(Action.SampleAttachmentDelete, SampleClass);
-      cannot(Action.SampleDatasetRead, SampleClass);
-    } else {
-      // -------------------------------------
-      // authenticated users
-      // -------------------------------------
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        // -------------------------------------
-        // users that belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        can(Action.SampleDelete, SampleClass);
-        can(Action.SampleAttachmentDelete, SampleClass);
-      } else {
-        // -------------------------------------
-        // users that do not belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        cannot(Action.SampleDelete, SampleClass);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.SampleRead, SampleClass);
-        can(Action.SampleCreate, SampleClass);
-        can(Action.SampleUpdate, SampleClass);
-        can(Action.SampleAttachmentRead, SampleClass);
-        can(Action.SampleAttachmentCreate, SampleClass);
-        can(Action.SampleAttachmentUpdate, SampleClass);
-        can(Action.SampleAttachmentDelete, SampleClass);
-        can(Action.SampleDatasetRead, SampleClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.samplePrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in SAMPLE_GROUPS
-        //
-
-        can(Action.SampleRead, SampleClass);
-        can(Action.SampleCreate, SampleClass);
-        can(Action.SampleUpdate, SampleClass);
-        can(Action.SampleAttachmentRead, SampleClass);
-        can(Action.SampleAttachmentCreate, SampleClass);
-        can(Action.SampleAttachmentUpdate, SampleClass);
-        can(Action.SampleAttachmentDelete, SampleClass);
-        can(Action.SampleDatasetRead, SampleClass);
-      } else if (
-        user.currentGroups.some((g) => this.accessGroups?.sample.includes(g)) ||
-        this.accessGroups?.sample.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in SAMPLE_GROUPS
-        //
-
-        can(Action.SampleRead, SampleClass);
-        can(Action.SampleCreate, SampleClass);
-        can(Action.SampleUpdate, SampleClass);
-        can(Action.SampleAttachmentRead, SampleClass);
-        can(Action.SampleAttachmentCreate, SampleClass);
-        can(Action.SampleAttachmentUpdate, SampleClass);
-        can(Action.SampleAttachmentDelete, SampleClass);
-        can(Action.SampleDatasetRead, SampleClass);
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.SampleRead, SampleClass);
-        cannot(Action.SampleCreate, SampleClass);
-        cannot(Action.SampleUpdate, SampleClass);
-        can(Action.SampleAttachmentRead, SampleClass);
-        cannot(Action.SampleAttachmentCreate, SampleClass);
-        cannot(Action.SampleAttachmentUpdate, SampleClass);
-        if (
-          !user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-        ) {
-          cannot(Action.SampleAttachmentDelete, SampleClass);
-        }
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   jobsInstanceAccessCan(
     can: AbilityBuilder<AppAbility>["can"],
     user: JWTUser,
@@ -1789,174 +1817,6 @@ export class CaslAbilityFactory {
         accessibleBy(abilities, Action.JobReadAccess).ofType(JobClass),
       ],
     };
-  }
-
-  samplesInstanceAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      // -------------------------------------
-      // unauthenticated users
-      // -------------------------------------
-
-      can(Action.SampleReadManyPublic, SampleClass);
-      can(Action.SampleReadOnePublic, SampleClass, {
-        isPublished: true,
-      });
-      can(Action.SampleAttachmentReadPublic, SampleClass, {
-        isPublished: true,
-      });
-    } else {
-      // -------------------------------------
-      // authenticated users
-      // -------------------------------------
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        // -------------------------------------
-        // users that belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        can(Action.SampleDeleteAny, SampleClass);
-        can(Action.SampleAttachmentDeleteAny, SampleClass);
-      } else {
-        // -------------------------------------
-        // users that do not belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        cannot(Action.SampleDeleteAny, SampleClass);
-        cannot(Action.SampleDeleteOwner, SampleClass);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.SampleReadAny, SampleClass);
-        can(Action.SampleCreateAny, SampleClass);
-        can(Action.SampleUpdateAny, SampleClass);
-        can(Action.SampleAttachmentReadAny, SampleClass);
-        can(Action.SampleAttachmentCreateAny, SampleClass);
-        can(Action.SampleAttachmentUpdateAny, SampleClass);
-        can(Action.SampleAttachmentDeleteAny, SampleClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.samplePrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in SAMPLE_GROUPS
-        //
-
-        can(Action.SampleCreateAny, SampleClass);
-        can(Action.SampleUpdateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadManyAccess, SampleClass);
-        can(Action.SampleReadOneAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          isPublished: true,
-        });
-        can(Action.SampleAttachmentCreateAny, SampleClass);
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          isPublished: true,
-        });
-        can(Action.SampleAttachmentUpdateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentDeleteOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) => this.accessGroups?.sample.includes(g)) ||
-        this.accessGroups?.sample.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in SAMPLE_GROUPS
-        //
-
-        can(Action.SampleCreateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleUpdateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadManyAccess, SampleClass);
-        can(Action.SampleReadOneAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          isPublished: true,
-        });
-        can(Action.SampleAttachmentCreateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          isPublished: true,
-        });
-        can(Action.SampleAttachmentUpdateOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentDeleteOwner, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.SampleReadManyAccess, SampleClass);
-        can(Action.SampleReadOneAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleReadOneAccess, SampleClass, {
-          isPublished: true,
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.SampleAttachmentReadAccess, SampleClass, {
-          isPublished: true,
-        });
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
   }
 
   publishedDataInstanceAccess(user: JWTUser) {
