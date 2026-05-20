@@ -164,9 +164,9 @@ The legacy datasets special permissions environment variables are marked obsolet
 In the meantime, they are mapped to the matching new variable.
 Here is the map:
 
-- Create Dataset Groups ( CREATE_DATASET_GROUP ) -> Dataset Create Basic
-- Create Dataset with PID Group ( CREATE_DATASET_WITH_PID_GROUP ) -> Dataset Create Extended
-- Create Dataset Privileged ( CREATE_DATASET_PRIVIELEGED_GROUP ) -> Dataset Create Privileged
+- Create Dataset Groups ( CREATE_DATASET_GROUPS ) -> Dataset Create Basic
+- Create Dataset with PID Group ( CREATE_DATASET_WITH_PID_GROUPS ) -> Dataset Create Extended
+- Create Dataset Privileged ( CREATE_DATASET_PRIVILEGED_GROUPS ) -> Dataset Create Privileged
 
 ## Use cases and configuration examples
 
