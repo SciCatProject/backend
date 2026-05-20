@@ -84,13 +84,13 @@ export class CaslAbilityFactory {
     origdatablocks: this.origDatablockAccess,
     policies: this.policyAccess,
     proposals: this.proposalAccess,
+    runtimeconfig: this.runtimeConfigAccess,
     samples: this.sampleAccess,
     users: this.userAccess,
 
     jobs: this.jobsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
     history: this.historyEndpointAccess,
-    runtimeconfig: this.runtimeConfigEndpointAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -1080,6 +1080,28 @@ export class CaslAbilityFactory {
     });
   }
 
+  runtimeConfigAccess(user: JWTUser) {
+    const { can, build } = new AbilityBuilder(
+      createMongoAbility<PossibleAbilities, Conditions>,
+    );
+
+    can(Action.RuntimeConfigRead, RuntimeConfig);
+    if (
+      user &&
+      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+    ) {
+      /**
+       * User belonging to ADMIN_GROUPS
+       */
+      can(Action.RuntimeConfigUpdate, RuntimeConfig);
+    }
+
+    return build({
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<Subjects>,
+    });
+  }
+
   sampleAccess(user:JWTUser) {
     const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1606,27 +1628,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  runtimeConfigEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.RuntimeConfigReadEndpoint, RuntimeConfig);
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-      can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,

@@ -76,6 +76,10 @@ export enum Action {
   ProposalAttachmentDelete = "proposals_attachment_delete",
   ProposalDatasetRead = "proposals_dataset_read",
 
+  // RuntimeConfig
+  RuntimeConfigRead = "runtimeconfig_read",
+  RuntimeConfigUpdate = "runtimeconfig_update",
+
   // Samples
   SampleCreate = "sample_create",
   SampleRead = "sample_read",
@@ -129,11 +133,4 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
-
-  // -------------------------------------
-  // RuntimeConfig
-  // -------------------------------------
-  // runtimeconfig endpoint authorization
-  RuntimeConfigReadEndpoint = "runtimeconfig_read_endpoint",
-  RuntimeConfigUpdateEndpoint = "runtimeconfig_update_endpoint",
 }

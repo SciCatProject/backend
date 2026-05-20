@@ -22,94 +22,37 @@ export class DatasetsAccessService {
   getRelationViewAccess(field: DatasetLookupKeysEnum, user: JWTUser) {
     switch (field) {
       case DatasetLookupKeysEnum.proposals: {
-        const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
-        const canViewAny = ability.can(Action.ProposalsReadAny, ProposalClass);
-        const canViewAccess = ability.can(
-          Action.ProposalsReadManyAccess,
-          ProposalClass,
-        );
-        const canViewOwner = ability.can(
-          Action.ProposalsReadManyOwner,
-          ProposalClass,
-        );
-        const canViewPublic = ability.can(
-          Action.ProposalsReadManyPublic,
-          ProposalClass,
-        );
-
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        const ability = this.caslAbilityFactory.proposalAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, ProposalClass);
+        const canView = ability.can(Action.ProposalRead, ProposalClass);
+        return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
         const ability =
-          this.caslAbilityFactory.origDatablockInstanceAccess(user);
-        const canViewAny = ability.can(
-          Action.OrigdatablockReadAny,
-          OrigDatablock,
-        );
-        const canViewAccess = ability.can(
-          Action.OrigdatablockReadManyAccess,
-          OrigDatablock,
-        );
-        const canViewOwner = ability.can(
-          Action.OrigdatablockReadManyOwner,
-          OrigDatablock,
-        );
-        const canViewPublic = ability.can(
-          Action.OrigdatablockReadManyPublic,
-          OrigDatablock,
-        );
-
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+          this.caslAbilityFactory.origDatablockAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+        const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+        return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.datablocks: {
         const ability = this.caslAbilityFactory.datasetAccess(user);
-        const canViewAny = ability.can(
-          Action.DatasetDatablockRead,
-          DatasetClass,
-        );
-        const canViewAccess = ability.can(
-          Action.DatasetDatablockRead,
-          DatasetClass,
-        );
-        const canViewOwner = ability.can(
-          Action.DatasetDatablockRead,
-          DatasetClass,
-        );
-        const canViewPublic = ability.can(
-          Action.DatasetDatablockRead,
-          DatasetClass,
-        );
-
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        const canViewAny = ability.can(Action.DatasetDatablockRead, DatasetClass);
+        const canView = ability.can(Action.DatasetDatablockRead, DatasetClass);
+        return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.samples: {
-        const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-        const canViewAny = ability.can(Action.SampleReadAny, SampleClass);
-        const canViewAccess = ability.can(
-          Action.SampleReadManyAccess,
-          SampleClass,
-        );
-        const canViewOwner = ability.can(
-          Action.SampleReadManyOwner,
-          SampleClass,
-        );
-        const canViewPublic = ability.can(
-          Action.SampleReadManyPublic,
-          SampleClass,
-        );
-
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        const ability = this.caslAbilityFactory.sampleAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, SampleClass);
+        const canView = ability.can(Action.SampleRead, SampleClass);
+        return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.instruments: {
-        // TODO: Fix this if the instrument access change
-        const ability = this.caslAbilityFactory.instrumentEndpointAccess(user);
+        const ability = this.caslAbilityFactory.instrumentAccess(user);
         const canViewAny = ability.can(Action.InstrumentRead, Instrument);
 
         return {
           canViewAny,
-          canViewOwner: false,
-          canViewAccess: false,
-          canViewPublic: true,
+          canView: false
         };
       }
       case DatasetLookupKeysEnum.attachments: {
@@ -118,23 +61,14 @@ export class DatasetsAccessService {
           Action.DatasetAttachmentRead,
           DatasetClass,
         );
-        const canViewAccess = ability.can(
-          Action.DatasetAttachmentRead,
-          DatasetClass,
-        );
-        const canViewOwner = ability.can(
-          Action.DatasetAttachmentRead,
-          DatasetClass,
-        );
+        const canView = ability.can(Action.DatasetAttachmentRead, DatasetClass);
 
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic: true };
+        return { canViewAny, canView };
       }
       default:
         return {
           canViewAny: false,
-          canViewOwner: false,
-          canViewAccess: false,
-          canViewPublic: true,
+          canView: false
         };
     }
   }
@@ -147,10 +81,10 @@ export class DatasetsAccessService {
       currentUser,
     );
     if (access) {
-      const { canViewAny, canViewAccess, canViewOwner } = access;
+      const { canViewAny, canView } = access;
       if (!canViewAny) {
         let pipeline: PipelineStage.Lookup["$lookup"]["pipeline"];
-        if (canViewAccess) {
+        if (canView) {
           pipeline = [
             {
               $match: {
@@ -160,14 +94,6 @@ export class DatasetsAccessService {
                   { sharedWith: { $in: [currentUser.email] } },
                   { isPublished: true },
                 ],
-              },
-            },
-          ];
-        } else if (canViewOwner) {
-          pipeline = [
-            {
-              $match: {
-                ownerGroup: { $in: currentUser.currentGroups },
               },
             },
           ];
@@ -188,15 +114,12 @@ export class DatasetsAccessService {
 
   addDatasetAccess(fieldValue: PipelineStage.Lookup) {
     const currentUser = this.request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(currentUser);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-    const canViewAccess = ability.can(
-      Action.DatasetReadManyAccess,
-      DatasetClass,
-    );
+    const ability = this.caslAbilityFactory.datasetAccess(currentUser);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
     if (!canViewAny) {
-      if (canViewAccess) {
+      if (canView) {
         fieldValue.$lookup.pipeline?.unshift({
           $match: {
             $or: [
