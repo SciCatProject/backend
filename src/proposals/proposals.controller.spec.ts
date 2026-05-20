@@ -22,9 +22,19 @@ class ProposalsServiceMock {
 }
 
 class CaslAbilityFactoryMock {
-  proposalsInstanceAccess = jest.fn().mockReturnValue({
-    can: jest.fn().mockReturnValue(true),
-  });
+  proposalAccess(user?: any) {
+    return {
+      can: (action: string, subject: any) => {
+        if (!user) {
+          return false;
+        }
+        if (user.currentGroups?.includes("admin")) {
+          return true;
+        }
+        return false;
+      },
+    };
+  }
 }
 
 const mockProposal: Partial<ProposalClass> = {
@@ -124,20 +134,27 @@ describe("ProposalsController", () => {
 
   describe("updateFiltersForList", () => {
     it("should restrict to isPublished when user is not authenticated", () => {
-      const result = controller.updateFiltersForList(
-        { user: null } as unknown as Request,
-        { where: {} },
-      );
-      expect(result.where?.isPublished).toBe(true);
+      const request = {
+        user: null,
+      } as unknown as Request;
+      const filter = {
+        where : {}
+      };
+      
+      const result = controller.updateFiltersForList(request, filter);
+      expect(result.where).toEqual({ $and : [{ isPublished : true }] });
     });
 
     it("should not restrict when admin can view all", () => {
       const request = {
         user: { currentGroups: ["admin"] },
       } as unknown as Request;
+      const filter = {
+        where : {}
+      };
 
-      const result = controller.updateFiltersForList(request, { where: {} });
-      expect(result.where?.isPublished).toBeUndefined();
+      const result = controller.updateFiltersForList(request, filter);
+      expect(result.where).toEqual(filter.where);
     });
   });
 
