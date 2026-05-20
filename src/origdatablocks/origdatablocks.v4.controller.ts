@@ -122,44 +122,9 @@ export class OrigDatablocksV4Controller {
     const origDatablockInstance =
       await this.generateOrigDatablockInstanceForPermissions(origdatablock);
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
 
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.OrigdatablockCreate:
-        canDoAction =
-          ability.can(Action.OrigdatablockCreateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockCreateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockRead:
-        canDoAction =
-          ability.can(Action.OrigdatablockReadAny, origDatablockInstance) ||
-          ability.can(
-            Action.OrigdatablockReadOnePublic,
-            origDatablockInstance,
-          ) ||
-          ability.can(
-            Action.OrigdatablockReadOneAccess,
-            origDatablockInstance,
-          ) ||
-          ability.can(Action.OrigdatablockReadOneOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockUpdate:
-        canDoAction =
-          ability.can(Action.OrigdatablockUpdateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockUpdateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockDelete:
-        canDoAction =
-          ability.can(Action.OrigdatablockDeleteAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockDeleteOwner, origDatablockInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const canDoAction = ability.can(group, origDatablockInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
@@ -294,23 +259,21 @@ export class OrigDatablocksV4Controller {
       IOrigDatablockFields
     >,
   ): IOrigDatablockFiltersV4<OrigDatablockDocument, IOrigDatablockFields> {
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    const canViewOwner = ability.can(
-      Action.OrigdatablockReadManyOwner,
-      OrigDatablock,
-    );
-    const canViewAccess = ability.can(
-      Action.OrigdatablockReadManyAccess,
-      OrigDatablock,
-    );
-
-    if (!filter.where) {
-      filter.where = {};
-    }
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
     if (!canViewAny) {
-      if (canViewAccess) {
+      filter.where = filter.where ?? {};
+      if (!user) {
+        if (filter.where["$and"]) {
+          filter.where["$and"].push({
+            isPublished: true,
+          });
+        } else {
+          filter.where["$and"] = [{ isPublished: true }];
+        }
+      } else if (canView) {
         if (filter.where["$and"]) {
           filter.where["$and"].push({
             $or: [
@@ -332,11 +295,6 @@ export class OrigDatablocksV4Controller {
             },
           ];
         }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
       }
     }
 
@@ -590,26 +548,18 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
     }
+    if (!canViewAny && canView) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
+    }
+  
     const parsedFilters: IFacets<IOrigDatablockFields> = {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "{}"),
@@ -640,26 +590,18 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
     }
+    if (!canViewAny && canView) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
+    }
+
     const parsedFilters = {
       fields: fields,
       limits: JSON.parse(filters.facets ?? "{}"),

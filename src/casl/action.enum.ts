@@ -56,6 +56,12 @@ export enum Action {
   InstrumentUpdate = "instrument_update",
   InstrumentDelete = "instrument_delete",
 
+  // Origdatablock
+  OrigdatablockCreate = "origdatablock_create",
+  OrigdatablockRead = "origdatablock_read",
+  OrigdatablockUpdate = "origdatablock_update",
+  OrigdatablockDelete = "origdatablock_delete",
+
   // MetadataKeys
   MetadataKeysRead = "metadatakeys_read",
 
@@ -66,27 +72,6 @@ export enum Action {
   UserDelete = "user_delete",
   UserCreateJwt = "user_create_jwt",
 
-  // -------------
-  // Origdatablock
-  // endpoint authorization actions
-  OrigdatablockCreate = "origdatablock_create",
-  OrigdatablockRead = "origdatablock_read",
-  OrigdatablockUpdate = "origdatablock_update",
-  OrigdatablockDelete = "origdatablock_delete",
-  // individual actions
-  OrigdatablockCreateOwner = "origdatablock_create_owner",
-  OrigdatablockCreateAny = "origdatablock_create_any",
-  OrigdatablockReadManyPublic = "origdatablock_read_many_public",
-  OrigdatablockReadManyAccess = "origdatablock_read_many_access",
-  OrigdatablockReadManyOwner = "origdatablock_read_many_owner",
-  OrigdatablockReadOnePublic = "origdatablock_read_one_public",
-  OrigdatablockReadOneAccess = "origdatablock_read_one_access",
-  OrigdatablockReadOneOwner = "origdatablock_read_one_owner",
-  OrigdatablockReadAny = "origdatablock_read_any",
-  OrigdatablockUpdateOwner = "origdatablock_update_owner",
-  OrigdatablockUpdateAny = "origdatablock_update_any",
-  OrigdatablockDeleteOwner = "origdatablock_delete_owner",
-  OrigdatablockDeleteAny = "origdatablock_delete_any",
 
   // Proposals
   // endpoint authorization actions

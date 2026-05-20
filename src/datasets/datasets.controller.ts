@@ -170,9 +170,7 @@ export class DatasetsController {
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
     const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!mergedFilters.where) {
-      mergedFilters.where = {};
-    }
+    mergedFilters.where = mergedFilters.where ?? {};
 
     if (!user) {
       if (mergedFilters.where["$and"]) {
