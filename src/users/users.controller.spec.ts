@@ -73,7 +73,7 @@ const mockUserSettings = {
 class AuthServiceMock {}
 
 class CaslAbilityFactoryMock {
-  userEndpointAccess = jest.fn();
+  userAccess = jest.fn();
 }
 
 describe("UsersController", () => {
@@ -202,7 +202,7 @@ describe("UsersController", () => {
       ).caslAbilityFactory;
     });
 
-    it("should return all users when admin user has UserListAll permission", async () => {
+    it("should return all users when admin user has AccessAny permission", async () => {
       const adminUserId = "user1";
       const mockRequest: Partial<Request> = {
         user: {
@@ -212,16 +212,16 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to allow UserListAll
+      // Mock the ability to allow AccessAny
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return true;
           }
           return false;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 
@@ -232,12 +232,12 @@ describe("UsersController", () => {
       expect(result).toEqual(mockUsers);
       expect(result.length).toBe(3);
       expect(usersService.findAll).toHaveBeenCalled();
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
         mockRequest.user,
       );
     });
 
-    it("should return only own user info when regular user has UserListOwn but not UserListAll permission", async () => {
+    it("should return only own user info when regular user has UserRead but not AccessAny permission", async () => {
       const regularUserId = "user2";
       const mockRequest: Partial<Request> = {
         user: {
@@ -247,19 +247,19 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to deny UserListAll but allow UserListOwn
+      // Mock the ability to deny AccessAny but allow UserRead
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return false;
           }
-          if (action === Action.UserListOwn && subject === User) {
+          if (action === Action.UserRead && subject === User) {
             return true;
           }
           return false;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 
@@ -272,7 +272,7 @@ describe("UsersController", () => {
       expect(result.length).toBe(1);
       expect(result[0].id).toBe(regularUserId);
       expect(usersService.findById).toHaveBeenCalledWith(regularUserId);
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
         mockRequest.user,
       );
     });
@@ -287,16 +287,16 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to deny UserListAll
+      // Mock the ability to deny AccessAny
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return false;
           }
           return true;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 
@@ -309,7 +309,7 @@ describe("UsersController", () => {
       expect(usersService.findById).toHaveBeenCalledWith(nonExistentUserId);
     });
 
-    it("should call userEndpointAccess with authenticated user", async () => {
+    it("should call userAccess with authenticated user", async () => {
       const userId = "user1";
       const mockUser = {
         _id: userId,
@@ -324,7 +324,7 @@ describe("UsersController", () => {
       const mockAbility = {
         can: jest.fn().mockReturnValue(true),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 
@@ -332,7 +332,7 @@ describe("UsersController", () => {
 
       await controller.findAll(mockRequest as Request);
 
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
         mockUser,
       );
     });
@@ -348,9 +348,9 @@ describe("UsersController", () => {
       };
 
       const mockAbility = {
-        can: jest.fn((action: Action) => action === Action.UserListAll),
+        can: jest.fn((action: Action) => action === Action.AccessAny),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 
@@ -367,7 +367,7 @@ describe("UsersController", () => {
       });
     });
 
-    it("should not call findAll service when user lacks UserListAll permission", async () => {
+    it("should not call findAll service when user lacks AccessAny permission", async () => {
       const regularUserId = "user2";
       const mockRequest: Partial<Request> = {
         user: {
@@ -378,9 +378,9 @@ describe("UsersController", () => {
       };
 
       const mockAbility = {
-        can: jest.fn((action: Action) => action !== Action.UserListAll),
+        can: jest.fn((action: Action) => action !== Action.AccessAny),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
         mockAbility,
       );
 

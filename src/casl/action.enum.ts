@@ -50,6 +50,19 @@ export enum Action {
 
   DatasetLogbookRead = "dataset_logbook_read",
 
+  // Instruments
+  InstrumentCreate = "instrument_create",
+  InstrumentRead = "instrument_read",
+  InstrumentUpdate = "instrument_update",
+  InstrumentDelete = "instrument_delete",
+
+  // Users
+  UserCreate = "user_create",
+  UserRead = "user_read",
+  UserUpdate = "user_update",
+  UserDelete = "user_delete",
+  UserCreateJwt = "user_create_jwt",
+
   // -------------
   // Origdatablock
   // endpoint authorization actions
@@ -167,25 +180,6 @@ export enum Action {
   JobUpdateOwner = "job_update_owner",
   JobUpdateAny = "job_update_any",
   //JobDeleteAny = "job_delete_any",
-
-  // -------------
-  // Users actions
-  UserReadOwn = "user_read_own",
-  UserReadAny = "user_read_any",
-  UserCreateOwn = "user_create_own",
-  UserCreateAny = "user_create_any",
-  UserUpdateOwn = "user_update_own",
-  UserUpdateAny = "user_update_any",
-  UserDeleteOwn = "user_delete_own",
-  UserDeleteAny = "user_delete_any",
-  UserCreateJwt = "user_create_jwt",
-  UserListAll = "user_list_all",
-  UserListOwn = "user_list_own",
-  // Instrument actions
-  InstrumentRead = "instrument_read",
-  InstrumentUpdate = "instrument_update",
-  InstrumentCreate = "instrument_create",
-  InstrumentDelete = "instrument_delete",
 
   // -------------------------------------
   // History

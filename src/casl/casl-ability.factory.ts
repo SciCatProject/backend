@@ -78,16 +78,17 @@ export class CaslAbilityFactory {
     attachments: this.attachmentAccess,
     datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
-    opensearch: this.opensearchEndpointAccess,
+    instruments: this.instrumentAccess,
+    opensearch: this.opensearchAccess,
+    users: this.userAccess,
+
     jobs: this.jobsEndpointAccess,
-    instruments: this.instrumentEndpointAccess,
     logbooks: this.logbookEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
     samples: this.samplesEndpointAccess,
-    users: this.userEndpointAccess,
     history: this.historyEndpointAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
@@ -685,20 +686,43 @@ export class CaslAbilityFactory {
   }
 
   instrumentAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
+    const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
-    
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
 
-  jobAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
+    if (!user) {
+      /**
+       * Unauthenticated user
+       */
+      can(Action.InstrumentRead, Instrument);
+    } else {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        /**
+         * User belonging to DELETE_GROUPS
+         */
+        can(Action.InstrumentDelete, Instrument);
+      }
+
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+        can(Action.InstrumentCreate, Instrument);
+
+        can(Action.InstrumentRead, Instrument);
+        
+        can(Action.InstrumentUpdate, Instrument);
+      } else {
+        /**
+         * Authenticated user not belonging to special group
+         */
+        can(Action.InstrumentRead, Instrument);
+      }
+    }
     
     return build({
       detectSubjectType: (item) =>
@@ -717,6 +741,27 @@ export class CaslAbilityFactory {
     });
   }
 
+  opensearchAccess(user:JWTUser) {
+    const { can, build } = new AbilityBuilder(
+      createMongoAbility<PossibleAbilities, Conditions>,
+    );
+    
+    if (
+      user &&
+      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+    ) {
+      /**
+       * User belonging to ADMIN_GROUPS
+       */
+      can(Action.Manage, Opensearch);
+    }
+
+    return build({
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<Subjects>,
+    });
+  }
+  
   origDatablockAccess(user:JWTUser) {
     const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -773,76 +818,36 @@ export class CaslAbilityFactory {
   }
 
   userAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  opensearchEndpointAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
 
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-      can(Action.Manage, Opensearch);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  instrumentEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      can(Action.InstrumentRead, Instrument);
-      cannot(Action.InstrumentCreate, Instrument);
-      cannot(Action.InstrumentUpdate, Instrument);
-      cannot(Action.InstrumentDelete, Instrument);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-         * user that belongs to any of the group listed in DELETE_GROUPS
-         */
-
-        can(Action.InstrumentDelete, Instrument);
-      } else {
-        cannot(Action.InstrumentDelete, Instrument);
-      }
-
+    if (user) {
       if (
         user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
       ) {
         /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
+         * User belonging to ADMIN_GROUPS
          */
 
-        can(Action.InstrumentRead, Instrument);
-        can(Action.InstrumentCreate, Instrument);
-        can(Action.InstrumentUpdate, Instrument);
+        can(Action.AccessAny, User);
+        can(Action.UserCreate, User);
+        can(Action.UserRead, User);
+        can(Action.UserUpdate, User);
+        can(Action.UserDelete, User);
+        can(Action.UserCreateJwt, User);
       } else {
-        can(Action.InstrumentRead, Instrument);
-        cannot(Action.InstrumentCreate, Instrument);
-        cannot(Action.InstrumentUpdate, Instrument);
+        /**
+         * Authenticated user not belonging to special group
+         */
+
+        can(Action.UserCreate, User, { _id: user._id });
+        can(Action.UserRead, User, { _id: user._id });
+        can(Action.UserUpdate, User, { _id: user._id });
+        can(Action.UserDelete, User, { _id: user._id });
       }
     }
-
+    
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -1590,68 +1595,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  userEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      cannot(Action.UserReadOwn, User);
-      cannot(Action.UserCreateOwn, User);
-      cannot(Action.UserUpdateOwn, User);
-      cannot(Action.UserDeleteOwn, User);
-      cannot(Action.UserReadAny, User);
-      cannot(Action.UserCreateAny, User);
-      cannot(Action.UserUpdateAny, User);
-      cannot(Action.UserDeleteAny, User);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-        // can(Action.ReadAll, UserIdentity); NOT used?
-
-        // -------------------------------------
-        // user endpoint, including useridentity
-        can(Action.UserReadAny, User);
-        can(Action.UserReadOwn, User);
-        can(Action.UserCreateAny, User);
-        can(Action.UserUpdateAny, User);
-        can(Action.UserDeleteAny, User);
-        can(Action.UserCreateJwt, User);
-        can(Action.UserListAll, User);
-
-        // -------------------------------------
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-        cannot(Action.UserReadAny, User);
-        cannot(Action.UserCreateAny, User);
-        cannot(Action.UserUpdateAny, User);
-        cannot(Action.UserDeleteAny, User);
-        cannot(Action.UserCreateJwt, User);
-        cannot(Action.UserListAll, User);
-      }
-      can(Action.UserReadOwn, User, { _id: user._id });
-      can(Action.UserCreateOwn, User, { _id: user._id });
-      can(Action.UserUpdateOwn, User, { _id: user._id });
-      can(Action.UserDeleteOwn, User, { _id: user._id });
-      can(Action.UserListOwn, User);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
