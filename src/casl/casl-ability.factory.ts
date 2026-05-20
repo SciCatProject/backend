@@ -84,12 +84,12 @@ export class CaslAbilityFactory {
     origdatablocks: this.origDatablockAccess,
     policies: this.policyAccess,
     proposals: this.proposalAccess,
+    publisheddata: this.publishedDataAccess,
     runtimeconfig: this.runtimeConfigAccess,
     samples: this.sampleAccess,
     users: this.userAccess,
 
     jobs: this.jobsEndpointAccess,
-    publisheddata: this.publishedDataEndpointAccess,
     history: this.historyEndpointAccess,
   };
 
@@ -1070,9 +1070,33 @@ export class CaslAbilityFactory {
   }
 
   publishedDataAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
+    const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
+
+    if (user) {
+      can(Action.Create, PublishedData);
+      can(Action.Read, PublishedData);
+      can(Action.Update, PublishedData);
+      
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        /**
+         * User belonging to DELETE_GROUPS
+         */
+        can(Action.Delete, PublishedData);
+      }
+
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+        can(Action.AccessAny, PublishedData);
+      }
+    }
     
     return build({
       detectSubjectType: (item) =>
@@ -1634,31 +1658,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  publishedDataEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (user) {
-      can(Action.Read, PublishedData);
-      can(Action.Update, PublishedData);
-      can(Action.Create, PublishedData);
-    }
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, PublishedData);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   jobsInstanceAccessCan(
     can: AbilityBuilder<AppAbility>["can"],
     user: JWTUser,
@@ -1818,27 +1817,5 @@ export class CaslAbilityFactory {
         accessibleBy(abilities, Action.JobReadAccess).ofType(JobClass),
       ],
     };
-  }
-
-  publishedDataInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      // -------------------------------------
-      // users belonging to any of the group listed in ADMIN_GROUPS
-      // -------------------------------------
-
-      can(Action.AccessAny, PublishedData);
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
   }
 }
