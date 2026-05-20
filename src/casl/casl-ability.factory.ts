@@ -79,13 +79,13 @@ export class CaslAbilityFactory {
     datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
     instruments: this.instrumentAccess,
+    logbooks: this.logbookAccess,
     opensearch: this.opensearchAccess,
+    policies: this.policyAccess,
     users: this.userAccess,
 
     jobs: this.jobsEndpointAccess,
-    logbooks: this.logbookEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
-    policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
     samples: this.samplesEndpointAccess,
@@ -131,15 +131,12 @@ export class CaslAbilityFactory {
         /**
          * User belonging to ADMIN_GROUPS
          */
-        can(Action.AttachmentCreate, Attachment);
-
-        can(Action.AttachmentRead, Attachment);
-
-        can(Action.AttachmentUpdate, Attachment);
-
-        can(Action.AttachmentDelete, Attachment);
-
         can(Action.AccessAny, Attachment);
+
+        can(Action.AttachmentCreate, Attachment);
+        can(Action.AttachmentRead, Attachment);
+        can(Action.AttachmentUpdate, Attachment);
+        can(Action.AttachmentDelete, Attachment);
       } else if (
         user.currentGroups.some((g) =>
           this.accessGroups?.attachmentPrivileged.includes(g),
@@ -241,9 +238,7 @@ export class CaslAbilityFactory {
          * User belonging to DELETE_GROUPS
          */
         can(Action.DatablockRead, Datablock);
-
         can(Action.DatablockUpdate, Datablock);
-
         can(Action.DatablockDelete, Datablock);
       }
 
@@ -254,9 +249,7 @@ export class CaslAbilityFactory {
          * User belonging to ADMIN_GROUPS
          */
         can(Action.DatablockCreate, Datablock);
-
         can(Action.DatablockRead, Datablock);
-
         can(Action.DatablockUpdate, Datablock);
       } else if (
         user.currentGroups.some((g) =>
@@ -344,11 +337,8 @@ export class CaslAbilityFactory {
          * User belonging to DELETE_GROUPS
          */
         can(Action.DatasetDelete, DatasetClass);
-
         can(Action.DatasetAttachmentDelete, DatasetClass);
-
         can(Action.DatasetDatablockDelete, DatasetClass);
-
         can(Action.DatasetOrigdatablockDelete, DatasetClass);
       }
       if (
@@ -712,9 +702,7 @@ export class CaslAbilityFactory {
          * User belonging to ADMIN_GROUPS
          */
         can(Action.InstrumentCreate, Instrument);
-
         can(Action.InstrumentRead, Instrument);
-        
         can(Action.InstrumentUpdate, Instrument);
       } else {
         /**
@@ -731,10 +719,17 @@ export class CaslAbilityFactory {
   }
 
   logbookAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
+    const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
     
+    if (user) {
+      /**
+       * Authenticated user not belonging to special group
+       */
+      can(Action.Read, Logbook);
+    }
+
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -774,9 +769,39 @@ export class CaslAbilityFactory {
   }
 
   policyAccess(user:JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
+    const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
+    if (user) {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        /**
+         * User belonging to DELETE_GROUPS
+         */
+        can(Action.Delete, Policy);
+      } 
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        /**
+         * User belonging to ADMIN_GROUPS
+         */
+
+        can(Action.Create, Policy);
+        can(Action.Read, Policy);
+        can(Action.Update, Policy);
+      } else if (
+        user.currentGroups.some((g) => this.accessGroups?.policy.includes(g))
+      ) {
+        /**
+         * User belonging to POLICY_GROUPS
+         */
+        can(Action.Create, Policy);
+        can(Action.Read, Policy);
+        can(Action.Update, Policy);
+      }
+    }
     
     return build({
       detectSubjectType: (item) =>
@@ -829,8 +854,8 @@ export class CaslAbilityFactory {
         /**
          * User belonging to ADMIN_GROUPS
          */
-
         can(Action.AccessAny, User);
+
         can(Action.UserCreate, User);
         can(Action.UserRead, User);
         can(Action.UserUpdate, User);
@@ -840,7 +865,6 @@ export class CaslAbilityFactory {
         /**
          * Authenticated user not belonging to special group
          */
-
         can(Action.UserCreate, User, { _id: user._id });
         can(Action.UserRead, User, { _id: user._id });
         can(Action.UserUpdate, User, { _id: user._id });
@@ -1197,23 +1221,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  logbookEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (user) {
-      /*
-        / authenticated user
-        */
-      can(Action.Read, Logbook);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   origDatablockEndpointAccess(user: JWTUser) {
     const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1339,37 +1346,6 @@ export class CaslAbilityFactory {
 
     can(Action.MetadataKeysReadEndpoint, MetadataKeyClass);
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  policyEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, Policy);
-    } else if (
-      user &&
-      (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g)) ||
-        user.currentGroups.some((g) => this.accessGroups?.policy.includes(g)))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-      can(Action.Update, Policy);
-      can(Action.Read, Policy);
-      can(Action.Create, Policy);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
