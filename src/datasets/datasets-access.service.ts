@@ -35,10 +35,7 @@ export class DatasetsAccessService {
       }
       case DatasetLookupKeysEnum.datablocks: {
         const ability = this.caslAbilityFactory.datasetAccess(user);
-        const canViewAny = ability.can(
-          Action.DatasetDatablockRead,
-          DatasetClass,
-        );
+        const canViewAny = ability.can(Action.AccessAny, DatasetClass);
         const canView = ability.can(Action.DatasetDatablockRead, DatasetClass);
         return { canViewAny, canView };
       }
@@ -51,7 +48,6 @@ export class DatasetsAccessService {
       case DatasetLookupKeysEnum.instruments: {
         const ability = this.caslAbilityFactory.instrumentAccess(user);
         const canViewAny = ability.can(Action.InstrumentRead, Instrument);
-
         return {
           canViewAny,
           canView: false,
@@ -59,12 +55,8 @@ export class DatasetsAccessService {
       }
       case DatasetLookupKeysEnum.attachments: {
         const ability = this.caslAbilityFactory.datasetAccess(user);
-        const canViewAny = ability.can(
-          Action.DatasetAttachmentRead,
-          DatasetClass,
-        );
+        const canViewAny = ability.can(Action.AccessAny, DatasetClass);
         const canView = ability.can(Action.DatasetAttachmentRead, DatasetClass);
-
         return { canViewAny, canView };
       }
       default:
