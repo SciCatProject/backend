@@ -86,7 +86,7 @@ export class DatasetsAccessService {
       const { canViewAny, canView } = access;
       if (!canViewAny) {
         let pipeline: PipelineStage.Lookup["$lookup"]["pipeline"];
-        if (canView) {
+        if (currentUser && canView) {
           pipeline = [
             {
               $match: {

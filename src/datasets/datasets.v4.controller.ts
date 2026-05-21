@@ -171,23 +171,11 @@ export class DatasetsV4Controller {
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
     const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!filter.where) {
-      filter.where = {};
-    }
-
     if (!user) {
       // In API v4 unauthorized users must use the public endpoints
       throw new ForbiddenException("Unauthorized access");
-      //if (filter.where["$and"]) {
-      //  filter.where["$and"].push({
-      //    isPublished: true
-      //  });
-      //} else {
-      //  filter.where["$and"] = [
-      //    { isPublished: true },
-      //  ];
-      //}
     } else if (!canViewAny && canView) {
+      filter.where = filter.where ?? {};
       if (filter.where["$and"]) {
         filter.where["$and"].push({
           $or: [

@@ -262,38 +262,31 @@ export class OrigDatablocksV4Controller {
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
     const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!canViewAny) {
+    if (!user) {
+      // In API v4 unauthorized users must use the public endpoints
+      throw new ForbiddenException("Unauthorized access");
+    } else if (!canViewAny && canView) {
       filter.where = filter.where ?? {};
-      if (!user) {
-        if (filter.where["$and"]) {
-          filter.where["$and"].push({
-            isPublished: true,
-          });
-        } else {
-          filter.where["$and"] = [{ isPublished: true }];
-        }
-      } else if (canView) {
-        if (filter.where["$and"]) {
-          filter.where["$and"].push({
+      if (filter.where["$and"]) {
+        filter.where["$and"].push({
+          $or: [
+            { ownerGroup: { $in: user.currentGroups } },
+            { accessGroups: { $in: user.currentGroups } },
+            { sharedWith: { $in: [user.email] } },
+            { isPublished: true },
+          ],
+        });
+      } else {
+        filter.where["$and"] = [
+          {
             $or: [
               { ownerGroup: { $in: user.currentGroups } },
               { accessGroups: { $in: user.currentGroups } },
               { sharedWith: { $in: [user.email] } },
               { isPublished: true },
             ],
-          });
-        } else {
-          filter.where["$and"] = [
-            {
-              $or: [
-                { ownerGroup: { $in: user.currentGroups } },
-                { accessGroups: { $in: user.currentGroups } },
-                { sharedWith: { $in: [user.email] } },
-                { isPublished: true },
-              ],
-            },
-          ];
-        }
+          },
+        ];
       }
     }
 
