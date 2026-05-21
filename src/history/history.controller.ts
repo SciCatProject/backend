@@ -24,8 +24,19 @@ import { Action } from "../casl/action.enum";
 import { AppAbility, CaslAbilityFactory } from "../casl/casl-ability.factory";
 import { CheckPolicies } from "../casl/decorators/check-policies.decorator";
 import { AuthenticatedPoliciesGuard } from "../casl/guards/auth-check.guard";
-import { GenericHistoryDocument } from "../common/schemas/generic-history.schema";
+import {
+  GenericHistory,
+  GenericHistoryDocument,
+} from "../common/schemas/generic-history.schema";
 import { HistoryService } from "./history.service";
+import { Attachment } from "src/attachments/schemas/attachment.schema";
+import { Datablock } from "src/datablocks/schemas/datablock.schema";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { Instrument } from "src/instruments/schemas/instrument.schema";
+import { Policy } from "src/policies/schemas/policy.schema";
+import { ProposalClass } from "src/proposals/schemas/proposal.schema";
+import { PublishedData } from "src/published-data/schemas/published-data.schema";
+import { SampleClass } from "src/samples/schemas/sample.schema";
 
 @ApiBearerAuth()
 @ApiTags("history")
@@ -40,20 +51,20 @@ export class HistoryController {
    * Maps history subsystem names to their corresponding CASL action permissions
    * @private
    */
-  private readonly subsystemActionMap = {
-    Dataset: Action.HistoryReadDataset,
-    Proposal: Action.HistoryReadProposal,
-    Sample: Action.HistoryReadSample,
-    Instrument: Action.HistoryReadInstrument,
-    PublishedData: Action.HistoryReadPublishedData,
-    Policy: Action.HistoryReadPolicy,
-    Datablock: Action.HistoryReadDatablock,
-    Attachment: Action.HistoryReadAttachment,
+  private readonly subsystemSubjectMap = {
+    Attachment: Attachment,
+    Datablock: Datablock,
+    Dataset: DatasetClass,
+    Instrument: Instrument,
+    Policy: Policy,
+    Proposal: ProposalClass,
+    PublishedData: PublishedData,
+    Sample: SampleClass,
   };
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryReadEndpoint, "GenericHistory"),
+    ability.can(Action.HistoryRead, GenericHistory),
   )
   @Get()
   @ApiOperation({
@@ -99,32 +110,17 @@ export class HistoryController {
     }
 
     // Get the user's instance-level permissions
-    const ability = this.caslFactory.historyInstanceAccess(
-      request.user as JWTUser,
-    );
+    const ability = this.caslFactory.historyAccess(request.user as JWTUser);
 
-    if (!filter.subsystem) {
-      // For admin users who can access all collections
-      const adminAbility = this.caslFactory.historyEndpointAccess(
-        request.user as JWTUser,
+    const subject =
+      this.subsystemSubjectMap[
+        filter.subsystem as keyof typeof this.subsystemSubjectMap
+      ];
+
+    if (!subject || !ability.can(Action.HistoryRead, subject)) {
+      throw new ForbiddenException(
+        `You don't have permission to access history for ${filter.subsystem} collection`,
       );
-
-      if (!adminAbility.can(Action.HistoryReadEndpoint, "GenericHistory")) {
-        throw new BadRequestException(
-          "subsystem is required in filter for non-admin users",
-        );
-      }
-    } else {
-      const requiredAction =
-        this.subsystemActionMap[
-          filter.subsystem as keyof typeof this.subsystemActionMap
-        ];
-
-      if (!requiredAction || !ability.can(requiredAction, "GenericHistory")) {
-        throw new ForbiddenException(
-          `You don't have permission to access history for ${filter.subsystem} collection`,
-        );
-      }
     }
 
     // Apply the filters and pagination
@@ -147,7 +143,7 @@ export class HistoryController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryReadEndpoint, "GenericHistory"),
+    ability.can(Action.HistoryRead, GenericHistory),
   )
   @Get("count")
   @ApiOperation({
@@ -186,16 +182,14 @@ export class HistoryController {
     }
 
     // Get the user's instance-level permissions
-    const ability = this.caslFactory.historyInstanceAccess(
-      request.user as JWTUser,
-    );
+    const ability = this.caslFactory.historyAccess(request.user as JWTUser);
 
-    const requiredAction =
-      this.subsystemActionMap[
-        filter.subsystem as keyof typeof this.subsystemActionMap
+    const subject =
+      this.subsystemSubjectMap[
+        filter.subsystem as keyof typeof this.subsystemSubjectMap
       ];
 
-    if (!requiredAction || !ability.can(requiredAction, "GenericHistory")) {
+    if (!subject || !ability.can(Action.HistoryRead, subject)) {
       throw new ForbiddenException(
         `You don't have permission to access history for ${filter.subsystem} collection`,
       );
@@ -209,7 +203,7 @@ export class HistoryController {
   // Keep the existing endpoint for backward compatibility
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryReadEndpoint, "GenericHistory"),
+    ability.can(Action.HistoryRead, GenericHistory),
   )
   @Get("collection/:subsystem")
   @ApiOperation({
@@ -246,17 +240,15 @@ export class HistoryController {
     @Query("limit") limit?: number,
   ) {
     // Get the user's instance-level permissions
-    const ability = this.caslFactory.historyInstanceAccess(
-      request.user as JWTUser,
-    );
+    const ability = this.caslFactory.historyAccess(request.user as JWTUser);
 
     // Check permissions using the correct third parameter format based on your CASL setup
-    const requiredAction =
-      this.subsystemActionMap[
-        subsystem as keyof typeof this.subsystemActionMap
+    const subject =
+      this.subsystemSubjectMap[
+        subsystem as keyof typeof this.subsystemSubjectMap
       ];
 
-    if (!requiredAction || !ability.can(requiredAction, "GenericHistory")) {
+    if (!subject || !ability.can(Action.HistoryRead, subject)) {
       throw new ForbiddenException(
         `You don't have permission to access history for ${subsystem} collection`,
       );
