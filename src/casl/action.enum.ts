@@ -56,6 +56,12 @@ export enum Action {
   InstrumentUpdate = "instrument_update",
   InstrumentDelete = "instrument_delete",
 
+  // Jobs
+  JobCreate = "jobs_create",
+  JobRead = "jobs_read",
+  JobUpdate = "job_update",
+  JobDelete = "job_delete",
+
   // MetadataKeys
   MetadataKeysRead = "metadatakeys_read",
 
@@ -96,25 +102,6 @@ export enum Action {
   UserUpdate = "user_update",
   UserDelete = "user_delete",
   UserCreateJwt = "user_create_jwt",
-
-  // --------------
-  // Jobs
-  // --------------
-  // endpoint authorization
-  JobCreate = "jobs_create",
-  JobRead = "jobs_read",
-  JobUpdate = "job_update",
-  JobDelete = "job_delete",
-  // data instance authorization
-  JobCreateConfiguration = "job_create_configuration",
-  JobCreateOwner = "job_create_owner",
-  JobCreateAny = "job_create_any",
-  JobReadAccess = "job_read_access",
-  JobReadAny = "job_read_any",
-  JobUpdateConfiguration = "job_update_configuration",
-  JobUpdateOwner = "job_update_owner",
-  JobUpdateAny = "job_update_any",
-  //JobDeleteAny = "job_delete_any",
 
   // -------------------------------------
   // History

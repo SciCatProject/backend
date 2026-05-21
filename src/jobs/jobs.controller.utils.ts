@@ -13,7 +13,7 @@ import { UpdateJobDto } from "./dto/update-job.dto";
 import { DatasetListDto } from "./dto/dataset-list.dto";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
-import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
+import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -40,6 +40,7 @@ import {
 } from "./dto/output-job-v4.dto";
 import { toObject } from "src/config/job-config/actions/actionutils";
 import { loadDatasets } from "src/config/job-config/actions/actionutils";
+import { accessibleBy } from "@casl/mongoose";
 
 @Injectable()
 export class JobsControllerUtils {
@@ -261,6 +262,17 @@ export class JobsControllerUtils {
     jobInstance.ownerGroup = job.ownerGroup;
     jobInstance.ownerUser = job.ownerUser;
     return jobInstance;
+  }
+
+  /**
+   * Build read access filter for mongodb
+   */
+  readAccessFilter(user: JWTUser) {
+    const abilities = this.caslAbilityFactory.jobAccess(user);
+
+    return {
+      $or: [accessibleBy(abilities, Action.JobRead).ofType(JobClass)],
+    };
   }
 
   /**
@@ -545,9 +557,17 @@ export class JobsControllerUtils {
           datasetsWhere["where"]["$or"] = [{ _id: { $in: [] } }];
         }
       }
-      const numberOfDatasetsWithAccess =
-        await this.datasetsService.count(datasetsWhere);
-      datasetsNoAccess = datasetIds.length - numberOfDatasetsWithAccess.count;
+
+      if (
+        user &&
+        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      ) {
+        datasetsNoAccess = 0;
+      } else {
+        const numberOfDatasetsWithAccess =
+          await this.datasetsService.count(datasetsWhere);
+        datasetsNoAccess = datasetIds.length - numberOfDatasetsWithAccess.count;
+      }
     }
 
     if (!user && jobCreateDto.ownerGroup) {
@@ -561,19 +581,10 @@ export class JobsControllerUtils {
     }
 
     // instantiate the casl matrix for the user
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      user,
-      jobConfiguration,
-    );
+    const ability = this.caslAbilityFactory.jobAccess(user);
     // check if the user can create this job
     const canCreate =
-      (ability.can(Action.JobCreateAny, JobClass) &&
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) ||
-      (ability.can(Action.JobCreateAny, JobClass) && datasetsNoAccess == 0) ||
-      ability.can(Action.JobCreateOwner, jobInstance) ||
-      (ability.can(Action.JobCreateConfiguration, jobInstance) &&
-        datasetsNoAccess == 0 &&
-        jobConfiguration.create.auth != CreateJobAuth.JobAdmin);
+      ability.can(Action.JobCreate, jobInstance) && datasetsNoAccess == 0;
 
     if (!canCreate) {
       throw new ForbiddenException("Unauthorized to create this job.");
@@ -661,16 +672,10 @@ export class JobsControllerUtils {
     const currentJobInstance =
       await this.generateJobInstanceForPermissions(currentJob);
     const jobConfig = this.getJobTypeConfiguration(currentJob.type);
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      request.user as JWTUser,
-      jobConfig,
-    );
+    const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
     // check if the user can update this job
-    const canUpdate =
-      ability.can(Action.JobUpdateAny, JobClass) ||
-      ability.can(Action.JobUpdateOwner, currentJobInstance) ||
-      (ability.can(Action.JobUpdateConfiguration, currentJobInstance) &&
-        jobConfig.update.auth != UpdateJobAuth.JobAdmin);
+    const canUpdate = ability.can(Action.JobUpdate, currentJobInstance);
+
     if (!canUpdate) {
       throw new ForbiddenException("Unauthorized to update this job.");
     }
@@ -721,9 +726,7 @@ export class JobsControllerUtils {
         fields: JSON.parse(filters.fields ?? ("{}" as string)),
         limits: JSON.parse(filters.limits ?? ("{}" as string)),
       };
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
 
       return (await this.jobsService.findByFilters(
         parsedFilter.fields,
@@ -754,9 +757,7 @@ export class JobsControllerUtils {
         fields: fields,
         facets: JSON.parse(filters.facets ?? ("[]" as string)),
       };
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
       return await this.jobsService.fullfacet(facetFilters, jobsAccess);
     } catch (e) {
       throw new HttpException(
@@ -787,16 +788,10 @@ export class JobsControllerUtils {
     }
     const currentJobInstance =
       await this.generateJobInstanceForPermissions(job);
-    const jobConfiguration = this.getJobTypeConfiguration(
-      currentJobInstance.type,
-    );
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      request.user as JWTUser,
-      jobConfiguration,
-    );
-    const canRead =
-      ability.can(Action.JobReadAny, JobClass) ||
-      ability.can(Action.JobReadAccess, currentJobInstance);
+
+    const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
+    const canRead = ability.can(Action.JobRead, currentJobInstance);
+
     if (!canRead) {
       throw new ForbiddenException("Unauthorized to get this job.");
     }
@@ -867,9 +862,7 @@ export class JobsControllerUtils {
   ): Promise<PartialOutputJobDto[]> {
     try {
       const parsedFilter = JSON.parse(filter ?? "{}");
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
       const jobs = await this.jobsService.findJobComplete(
         parsedFilter,
         jobsAccess,

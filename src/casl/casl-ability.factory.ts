@@ -11,7 +11,6 @@ import { ConfigService } from "@nestjs/config";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
@@ -29,7 +28,6 @@ import { UserSettings } from "src/users/schemas/user-settings.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
-import { accessibleBy } from "@casl/mongoose";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
 
@@ -78,6 +76,7 @@ export class CaslAbilityFactory {
     datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
     instruments: this.instrumentAccess,
+    jobs: this.jobAccess,
     logbooks: this.logbookAccess,
     metadataKeys: this.metadataKeyAccess,
     opensearch: this.opensearchAccess,
@@ -89,7 +88,6 @@ export class CaslAbilityFactory {
     samples: this.sampleAccess,
     users: this.userAccess,
 
-    jobs: this.jobsEndpointAccess,
     history: this.historyEndpointAccess,
   };
 
@@ -710,6 +708,138 @@ export class CaslAbilityFactory {
         can(Action.InstrumentRead, Instrument);
       }
     }
+
+    return build({
+      detectSubjectType: (item) =>
+        item.constructor as ExtractSubjectType<Subjects>,
+    });
+  }
+
+  jobAccess(user: JWTUser) {
+    const { can, build } = new AbilityBuilder(
+      createMongoAbility<PossibleAbilities, Conditions>,
+    );
+
+    Object.entries(this.jobConfigService.allJobConfigs).forEach(
+      ([jobType, jobConfig]) => {
+        const typeScope = jobType ? { type: jobType } : {};
+
+        if (!user) {
+          /**
+           * Unauthenticated user
+           */
+          if (
+            jobConfig.create.auth === CreateJobAuth.All ||
+            jobConfig.create.auth === CreateJobAuth.DatasetPublic
+          ) {
+            can(Action.JobCreate, JobClass, typeScope);
+          }
+          if (jobConfig.update.auth === UpdateJobAuth.All) {
+            can(Action.JobUpdate, JobClass, {
+              ownerGroup: undefined,
+              ...typeScope,
+            });
+          }
+        } else {
+          if (
+            user.currentGroups.some((g) =>
+              this.accessGroups?.deleteJob.includes(g),
+            )
+          ) {
+            /**
+             * User belonging to DELETE_JOB_GROUPS
+             */
+            can(Action.JobDelete, JobClass);
+          }
+
+          if (
+            user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+          ) {
+            /**
+             * User belonging to ADMIN_GROUPS
+             */
+            can(Action.JobCreate, JobClass);
+            can(Action.JobRead, JobClass);
+            can(Action.JobUpdate, JobClass);
+          } else if (
+            user.currentGroups.some((g) =>
+              this.accessGroups?.createJobPrivileged.includes(g),
+            )
+          ) {
+            /**
+             * User belonging to CREATE_JOB_PRIVILEGED_GROUPS
+             */
+            can(Action.JobCreate, JobClass);
+            can(Action.JobRead, JobClass);
+          } else if (
+            user.currentGroups.some((g) =>
+              this.accessGroups?.updateJobPrivileged.includes(g),
+            )
+          ) {
+            /**
+             * User belonging to UPDATE_JOB_PRIVILEGED_GROUPS
+             */
+            can(Action.JobRead, JobClass);
+            can(Action.JobUpdate, JobClass);
+          } else {
+            /**
+             * Authenticated user not belonging to special group
+             */
+            const ownerUserScope = {
+              ownerUser: user.username,
+              ...typeScope,
+            };
+            const ownerGroupScope = {
+              ownerGroup: { $in: user.currentGroups },
+              ...typeScope,
+            };
+
+            const createAuthorizationValues = [
+              ...Object.values(CreateJobAuth).filter(
+                (v) => String(v) !== "#jobAdmin",
+              ),
+              ...user.currentGroups.map((g) => "@" + g),
+              user.username,
+            ];
+            if (
+              createAuthorizationValues.some((a) => jobConfig.create.auth === a)
+            ) {
+              can(Action.JobCreate, JobClass, typeScope);
+            }
+
+            can(Action.JobRead, JobClass, ownerGroupScope);
+            can(Action.JobRead, JobClass, ownerUserScope);
+
+            const updateAuthorizationValues = [
+              ...Object.values(UpdateJobAuth).filter(
+                (v) => String(v) !== "#jobAdmin",
+              ),
+              ...user.currentGroups.map((g) => "@" + g),
+              user.username,
+            ];
+
+            let updateScope;
+            switch (jobConfig.update.auth) {
+              case "#jobOwnerUser":
+                updateScope = ownerUserScope;
+                break;
+              case "#jobOwnerGroup":
+                updateScope = ownerGroupScope;
+                break;
+              default:
+                updateScope = typeScope;
+                break;
+            }
+
+            if (
+              updateAuthorizationValues.some((a) => jobConfig.update.auth === a)
+            ) {
+              can(Action.JobUpdate, JobClass, updateScope);
+            }
+          }
+        }
+      },
+    );
 
     return build({
       detectSubjectType: (item) =>
@@ -1529,292 +1659,5 @@ export class CaslAbilityFactory {
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
     });
-  }
-
-  jobsEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      /**
-       * unauthenticated users
-       */
-
-      // job creation
-      if (
-        Object.values(this.jobConfigService.allJobConfigs).some(
-          (j) =>
-            j.create.auth == CreateJobAuth.All ||
-            j.create.auth == CreateJobAuth.DatasetPublic,
-        )
-      ) {
-        can(Action.JobCreate, JobClass);
-      } else {
-        cannot(Action.JobCreate, JobClass);
-      }
-      cannot(Action.JobRead, JobClass);
-      if (
-        Object.values(this.jobConfigService.allJobConfigs).some(
-          (j) => j.update.auth == UpdateJobAuth.All,
-        )
-      ) {
-        can(Action.JobUpdate, JobClass);
-      } else {
-        cannot(Action.JobUpdate, JobClass);
-      }
-      cannot(Action.JobDelete, JobClass);
-    } else {
-      /**
-       * authenticated users
-       */
-      // check if this user is part of the admin group
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-        can(Action.JobRead, JobClass);
-        can(Action.JobCreate, JobClass);
-        can(Action.JobUpdate, JobClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createJobPrivileged.includes(g),
-        )
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in CREATE_JOB_PRIVILEGED_GROUPS
-         */
-        can(Action.JobRead, JobClass);
-        can(Action.JobCreate, JobClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.updateJobPrivileged.includes(g),
-        )
-      ) {
-        can(Action.JobRead, JobClass);
-        can(Action.JobUpdate, JobClass);
-      } else {
-        const jobUserAuthorizationValues = [
-          ...user.currentGroups.map((g) => "@" + g),
-          user.username,
-        ];
-
-        /**
-         * authenticated users not belonging to any special group
-         */
-        const jobCreateEndPointAuthorizationValues = [
-          ...Object.values(CreateJobAuth),
-          ...jobUserAuthorizationValues,
-        ];
-        can(Action.JobRead, JobClass);
-
-        if (
-          Object.values(this.jobConfigService.allJobConfigs).some(
-            (j) =>
-              j.create.auth &&
-              jobCreateEndPointAuthorizationValues.includes(
-                j.create.auth as string,
-              ),
-          )
-        ) {
-          can(Action.JobCreate, JobClass);
-        }
-
-        const jobUpdateEndPointAuthorizationValues = [
-          ...Object.values(UpdateJobAuth),
-          ...jobUserAuthorizationValues,
-        ];
-
-        if (
-          Object.values(this.jobConfigService.allJobConfigs).some(
-            (j) =>
-              j.update.auth &&
-              jobUpdateEndPointAuthorizationValues.includes(
-                j.update.auth as string,
-              ),
-          )
-        ) {
-          can(Action.JobUpdate, JobClass);
-        }
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.deleteJob.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in DELETE_JOB_GROUPS
-         */
-        can(Action.JobDelete, JobClass);
-      } else {
-        cannot(Action.JobDelete, JobClass);
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  jobsInstanceAccessCan(
-    can: AbilityBuilder<AppAbility>["can"],
-    user: JWTUser,
-    jobConfiguration: JobConfig,
-    jobType?: string,
-  ) {
-    const typeScope = jobType ? { type: jobType } : {};
-
-    if (!user) {
-      /**
-       * unauthenticated users
-       */
-      if (jobConfiguration.create.auth === CreateJobAuth.All) {
-        can(Action.JobCreateConfiguration, JobClass, typeScope);
-      }
-      if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic) {
-        can(Action.JobCreateConfiguration, JobClass, typeScope);
-      }
-      if (jobConfiguration.update.auth === UpdateJobAuth.All) {
-        can(Action.JobUpdateConfiguration, JobClass, {
-          ownerGroup: undefined,
-          ...typeScope,
-        });
-      }
-    } else {
-      /**
-       * authenticated users
-       */
-      // check if this user is part of the admin group
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-        can(Action.JobReadAny, JobClass);
-        can(Action.JobCreateAny, JobClass);
-        can(Action.JobUpdateAny, JobClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createJobPrivileged.includes(g),
-        )
-      ) {
-        can(Action.JobReadAny, JobClass);
-        can(Action.JobCreateAny, JobClass);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.updateJobPrivileged.includes(g),
-        )
-      ) {
-        can(Action.JobUpdateAny, JobClass);
-        can(Action.JobReadAny, JobClass);
-      } else {
-        /**
-         * authenticated users not belonging to any special group
-         */
-        const jobUserAuthorizationValues = [
-          ...user.currentGroups.map((g) => "@" + g),
-          user.username,
-        ];
-        can(Action.JobReadAccess, JobClass, {
-          ownerGroup: { $in: user.currentGroups },
-          ...typeScope,
-        });
-        can(Action.JobReadAccess, JobClass, {
-          ownerUser: user.username,
-          ...typeScope,
-        });
-
-        const jobCreateInstanceAuthorizationValues = [
-          ...Object.values(CreateJobAuth).filter(
-            (v) => !String(v).includes("#dataset"),
-          ),
-          ...jobUserAuthorizationValues,
-        ];
-        const jobCreateDatasetAuthorizationValues = [
-          ...Object.values(CreateJobAuth).filter((v) =>
-            String(v).includes("#dataset"),
-          ),
-        ];
-
-        if (
-          jobCreateInstanceAuthorizationValues.some(
-            (a) => jobConfiguration.create.auth === a,
-          )
-        ) {
-          can(Action.JobCreateConfiguration, JobClass, typeScope);
-        }
-        if (
-          jobCreateDatasetAuthorizationValues.some(
-            (a) => jobConfiguration.create.auth === a,
-          )
-        ) {
-          can(Action.JobCreateConfiguration, JobClass, typeScope);
-        }
-
-        const jobUpdateInstanceAuthorizationValues = [
-          ...Object.values(UpdateJobAuth).filter(
-            (v) => !String(v).includes("#job"),
-          ),
-          ...jobUserAuthorizationValues,
-        ];
-        if (
-          jobUpdateInstanceAuthorizationValues.some(
-            (a) => jobConfiguration.update.auth === a,
-          )
-        ) {
-          can(Action.JobUpdateConfiguration, JobClass, typeScope);
-        }
-        if (jobConfiguration.update.auth === "#jobOwnerUser") {
-          can(Action.JobUpdateConfiguration, JobClass, {
-            ownerUser: user.username,
-            ...typeScope,
-          });
-        }
-        if (jobConfiguration.update.auth === "#jobOwnerGroup") {
-          can(Action.JobUpdateConfiguration, JobClass, {
-            ownerGroup: { $in: user.currentGroups },
-            ...typeScope,
-          });
-        }
-      }
-    }
-  }
-
-  jobsInstanceAccess(user: JWTUser, jobConfiguration: JobConfig) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    this.jobsInstanceAccessCan(can, user, jobConfiguration);
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  jobsAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    Object.entries(this.jobConfigService.allJobConfigs).forEach(
-      ([jobType, jobConfig]) => {
-        this.jobsInstanceAccessCan(can, user, jobConfig, jobType);
-      },
-    );
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  jobsMongoQueryReadAccess(user: JWTUser) {
-    const abilities = this.jobsAccess(user);
-    return {
-      $or: [
-        accessibleBy(abilities, Action.JobReadAny).ofType(JobClass),
-        accessibleBy(abilities, Action.JobReadAccess).ofType(JobClass),
-      ],
-    };
   }
 }
