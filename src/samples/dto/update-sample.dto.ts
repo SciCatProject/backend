@@ -1,5 +1,11 @@
 import { PartialType } from "@nestjs/swagger";
-import { IsBoolean, IsObject, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { OwnableDto } from "../../common/dto/ownable.dto";
 import { Transform } from "class-transformer";
 import { encodeScientificMetadataKeys } from "src/common/utils";
@@ -11,6 +17,13 @@ export class UpdateSampleDto extends OwnableDto {
   @IsString()
   @IsOptional()
   readonly owner?: string;
+
+  /**
+   * The name of the sample.
+   */
+  @IsString()
+  @IsNotEmpty()
+  readonly sampleName: string;
 
   /**
    * A description of the sample.
