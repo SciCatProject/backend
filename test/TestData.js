@@ -940,6 +940,7 @@ const TestData = {
 
   SampleCorrect: {
     owner: "Max Novelli",
+    sampleName: "Sample Test",
     description: "This is a very important sample",
     sampleCharacteristics: {
       chemical_formula: {
@@ -953,6 +954,7 @@ const TestData = {
 
   SampleWrong: {
     owner: "Max Novelli",
+    sampleName: "Sample Test",
     sampleCharacteristics: {
       chemical_formula: "H2O",
     },
