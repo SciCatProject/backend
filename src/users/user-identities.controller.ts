@@ -40,10 +40,8 @@ export class UserIdentitiesController {
   ) {}
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserRead, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
   )
   @Get("/findOne")
   @ApiQuery({

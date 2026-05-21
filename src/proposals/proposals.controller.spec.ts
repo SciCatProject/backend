@@ -9,6 +9,7 @@ import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { PartialUpdateProposalDto } from "./dto/update-proposal.dto";
 import { ProposalClass } from "./schemas/proposal.schema";
 import { ProposalLookupKeysEnum } from "./types/proposal-lookup";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 
 class AttachmentsServiceMock {}
 
@@ -22,9 +23,9 @@ class ProposalsServiceMock {
 }
 
 class CaslAbilityFactoryMock {
-  proposalAccess(user?: any) {
+  proposalAccess(user: JWTUser) {
     return {
-      can: (action: string, subject: any) => {
+      can: () => {
         if (!user) {
           return false;
         }
@@ -138,11 +139,11 @@ describe("ProposalsController", () => {
         user: null,
       } as unknown as Request;
       const filter = {
-        where : {}
+        where: {},
       };
-      
+
       const result = controller.updateFiltersForList(request, filter);
-      expect(result.where).toEqual({ $and : [{ isPublished : true }] });
+      expect(result.where).toEqual({ $and: [{ isPublished: true }] });
     });
 
     it("should not restrict when admin can view all", () => {
@@ -150,7 +151,7 @@ describe("ProposalsController", () => {
         user: { currentGroups: ["admin"] },
       } as unknown as Request;
       const filter = {
-        where : {}
+        where: {},
       };
 
       const result = controller.updateFiltersForList(request, filter);

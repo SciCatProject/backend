@@ -11,8 +11,6 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
-  Logger,
-  InternalServerErrorException,
   ForbiddenException,
   BadRequestException,
   Req,
@@ -170,7 +168,7 @@ export class SamplesController {
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
     const canView = ability.can(Action.SampleRead, SampleClass);
-    
+
     if (!canViewAny) {
       mergedFilters.where = mergedFilters.where ?? {};
       if (!user) {
@@ -385,7 +383,7 @@ export class SamplesController {
     const user: JWTUser = request.user as JWTUser;
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
-    
+
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
     const canView = ability.can(Action.SampleRead, SampleClass);
@@ -452,7 +450,7 @@ export class SamplesController {
 
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
-    
+
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
     const canView = ability.can(Action.SampleRead, SampleClass);

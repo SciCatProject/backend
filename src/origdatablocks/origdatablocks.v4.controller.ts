@@ -13,7 +13,6 @@ import {
   Req,
   ForbiddenException,
   NotFoundException,
-  InternalServerErrorException,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -558,7 +557,7 @@ export class OrigDatablocksV4Controller {
       fields.userGroups = fields.userGroups ?? [];
       fields.userGroups.push(...user.currentGroups);
     }
-  
+
     const parsedFilters: IFacets<IOrigDatablockFields> = {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "{}"),

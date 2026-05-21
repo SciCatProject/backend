@@ -221,9 +221,7 @@ describe("UsersController", () => {
           return false;
         }),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
@@ -259,9 +257,7 @@ describe("UsersController", () => {
           return false;
         }),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
       jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);
@@ -296,9 +292,7 @@ describe("UsersController", () => {
           return true;
         }),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findById").mockResolvedValue(null);
 
@@ -324,17 +318,13 @@ describe("UsersController", () => {
       const mockAbility = {
         can: jest.fn().mockReturnValue(true),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
       await controller.findAll(mockRequest as Request);
 
-      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
-        mockUser,
-      );
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(mockUser);
     });
 
     it("should return users with correct DTO structure", async () => {
@@ -350,9 +340,7 @@ describe("UsersController", () => {
       const mockAbility = {
         can: jest.fn((action: Action) => action === Action.AccessAny),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
@@ -380,9 +368,7 @@ describe("UsersController", () => {
       const mockAbility = {
         can: jest.fn((action: Action) => action !== Action.AccessAny),
       };
-      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
       jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);

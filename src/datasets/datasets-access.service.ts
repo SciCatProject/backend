@@ -28,15 +28,17 @@ export class DatasetsAccessService {
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
-        const ability =
-          this.caslAbilityFactory.origDatablockAccess(user);
+        const ability = this.caslAbilityFactory.origDatablockAccess(user);
         const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
         const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.datablocks: {
         const ability = this.caslAbilityFactory.datasetAccess(user);
-        const canViewAny = ability.can(Action.DatasetDatablockRead, DatasetClass);
+        const canViewAny = ability.can(
+          Action.DatasetDatablockRead,
+          DatasetClass,
+        );
         const canView = ability.can(Action.DatasetDatablockRead, DatasetClass);
         return { canViewAny, canView };
       }
@@ -52,7 +54,7 @@ export class DatasetsAccessService {
 
         return {
           canViewAny,
-          canView: false
+          canView: false,
         };
       }
       case DatasetLookupKeysEnum.attachments: {
@@ -68,7 +70,7 @@ export class DatasetsAccessService {
       default:
         return {
           canViewAny: false,
-          canView: false
+          canView: false,
         };
     }
   }

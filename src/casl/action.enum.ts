@@ -91,7 +91,6 @@ export enum Action {
   SampleAttachmentDelete = "sample_attachment_delete",
   SampleDatasetRead = "sample_dataset_read",
 
-
   // Users
   UserCreate = "user_create",
   UserRead = "user_read",

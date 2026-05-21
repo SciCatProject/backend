@@ -81,9 +81,7 @@ describe("MetadataKeysV4Controller", () => {
 
     const result = await controller.findAll(request, filterString);
 
-    expect(caslAbilityFactory.metadataKeyAccess).toHaveBeenCalledWith(
-      user,
-    );
+    expect(caslAbilityFactory.metadataKeyAccess).toHaveBeenCalledWith(user);
 
     expect(accessibleBy).toHaveBeenCalledWith(
       abilities,

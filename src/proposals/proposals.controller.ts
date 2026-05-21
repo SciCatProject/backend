@@ -14,8 +14,6 @@ import {
   Req,
   ForbiddenException,
   ConflictException,
-  Logger,
-  InternalServerErrorException,
   NotFoundException,
   Headers,
 } from "@nestjs/common";
@@ -118,7 +116,7 @@ export class ProposalsController {
     const ability = this.caslAbilityFactory.proposalAccess(user);
 
     const canDoAction = ability.can(group, proposalInstance);
-    
+
     return canDoAction;
   }
 
@@ -167,7 +165,7 @@ export class ProposalsController {
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
     const canView = ability.can(Action.ProposalRead, ProposalClass);
-    
+
     if (!canViewAny) {
       mergedFilters.where = mergedFilters.where ?? {};
       if (!user) {
@@ -425,7 +423,7 @@ export class ProposalsController {
     const user: JWTUser = request.user as JWTUser;
     const fields: IProposalFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
-    
+
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
     const canView = ability.can(Action.ProposalRead, ProposalClass);
