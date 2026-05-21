@@ -867,7 +867,7 @@ export class SamplesController {
   // GET /samples/:id/datasets
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleDatasetRead, SampleClass),
+    ability.can(Action.SampleRead, SampleClass),
   )
   @Get("/:id/datasets")
   @ApiOperation({

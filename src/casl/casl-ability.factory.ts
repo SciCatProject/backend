@@ -1210,7 +1210,7 @@ export class CaslAbilityFactory {
         this.accessGroups?.sample.includes("#all")
       ) {
         /**
-         * User belonging to SAMPLE_PRIVILEGED_GROUPS
+         * User belonging to SAMPLE_GROUPS
          */
         can(Action.SampleCreate, SampleClass, {
           ownerGroup: { $in: user.currentGroups },
