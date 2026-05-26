@@ -32,6 +32,7 @@ import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.
 import { accessibleBy } from "@casl/mongoose";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
+import { GenericHistory } from "src/common/schemas/generic-history.schema";
 
 type Subjects =
   | string
@@ -39,21 +40,21 @@ type Subjects =
       | typeof Attachment
       | typeof Datablock
       | typeof DatasetClass
+      | typeof GenericHistory
       | typeof Instrument
       | typeof JobClass
       | typeof Logbook
+      | typeof MetadataKeyClass
+      | typeof Opensearch
       | typeof OrigDatablock
       | typeof Policy
       | typeof ProposalClass
       | typeof PublishedData
+      | typeof RuntimeConfig
       | typeof SampleClass
       | typeof User
       | typeof UserIdentity
       | typeof UserSettings
-      | typeof Opensearch
-      | typeof Datablock
-      | typeof RuntimeConfig
-      | typeof MetadataKeyClass
     >
   | "all";
 type PossibleAbilities = [Action, Subjects];
@@ -75,22 +76,22 @@ export class CaslAbilityFactory {
   private endpointAccessors: {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
+    attachments: this.attachmentEndpointAccess,
+    datablocks: this.datablockEndpointAccess,
     datasets: this.datasetEndpointAccess,
-    opensearch: this.opensearchEndpointAccess,
-    jobs: this.jobsEndpointAccess,
+    history: this.historyEndpointAccess,
     instruments: this.instrumentEndpointAccess,
+    jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
+    metadataKeys: this.metadataKeysEndpointAccess,
+    opensearch: this.opensearchEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
+    runtimeconfig: this.runtimeConfigEndpointAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
-    attachments: this.attachmentEndpointAccess,
-    history: this.historyEndpointAccess,
-    datablocks: this.datablockEndpointAccess,
-    runtimeconfig: this.runtimeConfigEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -2314,7 +2315,7 @@ export class CaslAbilityFactory {
         can(Action.AttachmentUpdateInstance, Attachment);
         can(Action.AttachmentDeleteInstance, Attachment);
 
-        can(Action.accessAny, Attachment);
+        can(Action.AccessAny, Attachment);
       } else if (
         user.currentGroups.some((g) =>
           this.accessGroups?.attachmentPrivileged.includes(g),
@@ -2399,7 +2400,7 @@ export class CaslAbilityFactory {
       // users belonging to any of the group listed in ADMIN_GROUPS
       // -------------------------------------
 
-      can(Action.accessAny, PublishedData);
+      can(Action.AccessAny, PublishedData);
     }
 
     return build({
