@@ -123,7 +123,7 @@ export class DatasetsAccessService {
     const canView = ability.can(Action.DatasetRead, DatasetClass);
 
     if (!canViewAny) {
-      if (canView) {
+      if (currentUser && canView) {
         fieldValue.$lookup.pipeline?.unshift({
           $match: {
             $or: [
