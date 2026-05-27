@@ -12,6 +12,10 @@ export type JobDocument = JobClass & Document;
   timestamps: true,
   toJSON: {
     getters: true,
+    transform: (_doc: Document, ret: Record<string, unknown>) => {
+      delete ret.accessToken;
+      return ret;
+    },
   },
 })
 export class JobClass extends OwnableClass {
@@ -106,6 +110,17 @@ export class JobClass extends OwnableClass {
     default: {},
   })
   jobResultObject: Record<string, unknown>;
+
+  /**
+   * JWT access token provided by the user at job creation time.
+   * Stored for reuse by actions performed within the job.
+   * Not exposed in API responses for security reasons.
+   */
+  @Prop({
+    type: String,
+    required: false,
+  })
+  accessToken?: string;
 }
 export const JobSchema = SchemaFactory.createForClass(JobClass);
 

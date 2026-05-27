@@ -444,6 +444,19 @@ export class JobsControllerUtils {
   }
 
   /**
+   * Extract the Bearer token from the Authorization header of the request.
+   */
+  private extractBearerToken(request: Request): string | undefined {
+    const authHeader = request.headers?.authorization;
+    if (!authHeader) return undefined;
+    const parts = authHeader.split(" ");
+    if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
+      return parts[1];
+    }
+    return undefined;
+  }
+
+  /**
    * Create job implementation
    */
   async createJob(
@@ -457,6 +470,11 @@ export class JobsControllerUtils {
       createJobDto,
       request.user as JWTUser,
     );
+    // Extract JWT from Authorization header
+    const accessToken = this.extractBearerToken(request);
+    if (accessToken) {
+      jobInstance.accessToken = accessToken;
+    }
     // Allow actions to validate DTO
     const jobConfig = this.getJobTypeConfiguration(createJobDto.type);
     const validateContext = { request: createJobDto, env: process.env };
