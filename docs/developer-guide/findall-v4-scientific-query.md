@@ -8,6 +8,7 @@ We also want to support SI unit conversion for scientific fields, controlled by 
 
 ```
 {
+  "strictMode": "false",
   "where": {
     "$and": [
       {
@@ -31,6 +32,7 @@ We also want to support SI unit conversion for scientific fields, controlled by 
 
 ```
 {
+  "strictMode": "false",
   "where": {
     "$or": [
       {
@@ -81,6 +83,35 @@ Before being sent to the aggregation pipeline, the query looks like this:
           "$and": [
             { "scientificMetadata.temperature.value": { "$eq": 25 } },
             { "scientificMetadata.testing_unit2.unit": { "$eq": "celcius" } }
+          ]
+        }
+      ]
+    }
+  },
+  { "$sort": { "createdAt": -1 } },
+  { "$skip": 0 },
+  { "$limit": 10 }
+]
+```
+
+With SI conversion, the final query looks like this:
+
+```
+[
+  {
+    "$match": {
+      "$and": [
+        { "datasetName": { "$regex": "someName", "$options": "i" } },
+        {
+          "$and": [
+            { "scientificMetadata.distance.valueSI": { "$eq": 1000 } },
+            { "scientificMetadata.distance.unitSI": { "$eq": "m" } }
+          ]
+        },
+        {
+          "$and": [
+            { "scientificMetadata.temperature.valueSI": { "$eq": 77 } },
+            { "scientificMetadata.testing_unit2.unitSI": { "$eq": "fahrenheit" } }
           ]
         }
       ]
