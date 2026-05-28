@@ -110,8 +110,8 @@ With SI conversion, the final query looks like this:
         },
         {
           "$and": [
-            { "scientificMetadata.temperature.valueSI": { "$eq": 77 } },
-            { "scientificMetadata.testing_unit2.unitSI": { "$eq": "fahrenheit" } }
+            { "scientificMetadata.temperature.valueSI": { "$eq": 298,15 } },
+            { "scientificMetadata.testing_unit2.unitSI": { "$eq": "kelvin" } }
           ]
         }
       ]
