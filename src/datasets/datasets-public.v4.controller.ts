@@ -34,6 +34,11 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { getSwaggerDatasetFilterContent } from "./types/dataset-filter-content";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import {
+  ClassSerializerInterceptor,
+  SerializeOptions,
+  UseInterceptors,
+} from "@nestjs/common";
 
 @ApiExtraModels(HistoryClass, TechniqueClass, RelationshipClass)
 @ApiTags("datasets public v4")
@@ -43,6 +48,7 @@ import { AllowAny } from "src/auth/decorators/allow-any.decorator";
  * This is intentional for versioned routing.
  */
 @Controller({ path: "datasets/public", version: "4" })
+@UseInterceptors(ClassSerializerInterceptor)
 export class DatasetsPublicV4Controller {
   constructor(private datasetsService: DatasetsService) {}
 
@@ -57,6 +63,10 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public
   @AllowAny()
   @Get()
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of public datasets.",
     description:
@@ -271,6 +281,10 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public/:id
   @AllowAny()
   @Get("/:pid")
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiParam({
     name: "pid",
     description: "Id of the public dataset to return",
