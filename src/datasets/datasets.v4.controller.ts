@@ -19,6 +19,8 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
+  ClassSerializerInterceptor,
+  SerializeOptions,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -103,6 +105,7 @@ import { TechniqueClass } from "./schemas/technique.schema";
  * This is intentional for versioned routing.
  */
 @Controller({ path: "datasets", version: "4" })
+@UseInterceptors(ClassSerializerInterceptor)
 export class DatasetsV4Controller {
   constructor(
     private datasetsService: DatasetsService,
@@ -308,6 +311,10 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
+  @SerializeOptions({
+    type: CreateDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary:
       "It creates a new dataset. Type should be raw, derived or any of the customized types available in your instance",
@@ -409,6 +416,10 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get()
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of datasets.",
     description:
@@ -679,6 +690,10 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get("/:pid")
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiParam({
     name: "pid",
     description: "Id of the dataset to return",
@@ -734,6 +749,10 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Patch("/:pid")
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It partially updates the dataset.",
     description: `It updates the dataset through the pid specified. It updates only the specified fields.
