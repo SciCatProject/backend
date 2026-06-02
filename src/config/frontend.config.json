@@ -11,7 +11,7 @@
       "order": 1,
       "label": "Private",
       "type": "xhr",
-      "mat_icon": "publish",
+      "mat_icon": "",
       "method" : "POST",
       "url": "/api/v4/publisheddata/{{ @doi }}/private",
       "enabled": "@status === \"published\"",
@@ -46,7 +46,7 @@
     },
     {
       "id": "register",
-      "description": "This registers the record locally.",
+      "description": "This registers the record at DataCite.",
       "order": 2,
       "label": "Register",
       "type": "xhr",
@@ -64,14 +64,14 @@
     },
     {
       "id": "publish",
-      "description": "This amends the record locally.",
+      "description": "This should forward to local system.",
       "order": 3,
-      "label": "Amend",
+      "label": "Proceed to PubDB",
       "type": "xhr",
       "mat_icon": "",
       "method" : "POST",
-      "url": "/api/v4/publisheddata/{{ @doi }}/amend",
-      "enabled": "@status === 'registered' && #userIsAdmin",
+      "url": "some job url with passing userToken and {{ @doi }}",
+      "enabled": "@status === 'registered'",
       "variables" : {
         "doi": "#PublishedDataDoi",
         "status": "#PublishedDataStatus"
