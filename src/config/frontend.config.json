@@ -6,9 +6,29 @@
   "publishedDataActionsEnabled": true,
   "publishedDataActions": [
     {
-      "id": "publish",
-      "description": "This publishes the record locally.",
+      "id": "private",
+      "description": "This action makes a published data record private.",
       "order": 1,
+      "label": "Private",
+      "type": "xhr",
+      "mat_icon": "publish",
+      "method" : "POST",
+      "url": "/api/v4/publisheddata/{{ @doi }}/private",
+      "enabled": "@status === \"published\"",
+      "authorization": "",
+      "variables" : {
+        "doi": "#PublishedData0Doi",
+        "status" : "#PublishedData[0]Field[status]"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "#tokenBearer"
+      }
+    },
+    {
+      "id": "publish",
+      "description": "This action published the published data record.",
+      "order": 2,
       "label": "Publish",
       "type": "xhr",
       "mat_icon": "",
@@ -16,8 +36,8 @@
       "url": "/api/v4/publisheddata/{{ @doi }}/publish",
       "enabled": "@status === 'private'",
       "variables" : {
-        "doi": "#PublishedDataDoi",
-        "status": "#PublishedDataStatus"
+        "doi": "#PublishedData0Doi",
+        "status" : "#PublishedData[0]Field[status]"
       },
       "headers": {
         "Content-Type": "application/json",
