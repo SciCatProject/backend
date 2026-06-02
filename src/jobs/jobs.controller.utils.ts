@@ -96,7 +96,7 @@ export class JobsControllerUtils {
       datasetList,
     );
     const nestedErrors = await Promise.all(
-      datasetListDtos.map((dto) => validate(dto)),
+      datasetListDtos.map((dto) => validate(dto, { whitelist: true, forbidNonWhitelisted: true })),
     );
     const validateErrors = nestedErrors.flat();
     if (validateErrors.length > 0) {
