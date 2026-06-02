@@ -1,0 +1,29 @@
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from "@nestjs/common";
+import { Observable, tap } from "rxjs";
+import { EventsService } from "src/serverSideEvent/serverSideEvent.service";
+
+@Injectable()
+export class DatasetEventsInterceptor implements NestInterceptor {
+  constructor(private readonly eventsService: EventsService) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context.switchToHttp().getRequest();
+    const method = request.method;
+
+    return next.handle().pipe(
+      tap(() => {
+        if (["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
+          this.eventsService.emit({
+            type: "event.dataset.updated",
+            message: "Dataset updated",
+          });
+        }
+      }),
+    );
+  }
+}
