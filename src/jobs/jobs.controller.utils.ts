@@ -84,7 +84,7 @@ export class JobsControllerUtils {
     ] as Array<DatasetListDto>;
     // check that datasetList is a non empty array
     if (!Array.isArray(datasetList))
-      throw new UnprocessableEntityException("Invalid dataset list");
+      throw new UnprocessableEntityException("Invalid dataset list.");
     if (datasetList.length == 0)
       throw new UnprocessableEntityException(
         "List of passed datasets is empty.",
