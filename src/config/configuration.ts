@@ -75,6 +75,7 @@ const configuration = () => {
     datasetTypes: {},
     proposalTypes: {},
     opensearchConfig: {},
+    datafilesMetadataSchema: { type: "object", additionalProperties: false },
   };
   const jsonConfigFileList: { [key: string]: string } = {
     frontendConfig:
@@ -89,6 +90,8 @@ const configuration = () => {
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
     opensearchConfig:
       process.env.OPENSEARCH_CONFIG_FILE || "opensearchConfig.json",
+    datafilesMetadataSchema:
+      process.env.DATAFILES_METADATA_SCHEMA || "datafilesMetadataSchema.json",
   };
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
@@ -106,6 +109,7 @@ const configuration = () => {
       const configsWithExampleFallback = [
         "publishedDataConfig",
         "opensearchConfig",
+        "datafilesMetadataSchema",
       ];
       if (configsWithExampleFallback.includes(key)) {
         console.warn(
@@ -458,6 +462,7 @@ const configuration = () => {
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
     ajvCustomDefinitions: ajvCustomDefinitions,
     opensearchConfig: jsonConfigMap.opensearchConfig,
+    datafilesMetadataSchema: jsonConfigMap.datafilesMetadataSchema,
   };
   return merge(config, localconfiguration);
 };

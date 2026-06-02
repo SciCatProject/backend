@@ -10,6 +10,7 @@ import { OrigDatablocksPublicV4Controller } from "./origdatablocks-public.v4.con
 import { OrigDatablocksV4Controller } from "./origdatablocks.v4.controller";
 import { CaslModule } from "src/casl/casl.module";
 import { DatasetsModule } from "src/datasets/datasets.module";
+import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
 
 @Module({
   imports: [
@@ -28,6 +29,6 @@ import { DatasetsModule } from "src/datasets/datasets.module";
     OrigDatablocksV4Controller,
   ],
   exports: [OrigDatablocksService],
-  providers: [OrigDatablocksService],
+  providers: [OrigDatablocksService, DatafilesMetadataValidationPipe],
 })
 export class OrigDatablocksModule {}

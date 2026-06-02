@@ -82,7 +82,8 @@ export class DataFileDto {
   @ApiProperty({
     type: Object,
     required: false,
-    description: "File metadata.",
+    description:
+      "File-specific metadata. The Dataset field scientificMetadata should be preferred for aggregate metadata, as it is searchable and displayed more prominently to users.",
   })
   @IsObject()
   @IsOptional()
