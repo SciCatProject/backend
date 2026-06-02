@@ -97,7 +97,7 @@ export class JobsControllerUtils {
     );
     const nestedErrors = await Promise.all(
       datasetListDtos.map((dto) =>
-        validate(dto, { whitelist: true, forbidNonWhitelisted: true })
+        validate(dto, { whitelist: true, forbidNonWhitelisted: true }),
       ),
     );
     const validateErrors = nestedErrors.flat();
@@ -106,9 +106,10 @@ export class JobsControllerUtils {
         property,
         constraints,
       }));
-      throw new UnprocessableEntityException(
-        "Invalid dataset list. " + JSON.stringify(minimalErrors),
-      );
+      throw new UnprocessableEntityException({
+        message: "Invalid dataset list.",
+        error: JSON.stringify(minimalErrors),
+      });
     }
 
     // check that all requested pids exist
