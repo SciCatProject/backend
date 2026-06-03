@@ -868,7 +868,7 @@ describe("1165: Jobs test filters and access", () => {
       .then((res) => {
         res.body.should.have.property("message");
         res.body.message.should.contain("Invalid dataset list.");
-        res.body.errors.should.contain("pid");
+        res.body.error.should.contain("pid");
       });
   });
 });
