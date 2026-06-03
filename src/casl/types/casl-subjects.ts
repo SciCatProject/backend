@@ -1,7 +1,4 @@
-import {
-  InferSubjects,
-  MongoQuery,
-} from "@casl/ability";
+import { InferSubjects, MongoQuery } from "@casl/ability";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";

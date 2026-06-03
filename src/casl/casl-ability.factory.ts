@@ -28,11 +28,7 @@ import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
-import {
-  Subjects,
-  PossibleAbilities,
-  Conditions
-} from "./types/casl-subjects"
+import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
