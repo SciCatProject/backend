@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from "@nestjs/common";
 import { Observable, tap } from "rxjs";
+import { OutputDatasetDto } from "src/datasets/dto/output-dataset.dto";
 import { EventsService } from "src/serverSideEvent/serverSideEvent.service";
 
 @Injectable()
@@ -16,11 +17,13 @@ export class DatasetEventsInterceptor implements NestInterceptor {
     const method = request.method;
 
     return next.handle().pipe(
-      tap(() => {
+      tap((responseData: OutputDatasetDto) => {
         if (["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
           this.eventsService.emit({
-            type: "event.dataset.updated",
-            message: "Dataset updated",
+            ownerGroup: responseData?.ownerGroup,
+            accessGroups: responseData?.accessGroups ?? [],
+            message: "dataset.updated",
+            type: "dataset.updated",
           });
         }
       }),
