@@ -122,6 +122,7 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { DATASET_LOOKUP_FIELDS } from "./types/dataset-lookup";
 import { getSwaggerDatasetFilterContentV3 } from "./types/dataset-filter-content.v3";
 import { Filter } from "./decorators/filter.decorator";
+import { DatasetEventsInterceptor } from "src/common/interceptors/liveUpdate.Interceptor";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -132,6 +133,7 @@ import { Filter } from "./decorators/filter.decorator";
   TechniqueClass,
   RelationshipClass,
 )
+@UseInterceptors(DatasetEventsInterceptor)
 @ApiTags("datasets")
 @Controller({ path: "datasets", version: "3" })
 export class DatasetsController {
