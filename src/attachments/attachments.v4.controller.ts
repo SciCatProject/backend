@@ -135,19 +135,27 @@ export class AttachmentsV4Controller {
     user: JWTUser,
     filter: IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields>,
   ): IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields> {
-    if (!filter.where) {
-      filter.where = {};
-    }
     const ability = this.caslAbilityFactory.attachmentAccess(user);
-    const canAccessAny = ability.can(Action.AccessAny, Attachment);
+    const canViewAny = ability.can(Action.AccessAny, Attachment);
+    const canView = ability.can(Action.AttachmentRead, Attachment);
 
-    if (!canAccessAny) {
+    filter.where = filter.where ?? {};
+
+    if (!user) {
+      if (filter.where["$and"]) {
+        filter.where["$and"].push({
+          isPublished: true,
+        });
+      } else {
+        filter.where["$and"] = [{ isPublished: true }];
+      }
+    } else if (!canViewAny && canView) {
       if (filter.where["$and"]) {
         filter.where["$and"].push({
           $or: [
-            { ownerGroup: { $in: user?.currentGroups || [] } },
-            { accessGroups: { $in: user?.currentGroups || [] } },
-            { sharedWith: { $in: [user?.email || ""] } },
+            { ownerGroup: { $in: user.currentGroups } },
+            { accessGroups: { $in: user.currentGroups } },
+            { sharedWith: { $in: [user.email] } },
             { isPublished: true },
           ],
         });
@@ -155,9 +163,9 @@ export class AttachmentsV4Controller {
         filter.where["$and"] = [
           {
             $or: [
-              { ownerGroup: { $in: user?.currentGroups || [] } },
-              { accessGroups: { $in: user?.currentGroups || [] } },
-              { sharedWith: { $in: [user?.email || ""] } },
+              { ownerGroup: { $in: user.currentGroups } },
+              { accessGroups: { $in: user.currentGroups } },
+              { sharedWith: { $in: [user.email] } },
               { isPublished: true },
             ],
           },
