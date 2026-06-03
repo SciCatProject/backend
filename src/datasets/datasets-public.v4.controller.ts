@@ -48,7 +48,6 @@ import {
  * This is intentional for versioned routing.
  */
 @Controller({ path: "datasets/public", version: "4" })
-@UseInterceptors(ClassSerializerInterceptor)
 export class DatasetsPublicV4Controller {
   constructor(private datasetsService: DatasetsService) {}
 
@@ -63,6 +62,7 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public
   @AllowAny()
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
     type: OutputDatasetDto,
     excludeExtraneousValues: false,
@@ -281,6 +281,7 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public/:id
   @AllowAny()
   @Get("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
     type: OutputDatasetDto,
     excludeExtraneousValues: false,
