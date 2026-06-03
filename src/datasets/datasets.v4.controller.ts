@@ -105,7 +105,6 @@ import { TechniqueClass } from "./schemas/technique.schema";
  * This is intentional for versioned routing.
  */
 @Controller({ path: "datasets", version: "4" })
-@UseInterceptors(ClassSerializerInterceptor)
 export class DatasetsV4Controller {
   constructor(
     private datasetsService: DatasetsService,
@@ -311,8 +310,9 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
-    type: CreateDatasetDto,
+    type: OutputDatasetDto,
     excludeExtraneousValues: false,
   })
   @ApiOperation({
@@ -416,6 +416,7 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
     type: PartialOutputDatasetDto,
     excludeExtraneousValues: false,
@@ -690,6 +691,7 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
     type: OutputDatasetDto,
     excludeExtraneousValues: false,
@@ -749,6 +751,7 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Patch("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
   @SerializeOptions({
     type: PartialOutputDatasetDto,
     excludeExtraneousValues: false,
