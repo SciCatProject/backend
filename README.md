@@ -170,6 +170,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `ACCESS_GROUPS_STATIC_ENABLED` | string | Yes | Flag to enable/disable automatic assignment of predefined access groups to all users. | true |
 | `ACCESS_GROUPS_STATIC_VALUES` | string | Yes | Comma-separated list of access groups automatically assigned to all users. Example: "scicat, user". | |
 | `ACCESS_GROUPS_OIDCPAYLOAD_ENABLED` | string | Yes | Flag to enable/disable fetching access groups directly from OIDC response. Requires specifying a field via `OIDC_ACCESS_GROUPS_PROPERTY` to extract access groups. | false |
+| `ACCESS_GROUPS_LDAPPAYLOAD_ENABLED` | string | Yes | Flag to enable/disable fetching access groups directly from Ldap response. Requires specifying a field via `LDAP_ACCESS_GROUPS_PROPERTY` to extract access groups. | false |
 | `DOI_PREFIX` | string | | The facility DOI prefix, with trailing slash. | |
 | `DOI_SHORT_SUFFIX` | string | | By default `uuidv4` is used to generate the DOI suffix but if this flag is `true` the shorter version of 10 random characters is used as DOI suffix. | |
 | `DOI_USERNAME` | string | | The facility DOI DataCite username. | |
@@ -187,6 +188,10 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `LDAP_BIND_CREDENTIALS` | string | Yes | Credentials for your LDAP server. | |
 | `LDAP_SEARCH_BASE` | string | Yes | Search base for your LDAP server. | |
 | `LDAP_SEARCH_FILTER` | string | Yes | Search filter for your LDAP server. | |
+| `LDAP_GROUP_SEARCH_BASE` | string | Yes | Search base for the user groups. | |
+| `LDAP_GROUP_SEARCH_FILTER` | string | Yes | Search filter for the user groups. | |
+| `LDAP_ACCESS_GROUPS_PROPERTY`| string | Yes | Target field to get the access groups value from Ldap response. | |
+| `LDAP_USERNAME_ATTR`| string | Yes | Target field to get the username from the Ldap response. Defaults to displayName. | |
 | `OIDC_ISSUER` | string | Yes | URL of the OIDC server providing the authentication service. Example: https://identity.esss.dk/realm/ess. | |
 | `OIDC_CLIENT_ID` | string | Yes | Identity of the client used to obtain the user token. Example: scicat. | |
 | `OIDC_ADDITIONAL_AUTHORIZED_PARTIES` | string | No | Comma-separated list of additional OIDC client IDs allowed to present tokens to this backend. Used for token exchange scenarios where a third-party client obtains a token on behalf of a user. The client ID must appear as the `azp` claim in the token. Example: `additional-client1, additional-client2`. | |
