@@ -74,6 +74,8 @@ export class DatablockAbility {
       /**
        * User belonging to ADMIN_GROUPS
        */
+      can(Action.AccessAny, Datablock);
+
       can(Action.DatablockCreate, Datablock);
       can(Action.DatablockRead, Datablock);
       can(Action.DatablockUpdate, Datablock);

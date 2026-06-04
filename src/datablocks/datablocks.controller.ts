@@ -14,7 +14,6 @@ import {
   Post,
   Query,
   Req,
-  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -67,16 +66,17 @@ export class DatablocksController {
     action: Action,
   ) {
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datablockAccess(user);
+    const datablockInstance =
+      this.generateDatablockInstanceForPermissions(datablock);
 
-    if (
-      !ability.can(
-        action,
-        this.generateDatablockInstanceForPermissions(datablock),
-      )
-    ) {
+    const ability = this.caslAbilityFactory.datablockAccess(user);
+    const canDoAction = ability.can(action, datablockInstance);
+
+    if (!canDoAction) {
       throw new ForbiddenException();
     }
+
+    return canDoAction;
   }
 
   @UseGuards(PoliciesGuard)
@@ -141,10 +141,11 @@ export class DatablocksController {
   ): Promise<Datablock[]> {
     let datablockFilter: IFilters<DatablockDocument> = filter ?? {};
     const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockAccess(user);
+    const ability = this.caslAbilityFactory.datablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, Datablock);
 
-    if (abilities.cannot(Action.DatablockRead, Datablock)) {
-      datablockFilter = addAccessControlFilters(datablockFilter, user);
+    if (!canViewAny) {
+      datablockFilter = this.addAccessControlFilters(datablockFilter, user);
     }
 
     return this.datablocksService.findAll(datablockFilter);
@@ -207,12 +208,13 @@ export class DatablocksController {
       filter = where;
     }
 
-    let datablockFilter: IFilters<DatablockDocument> = filter ?? {};
+    const datablockFilter: IFilters<DatablockDocument> = filter ?? {};
     const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockAccess(user);
+    const ability = this.caslAbilityFactory.datablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, Datablock);
 
-    if (abilities.cannot(Action.DatablockRead, Datablock)) {
-      datablockFilter = addAccessControlFilters(datablockFilter, user);
+    if (!canViewAny) {
+      this.addAccessControlFilters(datablockFilter, user);
     }
 
     return this.datablocksService.count(datablockFilter);
@@ -227,24 +229,17 @@ export class DatablocksController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<Datablock | null> {
-    const user: JWTUser = request.user as JWTUser;
-    const abilities = this.caslAbilityFactory.datablockAccess(user);
-
-    const instance = await this.datablocksService.findOne({
+    const datablockInstance = await this.datablocksService.findOne({
       where: { _id: id },
     });
-    if (!instance) {
+
+    if (!datablockInstance) {
       throw new NotFoundException();
     }
 
-    if (
-      abilities.cannot(Action.DatablockRead, instance) &&
-      abilities.cannot(Action.DatablockRead, Datablock)
-    ) {
-      throw new UnauthorizedException();
-    }
+    this.checkPermission(request, datablockInstance, Action.DatablockRead);
 
-    return instance;
+    return datablockInstance;
   }
 
   @UseGuards(PoliciesGuard)
@@ -257,38 +252,21 @@ export class DatablocksController {
     @Req() request: Request,
     @Body() updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock | null> {
-    try {
-      const instance = await this.datablocksService.findOne({
-        where: { _id: id },
-      });
-      const user: JWTUser = request.user as JWTUser;
-      const ability = this.caslAbilityFactory.datablockAccess(user);
+    const datablockInstance = await this.datablocksService.findOne({
+      where: { _id: id },
+    });
 
-      if (!instance) {
-        throw new NotFoundException();
-      }
-
-      if (
-        ability.cannot(Action.DatablockUpdate, instance) &&
-        ability.cannot(Action.DatablockUpdate, Datablock)
-      ) {
-        throw new ForbiddenException("Unauthorized to update this datablock");
-      }
-
-      const datablock = await this.datablocksService.update(
-        { _id: id },
-        updateDatablockDto,
-      );
-      return datablock;
-    } catch (error) {
-      if ((error as MongoError).code === 11000) {
-        throw new ConflictException(
-          "A datablock with this this unique key already exists!",
-        );
-      } else {
-        throw new InternalServerErrorException(error);
-      }
+    if (!datablockInstance) {
+      throw new NotFoundException();
     }
+
+    this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
+
+    const datablock = await this.datablocksService.update(
+      { _id: id },
+      updateDatablockDto,
+    );
+    return datablock;
   }
 
   @UseGuards(PoliciesGuard)
@@ -300,19 +278,29 @@ export class DatablocksController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<unknown> {
+    const user: JWTUser = request.user as JWTUser;
+
     const datablock = await this.datablocksService.findOne({
       where: { _id: id },
     });
-    if (!datablock) throw new NotFoundException(`datablock: ${id} not found`);
+    if (!datablock) {
+      throw new NotFoundException(`datablock: ${id} not found`);
+    }
+
     const dataset = await this.datasetsService.findOne({
       where: { pid: datablock?.datasetId },
     });
-    if (!dataset)
+    if (!dataset) {
       throw new NotFoundException(`dataset: ${datablock.datasetId} not found`);
+    }
 
-    const user: JWTUser = request.user as JWTUser;
+    const datablockInstance =
+      this.generateDatablockInstanceForPermissions(datablock);
+
     const ability = this.caslAbilityFactory.datablockAccess(user);
-    if (ability.cannot(Action.DatablockDelete, Datablock)) {
+    const canDelete = ability.can(Action.DatablockDelete, datablockInstance);
+
+    if (!canDelete) {
       throw new ForbiddenException("Unauthorized to delete this datablock");
     }
 
@@ -326,29 +314,35 @@ export class DatablocksController {
 
     return res;
   }
-}
 
-function addAccessControlFilters(
-  datablockFilter: IFilters<DatablockDocument>,
-  user: JWTUser,
-): IFilters<DatablockDocument> {
-  if (!datablockFilter.where) {
-    datablockFilter.where = {};
+  private addAccessControlFilters(
+    datablockFilter: IFilters<DatablockDocument>,
+    user: JWTUser,
+  ): IFilters<DatablockDocument> {
+    datablockFilter.where = datablockFilter.where ?? {};
+
+    if (!user) {
+      if (datablockFilter.where["$and"]) {
+        datablockFilter.where["$and"].push({ isPublished: true });
+      } else {
+        datablockFilter.where["$and"] = [{ isPublished: true }];
+      }
+    } else {
+      const accessControlFilters = {
+        $or: [
+          { ownerGroup: { $in: user.currentGroups } },
+          { accessGroups: { $in: user.currentGroups } },
+          { isPublished: true },
+        ],
+      };
+
+      if (datablockFilter.where["$and"]) {
+        datablockFilter.where["$and"].push(accessControlFilters);
+      } else {
+        datablockFilter.where["$and"] = [accessControlFilters];
+      }
+    }
+
+    return datablockFilter;
   }
-
-  const accessControlFilters = {
-    $or: [
-      { ownerGroup: { $in: user.currentGroups || [] } },
-      { accessGroups: { $in: user.currentGroups || [] } },
-      { isPublished: true },
-    ],
-  };
-
-  if (datablockFilter.where["$and"]) {
-    datablockFilter.where["$and"].push(accessControlFilters);
-  } else {
-    datablockFilter.where["$and"] = [accessControlFilters];
-  }
-
-  return datablockFilter;
 }
