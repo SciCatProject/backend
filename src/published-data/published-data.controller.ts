@@ -8,7 +8,6 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -48,16 +47,12 @@ import {
   PartialUpdatePublishedDataDto,
   UpdatePublishedDataDto,
 } from "./dto/update-published-data.dto";
-import {
-  PartialUpdatePublishedDataV4Dto,
-  UpdatePublishedDataV4Dto,
-} from "./dto/update-published-data.v4.dto";
+import { UpdatePublishedDataV4Dto } from "./dto/update-published-data.v4.dto";
 import {
   FormPopulateData,
   ICount,
   IPublishedDataFilters,
   IRegister,
-  PublishedDataStatus,
 } from "./interfaces/published-data.interface";
 import {
   IdToDoiPipe,
@@ -68,6 +63,7 @@ import { PublishedDataService } from "./published-data.service";
 import { PublishedData } from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
+import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -82,152 +78,6 @@ export class PublishedDataController {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
   ) {}
-
-  convertObsoleteStatusToCurrent(obsoleteStatus: string): PublishedDataStatus {
-    switch (obsoleteStatus) {
-      case "registered":
-        return PublishedDataStatus.REGISTERED;
-      case "pending_registration":
-        return PublishedDataStatus.PRIVATE;
-      default:
-        Logger.error(
-          `Unknown PublishedData.status '${obsoleteStatus}' defaulting to PublishedDataStatus.PRIVATE`,
-        );
-        return PublishedDataStatus.PRIVATE;
-    }
-  }
-
-  convertObsoleteToCurrentSchema(
-    inputObsoletePublishedData:
-      | CreatePublishedDataDto
-      | UpdatePublishedDataDto
-      | PartialUpdatePublishedDataDto,
-  ):
-    | CreatePublishedDataV4Dto
-    | UpdatePublishedDataV4Dto
-    | PartialUpdatePublishedDataV4Dto {
-    const propertiesModifier: Record<string, any> = {
-      metadata: {},
-      title: inputObsoletePublishedData.title,
-      abstract: inputObsoletePublishedData.abstract,
-      datasetPids: inputObsoletePublishedData.pidArray,
-    };
-
-    if ("affiliation" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.affiliation =
-        inputObsoletePublishedData.affiliation;
-    }
-
-    if ("publisher" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.publisher = {
-        name: inputObsoletePublishedData.publisher,
-      };
-    }
-
-    if ("publicationYear" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.publicationYear =
-        inputObsoletePublishedData.publicationYear;
-    }
-
-    if ("creator" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.creators =
-        inputObsoletePublishedData.creator?.map((creator) => ({
-          name: creator.trim(),
-          affiliation: [
-            { name: inputObsoletePublishedData.affiliation?.trim() || "" },
-          ],
-        }));
-    }
-
-    if ("dataDescription" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.dataDescription =
-        inputObsoletePublishedData.dataDescription;
-    }
-
-    if ("resourceType" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.resourceType =
-        inputObsoletePublishedData.resourceType;
-    }
-
-    if ("numberOfFiles" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.numberOfFiles =
-        inputObsoletePublishedData.numberOfFiles;
-    }
-
-    if ("sizeOfArchive" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.sizeOfArchive =
-        inputObsoletePublishedData.sizeOfArchive;
-    }
-
-    if ("url" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.url = inputObsoletePublishedData.url;
-    }
-
-    if ("thumbnail" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.thumbnail =
-        inputObsoletePublishedData.thumbnail;
-    }
-
-    if ("scicatUser" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.scicatUser =
-        inputObsoletePublishedData.scicatUser;
-    }
-
-    if ("downloadLink" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.downloadLink =
-        inputObsoletePublishedData.downloadLink;
-    }
-
-    if ("authors" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.contributors =
-        inputObsoletePublishedData.authors?.map((author) => ({
-          name: author.trim(),
-        }));
-    }
-
-    if ("relatedPublications" in inputObsoletePublishedData) {
-      propertiesModifier.metadata.relatedIdentifiers =
-        inputObsoletePublishedData.relatedPublications?.map((publication) => ({
-          relatedIdentifier: publication,
-        }));
-    }
-
-    if ("pidArray" in inputObsoletePublishedData) {
-      propertiesModifier.datasetPids = inputObsoletePublishedData.pidArray;
-    }
-
-    if (
-      "status" in inputObsoletePublishedData &&
-      typeof inputObsoletePublishedData.status === "string"
-    ) {
-      propertiesModifier.status = this.convertObsoleteStatusToCurrent(
-        inputObsoletePublishedData.status,
-      );
-    }
-
-    let outputPublishedData:
-      | CreatePublishedDataV4Dto
-      | UpdatePublishedDataV4Dto
-      | PartialUpdatePublishedDataV4Dto = {};
-
-    if (inputObsoletePublishedData instanceof CreatePublishedDataDto) {
-      outputPublishedData = {
-        ...propertiesModifier,
-      } as CreatePublishedDataV4Dto;
-    } else if (inputObsoletePublishedData instanceof UpdatePublishedDataDto) {
-      outputPublishedData = {
-        ...propertiesModifier,
-      } as UpdatePublishedDataV4Dto;
-    } else if (
-      inputObsoletePublishedData instanceof PartialUpdatePublishedDataDto
-    ) {
-      outputPublishedData = {
-        ...propertiesModifier,
-      } as PartialUpdatePublishedDataV4Dto;
-    }
-
-    return outputPublishedData;
-  }
 
   // POST /publisheddata
   @UseGuards(PoliciesGuard)
@@ -245,14 +95,12 @@ export class PublishedDataController {
   })
   @Post()
   async create(
-    @Body() createPublishedDataDto: CreatePublishedDataDto,
+    @Body(V3_TO_V4_DTO_BODY_PIPE)
+    createPublishedDataDto: CreatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto> {
-    const publishedDataDto = this.convertObsoleteToCurrentSchema(
-      createPublishedDataDto,
-    ) as CreatePublishedDataV4Dto;
-
-    const createdPublishedData =
-      await this.publishedDataService.create(publishedDataDto);
+    const createdPublishedData = await this.publishedDataService.create(
+      createPublishedDataDto as unknown as CreatePublishedDataV4Dto,
+    );
 
     return createdPublishedData as unknown as PublishedDataObsoleteDto;
   }
@@ -456,14 +304,12 @@ export class PublishedDataController {
   @Patch("/:id")
   async update(
     @Param("id") id: string,
-    @Body() updatePublishedDataDto: PartialUpdatePublishedDataDto,
+    @Body(V3_TO_V4_DTO_BODY_PIPE)
+    updatePublishedDataDto: PartialUpdatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto | null> {
-    const updateData = this.convertObsoleteToCurrentSchema(
-      updatePublishedDataDto,
-    );
     const updatedData = await this.publishedDataService.update(
       { doi: id },
-      updateData,
+      updatePublishedDataDto as unknown as PublishedData,
     );
 
     return updatedData as unknown as PublishedDataObsoleteDto;
@@ -721,27 +567,22 @@ export class PublishedDataController {
   @Post("/:id/resync")
   async resync(
     @Param("id") id: string,
-    @Body() data: UpdatePublishedDataDto,
+    @Body(V3_TO_V4_DTO_BODY_PIPE)
+    data: UpdatePublishedDataDto,
   ): Promise<IRegister | null> {
-    const { ...obsolettePublishedData } = data;
-
-    const publishedData = this.convertObsoleteToCurrentSchema(
-      obsolettePublishedData,
-    );
-
     const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
     let returnValue = null;
     if (OAIServerUri) {
       returnValue = await this.publishedDataService.resyncOAIPublication(
         id,
-        publishedData as UpdatePublishedDataV4Dto,
+        data as unknown as UpdatePublishedDataV4Dto,
         OAIServerUri,
       );
     }
 
     try {
-      await this.publishedDataService.update({ doi: id }, publishedData);
+      await this.publishedDataService.update({ doi: id }, data);
     } catch (error: any) {
       throw new HttpException(
         `Error occurred: ${error}`,

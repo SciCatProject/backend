@@ -31,7 +31,7 @@ export const publishedDataV3toV4FieldMap: Partial<
   downloadLink: "metadata.downloadLink",
 };
 
-const mapPublishedDataV3toV4Field = createDeepMapper<
+export const mapPublishedDataV3toV4Field = createDeepMapper<
   PublishedData,
   PublishedDataObsoleteDto
 >(publishedDataV3toV4FieldMap);
