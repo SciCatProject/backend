@@ -40,7 +40,6 @@ import {
   IAttachmentFiltersV4,
 } from "./interfaces/attachment-filters.interface";
 
-import { OutputDatasetDto } from "src/datasets/dto/output-dataset.dto";
 import { getSwaggerAttachmentFilterContent } from "./types/attachment-filter-contents";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { CreateAttachmentV4Dto } from "./dto/create-attachment.v4.dto";
@@ -58,8 +57,8 @@ import {
   ALLOWED_ATTACHMENT_KEYS,
   ALLOWED_ATTACHMENT_FILTER_KEYS,
 } from "./types/attachment-lookup";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
+import { parseDate } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiExtraModels(AttachmentRelationshipClass)
@@ -232,7 +231,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputDatasetDto,
+    type: OutputAttachmentV4Dto,
     isArray: true,
     description: "Return the attachments requested",
   })
@@ -279,7 +278,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputDatasetDto,
+    type: OutputAttachmentV4Dto,
     isArray: true,
     description: "Return the attachments requested",
   })
@@ -324,7 +323,7 @@ export class AttachmentsV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: Attachment,
+    type: OutputAttachmentV4Dto,
     description: "Return attachment with id specified",
   })
   @Get("/:aid")
@@ -386,15 +385,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      foundAttachment.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
       updateAttachmentDtoForservice,
+      unmodifiedSince,
     );
   }
 

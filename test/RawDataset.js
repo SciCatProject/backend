@@ -127,6 +127,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("valid").and.equal(false);
+        res.body.should.have.property("error").and.equal("principalInvestigator must be a string; creationLocation must be a string");
       });
   });
 

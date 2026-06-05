@@ -2,9 +2,9 @@ import { AccessGroupService as AccessGroupService } from "./access-group.service
 import { Injectable, Logger } from "@nestjs/common";
 ///import fetch from "node-fetch";
 
-import { UserPayload } from "../interfaces/userPayload.interface";
 import { HttpService } from "@nestjs/axios";
 import { firstValueFrom } from "rxjs";
+import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 /**
  * This service is used to fetch access groups from a GraphQL API.
  */

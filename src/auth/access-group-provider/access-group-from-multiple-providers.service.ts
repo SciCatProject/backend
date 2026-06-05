@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { UserPayload } from "../interfaces/userPayload.interface";
 import { AccessGroupService } from "./access-group.service";
+import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 
 /**
  * This service is used to get the access groups from multiple providers.

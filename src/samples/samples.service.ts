@@ -1,9 +1,15 @@
-import { Injectable, Inject, Scope } from "@nestjs/common";
+import {
+  Injectable,
+  Inject,
+  Scope,
+  NotFoundException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, QueryOptions } from "mongoose";
+import { FilterQuery, Model, QueryOptions, UpdateQuery } from "mongoose";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IFilters } from "src/common/interfaces/common.interface";
 import {
@@ -20,22 +26,47 @@ import { ISampleFields } from "./interfaces/sample-filters.interface";
 import { SampleClass, SampleDocument } from "./schemas/sample.schema";
 import { CountApiResponse } from "src/common/types";
 import { OutputSampleDto } from "./dto/output-sample.dto";
+import {
+  MetadataKeysService,
+  MetadataSourceDoc,
+} from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class SamplesService {
   constructor(
     @InjectModel(SampleClass.name) private sampleModel: Model<SampleDocument>,
     private configService: ConfigService,
+    private metadataKeysService: MetadataKeysService,
     @Inject(REQUEST) private request: Request,
   ) {}
+
+  private createMetadataKeysInstance(
+    doc: UpdateQuery<SampleDocument>,
+  ): MetadataSourceDoc {
+    const source: MetadataSourceDoc = {
+      sourceType: "sample",
+      sourceId: doc.sampleId,
+      ownerGroup: doc.ownerGroup,
+      accessGroups: doc.accessGroups || [],
+      isPublished: doc.isPublished || false,
+      metadata: doc.sampleCharacteristics ?? {},
+    };
+    return source;
+  }
 
   async create(createSampleDto: CreateSampleDto): Promise<SampleClass> {
     const username = (this.request.user as JWTUser).username;
     const createdSample = new this.sampleModel(
       addCreatedByFields(createSampleDto, username),
     );
+    const savedSample = await createdSample.save();
 
-    return createdSample.save();
+    this.metadataKeysService.insertManyFromSource(
+      this.createMetadataKeysInstance(savedSample),
+    );
+
+    return savedSample;
   }
 
   async findAll(
@@ -148,9 +179,10 @@ export class SamplesService {
     return this.sampleModel.findOne(filter).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<SampleDocument>,
     updateSampleDto: PartialUpdateSampleDto,
+    unmodifiedSince?: Date,
   ): Promise<OutputSampleDto | null> {
     const username = (this.request.user as JWTUser).username;
     const updateData = addUpdatedByField(updateSampleDto, username);
@@ -161,16 +193,49 @@ export class SamplesService {
       updatedAt: new Date(),
     };
 
-    return this.sampleModel
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
+
+    const updatedSample = await this.sampleModel
       .findOneAndUpdate(
-        filter,
+        filterQuery,
         { $set: updateDataMongoose },
         { new: true, runValidators: true },
       )
       .exec();
+
+    if (!updatedSample) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Sample not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
+      throw new PreconditionFailedException(
+        `Sample #${filter.sampleId} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
+      );
+    }
+
+    await this.metadataKeysService.replaceManyFromSource(
+      this.createMetadataKeysInstance(updatedSample),
+    );
+
+    return updatedSample;
   }
 
   async remove(filter: FilterQuery<SampleDocument>): Promise<unknown> {
-    return this.sampleModel.findOneAndDelete(filter).exec();
+    const deletedSample = await this.sampleModel
+      .findOneAndDelete(filter)
+      .exec();
+
+    if (!deletedSample) {
+      throw new NotFoundException(
+        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    this.metadataKeysService.deleteMany({
+      sourceType: "sample",
+      sourceId: deletedSample.sampleId,
+    });
+    return deletedSample;
   }
 }

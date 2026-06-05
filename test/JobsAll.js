@@ -356,7 +356,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -620,7 +620,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -646,7 +646,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -671,7 +671,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -716,7 +716,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       .post("/api/v4/Jobs")
       .send(newJob)
       .set("Accept", "application/json")
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");

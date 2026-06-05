@@ -15,7 +15,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private authService: AuthService,
     private rolesService: RolesService,
-    //private configService: ConfigService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {

@@ -4,7 +4,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 import { InitialDatasetsService } from "src/initial-datasets/initial-datasets.service";
 import { LogbooksService } from "src/logbooks/logbooks.service";
-import { ElasticSearchService } from "src/elastic-search/elastic-search.service";
 import { DatasetsService } from "./datasets.service";
 import { DatasetClass } from "./schemas/dataset.schema";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
@@ -13,6 +12,10 @@ import { Request } from "express";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { plainToInstance } from "class-transformer";
 import { ProposalsService } from "src/proposals/proposals.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
+import { OpensearchService } from "src/opensearch/opensearch.service";
+import { REQUEST } from "@nestjs/core";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 
 class InitialDatasetsServiceMock {}
 
@@ -20,7 +23,10 @@ class LogbooksServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
-class ElasticSearchServiceMock {}
+class MetadataKeysServiceMock {
+  insertManyFromSource = jest.fn().mockResolvedValue([]);
+  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
+}
 
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
@@ -94,7 +100,6 @@ const mockDataset: DatasetClass = {
 
 describe("DatasetsService", () => {
   let service: DatasetsService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let model: Model<DatasetClass>;
 
   beforeEach(async () => {
@@ -118,9 +123,11 @@ describe("DatasetsService", () => {
           useClass: InitialDatasetsServiceMock,
         },
         { provide: LogbooksService, useClass: LogbooksServiceMock },
-        { provide: ElasticSearchService, useClass: ElasticSearchServiceMock },
+        { provide: OpensearchService, useValue: null },
+        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
+        { provide: REQUEST, useValue: { user: { username: "tester" } } },
       ],
     }).compile();
 
@@ -166,5 +173,26 @@ describe("DatasetsService", () => {
     expect(
       (scientificMetadata["already%20encoded"] as { value: unknown }).value,
     ).toBe("Already Encoded");
+  });
+
+  it("should throw NotFoundException if no document is found for update and no unmodifiedSince is provided", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it("should throw PreconditionedFailed if no patched dataset is returned (indicating a concurrent modification)", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    const unmodifiedSince = new Date("2021-11-11T12:29:02.083Z");
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto, unmodifiedSince),
+    ).rejects.toThrow(PreconditionFailedException);
   });
 });

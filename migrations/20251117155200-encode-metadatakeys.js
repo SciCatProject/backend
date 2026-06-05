@@ -13,7 +13,10 @@ const {
 
 module.exports = {
   async up(db, client) {
-    const bulkOps = [];
+    let bulkOps = [];
+    const BATCH_SIZE = 10000;
+    let modifiedCount = 0;
+    let unModifiedCount = 0;
 
     for await (const dataset of db
       .collection("Dataset")
@@ -32,26 +35,42 @@ module.exports = {
         continue;
       }
 
-      console.log(
-        `Updating Dataset (Id: ${dataset._id}) with encoded scientificMetadata keys`,
-      );
-
       bulkOps.push({
         updateOne: {
           filter: { _id: dataset._id },
           update: { $set: { scientificMetadata: encodedMetadata } },
         },
       });
+
+      if (bulkOps.length === BATCH_SIZE) {
+        const bulkWriteResult = await db.collection("Dataset").bulkWrite(bulkOps, {
+          ordered: false
+        });
+        modifiedCount += bulkWriteResult.modifiedCount;
+        unModifiedCount += BATCH_SIZE - bulkWriteResult.modifiedCount;
+
+        bulkOps = [];
+        console.log("migrating, count, unModifiedCount: ",
+          modifiedCount,
+          unModifiedCount,
+        );
+      }
     }
 
     if (bulkOps.length > 0) {
       console.log(`Executing bulk update for ${bulkOps.length} datasets`);
-      await db.collection("Dataset").bulkWrite(bulkOps);
+      const bulkWriteResult = await db.collection("Dataset").bulkWrite(bulkOps, { ordered: false });
+      modifiedCount += bulkWriteResult.modifiedCount;
+      unModifiedCount += bulkOps.length - bulkWriteResult.modifiedCount;
     }
+    console.log("FINISHED: count, unModifiedCount: ", modifiedCount, unModifiedCount);
   },
 
   async down(db, client) {
-    const bulkOps = [];
+    let bulkOps = [];
+    const BATCH_SIZE = 10000;
+    let modifiedCount = 0;
+    let unModifiedCount = 0;
 
     for await (const dataset of db
       .collection("Dataset")
@@ -71,21 +90,34 @@ module.exports = {
         continue;
       }
 
-      console.log(
-        `Reverting Dataset (Id: ${dataset._id}) to decoded scientificMetadata keys`,
-      );
-
       bulkOps.push({
         updateOne: {
           filter: { _id: dataset._id },
           update: { $set: { scientificMetadata: decodedMetadata } },
         },
       });
+
+      if (bulkOps.length === BATCH_SIZE) {
+        const bulkWriteResult = await db.collection("Dataset").bulkWrite(bulkOps, {
+          ordered: false
+        });
+        modifiedCount += bulkWriteResult.modifiedCount;
+        unModifiedCount += BATCH_SIZE - bulkWriteResult.modifiedCount;
+
+        bulkOps = [];
+        console.log("migrating, count, unModifiedCount: ",
+          modifiedCount,
+          unModifiedCount,
+        );
+      }
     }
 
     if (bulkOps.length > 0) {
       console.log(`Executing bulk revert for ${bulkOps.length} datasets`);
-      await db.collection("Dataset").bulkWrite(bulkOps);
+      const bulkWriteResult = await db.collection("Dataset").bulkWrite(bulkOps, { ordered: false });
+      modifiedCount += bulkWriteResult.modifiedCount;
+      unModifiedCount += bulkOps.length - bulkWriteResult.modifiedCount;
     }
+    console.log("FINISHED: count, unModifiedCount: ", modifiedCount, unModifiedCount);
   },
 };

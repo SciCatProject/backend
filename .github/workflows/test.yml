@@ -103,14 +103,14 @@ jobs:
         run: npm run build
 
   api_tests:
-    name: API tests with ElasticSearch enabled - ${{ matrix.elasticsearch_enabled }}
+    name: API tests with OpenSearch enabled - ${{ matrix.opensearch_enabled }}
     needs: [install-and-cache]
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        elasticsearch_enabled: ["yes", "no"]
+        opensearch_enabled: ["yes", "no"]
 
     steps:
       - name: Checkout code
@@ -130,13 +130,17 @@ jobs:
 
       - name: API tests
         env:
-          ELASTICSEARCH_ENABLED: ${{ matrix.elasticsearch_enabled }}
-          CLUSTER_NAME: es-cluster
-          ES_PASSWORD: duo-password
-          MEM_LIMIT: 4G
-          STACK_VERSION: 8.8.2
+          COMPOSE_PROFILES: ${{ matrix.opensearch_enabled == 'yes' && 'opensearch' || ''}}
+          OPENSEARCH_ENABLED: ${{ matrix.opensearch_enabled }}
+          OIDC_ISSUER: http://localhost:8080/local-test
+          OIDC_CLIENT_ID: scicat-client-test
+          OIDC_CLIENT_SECRET: secret
+          OIDC_SCOPE: openid profile email
+          OIDC_ADDITIONAL_AUTHORIZED_PARTIES: additional-authorized-client-test-1, additional-authorized-client-test-2
+
         # Start mongo container and app before running api tests
         run: |
+          cp opensearchConfig.example.json opensearchConfig.json
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
-          docker compose up --build -d
-          npm run test:api
+          docker compose up --build -d --wait
+          OPENSEARCH_ENABLED=${{ matrix.opensearch_enabled }} npm run test:api

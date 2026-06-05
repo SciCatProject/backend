@@ -2,6 +2,7 @@
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 const { v4: uuidv4 } = require("uuid");
+const assert = require("node:assert");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
@@ -314,7 +315,7 @@ describe("2500: Datasets v4 tests", () => {
     it("0126: adds a new dataset with scientificMetadata", async () => {
       return request(appUrl)
         .post("/api/v4/datasets")
-        .send(TestData.ScientificMetadataForElasticSearchV4)
+        .send(TestData.DatasetWithScientificMetadataV4)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
@@ -331,7 +332,7 @@ describe("2500: Datasets v4 tests", () => {
 
     it("0127: should be able to add a new dataset with non-empty datasetLifecycle", async () => {
       const newDataset = {
-        ...TestData.ScientificMetadataForElasticSearchV4,
+        ...TestData.DatasetWithScientificMetadataV4,
         datasetlifecycle: {
           archivable: false,
           retrievable: true,
@@ -423,7 +424,7 @@ describe("2500: Datasets v4 tests", () => {
         .send(proposalBody)
         .auth(accessTokenAdminIngestor, { type: "bearer" });
       const proposalId = proposalRes.body.proposalId;
-      
+
       const dataset = {
         ...TestData.DerivedCorrectMinV4,
         proposalIds: [proposalId],
@@ -442,7 +443,7 @@ describe("2500: Datasets v4 tests", () => {
         .post("/api/v4/datasets")
         .send({ ...TestData.DerivedCorrectMinV4, proposalIds: [] })
         .auth(accessTokenAdminIngestor, { type: "bearer" });
-      
+
       const res2 = await request(appUrl)
         .post("/api/v4/datasets")
         .send({ ...TestData.DerivedCorrectMinV4 })
@@ -458,9 +459,14 @@ describe("2500: Datasets v4 tests", () => {
       const proposalAfter = await request(appUrl)
         .get(`/api/v3/proposals/${encodeURIComponent(proposalId)}`)
         .auth(accessTokenAdminIngestor, { type: "bearer" });
-      console.log("DEBUG numberOfDatasets: ", proposalAfter.body.numberOfDatasets);
+      console.log(
+        "DEBUG numberOfDatasets: ",
+        proposalAfter.body.numberOfDatasets,
+      );
       console.log("DEBUG initialCount: ", initialCount);
-      proposalAfter.body.should.have.property("numberOfDatasets").and.equal(initialCount);
+      proposalAfter.body.should.have
+        .property("numberOfDatasets")
+        .and.equal(initialCount);
     });
   });
 
@@ -775,13 +781,15 @@ describe("2500: Datasets v4 tests", () => {
     it("0211: should fetch dataset relation fields if provided in the filter as obj and add scopes", async () => {
       const filter = {
         where: { pid: derivedDatasetMinPid },
-        include: [{
-          relation: "instruments",
-          scope: {
-            where:
-              { uniqueName: TestData.InstrumentCorrect1.uniqueName }, fields: ["uniqueName"]
-          }
-        }],
+        include: [
+          {
+            relation: "instruments",
+            scope: {
+              where: { uniqueName: TestData.InstrumentCorrect1.uniqueName },
+              fields: ["uniqueName"],
+            },
+          },
+        ],
       };
 
       const instrument1 = await request(appUrl)
@@ -790,7 +798,7 @@ describe("2500: Datasets v4 tests", () => {
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
         .expect(TestData.EntryCreatedStatusCode)
-        .expect("Content-Type", /json/)
+        .expect("Content-Type", /json/);
 
       const instrument2 = await request(appUrl)
         .post("/api/v3/Instruments")
@@ -798,7 +806,7 @@ describe("2500: Datasets v4 tests", () => {
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
         .expect(TestData.EntryCreatedStatusCode)
-        .expect("Content-Type", /json/)
+        .expect("Content-Type", /json/);
 
       await request(appUrl)
         .patch(`/api/v4/datasets/${encodeURIComponent(derivedDatasetMinPid)}`)
@@ -818,18 +826,19 @@ describe("2500: Datasets v4 tests", () => {
           const [firstDataset] = res.body;
 
           firstDataset.should.have.property("pid");
-          firstDataset.should.have.property("instruments").eql([{
-            _id: instrument1.body.id,
-            uniqueName: TestData.InstrumentCorrect1.uniqueName
-          }]
-          );
+          firstDataset.should.have.property("instruments").eql([
+            {
+              _id: instrument1.body.id,
+              uniqueName: TestData.InstrumentCorrect1.uniqueName,
+            },
+          ]);
           firstDataset.should.not.have.property("datablocks");
         });
     });
 
     it("0212: should fetch specific dataset fields excluding fields provided in field", async () => {
       const filter = {
-        fields: {datasetName: 0, contactEmail: 1},
+        fields: { datasetName: 0, contactEmail: 1 },
       };
 
       return request(appUrl)
@@ -1096,7 +1105,9 @@ describe("2500: Datasets v4 tests", () => {
         .then((res) => {
           res.body.should.be.a("object");
           res.body.should.have.property("message");
-          res.body.message.should.match(/Invalid \$project :: caused by :: Path collision at origdatablocks/);
+          res.body.message.should.match(
+            /Invalid \$project :: caused by :: Path collision at origdatablocks/,
+          );
         });
     });
   });
@@ -2092,6 +2103,49 @@ describe("2500: Datasets v4 tests", () => {
             .property("scientificMetadataValid")
             .and.be.equal(false);
         });
+    });
+  });
+
+  describe("Datasets v4 optimistic concurrency control tests", () => {
+    it("0900: should fail one request with HTTP 412 when two requests try to update the same dataset", async () => {
+      //create a new dataset
+      const res = await request(appUrl)
+        .post("/api/v4/datasets")
+        .send(TestData.DerivedCorrectMinV4)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
+      const pid = res.body.pid;
+      const patchRequest1 = {
+        datasetName: "Updated dataset name 1",
+      };
+
+      const patchRequest2 = {
+        datasetName: "Updated dataset name 2",
+      };
+
+      const [res1, res2] = await Promise.all([
+        request(appUrl)
+          .patch(`/api/v4/datasets/${encodeURIComponent(pid)}`)
+          .send(patchRequest1)
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+        request(appUrl)
+          .patch(`/api/v4/datasets/${encodeURIComponent(pid)}`)
+          .send(patchRequest2)
+          .set("if-unmodified-since", res.body.updatedAt)
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
+      ]);
+      assert(
+        [res1.statusCode, res2.statusCode].includes(
+          TestData.SuccessfulPatchStatusCode,
+        ),
+        "Neither PATCH request succeeded",
+      );
+      if (res1.status === TestData.SuccessfulPatchStatusCode) {
+        assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+      } else {
+        assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+      }
     });
   });
 });
