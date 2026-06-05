@@ -13,6 +13,17 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // History
+  HistoryRead = "history_read",
+  HistoryReadDataset = "history_read_dataset",
+  HistoryReadProposal = "history_read_proposal",
+  HistoryReadSample = "history_read_sample",
+  HistoryReadInstrument = "history_read_instrument",
+  HistoryReadPublishedData = "history_read_published_data",
+  HistoryReadPolicy = "history_read_policy",
+  HistoryReadDatablock = "history_read_datablock",
+  HistoryReadAttachment = "history_read_attachment",
+
   // ---------------
   // Datasets
   // endpoint authorization actions
@@ -250,22 +261,6 @@ export enum Action {
   AttachmentReadInstance = "attachment_read_instance",
   AttachmentUpdateInstance = "attachment_update_instance",
   AttachmentDeleteInstance = "attachment_delete_instance",
-
-  // -------------------------------------
-  // History
-  // -------------------------------------
-  // endpoint authorization
-  HistoryReadEndpoint = "history_read_endpoint", // General history endpoint access
-
-  // instance authorization by collection
-  HistoryReadDataset = "history_read_dataset",
-  HistoryReadProposal = "history_read_proposal",
-  HistoryReadSample = "history_read_sample",
-  HistoryReadInstrument = "history_read_instrument",
-  HistoryReadPublishedData = "history_read_published_data",
-  HistoryReadPolicy = "history_read_policy",
-  HistoryReadDatablock = "history_read_datablock",
-  HistoryReadAttachment = "history_read_attachment",
 
   // -------------------------------------
   // MetadataKeys
