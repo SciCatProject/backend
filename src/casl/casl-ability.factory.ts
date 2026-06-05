@@ -23,6 +23,7 @@ import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
+import { PublishedDataStatus } from "src/published-data/interfaces/published-data.interface";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { UserIdentity } from "src/users/schemas/user-identity.schema";
 import { UserSettings } from "src/users/schemas/user-settings.schema";
@@ -1093,24 +1094,56 @@ export class CaslAbilityFactory {
   }
 
   publishedDataEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
+    const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
-    if (user) {
-      can(Action.Read, PublishedData);
-      can(Action.Update, PublishedData);
+
+    // Unauthenticated users can only read publicly accessible records
+    if (!user) {
+      can(Action.Read, PublishedData, {
+        $or: [
+          { ownerGroup: { $exists: false } },
+          { status: PublishedDataStatus.PUBLIC },
+          { status: PublishedDataStatus.REGISTERED },
+          { status: PublishedDataStatus.AMENDED },
+        ],
+      });
+      cannot(Action.Create, PublishedData);
+      cannot(Action.Update, PublishedData);
+      cannot(Action.Delete, PublishedData);
+    } else {
+      // Authenticated users
+      // Read access: public records (PUBLIC, REGISTERED, AMENDED) OR legacy (no ownerGroup) OR private records where user is owner
+      can(Action.Read, PublishedData, {
+        $or: [
+          { ownerGroup: { $exists: false } },
+          { status: { $in: [PublishedDataStatus.PUBLIC, PublishedDataStatus.REGISTERED, PublishedDataStatus.AMENDED] } },
+          { $and: [
+            { status: PublishedDataStatus.PRIVATE },
+            { ownerGroup: { $in: user.currentGroups } },
+          ] },
+        ],
+      });
+
+      // Create access: all authenticated users can create
       can(Action.Create, PublishedData);
+
+      // Update access: owner of the record OR legacy records (no ownerGroup)
+      can(Action.Update, PublishedData, {
+        $or: [
+          { ownerGroup: { $in: user.currentGroups } },
+          { ownerGroup: { $exists: false } },
+        ],
+      });
+
+      // Delete access: only delete group members
+      if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+        can(Action.Delete, PublishedData);
+      } else {
+        cannot(Action.Delete, PublishedData);
+      }
     }
 
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, PublishedData);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
