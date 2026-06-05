@@ -97,14 +97,14 @@ export class HistoryController {
   })
   async findHistory(
     @Req() request: Request,
-    @Query("filter") filterStr: string,
+    @Query("filter") filter: string,
     @Query("skip") skip?: number,
     @Query("limit") limit?: number,
   ) {
     // Parse the filter JSON
-    let filter: FilterQuery<GenericHistoryDocument>;
+    let parsedFilter: FilterQuery<GenericHistoryDocument>;
     try {
-      filter = JSON.parse(filterStr);
+      parsedFilter = JSON.parse(filter);
     } catch (error) {
       throw new BadRequestException("Invalid filter JSON format: " + error);
     }
@@ -113,25 +113,38 @@ export class HistoryController {
     const ability = this.caslAbilityFactory.historyAccess(
       request.user as JWTUser,
     );
+    const canViewAny = ability.can(Action.AccessAny, GenericHistory);
 
-    const subject =
-      this.subsystemSubjectMap[
-        filter.subsystem as keyof typeof this.subsystemSubjectMap
-      ];
+    if (!canViewAny) {
+      if (!parsedFilter.subsystem) {
+        throw new BadRequestException(
+          "subsystem is required in filter for permission verification",
+        );
+      }
 
-    if (!subject || !ability.can(Action.HistoryRead, subject)) {
-      throw new ForbiddenException(
-        `You don't have permission to access history for ${filter.subsystem} collection`,
-      );
+      const subject =
+        this.subsystemSubjectMap[
+          parsedFilter.subsystem as keyof typeof this.subsystemSubjectMap
+        ];
+
+      if (!subject) {
+        throw new BadRequestException(
+          `${parsedFilter.subsystem} is not a valid history collection`,
+        );
+      } else if (!ability.can(Action.HistoryRead, subject)) {
+        throw new ForbiddenException(
+          `You don't have permission to access history for ${parsedFilter.subsystem} collection`,
+        );
+      }
     }
 
     // Apply the filters and pagination
     const [items, totalCount] = await Promise.all([
-      this.historyService.find(filter, {
+      this.historyService.find(parsedFilter, {
         skip: skip ? Number(skip) : undefined,
         limit: limit ? Number(limit) : undefined,
       }),
-      this.historyService.count(filter),
+      this.historyService.count(parsedFilter),
     ]);
 
     return {
@@ -166,18 +179,18 @@ export class HistoryController {
   })
   async countHistory(
     @Req() request: Request,
-    @Query("filter") filterStr: string,
+    @Query("filter") filter: string,
   ) {
     // Parse the filter JSON
-    let filter: FilterQuery<GenericHistoryDocument>;
+    let parsedFilter: FilterQuery<GenericHistoryDocument>;
     try {
-      filter = JSON.parse(filterStr);
+      parsedFilter = JSON.parse(filter);
     } catch (error) {
       throw new BadRequestException("Invalid filter JSON format: " + error);
     }
 
     // Ensure subsystem is provided for permission check
-    if (!filter.subsystem) {
+    if (!parsedFilter.subsystem) {
       throw new BadRequestException(
         "subsystem is required in filter for permission verification",
       );
@@ -190,16 +203,16 @@ export class HistoryController {
 
     const subject =
       this.subsystemSubjectMap[
-        filter.subsystem as keyof typeof this.subsystemSubjectMap
+        parsedFilter.subsystem as keyof typeof this.subsystemSubjectMap
       ];
 
     if (!subject || !ability.can(Action.HistoryRead, subject)) {
       throw new ForbiddenException(
-        `You don't have permission to access history for ${filter.subsystem} collection`,
+        `You don't have permission to access history for ${parsedFilter.subsystem} collection`,
       );
     }
 
-    const count = await this.historyService.count(filter);
+    const count = await this.historyService.count(parsedFilter);
 
     return { count };
   }

@@ -147,8 +147,9 @@ export class HistoryAbility {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.HistoryRead, GenericHistory);
+      can(Action.AccessAny, GenericHistory);
 
+      can(Action.HistoryRead, GenericHistory);
       can(Action.HistoryRead, Attachment);
       can(Action.HistoryRead, Datablock);
       can(Action.HistoryRead, DatasetClass);
