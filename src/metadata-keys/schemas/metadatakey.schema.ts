@@ -105,11 +105,5 @@ export class MetadataKeyClass extends QueryableClass {
 
 export const MetadataKeySchema = SchemaFactory.createForClass(MetadataKeyClass);
 
-MetadataKeySchema.index({ sourceType: 1, isPublished: 1, key: 1 });
-MetadataKeySchema.index({
-  sourceType: 1,
-  isPublished: 1,
-  humanReadableName: 1,
-});
-MetadataKeySchema.index({ sourceType: 1, userGroups: 1, key: 1 });
-MetadataKeySchema.index({ sourceType: 1, userGroups: 1, humanReadableName: 1 });
+MetadataKeySchema.index({ sourceType: 1, key: 1 });
+MetadataKeySchema.index({ sourceType: 1, humanReadableName: 1 });
