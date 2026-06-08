@@ -1,4 +1,11 @@
-import { Controller, Sse, MessageEvent, UseGuards, Req } from "@nestjs/common";
+import {
+  Controller,
+  Sse,
+  MessageEvent,
+  UseGuards,
+  Req,
+  Get,
+} from "@nestjs/common";
 import { Observable } from "rxjs";
 
 import { Request } from "express";
@@ -11,6 +18,7 @@ import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 
 @Controller("events")
 @ApiBearerAuth()
@@ -28,5 +36,16 @@ export class EventsController {
     return this.eventsService
       .getEvents(user)
       .pipe(map((payload) => ({ data: payload })));
+  }
+
+  @Get("connections")
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies(
+    "runtimeconfig",
+    (ability: AppAbility) =>
+      ability.can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig), //TODO: define a correct policy for monitoring connections
+  )
+  connections() {
+    return this.eventsService.getAllConnections();
   }
 }
