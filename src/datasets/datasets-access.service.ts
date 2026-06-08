@@ -22,22 +22,16 @@ export class DatasetsAccessService {
   getRelationViewAccess(field: DatasetLookupKeysEnum, user: JWTUser) {
     switch (field) {
       case DatasetLookupKeysEnum.proposals: {
-        const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
-        const canViewAny = ability.can(Action.ProposalsReadAny, ProposalClass);
-        const canViewAccess = ability.can(
-          Action.ProposalsReadManyAccess,
-          ProposalClass,
-        );
-        const canViewOwner = ability.can(
-          Action.ProposalsReadManyOwner,
-          ProposalClass,
-        );
-        const canViewPublic = ability.can(
-          Action.ProposalsReadManyPublic,
-          ProposalClass,
-        );
+        const ability = this.caslAbilityFactory.proposalAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, ProposalClass);
+        const canView = ability.can(Action.ProposalRead, ProposalClass);
 
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        return {
+          canViewAny,
+          canViewOwner: canView,
+          canViewAccess: canView,
+          canViewPublic: canView,
+        };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
         const ability =
@@ -150,7 +144,7 @@ export class DatasetsAccessService {
       const { canViewAny, canViewAccess, canViewOwner } = access;
       if (!canViewAny) {
         let pipeline: PipelineStage.Lookup["$lookup"]["pipeline"];
-        if (canViewAccess) {
+        if (currentUser && canViewAccess) {
           pipeline = [
             {
               $match: {
@@ -163,7 +157,7 @@ export class DatasetsAccessService {
               },
             },
           ];
-        } else if (canViewOwner) {
+        } else if (currentUser && canViewOwner) {
           pipeline = [
             {
               $match: {
