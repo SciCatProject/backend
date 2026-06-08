@@ -369,15 +369,7 @@ It builds a MetadataKeys collection by extracting and aggregating scientific met
     isPublished: 1,
     userGroups: 1,
     userGroupCounts: { $arrayToObject: "$userGroupCountsArr" },
-    usageCount: {
-      $size: {
-        $reduce: {
-          input: "$datasetIdSets",
-          initialValue: [],
-          in: { $setUnion: ["$$value", "$$this"] },
-        },
-      },
-    },
+    usageCount: { $size: { $setUnion: "$datasetIdSets" } },
     createdBy: { $literal: "migration" },
     createdAt: { $toDate: "$$NOW" },
   },
