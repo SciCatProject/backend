@@ -101,8 +101,7 @@ export class DatasetsAccessService {
         return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
       }
       case DatasetLookupKeysEnum.instruments: {
-        // TODO: Fix this if the instrument access change
-        const ability = this.caslAbilityFactory.instrumentEndpointAccess(user);
+        const ability = this.caslAbilityFactory.instrumentAccess(user);
         const canViewAny = ability.can(Action.InstrumentRead, Instrument);
 
         return {
