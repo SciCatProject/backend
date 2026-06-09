@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../datafiles_metadata/">
+        <link rel="prev" href="../ajv-extensions/">
       
       
-        <link rel="next" href="../opensearch-guidelines/">
+        <link rel="next" href="../metadatakeys-module/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>MetadataKeys Synchronization Service Overview - SciCat Documentation</title>
+        <title>Datafile Metadata - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#overview-problem-statement" class="md-skip">
+        <a href="#datafile-metadata" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              MetadataKeys Synchronization Service Overview
+              Datafile Metadata
             
           </span>
         </div>
@@ -343,34 +343,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../datafiles_metadata/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datafile Metadata
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -380,6 +352,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -388,7 +362,7 @@
   <span class="md-ellipsis">
     
   
-    MetadataKeys Synchronization Service Overview
+    Datafile Metadata
   
 
     
@@ -406,7 +380,7 @@
   <span class="md-ellipsis">
     
   
-    MetadataKeys Synchronization Service Overview
+    Datafile Metadata
   
 
     
@@ -422,6 +396,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -430,105 +406,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview-problem-statement" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview &amp; Problem Statement
+        Configuration
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Overview &amp; Problem Statement">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problem-addressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problem Addressed
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#module-architecture" class="md-nav__link">
+  <a href="#schema-draft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Module Architecture
+        Schema Draft
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Module Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#metadatakeyscontroller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MetadataKeysController
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#metadatakeysservice" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MetadataKeysService
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MetadataKeysService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permission Layer (Applies to findAll only):
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Service Methods:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
+  <a href="#example-facility-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage Example
+        Example Facility Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validated-routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validated Routes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Examples
       
     </span>
   </a>
@@ -539,6 +475,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metadatakeys-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MetadataKeys Synchronization Service Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -790,6 +754,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -798,105 +764,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview-problem-statement" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview &amp; Problem Statement
+        Configuration
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Overview &amp; Problem Statement">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problem-addressed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problem Addressed
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#module-architecture" class="md-nav__link">
+  <a href="#schema-draft" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Module Architecture
+        Schema Draft
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Module Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#metadatakeyscontroller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MetadataKeysController
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#metadatakeysservice" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MetadataKeysService
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MetadataKeysService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permission Layer (Applies to findAll only):
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Service Methods:
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
+  <a href="#example-facility-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage Example
+        Example Facility Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validated-routes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validated Routes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Examples
       
     </span>
   </a>
@@ -920,73 +846,164 @@
 
 
 
-  <h1>MetadataKeys Synchronization Service Overview</h1>
-
-<h2 id="overview-problem-statement">Overview &amp; Problem Statement<a class="headerlink" href="#overview-problem-statement" title="Permanent link">¶</a></h2>
-<p>The Metadata Keys Module is a dedicated standalone component designed to manage and retrieve metadata keys across the platform. This module replaces the legacy GET /datasets/metadataKeys endpoint.</p>
-<h3 id="problem-addressed">Problem Addressed<a class="headerlink" href="#problem-addressed" title="Permanent link">¶</a></h3>
-<p>The previous implementation in the Datasets service lacked a permission-based filtering layer. Because it attempted to return all global keys without ownership validation, it caused:</p>
-<ul>
-<li>Performance: Significant latency when processing large datasets.</li>
-<li>Stability: Crashes occurred when retrieval limits were missing or improperly configured.</li>
-<li>Risks: Users could see metadata keys they did not have permissions to access.</li>
-</ul>
-<h2 id="module-architecture">Module Architecture<a class="headerlink" href="#module-architecture" title="Permanent link">¶</a></h2>
-<p>This module consists of a dedicated Controller and Service layer that implements a robust permission-aware logic.</p>
-<h3 id="metadatakeyscontroller">MetadataKeysController<a class="headerlink" href="#metadatakeyscontroller" title="Permanent link">¶</a></h3>
-<p>Provides the API interface for searching keys. Allowed filters can be found in <code>src/metadata-keys/metadatakeys.service.ts</code> and exmaple can be find in <code>src/metadata-keys/types/metadatakeys-filter-content.ts</code></p>
-<ul>
-<li><code>Endpoint</code>: GET /metadatakeys (replaces /datasets/metadataKeys)</li>
-<li><code>Method</code>: findAll</li>
-<li><code>Endpoint Access</code>: Endpoint can be Accessed by any users</li>
-</ul>
-<h3 id="metadatakeysservice">MetadataKeysService<a class="headerlink" href="#metadatakeysservice" title="Permanent link">¶</a></h3>
-<p>This handles the business logic and talks to the database. It is divided into user-facing search logic and internal data synchronization.</p>
-<h4 id="permission-layer-applies-to-findall-only">Permission Layer (Applies to findAll only):<a class="headerlink" href="#permission-layer-applies-to-findall-only" title="Permanent link">¶</a></h4>
-<p>When a user searches for keys, the service uses accessibleBy to automatically append access filters based on CASL permissions:</p>
-<ul>
-<li><code>Admins</code>: Can search and get all metadata keys in the system.</li>
-<li><code>Authenticated Users</code>: Can only get keys where they are part of the ownerGroup or accessGroups.</li>
-<li><code>Unauthenticated Users</code>: Can only get keys that are marked as isPublished.</li>
-</ul>
-<h4 id="service-methods">Service Methods:<a class="headerlink" href="#service-methods" title="Permanent link">¶</a></h4>
-<ul>
-<li><code>findAll</code>: The only public-facing method. It applies the permission layer and then uses a database aggregation pipeline to find and return the specific keys requested by the user. Every search is limited to 100 results by default, if limit is not provided.</li>
-<li><code>insertManyFromSource</code>: An internal method that takes an original document (like a Dataset), extracts fields from <strong>scientificMetadata</strong>, <strong>metadata</strong>, and <strong>customMetadata</strong>, and creates new records in the Metadata Keys collection.</li>
-<li><code>deleteMany</code>: Removes metadata key entries associated with a source document when that document is deleted from the system.</li>
-<li><code>replaceManyFromSource</code>: Triggered when a source document (e.g., a Dataset or Proposal) is updated. It calls <code>deleteMany</code> and <code>insertManyFromSource</code> sequentially.</li>
-</ul>
-<h2 id="usage-example">Usage Example<a class="headerlink" href="#usage-example" title="Permanent link">¶</a></h2>
-<p>To list all metadata keys associated with a dataset, the user must provide the sourceType and sourceId. If the fields array is provided, only those specific fields will be returned:</p>
+<h1 id="datafile-metadata">Datafile Metadata<a class="headerlink" href="#datafile-metadata" title="Permanent link">¶</a></h1>
+<p>Datafile objects can carry optional file-specific metadata in the <code>metadata</code>
+field. This field is available on each entry of an origdatablock
+<code>dataFileList</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"humanreadableName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"raw/run-0001.nxs"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">1048576</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-02T08:00:00Z"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"chk"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2cf24dba5fb0a30e26e83b2ac5b9e29e"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"duration"</span><span class="p">:</span><span class="w"> </span><span class="mf">12.5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"measurement_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scan"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>To retrieve a specific metadata key, use the following filter:</p>
+<p>The backend stores <code>metadata</code> as a JSON object:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">metadata?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<blockquote>
+<p><strong>Important</strong>:
+This field is intended for facility specific file-level metadata. For aggregate metadata that should be searchable and shown more prominently to users, prefer the dataset <code>scientificMetadata</code> field. Note that these metadata are not searchable at Dataset level.</p>
+</blockquote>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h2>
+<p>Datafile metadata validation is configured with the
+<code>DATAFILES_METADATA_SCHEMA</code> environment variable.</p>
+<div class="highlight"><pre><span></span><code><span class="nv">DATAFILES_METADATA_SCHEMA</span><span class="o">=</span><span class="s2">"datafilesMetadataSchema.example.json"</span>
+</code></pre></div>
+<p>The environment variable points to a JSON Schema file. During application
+configuration, <code>src/config/configuration.ts</code> reads and parses that file, then
+exposes the parsed schema object through the Nest configuration key
+<code>datafilesMetadataSchema</code>.</p>
+<p>If <code>DATAFILES_METADATA_SCHEMA</code> is not set, <code>configuration.ts</code> uses
+<code>datafilesMetadataSchema.json</code> as the default schema path. If that file is
+missing, it falls back to <code>datafilesMetadataSchema.example.json</code>. The default
+schema shipped with the backend is closed and rejects non-empty metadata until a
+facility configures allowed fields. If both the default schema file and example
+schema file are missing, the current configuration loader stores a schema
+object (<code>{type: "object", additionalProperties: false}</code>), which would still reject all non empty metadata.</p>
+<p>The example schema is deliberately closed:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"metadata_key_name"</span>
-<span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
+<span class="w">  </span><span class="nt">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://json-schema.org/draft-07/schema#"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">  </span><span class="nt">"additionalProperties"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>With this schema, omitted or empty datafile metadata is valid, but any
+non-empty metadata object is rejected until the facility configures the allowed
+metadata fields.</p>
+<h2 id="schema-draft">Schema Draft<a class="headerlink" href="#schema-draft" title="Permanent link">¶</a></h2>
+<p>The validation pipe uses the default Ajv import, which validates draft-07
+schemas. Schema files should declare the draft-07 meta-schema:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://json-schema.org/draft-07/schema#"</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="example-facility-schema">Example Facility Schema<a class="headerlink" href="#example-facility-schema" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://json-schema.org/draft-07/schema#"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"duration"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"minimum"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"measurement_type"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"scan"</span><span class="p">,</span><span class="w"> </span><span class="s2">"calibration"</span><span class="p">,</span><span class="w"> </span><span class="s2">"dark"</span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"detector"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">"distance_mm"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">"additionalProperties"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"measurement_type"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"additionalProperties"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>To allow arbitrary top-level metadata keys, configure
+<code>additionalProperties: true</code> explicitly or simply remove it entirely:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://json-schema.org/draft-07/schema#"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>For nested objects, define <code>additionalProperties</code> in the nested schema too if
+unknown nested keys should be rejected.</p>
+<h2 id="validation-mechanism">Validation Mechanism<a class="headerlink" href="#validation-mechanism" title="Permanent link">¶</a></h2>
+<p>Validation is implemented by <code>DatafilesMetadataValidationPipe</code> in
+<code>src/origdatablocks/pipes/datafiles-metadata-validation.pipe.ts</code>.</p>
+<p>For each request body handled by this pipe:</p>
+<ol>
+<li>The default schema in case of missing configuration is:
+   <div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"additionalProperties"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div></li>
+<li>
+<p>If the request body has no <code>dataFileList</code>, the pipe returns without metadata
+   validation. This allows partial update bodies that do not touch files.</p>
+</li>
+<li>
+<p>Each entry in <code>dataFileList</code> is checked.</p>
+</li>
+<li>Each datafile <code>metadata</code> value is validated. If a datafile omits <code>metadata</code>,
+   the pipe validates an empty object (<code>{}</code>).</li>
+<li>Invalid metadata causes HTTP 400 with the validation error details.</li>
+<li>A schema that cannot be compiled by Ajv causes HTTP 500 because it is a
+   server configuration problem.</li>
+</ol>
+<p>Invalid metadata produces an error like:</p>
+<div class="highlight"><pre><span></span><code>Datafile metadata is not following the configured schema: metadata/duration must be number
+</code></pre></div>
+<h2 id="validated-routes">Validated Routes<a class="headerlink" href="#validated-routes" title="Permanent link">¶</a></h2>
+<p>The pipe validates origdatablock request bodies on routes where
+<code>@UsePipes(DatafilesMetadataValidationPipe)</code> is applied.</p>
+<p>Current covered routes:</p>
+<ul>
+<li><code>POST /origdatablocks</code> in the v3 controller</li>
+<li><code>PATCH /origdatablocks/:id</code> in the v3 controller</li>
+<li><code>POST /origdatablocks</code> in the v4 controller</li>
+<li><code>POST /origdatablocks/isValid</code> in the v4 controller</li>
+<li><code>PATCH /origdatablocks/:id</code> in the v4 controller</li>
+</ul>
+<p>Any future route that accepts origdatablock <code>dataFileList</code> input must also use
+this pipe if datafile metadata should be validated there.</p>
+<h2 id="request-examples">Request Examples<a class="headerlink" href="#request-examples" title="Permanent link">¶</a></h2>
+<p>Accepted when the configured schema allows <code>duration</code> and
+<code>measurement_type</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"datasetId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20.500.12345/example-dataset"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">1048576</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"dataFileList"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"raw/run-0001.nxs"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">1048576</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-02T08:00:00Z"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"duration"</span><span class="p">:</span><span class="w"> </span><span class="mf">12.5</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"measurement_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scan"</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Rejected by the closed example schema:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"raw/run-0001.nxs"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"size"</span><span class="p">:</span><span class="w"> </span><span class="mi">1048576</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-06-02T08:00:00Z"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"operator_comment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"extra key"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -996,9 +1013,6 @@
 
 
 
-
-  
-  
 
 
 
