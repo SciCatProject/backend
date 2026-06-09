@@ -185,7 +185,7 @@ export class ProposalsService {
     );
     const savedProposal = await createdProposal.save();
 
-    this.metadataKeysService.insertManyFromSource(
+    await this.metadataKeysService.insertManyFromSource(
       createMetadataKeysInstance(
         this.proposalModel.collection.name,
         savedProposal,

@@ -46,7 +46,7 @@ export class SamplesService {
     );
     const savedSample = await createdSample.save();
 
-    this.metadataKeysService.insertManyFromSource(
+    await this.metadataKeysService.insertManyFromSource(
       createMetadataKeysInstance(this.sampleModel.collection.name, savedSample),
     );
 

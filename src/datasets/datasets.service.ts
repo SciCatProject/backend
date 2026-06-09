@@ -200,7 +200,7 @@ export class DatasetsService {
       );
     }
 
-    this.metadataKeysService.insertManyFromSource(
+    await this.metadataKeysService.insertManyFromSource(
       createMetadataKeysInstance(
         this.datasetModel.collection.name,
         savedDataset,
