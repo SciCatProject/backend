@@ -493,10 +493,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
+  <a href="#1-user-facing-search-findall" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permission Layer (Applies to findAll only):
+        1. User-facing search — findAll
       
     </span>
   </a>
@@ -504,13 +504,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
+  <a href="#2-internal-synchronization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Service Methods:
+        2. Internal synchronization
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. Internal synchronization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#insertmanyfromsourcedoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        insertManyFromSource(doc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deletemanydoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deleteMany(doc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacemanyfromsourceolddoc-newdoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        replaceManyFromSource(oldDoc, newDoc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -525,10 +564,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
+  <a href="#schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage Example
+        Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initial-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initial Migration
       
     </span>
   </a>
@@ -643,6 +704,34 @@
     
   
     Pull Request Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20260420145401 — Sync Dataset scientificMetadata to MetadataKeys
   
 
     
@@ -861,10 +950,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#permission-layer-applies-to-findall-only" class="md-nav__link">
+  <a href="#1-user-facing-search-findall" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permission Layer (Applies to findAll only):
+        1. User-facing search — findAll
       
     </span>
   </a>
@@ -872,13 +961,52 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#service-methods" class="md-nav__link">
+  <a href="#2-internal-synchronization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Service Methods:
+        2. Internal synchronization
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. Internal synchronization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#insertmanyfromsourcedoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        insertManyFromSource(doc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deletemanydoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deleteMany(doc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacemanyfromsourceolddoc-newdoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        replaceManyFromSource(oldDoc, newDoc)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -893,10 +1021,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-example" class="md-nav__link">
+  <a href="#schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage Example
+        Schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initial-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initial Migration
       
     </span>
   </a>
@@ -931,65 +1081,195 @@
 <li>Stability: Crashes occurred when retrieval limits were missing or improperly configured.</li>
 <li>Risks: Users could see metadata keys they did not have permissions to access.</li>
 </ul>
+<hr>
 <h2 id="module-architecture">Module Architecture<a class="headerlink" href="#module-architecture" title="Permanent link">¶</a></h2>
 <p>This module consists of a dedicated Controller and Service layer that implements a robust permission-aware logic.</p>
 <h3 id="metadatakeyscontroller">MetadataKeysController<a class="headerlink" href="#metadatakeyscontroller" title="Permanent link">¶</a></h3>
-<p>Provides the API interface for searching keys. Allowed filters can be found in <code>src/metadata-keys/metadatakeys.service.ts</code> and exmaple can be find in <code>src/metadata-keys/types/metadatakeys-filter-content.ts</code></p>
+<p>Provides the API interface for searching metadata keys.</p>
 <ul>
-<li><code>Endpoint</code>: GET /metadatakeys (replaces /datasets/metadataKeys)</li>
-<li><code>Method</code>: findAll</li>
-<li><code>Endpoint Access</code>: Endpoint can be Accessed by any users</li>
+<li><strong>Endpoint</strong>: <code>GET /metadatakeys</code> (replaces <code>GET /datasets/metadataKeys</code>)</li>
+<li><strong>Method</strong>: <code>findAll</code></li>
+<li><strong>Access</strong>: Any authenticated user (permission filtering is applied server-side)</li>
+<li>Allowed filter fields: see <code>src/metadata-keys/types/metadatakeys-lookup.ts</code></li>
+<li>Filter examples: see <code>src/metadata-keys/types/metadatakeys-filter-content.ts</code></li>
 </ul>
+<hr>
 <h3 id="metadatakeysservice">MetadataKeysService<a class="headerlink" href="#metadatakeysservice" title="Permanent link">¶</a></h3>
-<p>This handles the business logic and talks to the database. It is divided into user-facing search logic and internal data synchronization.</p>
-<h4 id="permission-layer-applies-to-findall-only">Permission Layer (Applies to findAll only):<a class="headerlink" href="#permission-layer-applies-to-findall-only" title="Permanent link">¶</a></h4>
-<p>When a user searches for keys, the service uses accessibleBy to automatically append access filters based on CASL permissions:</p>
+<p>Handles business logic and database access. Split into two concerns:</p>
+<h4 id="1-user-facing-search-findall">1. User-facing search — <code>findAll</code><a class="headerlink" href="#1-user-facing-search-findall" title="Permanent link">¶</a></h4>
+<p>Applies CASL permission filters before querying:</p>
+<table>
+<thead>
+<tr>
+<th>User type</th>
+<th>Visible keys</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Admin</td>
+<td>All keys in the system</td>
+</tr>
+<tr>
+<td>Authenticated user</td>
+<td>Keys where they belong to <code>ownerGroup</code> or <code>accessGroups</code></td>
+</tr>
+<tr>
+<td>Unauthenticated user</td>
+<td>Keys marked <code>isPublished: true</code></td>
+</tr>
+</tbody>
+</table>
+<p>Results default to 100 per page if no limit is provided.</p>
+<h4 id="2-internal-synchronization">2. Internal synchronization<a class="headerlink" href="#2-internal-synchronization" title="Permanent link">¶</a></h4>
+<p>These methods are called internally when source documents are created, updated, or deleted. They are never called directly from the controller.</p>
+<h5 id="insertmanyfromsourcedoc"><code>insertManyFromSource(doc)</code><a class="headerlink" href="#insertmanyfromsourcedoc" title="Permanent link">¶</a></h5>
+<p>Called when a dataset is <strong>created</strong> or <strong>gains new metadata keys</strong>.</p>
+<p>For each key in <code>scientificMetadata</code>:</p>
 <ul>
-<li><code>Admins</code>: Can search and get all metadata keys in the system.</li>
-<li><code>Authenticated Users</code>: Can only get keys where they are part of the ownerGroup or accessGroups.</li>
-<li><code>Unauthenticated Users</code>: Can only get keys that are marked as isPublished.</li>
+<li>Upserts a <code>MetadataKey</code> document identified by <code>${sourceType}_${key}_${humanReadableName}</code></li>
+<li>Increments <code>usageCount</code> (total datasets referencing this key)</li>
+<li>Increments per-group reference counts in <code>userGroupCounts</code></li>
+<li>Adds new groups to the <code>userGroups</code> query array via <code>$addToSet</code></li>
+<li>Sets <code>isPublished: true</code> if the source dataset is published (never unsets inline — the cronjob handles the <code>true → false</code> transition)</li>
 </ul>
-<h4 id="service-methods">Service Methods:<a class="headerlink" href="#service-methods" title="Permanent link">¶</a></h4>
+<h5 id="deletemanydoc"><code>deleteMany(doc)</code><a class="headerlink" href="#deletemanydoc" title="Permanent link">¶</a></h5>
+<p>Called when a dataset is <strong>deleted</strong> or <strong>loses metadata keys</strong>.</p>
+<p>Runs three sequential steps:</p>
+<ol>
+<li>Decrements <code>usageCount</code> and per-group counts in <code>userGroupCounts</code></li>
+<li>Recomputes the <code>userGroups</code> array from the updated counts — drops any group whose count reached zero</li>
+<li>Deletes <code>MetadataKey</code> documents where <code>usageCount &lt;= 0</code>
+   <code>usageCount</code> is the authoritative deletion signal. A dataset with no <code>userGroups</code> and <code>isPublished: false</code> would be invisible to both <code>userGroupCounts</code> and <code>isPublished</code> checks, so neither alone can substitute for it.</li>
+</ol>
+<h5 id="replacemanyfromsourceolddoc-newdoc"><code>replaceManyFromSource(oldDoc, newDoc)</code><a class="headerlink" href="#replacemanyfromsourceolddoc-newdoc" title="Permanent link">¶</a></h5>
+<p>Called when a dataset is <strong>updated</strong>. Executes a two-step replacement:</p>
+<ol>
+<li>Calls <code>deleteMany(oldDoc)</code> — removes all metadata keys from the old dataset</li>
+<li>Calls <code>insertManyFromSource(newDoc)</code> — inserts all metadata keys from the new dataset</li>
+</ol>
+<p>This sequential approach ensures all changes to <code>usageCount</code>, <code>userGroupCounts</code>, and <code>userGroups</code> are applied consistently. The net effect is that:</p>
 <ul>
-<li><code>findAll</code>: The only public-facing method. It applies the permission layer and then uses a database aggregation pipeline to find and return the specific keys requested by the user. Every search is limited to 100 results by default, if limit is not provided.</li>
-<li><code>insertManyFromSource</code>: An internal method that takes an original document (like a Dataset), extracts fields from <strong>scientificMetadata</strong>, <strong>metadata</strong>, and <strong>customMetadata</strong>, and creates new records in the Metadata Keys collection.</li>
-<li><code>deleteMany</code>: Removes metadata key entries associated with a source document when that document is deleted from the system.</li>
-<li><code>replaceManyFromSource</code>: Triggered when a source document (e.g., a Dataset or Proposal) is updated. It calls <code>deleteMany</code> and <code>insertManyFromSource</code> sequentially.</li>
+<li>Keys no longer present in the updated dataset are decremented and removed if their usage drops to zero</li>
+<li>Keys newly present or with changed <code>sourceType</code> / <code>humanReadableName</code> are inserted fresh with correct counts</li>
+<li>Keys that remain but belong to different groups or have changed <code>isPublished</code> status are handled by the insert logic</li>
 </ul>
-<h2 id="usage-example">Usage Example<a class="headerlink" href="#usage-example" title="Permanent link">¶</a></h2>
-<p>To list all metadata keys associated with a dataset, the user must provide the sourceType and sourceId. If the fields array is provided, only those specific fields will be returned:</p>
+<hr>
+<h2 id="schema">Schema<a class="headerlink" href="#schema" title="Permanent link">¶</a></h2>
+<p>Each <code>MetadataKey</code> document has the following key fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_id</code></td>
+<td><code>ObjectId</code></td>
+<td>Generated UUID; logical identity is <code>(sourceType, key, humanReadableName)</code></td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>The raw metadata key name</td>
+</tr>
+<tr>
+<td><code>humanReadableName</code></td>
+<td><code>string</code></td>
+<td>Human-readable label from <code>human_name</code>, empty string if absent</td>
+</tr>
+<tr>
+<td><code>sourceType</code></td>
+<td><code>string</code></td>
+<td>Source collection: <code>Dataset</code>, <code>Proposal</code>, <code>Sample</code>, etc.</td>
+</tr>
+<tr>
+<td><code>userGroups</code></td>
+<td><code>string[]</code></td>
+<td>Groups that can see this key — kept in sync with <code>userGroupCounts</code> for query performance</td>
+</tr>
+<tr>
+<td><code>userGroupCounts</code></td>
+<td><code>Map&lt;string, number&gt;</code></td>
+<td>Per-group reference counts — source of truth for safe group removal</td>
+</tr>
+<tr>
+<td><code>usageCount</code></td>
+<td><code>number</code></td>
+<td>Total datasets referencing this key — authoritative deletion signal</td>
+</tr>
+<tr>
+<td><code>isPublished</code></td>
+<td><code>boolean</code></td>
+<td>True if any contributing dataset is published</td>
+</tr>
+</tbody>
+</table>
+<p><code>userGroups</code> and <code>userGroupCounts</code> are intentionally redundant. <code>userGroupCounts</code> owns the truth and enables safe atomic decrements. <code>userGroups</code> is a denormalized array kept for query performance — MongoDB's multikey index on <code>userGroups</code> makes <code>{ userGroups: { $in: [...] } }</code> efficient in a way that querying Map keys directly is not.</p>
+<hr>
+<h2 id="filter-examples">Filter Examples<a class="headerlink" href="#filter-examples" title="Permanent link">¶</a></h2>
+<p>List metadata keys visible to the current user for a given source type:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span>
+<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dataset"</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"humanreadableName"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"key"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humanReadableName"</span><span class="p">],</span>
 <span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
+<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"desc"</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>To retrieve a specific metadata key, use the following filter:</p>
+<p>Find a specific key by name:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sourceId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"metadata_key_name"</span>
+<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"temperature"</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"key"</span><span class="p">],</span>
 <span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">"sort"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"asc | desc"</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<p>Partial search on <code>key</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"$regex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"temp"</span><span class="p">,</span><span class="w"> </span><span class="nt">"$options"</span><span class="p">:</span><span class="w"> </span><span class="s2">"i"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Partial search on <code>humanReadableName</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"where"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"sourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"humanReadableName"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"$regex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"temp"</span><span class="p">,</span><span class="w"> </span><span class="nt">"$options"</span><span class="p">:</span><span class="w"> </span><span class="s2">"i"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"limit"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"skip"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h2 id="initial-migration">Initial Migration<a class="headerlink" href="#initial-migration" title="Permanent link">¶</a></h2>
+<p>The <code>MetadataKeys</code> collection is populated by a migration script that must be run manually before the service is deployed for the first time.</p>
+<p>See: <code>migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.js</code></p>
+<p>Documentation: <code>migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.md</code></p>
+<blockquote>
+<p>⚠️ The application will start normally without the migration, but the MetadataKeys service will return empty results until it is run.</p>
+</blockquote>
 
 
 

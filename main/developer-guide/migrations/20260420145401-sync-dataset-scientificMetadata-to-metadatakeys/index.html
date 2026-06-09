@@ -1,0 +1,1541 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../contributing/pr-guidelines/">
+      
+      
+        <link rel="next" href="../../../frontend-config-guide/default-list-settings/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>20260420145401 — Sync Dataset scientificMetadata to MetadataKeys - SciCat Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#20260420145401-sync-dataset-scientificmetadata-to-metadatakeys" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden="">
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SciCat Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              20260420145401 — Sync Dataset scientificMetadata to MetadataKeys
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    SciCat Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SciCat Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About SciCat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ajv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending Ajv
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../datafiles_metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datafile Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metadatakeys-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MetadataKeys Synchronization Service Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../opensearch-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenSearch Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Release Version Bump Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtime-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Configuration System Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/pr-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull Request Guidelines
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20260420145401 — Sync Dataset scientificMetadata to MetadataKeys
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20260420145401 — Sync Dataset scientificMetadata to MetadataKeys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#what-this-migration-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this migration does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-data-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source data shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadatakey-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetadataKey shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-pipeline-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Pipeline walkthrough
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration Pipeline walkthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-flatten-scientificmetadata-into-an-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1 — Flatten scientificMetadata into an array
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-one-document-per-metadata-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 — One document per metadata key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-shape-each-document-datasetidkey-with-hrm-and-usergroups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 — Shape each document (datasetId+key) with HRM and userGroups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-4-one-document-per-datasetkeygroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 4 — One document per (dataset+key+group)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-5-group-by-metakeyid-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 5 — Group by (metaKeyId, group)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-6-group-by-metakeyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 6 — Group by metaKeyId
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-7-add-generated-uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 7 — Add generated UUID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-8-project-final-document-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 8 — Project final document shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-9-merge-into-metadatakeys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 9 — Merge into MetadataKeys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend config guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Frontend config guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic Dataset Detail Component - Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../frontend-config-guide/frontend-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#what-this-migration-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this migration does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-data-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source data shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadatakey-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetadataKey shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-pipeline-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Pipeline walkthrough
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Migration Pipeline walkthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stage-1-flatten-scientificmetadata-into-an-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 1 — Flatten scientificMetadata into an array
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-2-one-document-per-metadata-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 2 — One document per metadata key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-3-shape-each-document-datasetidkey-with-hrm-and-usergroups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 3 — Shape each document (datasetId+key) with HRM and userGroups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-4-one-document-per-datasetkeygroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 4 — One document per (dataset+key+group)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-5-group-by-metakeyid-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 5 — Group by (metaKeyId, group)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-6-group-by-metakeyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 6 — Group by metaKeyId
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-7-add-generated-uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 7 — Add generated UUID
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-8-project-final-document-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 8 — Project final document shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stage-9-merge-into-metadatakeys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage 9 — Merge into MetadataKeys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="20260420145401-sync-dataset-scientificmetadata-to-metadatakeys">20260420145401 — Sync Dataset scientificMetadata to MetadataKeys<a class="headerlink" href="#20260420145401-sync-dataset-scientificmetadata-to-metadatakeys" title="Permanent link">¶</a></h1>
+<h2 id="what-this-migration-does">What this migration does<a class="headerlink" href="#what-this-migration-does" title="Permanent link">¶</a></h2>
+<p>Rebuilds the <code>MetadataKeys</code> collection from scratch by scanning all <code>Dataset</code> documents and extracting every key found in <code>scientificMetadata</code>.</p>
+<p>Each unique <code>(sourceType, key, humanReadableName)</code> combination becomes one <code>MetadataKey</code> document. If the same key appears across multiple datasets, their <code>userGroups</code> and counts are merged into a single entry.</p>
+<hr>
+<h2 id="why-it-exists">Why it exists<a class="headerlink" href="#why-it-exists" title="Permanent link">¶</a></h2>
+<p>The <code>MetadataKeys</code> collection powers metadata key search and access control. This is the initial population of the collection — it must be run once before the service can operate.</p>
+<p>Each <code>MetadataKey</code> document tracks:</p>
+<ul>
+<li><code>userGroupCounts: Map&lt;string, number&gt;</code> — how many datasets per group reference this key, enabling safe atomic group removal when a dataset is updated or deleted</li>
+<li><code>usageCount: number</code> — total datasets referencing this key regardless of groups, used as the authoritative deletion signal</li>
+</ul>
+<hr>
+<h2 id="source-data-shape">Source data shape<a class="headerlink" href="#source-data-shape" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1">// Dataset document</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="p">...,</span>
+<span class="w">  </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"uuid-A"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">ownerGroup</span><span class="o">:</span><span class="w"> </span><span class="s2">"group-1"</span><span class="p">,</span><span class="w">       </span><span class="c1">// mandatory</span>
+<span class="w">  </span><span class="nx">accessGroups</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"group-2"</span><span class="p">],</span><span class="w">   </span><span class="c1">// optional</span>
+<span class="w">  </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">scientificMetadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">temperature</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span><span class="w"> </span><span class="nx">unit</span><span class="o">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w"> </span><span class="nx">human_name</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">pressure</span><span class="o">:</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w">   </span><span class="nx">unit</span><span class="o">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w"> </span><span class="p">},</span><span class="w">   </span><span class="c1">// no human_name</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h2 id="metadatakey-shape">MetadataKey shape<a class="headerlink" href="#metadatakey-shape" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1">// MetadataKey document</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"group-1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group-2"</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"group-1"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"group-2"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">createdBy</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">createdAt</span><span class="o">:</span><span class="w"> </span><span class="nx">ISODate</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h2 id="migration-pipeline-walkthrough">Migration Pipeline walkthrough<a class="headerlink" href="#migration-pipeline-walkthrough" title="Permanent link">¶</a></h2>
+<p>It builds a MetadataKeys collection by extracting and aggregating scientific metadata keys from datasets. Each document in MetadataKeys represents one unique metadata key, enriched with access group membership, usage counts, and publication status.</p>
+<hr>
+<h3 id="stage-1-flatten-scientificmetadata-into-an-array">Stage 1 — Flatten scientificMetadata into an array<a class="headerlink" href="#stage-1-flatten-scientificmetadata-into-an-array" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$project</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">datasetId</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">ownerGroup</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">accessGroups</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">metaArr</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$objectToArray</span><span class="o">:</span><span class="w"> </span><span class="s2">"$scientificMetadata"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Converts the scientificMetadata object into an array of {k, v} pairs so it can be unwound in the next stage. Preserves _id as datasetId for later use in usage counting.</p>
+<p><strong>Input</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"ownerGroup"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"accessGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"scientificMetadata"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">"temperature"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"value"</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="s2">"pressure"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Pressure"</span><span class="p">,</span><span class="w"> </span><span class="s2">"value"</span><span class="o">:</span><span class="w"> </span><span class="mf">200</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"ownerGroup"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"accessGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"metaArr"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"value"</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"pressure"</span><span class="p">,</span><span class="w">    </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Pressure"</span><span class="p">,</span><span class="w">    </span><span class="s2">"value"</span><span class="o">:</span><span class="w"> </span><span class="mf">200</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-2-one-document-per-metadata-key">Stage 2 — One document per metadata key<a class="headerlink" href="#stage-2-one-document-per-metadata-key" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$unwind</span><span class="o">:</span><span class="w"> </span><span class="s2">"$metaArr"</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Produces one document per metadata key entry. A dataset with N metadata keys becomes N documents.</p>
+<p><strong>Input (from stage1)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"metaArr"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"pressure"</span><span class="p">,</span><span class="w">    </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Pressure"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"metaArr"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"metaArr"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"pressure"</span><span class="p">,</span><span class="w">    </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Pressure"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-3-shape-each-document-datasetidkey-with-hrm-and-usergroups">Stage 3 — Shape each document (datasetId+key) with HRM and userGroups<a class="headerlink" href="#stage-3-shape-each-document-datasetidkey-with-hrm-and-usergroups" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$project</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">datasetId</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"$metaArr.k"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$ifNull</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"$metaArr.v.human_name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">$setUnion</span><span class="o">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"$ownerGroup"</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$ifNull</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"$accessGroups"</span><span class="p">,</span><span class="w"> </span><span class="p">[]]</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Extracts the key name and human-readable name. Computes userGroups as the union of ownerGroup and accessGroups — every group that has access to this dataset.</p>
+<p><strong>Input (from stage2)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"ownerGroup"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"accessGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"metaArr"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-4-one-document-per-datasetkeygroup">Stage 4 — One document per (dataset+key+group)<a class="headerlink" href="#stage-4-one-document-per-datasetkeygroup" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$unwind</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">"$userGroups"</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Split userGroups so each group gets its own document. This allows grouping by (key, group) in Stage 6.</p>
+<p><strong>Input (from stage3)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-5-group-by-metakeyid-group">Stage 5 — Group by (metaKeyId, group)<a class="headerlink" href="#stage-5-group-by-metakeyid-group" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$group</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">metaKeyId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$concat</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="sb">`</span><span class="si">${</span><span class="nx">sourceType</span><span class="si">}</span><span class="sb">_`</span><span class="p">,</span><span class="w"> </span><span class="s2">"$key"</span><span class="p">,</span><span class="w"> </span><span class="s2">"_"</span><span class="p">,</span><span class="w"> </span><span class="s2">"$humanReadableName"</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">group</span><span class="o">:</span><span class="w"> </span><span class="s2">"$userGroups"</span><span class="p">,</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$first</span><span class="o">:</span><span class="w"> </span><span class="s2">"$key"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$first</span><span class="o">:</span><span class="w"> </span><span class="s2">"$humanReadableName"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$max</span><span class="o">:</span><span class="w"> </span><span class="s2">"$isPublished"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">groupCount</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$sum</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">datasetIds</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$addToSet</span><span class="o">:</span><span class="w"> </span><span class="s2">"$datasetId"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Groups by (metadata key, group) pair. Computes:</p>
+<ul>
+<li><code>metaKeyId</code> is a stable, deterministic identifier derived from <code>${sourceType}_${key}_${humanReadableName}</code> used as the merge key in Stage 9 to prevent duplicate documents across pipeline runs.</li>
+<li><code>groupCount</code> indicates how many datasets with this group use this key</li>
+<li><code>datasetIds</code> includes distinct dataset IDs for this group, used later to count unique datasets across all groups without double-counting</li>
+</ul>
+<p><strong>Input (from stage4)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"datasetId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">,</span><span class="w"> </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"groupCount"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"datasetIds"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">]</span>
+<span class="p">}</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"groupCount"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"datasetIds"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-6-group-by-metakeyid">Stage 6 — Group by metaKeyId<a class="headerlink" href="#stage-6-group-by-metakeyid" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$group</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id.metaKeyId"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$first</span><span class="o">:</span><span class="w"> </span><span class="s2">"$key"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$first</span><span class="o">:</span><span class="w"> </span><span class="s2">"$humanReadableName"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$max</span><span class="o">:</span><span class="w"> </span><span class="s2">"$isPublished"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$push</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id.group"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">userGroupCountsArr</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$push</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">k</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id.group"</span><span class="p">,</span><span class="w"> </span><span class="nx">v</span><span class="o">:</span><span class="w"> </span><span class="s2">"$groupCount"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">datasetIdSets</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$push</span><span class="o">:</span><span class="w"> </span><span class="s2">"$datasetIds"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Reassembles one document per metadata key by collecting all per-group data. datasetIdSets is a list of per-group dataset ID sets — merged in Stage 8 to compute total unique dataset count.</p>
+<p><strong>Input (from stage5)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s2">"groupCount"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"datasetIds"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s2">"groupCount"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"datasetIds"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"userGroupCountsArr"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"datasetIdSets"</span><span class="o">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">]]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-7-add-generated-uuid">Stage 7 — Add generated UUID<a class="headerlink" href="#stage-7-add-generated-uuid" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$addFields</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">metaKeyId</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">generatedId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">$function</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="s2">"function() { return UUID().toString().replace('UUID(\"', '').replace('\")', ''); }"</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">args</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">        </span><span class="nx">lang</span><span class="o">:</span><span class="w"> </span><span class="s2">"js"</span><span class="p">,</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Saves <code>_id</code> which at this point is <code>${sourceType}_${key}_${humanReadableName}</code> as metaKeyId before it gets replaced. Generates a UUID for _id to support future document splitting when a document approaches MongoDB's 16MB size limit, while metaKeyId remains the stable merge key for Stage 8.</p>
+<p><strong>Input (from stage7)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">"_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"metaKeyId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"generatedId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="err">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-8-project-final-document-shape">Stage 8 — Project final document shape<a class="headerlink" href="#stage-8-project-final-document-shape" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$project</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"$generatedId"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">metaKeyId</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$literal</span><span class="o">:</span><span class="w"> </span><span class="nx">sourceType</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$arrayToObject</span><span class="o">:</span><span class="w"> </span><span class="s2">"$userGroupCountsArr"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$size</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$setUnion</span><span class="o">:</span><span class="w"> </span><span class="s2">"$datasetIdSets"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">createdBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$literal</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">createdAt</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$toDate</span><span class="o">:</span><span class="w"> </span><span class="s2">"$$NOW"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Produces the final document shape for MetadataKeys. Converts userGroupCountsArr to an object map. Computes usageCount by merging all per-group datasetIdSets into a single set and counting — this avoids double-counting datasets that belong to multiple groups.</p>
+<p><strong>Why set union for usageCount:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nx">datasetIds</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">];</span><span class="w"> </span><span class="c1">//groupA</span>
+<span class="nx">datasetIds</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">];</span><span class="w"> </span><span class="c1">// groupB</span>
+<span class="nx">union</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">];</span><span class="w"> </span><span class="c1">// usageCount = 2  (not 3)</span>
+</code></pre></div>
+<p><strong>Input (from stage7)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"generatedId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"userGroupCountsArr"</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"k"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">,</span><span class="w"> </span><span class="s2">"v"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">  </span><span class="s2">"datasetIdSets"</span><span class="o">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="s2">"ds1"</span><span class="p">]]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"metaKeyId"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"sourceType"</span><span class="o">:</span><span class="w"> </span><span class="s2">"dataset"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"humanReadableName"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"userGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="s2">"userGroupCounts"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"groupA"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="s2">"usageCount"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"createdBy"</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"createdAt"</span><span class="o">:</span><span class="w"> </span><span class="s2">"2026-05-07T00:00:00.000Z"</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3 id="stage-9-merge-into-metadatakeys">Stage 9 — Merge into MetadataKeys<a class="headerlink" href="#stage-9-merge-into-metadatakeys" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">$merge</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">into</span><span class="o">:</span><span class="w"> </span><span class="s2">"MetadataKeys"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">on</span><span class="o">:</span><span class="w"> </span><span class="s2">"metaKeyId"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">whenMatched</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">$replaceWith</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nx">$mergeObjects</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">"$$new"</span><span class="p">,</span>
+<span class="w">            </span><span class="p">{</span><span class="w"> </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"$_id"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nx">whenNotMatched</span><span class="o">:</span><span class="w"> </span><span class="s2">"insert"</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>What it does:</strong> Upserts each document into <code>MetadataKeys</code> using <code>metaKeyId</code> as the match key. On match, replaces the existing document entirely with the incoming one, preserving only <code>_id</code> since MongoDB does not allow changing it.</p>
+<p><strong>Input (from Stage 9)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"metaKeyId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"userGroups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"userGroupCounts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"groupA"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"groupB"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"usageCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"isPublished"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Output (inserted or replaced):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"metaKeyId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dataset_temperature_Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"userGroups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"userGroupCounts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"groupA"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"groupB"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"usageCount"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"isPublished"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="running-the-migration">Running the migration<a class="headerlink" href="#running-the-migration" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run manually in production — ideally during low-traffic hours.</span>
+<span class="c1"># The migration is slow but non-blocking: the app continues to serve</span>
+<span class="c1"># requests while it runs. However, MetadataKeys will be unavailable</span>
+<span class="c1"># for the duration since the collection is wiped at the start.</span>
+npm<span class="w"> </span>run<span class="w"> </span>migrate:db:up
+
+<span class="c1"># verify</span>
+db.MetadataKeys.countDocuments<span class="o">({</span><span class="w"> </span>userGroupCounts:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">$exists</span>:<span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="o">})</span>
+<span class="c1"># should equal</span>
+db.MetadataKeys.countDocuments<span class="o">()</span>
+</code></pre></div>
+<blockquote>
+<p>⚠️ <strong>Do not interrupt.</strong> The migration wipes <code>MetadataKeys</code> at the start with <code>deleteMany</code>. If interrupted, re-run <code>migrate:db:up</code> — the wipe ensures a clean slate on retry.</p>
+</blockquote>
+<hr>
+<h2 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>migrate:db:down
+</code></pre></div>
+<p>Wipes the entire <code>MetadataKeys</code> collection. The collection will be repopulated on the next <code>migrate:db:up</code>.</p>
+<p>Verify the rollback succeeded by checking the migration status:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>migrate:db:status
+</code></pre></div>
+<p>If the migration shows as <code>pending</code> it means the rollback was successful and the migration has not been run yet.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["instant"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
