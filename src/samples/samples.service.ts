@@ -231,7 +231,7 @@ export class SamplesService {
       );
     }
 
-    this.metadataKeysService.deleteMany(
+    await this.metadataKeysService.deleteMany(
       createMetadataKeysInstance(
         this.sampleModel.collection.name,
         deletedSample,
