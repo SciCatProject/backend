@@ -1098,31 +1098,29 @@ export class CaslAbilityFactory {
       createMongoAbility<PossibleAbilities, Conditions>,
     );
 
-    // Unauthenticated users can only read publicly accessible records
+    // All users (Unauthenticated or authenticated) can read publicly accessible records
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.PUBLIC,
+    });
+
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.REGISTERED,
+    });
+
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.AMENDED,
+    });
+
     if (!user) {
-      can(Action.Read, PublishedData, {
-        $or: [
-          { ownerGroup: { $exists: false } },
-          { status: PublishedDataStatus.PUBLIC },
-          { status: PublishedDataStatus.REGISTERED },
-          { status: PublishedDataStatus.AMENDED },
-        ],
-      });
       cannot(Action.Create, PublishedData);
       cannot(Action.Update, PublishedData);
       cannot(Action.Delete, PublishedData);
     } else {
       // Authenticated users
-      // Read access: public records (PUBLIC, REGISTERED, AMENDED) OR legacy (no ownerGroup) OR private records where user is owner
+      // Additional Read access: private records where user is owner
       can(Action.Read, PublishedData, {
-        $or: [
-          { ownerGroup: { $exists: false } },
-          { status: { $in: [PublishedDataStatus.PUBLIC, PublishedDataStatus.REGISTERED, PublishedDataStatus.AMENDED] } },
-          { $and: [
-            { status: PublishedDataStatus.PRIVATE },
-            { ownerGroup: { $in: user.currentGroups } },
-          ] },
-        ],
+        status: PublishedDataStatus.PRIVATE,
+        ownerGroup: { $in: user.currentGroups },
       });
 
       // Create access: all authenticated users can create
@@ -1130,14 +1128,13 @@ export class CaslAbilityFactory {
 
       // Update access: owner of the record OR legacy records (no ownerGroup)
       can(Action.Update, PublishedData, {
-        $or: [
-          { ownerGroup: { $in: user.currentGroups } },
-          { ownerGroup: { $exists: false } },
-        ],
+        ownerGroup: { $in: user.currentGroups },
       });
 
       // Delete access: only delete group members
-      if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
         can(Action.Delete, PublishedData);
       } else {
         cannot(Action.Delete, PublishedData);
