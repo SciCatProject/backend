@@ -13,6 +13,7 @@ import {
   Req,
   ForbiddenException,
   NotFoundException,
+  UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -48,6 +49,7 @@ import { CreateRawDatasetObsoleteDto } from "src/datasets/dto/create-raw-dataset
 import { CreateDerivedDatasetObsoleteDto } from "src/datasets/dto/create-derived-dataset-obsolete.dto";
 import { logger } from "@user-office-software/duo-logger";
 import { FullFacetFilters, FullFacetResponse } from "src/common/types";
+import { DatafilesMetadataValidationPipe } from "src/origdatablocks/pipes/datafiles-metadata-validation.pipe";
 
 @ApiBearerAuth()
 @ApiTags("origdatablocks")
@@ -163,6 +165,7 @@ export class OrigDatablocksController {
 
   // POST /origdatablocks
   @UseGuards(PoliciesGuard)
+  @UsePipes(DatafilesMetadataValidationPipe)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
@@ -619,6 +622,7 @@ export class OrigDatablocksController {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockUpdate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
   @ApiOperation({
     summary: "It updates the origdatablock.",
