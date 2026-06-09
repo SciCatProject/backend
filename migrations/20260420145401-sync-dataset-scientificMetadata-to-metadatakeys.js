@@ -181,6 +181,23 @@ module.exports = {
       .collection("MetadataKeys")
       .updateMany({}, [{ $set: { id: "$_id" } }, { $unset: ["metaKeyId"] }]);
 
+    // In the datasets.scientificMetadata these keys are field names, so they're URL-encoded for
+    // Mongo field-name rules. Store them decoded here so incoming queries — from the frontend or other
+    // services hitting scicat directly — match without re-encoding every query value first.
+    await db.collection("MetadataKeys").updateMany({ key: /%/ }, [
+      {
+        $set: {
+          key: {
+            $function: {
+              body: "function(k) { try { return decodeURIComponent(k); } catch (e) { return k; } }",
+              args: ["$key"],
+              lang: "js",
+            },
+          },
+        },
+      },
+    ]);
+
     const result = await db.collection("MetadataKeys").countDocuments();
     console.log(
       `[${elapsed()}] Migration completed — Total MetadataKeys: ${result.toLocaleString()}`,

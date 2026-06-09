@@ -127,7 +127,16 @@ export class MetadataKeysService {
     const filters = Object.entries(metadata).map(([key, entry]) => {
       const humanReadableName =
         (entry as ScientificMetadataEntry).human_name ?? "";
-      return { sourceType, key, humanReadableName };
+
+      // The source model uses these keys as object field names, so they're URL-encoded
+      // to satisfy Mongo's field-name rules. Here the key is a value, not a field name,
+      // so store the decoded version.
+      const originalKey = decodeURIComponent(key);
+      return {
+        sourceType,
+        key: originalKey,
+        humanReadableName,
+      };
     });
 
     const queryFilter = { $or: filters };
