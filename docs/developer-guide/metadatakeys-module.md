@@ -80,21 +80,16 @@ Runs three sequential steps:
 
 ##### `replaceManyFromSource(oldDoc, newDoc)`
 
-Called when a dataset is **updated**. Diffs the old and new `scientificMetadata` to produce three disjoint key sets:
+Called when a dataset is **updated**. Executes a two-step replacement:
 
-| Set     | Keys             | Action                                                               |
-| ------- | ---------------- | -------------------------------------------------------------------- |
-| Added   | Only in `newDoc` | `insertManyFromSource`                                               |
-| Removed | Only in `oldDoc` | `deleteMany`                                                         |
-| Shared  | In both          | `updateSharedKeys` (group / isPublished / humanReadableName changes) |
+1. Calls `deleteMany(oldDoc)` — removes all metadata keys from the old dataset
+2. Calls `insertManyFromSource(newDoc)` — inserts all metadata keys from the new dataset
 
-The three sets are disjoint by `_id` so they run in parallel via `Promise.all`.
+This sequential approach ensures all changes to `usageCount`, `userGroupCounts`, and `userGroups` are applied consistently. The net effect is that:
 
-For shared keys, three things are handled independently:
-
-- **userGroups changed** — added groups are incremented, removed groups are decremented, then `userGroups` array is recomputed from the updated counts
-- **isPublished flipped true** — sets `isPublished: true` inline; `false` is left to the cronjob
-- **humanReadableName changed** — since `humanReadableName` is part of `_id`, this is treated as a delete of the old document + insert of a new one
+- Keys no longer present in the updated dataset are decremented and removed if their usage drops to zero
+- Keys newly present or with changed `sourceType` / `humanReadableName` are inserted fresh with correct counts
+- Keys that remain but belong to different groups or have changed `isPublished` status are handled by the insert logic
 
 ---
 
@@ -104,7 +99,7 @@ Each `MetadataKey` document has the following key fields:
 
 | Field               | Type                  | Description                                                                              |
 | ------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `_id`               | `string`              | Composite key: `${sourceType}_${key}_${humanReadableName}`                               |
+| `_id`               | `ObjectId`            | Generated UUID; logical identity is `(sourceType, key, humanReadableName)`               |
 | `key`               | `string`              | The raw metadata key name                                                                |
 | `humanReadableName` | `string`              | Human-readable label from `human_name`, empty string if absent                           |
 | `sourceType`        | `string`              | Source collection: `Dataset`, `Proposal`, `Sample`, etc.                                 |
@@ -188,8 +183,8 @@ Partial search on `humanReadableName`:
 
 The `MetadataKeys` collection is populated by a migration script that must be run manually before the service is deployed for the first time.
 
-See: `migrations/20260417145401-sync-dataset-scientificMetadata-to-metadatakeys.js`
+See: `migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.js`
 
-Documentation: `migrations/20260417145401-sync-dataset-scientificMetadata-to-metadatakeys.md`
+Documentation: `migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.md`
 
 > ⚠️ The application will start normally without the migration, but the MetadataKeys service will return empty results until it is run.
