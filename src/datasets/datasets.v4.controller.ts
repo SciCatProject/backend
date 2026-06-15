@@ -88,7 +88,10 @@ import { HistoryClass } from "./schemas/history.schema";
 import { LifecycleClass } from "./schemas/lifecycle.schema";
 import { RelationshipClass } from "./schemas/relationship.schema";
 import { TechniqueClass } from "./schemas/technique.schema";
-import { EventEmitInterceptor } from "src/common/interceptors/eventEmit.Interceptor";
+import {
+  EVENT_METHODS,
+  EventEmitInterceptor,
+} from "src/common/interceptors/eventEmit.Interceptor";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -97,7 +100,6 @@ import { EventEmitInterceptor } from "src/common/interceptors/eventEmit.Intercep
   TechniqueClass,
   RelationshipClass,
 )
-@UseInterceptors(EventEmitInterceptor("dataset.updated"))
 @ApiTags("datasets v4")
 /* NOTE: Generated SDK method names include "V4" twice:
  *  - From the controller class name (DatasetsV4Controller)
@@ -307,6 +309,7 @@ export class DatasetsV4Controller {
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
     new UTCTimeInterceptor<DatasetClass>(["endTime"]),
     new FormatPhysicalQuantitiesInterceptor<DatasetClass>("scientificMetadata"),
+    EventEmitInterceptor(EVENT_METHODS.POST),
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
