@@ -467,4 +467,65 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .expect(TestData.NotFoundStatusCode)
       .expect("Content-Type", /json/);
   });
+
+  describe("Ajv extensions are executed on create/save", () => {
+    const { metadata, ...strippedPublishedData } = publishedData;
+    const expectedPublicationYear = new Date().getFullYear();
+    let id;
+
+    it("should set 'metadata.publicationYear' on create", async () => {
+      return request(appUrl)
+        .post("/api/v4/PublishedData")
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+          id = encodeURIComponent(res.body.doi);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on patch", async () => {
+      return request(appUrl)
+        .patch(`/api/v4/PublishedData/${id}`)
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on resync", async () => {
+      request(appUrl)
+        .post(`/api/v4/PublishedData/${id}/resync`)
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+
+      return request(appUrl)
+        .get(`/api/v4/PublishedData/${id}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
+  });
 });
