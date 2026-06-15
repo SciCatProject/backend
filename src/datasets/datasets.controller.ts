@@ -121,7 +121,10 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { DATASET_LOOKUP_FIELDS } from "./types/dataset-lookup";
 import { getSwaggerDatasetFilterContentV3 } from "./types/dataset-filter-content.v3";
 import { Filter } from "./decorators/filter.decorator";
-import { EventEmitInterceptor } from "src/common/interceptors/eventEmit.Interceptor";
+import {
+  EVENT_METHODS,
+  EventEmitInterceptor,
+} from "src/common/interceptors/eventEmit.Interceptor";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -132,7 +135,6 @@ import { EventEmitInterceptor } from "src/common/interceptors/eventEmit.Intercep
   TechniqueClass,
   RelationshipClass,
 )
-@UseInterceptors(EventEmitInterceptor("dataset.updated"))
 @ApiTags("datasets")
 @Controller({ path: "datasets", version: "3" })
 export class DatasetsController {
@@ -547,6 +549,7 @@ export class DatasetsController {
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
     new UTCTimeInterceptor<DatasetClass>(["endTime"]),
     new FormatPhysicalQuantitiesInterceptor<DatasetClass>("scientificMetadata"),
+    EventEmitInterceptor(EVENT_METHODS.POST),
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
