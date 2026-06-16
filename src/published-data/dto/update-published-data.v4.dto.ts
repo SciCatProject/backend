@@ -52,7 +52,7 @@ export class UpdatePublishedDataV4Dto {
    */
   @IsObject()
   @IsOptional()
-  readonly metadata?: Record<string, unknown> = {};
+  readonly metadata?: Record<string, unknown>;
 }
 
 export class PartialUpdatePublishedDataV4Dto extends PartialType(

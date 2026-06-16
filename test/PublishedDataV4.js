@@ -469,11 +469,11 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
   });
 
   describe("Ajv extensions are executed on create/save", () => {
-    const { metadata, ...strippedPublishedData } = publishedData;
+    const strippedPublishedData = { ...publishedData, metadata: {} };
     const expectedPublicationYear = new Date().getFullYear();
     let id;
 
-    it("should set 'metadata.publicationYear' on create", async () => {
+    it("should set 'metadata.publicationYear' on create", () => {
       return request(appUrl)
         .post("/api/v4/PublishedData")
         .send(strippedPublishedData)
@@ -490,7 +490,7 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
         });
     });
 
-    it("should set 'metadata.publicationYear' on patch", async () => {
+    it("should set 'metadata.publicationYear' on patch", () => {
       return request(appUrl)
         .patch(`/api/v4/PublishedData/${id}`)
         .send(strippedPublishedData)
@@ -507,7 +507,7 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
     });
 
     it("should set 'metadata.publicationYear' on resync", async () => {
-      request(appUrl)
+      await request(appUrl)
         .post(`/api/v4/PublishedData/${id}/resync`)
         .send(strippedPublishedData)
         .set("Accept", "application/json")
