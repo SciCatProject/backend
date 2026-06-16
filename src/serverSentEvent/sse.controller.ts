@@ -56,7 +56,7 @@ export class SseController {
   @CheckPolicies(
     "runtimeconfig",
     (ability: AppAbility) =>
-      ability.can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig), //TODO: define a correct policy for monitoring connections
+      ability.can(Action.RuntimeConfigUpdate, RuntimeConfig), //TODO: define a correct policy for monitoring connections
   )
   @ApiOperation({
     summary: "List active SSE connections on this instance.",
