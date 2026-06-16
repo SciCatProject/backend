@@ -45,7 +45,7 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
 import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
 import { OidcClientModule } from "./common/openid-client/openid-client.module";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { EventsModule } from "./serverSideEvent/serverSideEvent.module";
+import { SseModule } from "./serverSentEvent/sse.module";
 import type { MailerOptions } from "@nestjs-modules/mailer";
 
 @Module({
@@ -56,7 +56,7 @@ import type { MailerOptions } from "@nestjs-modules/mailer";
       cache: true,
     }),
     AuthModule,
-    EventsModule,
+    SseModule,
     OidcClientModule,
     CaslModule,
     AttachmentsModule,
