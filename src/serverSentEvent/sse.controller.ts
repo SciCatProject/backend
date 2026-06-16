@@ -10,8 +10,7 @@ import { Observable } from "rxjs";
 
 import { Request } from "express";
 import { map } from "rxjs/operators";
-import { EventsService } from "./serverSideEvent.service";
-import { ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { Action } from "src/casl/action.enum";
 import { AppAbility } from "src/casl/casl-ability.factory";
@@ -19,13 +18,14 @@ import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
+import { SseService } from "./sse.service";
 
+@ApiTags("events")
 @Controller("events")
 @ApiBearerAuth()
-export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+export class SseController {
+  constructor(private readonly sseService: SseService) {}
 
-  // SSE stream endpoint
   @Sse("stream")
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
@@ -33,7 +33,7 @@ export class EventsController {
   )
   stream(@Req() request: Request): Observable<MessageEvent> {
     const user = request.user as JWTUser;
-    return this.eventsService
+    return this.sseService
       .getEvents(user)
       .pipe(map((payload) => ({ data: payload })));
   }
@@ -46,6 +46,6 @@ export class EventsController {
       ability.can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig), //TODO: define a correct policy for monitoring connections
   )
   connections() {
-    return this.eventsService.getAllConnections();
+    return this.sseService.getAllConnections();
   }
 }

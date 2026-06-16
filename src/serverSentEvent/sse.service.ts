@@ -4,13 +4,13 @@ import { MessageEvent } from "@nestjs/common";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { randomUUID } from "crypto";
 
-interface HasAccessGroups {
+export interface HasAccessGroups {
   ownerGroup?: string;
   accessGroups?: string[];
 }
 
 @Injectable()
-export class EventsService {
+export class SseService {
   private readonly MAX_CONNECTIONS_PER_USER = 5;
   private clients = new Map<
     string,
@@ -24,7 +24,7 @@ export class EventsService {
 
     if (userConnectionCount >= this.MAX_CONNECTIONS_PER_USER) {
       throw new ForbiddenException(
-        "Maximum number of open connections reached",
+        `Maximum number of ${this.MAX_CONNECTIONS_PER_USER} open connections reached`,
       );
     }
 
