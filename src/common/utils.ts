@@ -13,7 +13,7 @@ import { ScientificRelation } from "./scientific-relation.enum";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
 import { isPlainObject, mapValues, omit, pickBy, some } from "lodash";
 import { MetadataSourceDoc } from "src/metadata-keys/metadatakeys.service";
-import { IJobFields } from "src/jobs/interfaces/job-filters.interface";
+import type { IJobFields } from "src/jobs/interfaces/job-filters.interface";
 
 // add Å to mathjs accepted units as equivalent to angstrom
 const isAlphaOriginal = Unit.isValidAlpha;
@@ -1382,7 +1382,7 @@ export function addAccessMatchToPipeline<T>(
   access: FilterQuery<T>,
   fields: IJobFields,
 ) {
-  if (fields["text"]) {
+  if ("text" in fields) {
     pipeline.splice(1, 0, {
       $match: access,
     });
