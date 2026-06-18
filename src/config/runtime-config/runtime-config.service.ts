@@ -21,6 +21,7 @@ import { UpdateRuntimeConfigDto } from "./dto/update-runtime-config.dto";
  * Apply a JSON Merge Patch (RFC 7396) to a target object.
  * - Keys with non-null values are added or updated in the target.
  * - Keys with null values are removed from the target.
+ * - Nested objects are merged recursively.
  */
 function applyMergePatch(
   target: Record<string, unknown>,
@@ -30,6 +31,17 @@ function applyMergePatch(
   for (const [key, value] of Object.entries(patch)) {
     if (value === null) {
       delete result[key];
+    } else if (
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      typeof result[key] === "object" &&
+      result[key] !== null &&
+      !Array.isArray(result[key])
+    ) {
+      result[key] = applyMergePatch(
+        result[key] as Record<string, unknown>,
+        value as Record<string, unknown>,
+      );
     } else {
       result[key] = value;
     }
@@ -94,7 +106,7 @@ export class RuntimeConfigService implements OnModuleInit {
       throw new BadRequestException("Patch body must be a JSON object");
     }
 
-    const existing = await this.runtimeConfigModel.findOne({ cid: cid }).lean();
+    const existing = await this.runtimeConfigModel.findOne({ cid }).lean();
 
     if (!existing) {
       throw new NotFoundException(`Config '${cid}' not found`);
@@ -108,14 +120,10 @@ export class RuntimeConfigService implements OnModuleInit {
     const updateData = addUpdatedByField({ data: mergedData }, user.username);
 
     const updatedDoc = await this.runtimeConfigModel.findOneAndUpdate(
-      { cid: cid },
+      { cid },
       { $set: { ...updateData } },
       { new: true },
     );
-
-    if (!updatedDoc) {
-      throw new NotFoundException(`Config '${cid}' not found`);
-    }
 
     Logger.log(
       `Patched app config entry '${cid}' by user '${updateData.updatedBy}'`,

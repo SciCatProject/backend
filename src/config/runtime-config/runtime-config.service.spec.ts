@@ -191,6 +191,40 @@ describe("RuntimeConfigService", () => {
         ),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it("recursively merges nested objects", async () => {
+      const existing = {
+        cid: "frontendConfig",
+        data: { nested: { a: 1, b: 2 }, top: "level" },
+      };
+      const updated = {
+        cid: "frontendConfig",
+        data: { nested: { a: 99, b: 2 }, top: "level" },
+        updatedBy: "admin",
+      };
+      model.findOne.mockReturnValue({ lean: () => existing });
+      model.findOneAndUpdate.mockResolvedValue(updated);
+
+      const patch = { nested: { a: 99 } };
+      const user = { username: "admin" };
+      const res = await service.patchConfig(
+        "frontendConfig",
+        patch,
+        user as JWTUser,
+      );
+
+      expect(res).toEqual(updated);
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { cid: "frontendConfig" },
+        {
+          $set: expect.objectContaining({
+            data: { nested: { a: 99, b: 2 }, top: "level" },
+            updatedBy: "admin",
+          }),
+        },
+        { new: true },
+      );
+    });
   });
 
   describe("syncConfig", () => {
