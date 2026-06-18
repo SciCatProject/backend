@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -15,6 +16,26 @@ import {
 } from "./schemas/runtime-config.schema";
 import { addCreatedByFields, addUpdatedByField } from "src/common/utils";
 import { UpdateRuntimeConfigDto } from "./dto/update-runtime-config.dto";
+
+/**
+ * Apply a JSON Merge Patch (RFC 7396) to a target object.
+ * - Keys with non-null values are added or updated in the target.
+ * - Keys with null values are removed from the target.
+ */
+function applyMergePatch(
+  target: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...target };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) {
+      delete result[key];
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
 
 @Injectable()
 export class RuntimeConfigService implements OnModuleInit {
@@ -58,6 +79,46 @@ export class RuntimeConfigService implements OnModuleInit {
     }
     Logger.log(
       `Updated app config entry '${cid}' by user '${updateData.updatedBy}'`,
+      "RuntimeConfigService",
+    );
+
+    return updatedDoc;
+  }
+
+  async patchConfig(
+    cid: string,
+    patch: Record<string, unknown>,
+    user: JWTUser,
+  ): Promise<OutputRuntimeConfigDto | null> {
+    if (typeof patch !== "object" || patch === null || Array.isArray(patch)) {
+      throw new BadRequestException("Patch body must be a JSON object");
+    }
+
+    const existing = await this.runtimeConfigModel.findOne({ cid: cid }).lean();
+
+    if (!existing) {
+      throw new NotFoundException(`Config '${cid}' not found`);
+    }
+
+    const mergedData = applyMergePatch(
+      existing.data as Record<string, unknown>,
+      patch,
+    );
+
+    const updateData = addUpdatedByField({ data: mergedData }, user.username);
+
+    const updatedDoc = await this.runtimeConfigModel.findOneAndUpdate(
+      { cid: cid },
+      { $set: { ...updateData } },
+      { new: true },
+    );
+
+    if (!updatedDoc) {
+      throw new NotFoundException(`Config '${cid}' not found`);
+    }
+
+    Logger.log(
+      `Patched app config entry '${cid}' by user '${updateData.updatedBy}'`,
       "RuntimeConfigService",
     );
 
