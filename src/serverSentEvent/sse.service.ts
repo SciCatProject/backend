@@ -11,7 +11,7 @@ export interface HasAccessGroups {
 
 @Injectable()
 export class SseService {
-  private readonly MAX_CONNECTIONS_PER_USER = 5;
+  private readonly MAX_CONNECTIONS_PER_USER_PER_INSTANCE = 5;
   private clients = new Map<
     string,
     { user: JWTUser; subject: Subject<MessageEvent> }
@@ -22,9 +22,9 @@ export class SseService {
       (c) => c.user._id === user._id,
     ).length;
 
-    if (userConnectionCount >= this.MAX_CONNECTIONS_PER_USER) {
+    if (userConnectionCount >= this.MAX_CONNECTIONS_PER_USER_PER_INSTANCE) {
       throw new ForbiddenException(
-        `Maximum number of ${this.MAX_CONNECTIONS_PER_USER} open connections reached`,
+        `Maximum number of ${this.MAX_CONNECTIONS_PER_USER_PER_INSTANCE} open connections reached`,
       );
     }
 
