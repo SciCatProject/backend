@@ -44,11 +44,11 @@ export class SseService {
   emit(event: { message: HasAccessGroups; type: string }) {
     for (const [, { user, subject }] of this.clients) {
       const userGroups = user.currentGroups ?? [];
-      const instanceOnwerGroup = event.message.ownerGroup ?? "";
+      const instanceOwnerGroup = event.message.ownerGroup ?? "";
       const instanceAccessGroups = event.message.accessGroups ?? [];
 
       const canAccess =
-        userGroups.includes(instanceOnwerGroup) ||
+        userGroups.includes(instanceOwnerGroup) ||
         instanceAccessGroups.some((g) => userGroups.includes(g)) ||
         userGroups.includes("admin");
 
