@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { UpdateSampleDto } from "./update-sample.dto";
 
 export class CreateSampleDto extends UpdateSampleDto {
@@ -8,4 +8,11 @@ export class CreateSampleDto extends UpdateSampleDto {
   @IsString()
   @IsOptional()
   readonly sampleId?: string;
+
+  /**
+   * The name of the sample.
+   */
+  @IsString()
+  @IsNotEmpty()
+  declare readonly sampleName: string;
 }

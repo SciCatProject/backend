@@ -10,7 +10,7 @@ import {
   ILimitsFilter,
 } from "src/common/interfaces/common.interface";
 import { JobLookupKeysEnum, JOB_LOOKUP_FIELDS } from "./types/job-lookup";
-import { parsePipelineProjection } from "src/common/utils";
+import { parsePipelineProjection, parsePipelineSort } from "src/common/utils";
 import {
   addCreatedByFields,
   addUpdatedByField,
@@ -157,12 +157,17 @@ export class JobsService {
       });
     }
 
-    const sort = filter.sort ?? parseLimitFilters(filter.order).sort;
-    if (sort && !isEmpty(sort)) pipeline.push({ $sort: sort });
-    if (filter.limits?.limit) pipeline.push({ $limit: filter.limits.limit });
-    if (filter.limits?.skip) pipeline.push({ $skip: filter.limits.skip });
+    const limits = parseLimitFilters(filter.limits);
+    if (!isEmpty(limits.sort)) {
+      const sort = parsePipelineSort(limits.sort);
+      pipeline.push({ $sort: sort });
+    } else {
+      pipeline.push({ $sort: { createdAt: 1 } });
+    }
+    if (limits?.limit) pipeline.push({ $limit: limits.limit });
+    if (limits?.skip) pipeline.push({ $skip: limits.skip });
 
-    if (access) pipeline.unshift({ $match: access });
+    if (!isEmpty(access)) pipeline.unshift({ $match: access });
     const data = await this.jobModel
       .aggregate<PartialIntermediateOutputJobDto>(pipeline)
       .exec();

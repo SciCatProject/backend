@@ -6,7 +6,8 @@ let accessTokenAdminIngestor = null,
   userIdUser1 = null,
   accessTokenUser1 = null,
   userIdUser2 = null,
-  accessTokenUser2 = null;
+  accessTokenUser2 = null,
+  adminIngestorUserId = null;
 
 describe("2350: Users: Login with functional accounts", () => {
   it("0010: Admin ingestor login fails with incorrect credentials", async () => {
@@ -34,6 +35,7 @@ describe("2350: Users: Login with functional accounts", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("user").and.be.instanceof(Object);
+        adminIngestorUserId = res.body.userId;
       });
   });
 });
@@ -259,6 +261,27 @@ describe("2370: Change password", () => {
           "message",
           "Only local users passwords can be changed by admin",
         );
+      });
+  });
+
+  it("0080: Request with expired token should return SESSION_EXPIRED", async () => {
+    const response = await request(appUrl)
+      .post(`/api/v3/users/${adminIngestorUserId}/jwt`)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .send({ expiresIn: "-5" });
+
+    const expiredAccessToken = response.body.jwt;
+    return request(appUrl)
+      .post("/api/v3/datasets")
+      .set("Accept", "application/json")
+      .set({
+        Authorization: `Bearer ${expiredAccessToken}`,
+      })
+      .send({})
+      .expect(401)
+      .then((res) => {
+        res.body.message.should.equal("SESSION_EXPIRED");
       });
   });
 });

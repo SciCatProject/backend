@@ -14,6 +14,7 @@ import {
   ForbiddenException,
   NotFoundException,
   InternalServerErrorException,
+  UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -67,7 +68,8 @@ import {
 } from "./types/origdatablock-lookup";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
+import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
+import { parseDate } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiTags("origdatablocks v4")
@@ -387,6 +389,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.CREATED)
   @Post()
   @ApiOperation({
@@ -444,6 +447,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
   @ApiOperation({
@@ -747,6 +751,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockUpdate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
   @ApiOperation({
     summary: "It updates the origdatablock",
@@ -773,21 +778,16 @@ export class OrigDatablocksV4Controller {
     @Param("id") id: string,
     @Body() updateOrigDatablockDto: PartialUpdateOrigDatablockDto,
   ): Promise<OrigDatablock | null> {
-    const datablock = (await this.checkPermissionsForOrigDatablockWrite(
+    await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
       Action.OrigdatablockUpdate,
-    )) as OrigDatablock;
-
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      datablock.updatedAt,
-      request.headers["if-unmodified-since"],
     );
-
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
       id,
       updateOrigDatablockDto,
+      unmodifiedSince,
     );
 
     if (origdatablock) {

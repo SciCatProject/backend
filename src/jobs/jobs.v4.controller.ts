@@ -343,6 +343,7 @@ export class JobsV4Controller {
 
   /**
    * Get jobs v4
+   * GET /api/v4/jobs
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>

@@ -5,7 +5,7 @@
   },
   "statusBannerMessage": "",
   "statusBannerCode": "INFO",
-  "checkBoxFilterClickTrigger": false,
+  "autoApplyFilters": false,
   "accessTokenPrefix": "Bearer ",
   "addDatasetEnabled": false,
   "allowConfigOverrides": true,

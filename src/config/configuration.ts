@@ -75,6 +75,7 @@ const configuration = () => {
     datasetTypes: {},
     proposalTypes: {},
     opensearchConfig: {},
+    datafilesMetadataSchema: { type: "object", additionalProperties: false },
   };
   const jsonConfigFileList: { [key: string]: string } = {
     frontendConfig:
@@ -89,6 +90,8 @@ const configuration = () => {
       process.env.PUBLISHED_DATA_CONFIG_FILE || "publishedDataConfig.json",
     opensearchConfig:
       process.env.OPENSEARCH_CONFIG_FILE || "opensearchConfig.json",
+    datafilesMetadataSchema:
+      process.env.DATAFILES_METADATA_SCHEMA || "datafilesMetadataSchema.json",
   };
   Object.keys(jsonConfigFileList).forEach((key) => {
     const filePath = jsonConfigFileList[key];
@@ -106,6 +109,7 @@ const configuration = () => {
       const configsWithExampleFallback = [
         "publishedDataConfig",
         "opensearchConfig",
+        "datafilesMetadataSchema",
       ];
       if (configsWithExampleFallback.includes(key)) {
         console.warn(
@@ -268,7 +272,9 @@ const configuration = () => {
         : [],
       //End of History
 
-      updateDatasetLifecycle: updateDatasetLifecycleGroups,
+      updateDatasetLifecycle: updateDatasetLifecycleGroups
+        .split(",")
+        .map((v) => v.trim()),
       policy: policyGroups.split(",").map((v) => v.trim()),
       proposal: proposalGroups.split(",").map((v) => v.trim()),
       sample: sampleGroups.split(",").map((v) => v.trim()),
@@ -277,9 +283,13 @@ const configuration = () => {
       attachmentPrivileged: attachmentPrivilegedGroups
         .split(",")
         .map((v) => v.trim()),
-      createJobPrivileged: createJobPrivilegedGroups,
-      updateJobPrivileged: updateJobPrivilegedGroups,
-      deleteJob: deleteJobGroups,
+      createJobPrivileged: createJobPrivilegedGroups
+        .split(",")
+        .map((v) => v.trim()),
+      updateJobPrivileged: updateJobPrivilegedGroups
+        .split(",")
+        .map((v) => v.trim()),
+      deleteJob: deleteJobGroups.split(",").map((v) => v.trim()),
     },
     datasetCreationValidationEnabled: boolean(datasetCreationValidationEnabled),
     datasetCreationValidationRegex: datasetCreationValidationRegex,
@@ -306,6 +316,10 @@ const configuration = () => {
       apiUrl: process.env.ACCESS_GROUPS_SERVICE_REST_API_URL,
       userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
     },
+    accessGroupsLdapPayloadConfig: {
+      enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
+      accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY || "cn", // Examples: "cn" or "ou"
+    },
     doiPrefix: process.env.DOI_PREFIX,
     expressSession: {
       secret: process.env.EXPRESS_SESSION_SECRET,
@@ -329,9 +343,11 @@ const configuration = () => {
         bindCredentials: process.env.LDAP_BIND_CREDENTIALS || "",
         searchBase: process.env.LDAP_SEARCH_BASE || "",
         searchFilter: process.env.LDAP_SEARCH_FILTER || "",
+        groupSearchBase: process.env.LDAP_GROUP_SEARCH_BASE || "",
+        groupSearchFilter: process.env.LDAP_GROUP_SEARCH_FILTER || "",
         Mode: process.env.LDAP_MODE ?? "ad",
         externalIdAttr: process.env.LDAP_EXTERNAL_ID ?? "sAMAccountName",
-        usernameAttr: process.env.LDAP_USERNAME ?? "displayName",
+        usernameAttr: process.env.LDAP_USERNAME_ATTR ?? "displayName",
       },
     },
     oidc: {
@@ -446,6 +462,7 @@ const configuration = () => {
     publishedDataConfig: jsonConfigMap.publishedDataConfig,
     ajvCustomDefinitions: ajvCustomDefinitions,
     opensearchConfig: jsonConfigMap.opensearchConfig,
+    datafilesMetadataSchema: jsonConfigMap.datafilesMetadataSchema,
   };
   return merge(config, localconfiguration);
 };

@@ -4,6 +4,7 @@ import {
   Scope,
   ForbiddenException,
   NotFoundException,
+  PreconditionFailedException,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -45,6 +46,7 @@ import {
 } from "./types/origdatablock-lookup";
 import { isEmpty } from "lodash";
 import { CountApiResponse } from "src/common/types";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class OrigDatablocksService {
@@ -341,18 +343,14 @@ export class OrigDatablocksService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto: PartialUpdateOrigDatablockDto,
+    unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     const username = (this.request.user as JWTUser).username;
-    const existingOrigDatablock = await this.origDatablockModel
-      .findOne({ _id: id })
-      .exec();
-    if (!existingOrigDatablock) {
-      throw new NotFoundException(`OrigDatablock #${id} not found`);
-    }
-
+    let filter: FilterQuery<OrigDatablockDocument> = { _id: id };
+    filter = withOCCFilter(filter, unmodifiedSince);
     const patchedOrigDatablock = await this.origDatablockModel
       .findOneAndUpdate(
-        { _id: id },
+        filter,
         addUpdatedByField(
           updateDatasetDto as UpdateQuery<OrigDatablockDocument>,
           username,
@@ -360,7 +358,14 @@ export class OrigDatablocksService {
         { new: true },
       )
       .exec();
-
+    if (!patchedOrigDatablock) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(`OrigDatablock #${id} not found`);
+      }
+      throw new PreconditionFailedException(
+        `OrigDatablock #${id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
+      );
+    }
     return patchedOrigDatablock;
   }
 
@@ -376,5 +381,27 @@ export class OrigDatablocksService {
       .countDocuments(whereFilter)
       .exec();
     return { count };
+  }
+
+  async aggregateSizeAndFileCount(
+    datasetId: string,
+  ): Promise<{ size: number; numberOfFiles: number }> {
+    const [result] = await this.origDatablockModel
+      .aggregate<{ size: number; numberOfFiles: number }>([
+        { $match: { datasetId } },
+        {
+          $group: {
+            _id: null,
+            size: { $sum: "$size" },
+            numberOfFiles: {
+              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
+            },
+          },
+        },
+      ])
+      .exec();
+    return result
+      ? { size: result.size, numberOfFiles: result.numberOfFiles }
+      : { size: 0, numberOfFiles: 0 };
   }
 }
