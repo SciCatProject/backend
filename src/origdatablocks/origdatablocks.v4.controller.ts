@@ -722,7 +722,7 @@ export class OrigDatablocksV4Controller {
   @ApiResponse({
     status: HttpStatus.OK,
     type: CountApiResponse,
-    description: 
+    description:
       "Return the number of files in the following format: { count: integer }",
   })
   async countFiles(
@@ -738,9 +738,9 @@ export class OrigDatablocksV4Controller {
           fields: false,
           limits: false,
         },
-    ),
-  )
-  queryFilter?: string,
+      ),
+    )
+    queryFilter?: string,
   ) {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
     const mergedFilter = this.addAccessBasedFilters(
