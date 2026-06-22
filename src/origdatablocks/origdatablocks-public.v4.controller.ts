@@ -14,7 +14,11 @@ import {
   IOrigDatablockFields,
   IOrigDatablockFiltersV4,
 } from "./interfaces/origdatablocks.interface";
-import { FullFacetFilters, FullFacetResponse } from "src/common/types";
+import {
+  FullFacetFilters,
+  FullFacetResponse,
+  CountApiResponse,
+} from "src/common/types";
 import { getSwaggerOrigDatablockFilterContent } from "./types/origdatablock-filter-content";
 import {
   OrigDatablockLookupKeysEnum,
@@ -236,5 +240,53 @@ export class OrigDatablocksPublicV4Controller {
     });
 
     return origdatablock;
+  }
+
+  // GET /origdatablocks/public/files/count
+  @AllowAny()
+  @Get("/files/count")
+  @ApiOperation({
+    summary: "It returns the count of public files",
+    description:
+      "It returns the total number of public files across all origdatablocks matching the provided filter.",
+  })
+  @ApiQuery({
+    name: "filter",
+    description:
+      "Database filters to apply when retrieving count of public files",
+    required: false,
+    type: String,
+    content: getSwaggerOrigDatablockFilterContent({
+      where: true,
+      include: false,
+      fields: false,
+      limits: false,
+    }),
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CountApiResponse,
+    description:
+      "Return the number of public files in the following format: { count: integer }",
+  })
+  async countFilesPublic(
+    @Query(
+      "filter",
+      new FilterValidationPipe(
+        ALLOWED_ORIGDATABLOCK_KEYS,
+        ALLOWED_ORIGDATABLOCK_FILTER_KEYS,
+        {
+          where: true,
+          include: false,
+          fields: false,
+          limits: false,
+        },
+      ),
+    )
+    queryFilter: string,
+  ) {
+    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+
+    return this.origDatablocksService.countFiles(parsedFilter);
   }
 }
