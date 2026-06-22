@@ -3,6 +3,8 @@ import { Subject, Observable, finalize } from "rxjs";
 import { MessageEvent } from "@nestjs/common";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { randomUUID } from "crypto";
+import { ConfigService } from "@nestjs/config";
+import { AccessGroupsType } from "src/config/configuration";
 
 export interface HasAccessGroups {
   ownerGroup?: string;
@@ -16,6 +18,12 @@ export class SseService {
     string,
     { user: JWTUser; subject: Subject<MessageEvent> }
   >();
+  private accessGroups;
+
+  constructor(private configService: ConfigService) {
+    this.accessGroups =
+      this.configService.get<AccessGroupsType>("accessGroups");
+  }
 
   getEvents(user: JWTUser): Observable<MessageEvent> {
     const userConnectionCount = [...this.clients.values()].filter(
@@ -41,19 +49,24 @@ export class SseService {
     );
   }
 
-  emit(event: { message: HasAccessGroups; type: string }) {
+  emit(event: { message: HasAccessGroups; action: string; entity: string }) {
     for (const [, { user, subject }] of this.clients) {
       const userGroups = user.currentGroups ?? [];
       const instanceOwnerGroup = event.message.ownerGroup ?? "";
       const instanceAccessGroups = event.message.accessGroups ?? [];
 
+      // TODO: this logic is duplicated from CaslAbilityFactory, consider centralizing it
+      // after the refacor of CaslAbilityFactory is done
       const canAccess =
         userGroups.includes(instanceOwnerGroup) ||
         instanceAccessGroups.some((g) => userGroups.includes(g)) ||
-        userGroups.includes("admin");
+        userGroups.some((g) => this.accessGroups?.admin?.includes(g));
 
       if (canAccess) {
-        subject.next({ type: event.type, data: event.message });
+        subject.next({
+          type: `${event.entity}.${event.action}`,
+          data: event.message,
+        });
       }
     }
   }

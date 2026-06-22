@@ -90,8 +90,6 @@ import { HistoryClass } from "./schemas/history.schema";
 import { LifecycleClass } from "./schemas/lifecycle.schema";
 import { RelationshipClass } from "./schemas/relationship.schema";
 import { TechniqueClass } from "./schemas/technique.schema";
-import { EVENT_METHODS } from "src/serverSentEvent/interceptors/sse.interceptor";
-import { EmitSse } from "src/serverSentEvent/decorators/sse.decorator";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -256,7 +254,6 @@ export class DatasetsV4Controller {
     new UTCTimeInterceptor<DatasetClass>(["endTime"]),
     new FormatPhysicalQuantitiesInterceptor<DatasetClass>("scientificMetadata"),
   )
-  @EmitSse(EVENT_METHODS.DATASET_CREATED)
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
   @UseInterceptors(ClassSerializerInterceptor)
