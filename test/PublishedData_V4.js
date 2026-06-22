@@ -38,7 +38,7 @@ const nonpublictestdataset = {
   ownerGroup: "examplenonpublicgroup",
 };
 
-describe("1600: PublishedDataV4: Test of access to published data v4 endpoints", () => {
+describe("1610: PublishedDataV4: Test of access to published data v4 endpoints", () => {
   before(async () => {
     db.collection("Dataset").deleteMany({});
     db.collection("PublishedData").deleteMany({});
@@ -100,7 +100,9 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.have.property("title").and.be.string;
+        res.body.should.have
+          .property("title")
+          .and.be.string(publishedData.title);
         res.body.should.have.property("metadata");
         res.body.metadata.should.have.property("publisher");
         res.body.should.have.property("status").and.equal(defaultStatus);

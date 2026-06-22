@@ -1358,6 +1358,7 @@ const TestData = {
       landingPage: "doi.ess.eu/detail/",
     },
     datasetPids: [],
+    ownerGroup: "admin",
   },
 
   InstrumentCorrect1: {
