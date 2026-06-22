@@ -283,7 +283,7 @@ export class OrigDatablocksPublicV4Controller {
         },
       ),
     )
-    queryFilter: string,
+    queryFilter?: string,
   ) {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
 

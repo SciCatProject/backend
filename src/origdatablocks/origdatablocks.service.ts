@@ -387,7 +387,7 @@ export class OrigDatablocksService {
     filter: FilterQuery<OrigDatablockDocument>,
   ): Promise<CountApiResponse> {
     const whereFilter: FilterQuery<OrigDatablockDocument> = filter.where ?? {};
-    const fieldsProjection: string[] = filter.fields ?? {};
+    const fieldsProjection: string[] = filter.fields ?? [];
 
     const pipeline: PipelineStage[] = [{ $match: whereFilter }];
     this.addLookupFields(pipeline, filter.include);
@@ -422,7 +422,7 @@ export class OrigDatablocksService {
       .aggregate<{ count: number }>(pipeline)
       .exec();
 
-    return { count: result.count ?? 0 };
+    return { count: result?.count ?? 0 };
   }
 
   async aggregateSizeAndFileCount(
