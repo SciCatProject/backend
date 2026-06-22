@@ -122,8 +122,6 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { DATASET_LOOKUP_FIELDS } from "./types/dataset-lookup";
 import { getSwaggerDatasetFilterContentV3 } from "./types/dataset-filter-content.v3";
 import { Filter } from "./decorators/filter.decorator";
-import { EmitSse } from "src/serverSentEvent/decorators/sse.decorator";
-import { EVENT_METHODS } from "src/serverSentEvent/interceptors/sse.interceptor";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -628,7 +626,6 @@ export class DatasetsController {
     new UTCTimeInterceptor<DatasetClass>(["endTime"]),
     new FormatPhysicalQuantitiesInterceptor<DatasetClass>("scientificMetadata"),
   )
-  @EmitSse(EVENT_METHODS.DATASET_CREATED)
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
   @ApiOperation({
