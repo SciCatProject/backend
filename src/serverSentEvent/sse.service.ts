@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { Subject, Observable, finalize } from "rxjs";
 import { MessageEvent } from "@nestjs/common";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -19,6 +23,7 @@ export class SseService {
     { user: JWTUser; subject: Subject<MessageEvent> }
   >();
   private accessGroups;
+  public sseEnabled = false;
 
   constructor(private configService: ConfigService) {
     this.accessGroups =
@@ -26,6 +31,9 @@ export class SseService {
   }
 
   getEvents(user: JWTUser): Observable<MessageEvent> {
+    if (!this.sseEnabled) {
+      throw new ServiceUnavailableException("SSE are not enabled.");
+    }
     const userConnectionCount = [...this.clients.values()].filter(
       (c) => c.user._id === user._id,
     ).length;
@@ -72,6 +80,9 @@ export class SseService {
   }
 
   getAllConnections() {
+    if (!this.sseEnabled) {
+      throw new ServiceUnavailableException("SSE are not enabled.");
+    }
     const counts = new Map<string, number>();
 
     for (const { user } of this.clients.values()) {
