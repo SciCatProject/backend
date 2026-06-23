@@ -39,7 +39,18 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
     private readonly sseService: SseService,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
+    const isReplicaSet = await this.isDbReplicaSet();
+
+    if (!isReplicaSet) {
+      Logger.debug(
+        "MongoDB is not running as a replica set. SSE change streams are disabled.",
+      );
+      return;
+    }
+
+    this.sseService.sseEnabled = isReplicaSet;
+
     this.changeStream = this.connection.watch([
       {
         $match: {
@@ -73,6 +84,15 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
       action: action,
       entity: config.entity,
     });
+  }
+
+  private async isDbReplicaSet(): Promise<boolean> {
+    try {
+      const info = await this.connection.db?.admin().command({ check: 1 });
+      return Boolean(info?.setName);
+    } catch {
+      return false;
+    }
   }
 
   onModuleDestroy() {
