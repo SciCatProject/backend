@@ -5,6 +5,7 @@
   },
   "statusBannerMessage": "",
   "statusBannerCode": "INFO",
+  "enableRealTimeUpdates": true,
   "autoApplyFilters": false,
   "accessTokenPrefix": "Bearer ",
   "addDatasetEnabled": false,
