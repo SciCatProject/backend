@@ -42,6 +42,7 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     const isReplicaSet = await this.isDbReplicaSet();
 
+    console.log("isReplicaSet", isReplicaSet);
     if (!isReplicaSet) {
       Logger.debug(
         "MongoDB is not running as a replica set. SSE change streams are disabled.",
@@ -88,7 +89,7 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
 
   private async isDbReplicaSet(): Promise<boolean> {
     try {
-      const info = await this.connection.db?.admin().command({ check: 1 });
+      const info = await this.connection.db?.admin().command({ hello: 1 });
       return Boolean(info?.setName);
     } catch {
       return false;
