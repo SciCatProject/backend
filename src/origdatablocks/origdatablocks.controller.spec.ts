@@ -10,15 +10,19 @@ import { Request } from "express";
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
   findByIdAndUpdate = jest.fn();
+  aggregateSizeAndFileCount = jest.fn();
 }
 
-class DatasetsServiceMock {}
+class DatasetsServiceMock {
+  findByIdAndUpdate = jest.fn();
+}
 
 class CaslAbilityFactoryMock {}
 
 describe("OrigDatablocksController", () => {
   let controller: OrigDatablocksController;
   let origDatablocksService: OrigDatablocksServiceMock;
+  let datasetsService: DatasetsServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,10 +38,10 @@ describe("OrigDatablocksController", () => {
     controller = module.get<OrigDatablocksController>(OrigDatablocksController);
     origDatablocksService = module.get<OrigDatablocksService>(
       OrigDatablocksService,
-    );
-
-    // Mock internal methods
-    controller["updateDatasetSizeAndFiles"] = jest.fn();
+    ) as unknown as OrigDatablocksServiceMock;
+    datasetsService = module.get<DatasetsService>(
+      DatasetsService,
+    ) as unknown as DatasetsServiceMock;
   });
 
   it("should be defined", () => {
@@ -54,6 +58,11 @@ describe("OrigDatablocksController", () => {
       updatedAt: new Date(Date.now() - 1000),
       datasetId: "ds1",
     };
+
+    beforeEach(() => {
+      // Isolate the update handler from the side-effect helper
+      controller["updateDatasetSizeAndFiles"] = jest.fn();
+    });
 
     it("should throw NotFoundException if datablock not found before update", async () => {
       origDatablocksService.findOne.mockResolvedValue(null);
@@ -158,6 +167,42 @@ describe("OrigDatablocksController", () => {
           "ds1",
         );
       });
+    });
+  });
+
+  describe("updateDatasetSizeAndFiles", () => {
+    it("should use aggregateSizeAndFileCount and update the dataset", async () => {
+      origDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+        size: 2000,
+        numberOfFiles: 5,
+      });
+
+      await controller["updateDatasetSizeAndFiles"]("testPid");
+
+      expect(
+        origDatablocksService.aggregateSizeAndFileCount,
+      ).toHaveBeenCalledWith("testPid");
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "testPid",
+        {
+          size: 2000,
+          numberOfFiles: 5,
+        },
+      );
+    });
+
+    it("should propagate zero totals when no origdatablocks exist", async () => {
+      origDatablocksService.aggregateSizeAndFileCount.mockResolvedValue({
+        size: 0,
+        numberOfFiles: 0,
+      });
+
+      await controller["updateDatasetSizeAndFiles"]("emptyPid");
+
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "emptyPid",
+        { size: 0, numberOfFiles: 0 },
+      );
     });
   });
 });
