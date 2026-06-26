@@ -177,10 +177,7 @@ export class HistoryController {
     status: HttpStatus.OK,
     description: "History count retrieved successfully",
   })
-  async countHistory(
-    @Req() request: Request,
-    @Query("filter") filter: string,
-  ) {
+  async countHistory(@Req() request: Request, @Query("filter") filter: string) {
     // Parse the filter JSON
     let parsedFilter: FilterQuery<GenericHistoryDocument>;
     try {
