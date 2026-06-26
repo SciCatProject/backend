@@ -14,6 +14,7 @@ import {
   ForbiddenException,
   NotFoundException,
   InternalServerErrorException,
+  UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -67,6 +68,7 @@ import {
 } from "./types/origdatablock-lookup";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
+import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
 import { parseDate } from "src/common/utils";
 
 @ApiBearerAuth()
@@ -367,6 +369,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.CREATED)
   @Post()
   @ApiOperation({
@@ -424,6 +427,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
   @ApiOperation({
@@ -727,6 +731,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockUpdate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
   @ApiOperation({
     summary: "It updates the origdatablock",
