@@ -11,12 +11,4 @@ export class CreateMetadataKeyDto extends UpdateMetadataKeyDto {
   })
   @IsString()
   sourceType: string;
-
-  @ApiProperty({
-    type: String,
-    required: true,
-    description: "Unique identifier of the source item this key is linked to.",
-  })
-  @IsString()
-  sourceId: string;
 }
