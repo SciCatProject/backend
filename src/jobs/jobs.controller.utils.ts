@@ -273,8 +273,10 @@ export class JobsControllerUtils {
     return jobInstance;
   }
 
-  isAlwaysFalseQuery(q: Record<string, unknown>): boolean {
-    const expr = q.$expr as { $eq?: unknown } | undefined;
+  isAlwaysFalseQuery(query: unknown): boolean {
+    if (!query || typeof query !== "object") return false;
+
+    const expr = (query as { $expr?: { $eq?: unknown } }).$expr;
     const eq = expr?.$eq;
 
     // This function tests for the following expression
@@ -289,10 +291,10 @@ export class JobsControllerUtils {
     );
   }
 
-  isEmptyObject(q: unknown): boolean {
-    return (q &&
-      typeof q === "object" &&
-      Object.keys(q).length === 0) as boolean;
+  isEmptyObject(query: unknown): query is Record<string, unknown> {
+    return (
+      !!query && typeof query === "object" && Object.keys(query).length === 0
+    );
   }
 
   /**
@@ -300,35 +302,22 @@ export class JobsControllerUtils {
    */
   readAccessFilter(user: JWTUser) {
     const abilities = this.caslAbilityFactory.jobAccess(user);
-    const queries = [accessibleBy(abilities, Action.JobRead).ofType(JobClass)];
-
-    // Remove the "always false" query that is returned by accessibleBy() casl function
-    // when the user does not have permission
-    // The expression returned is:
-    // { $expr: { $eq: [0, 1] } }
-    const meaningfulQueries = queries.filter(
-      (q) => !this.isAlwaysFalseQuery(q),
-    );
-
-    // If any query provides unrestricted access,
-    // which is coded as an empty object( {} ),
-    // it just returns {}
-    if (meaningfulQueries.some((q) => this.isEmptyObject(q))) {
-      return {};
-    }
+    const query = accessibleBy(abilities, Action.JobRead).ofType(JobClass);
 
     // No access at all:
-    // return the expressions provided by accessibleBy() casl function
-    if (meaningfulQueries.length === 0) {
+    // Return an "always false" query as returned by accessibleBy() casl function
+    // when the user does not have permission
+    if (this.isAlwaysFalseQuery(query)) {
       return { $expr: { $eq: [0, 1] } };
     }
 
-    // Single condition doesn't need $or
-    if (meaningfulQueries.length === 1) {
-      return meaningfulQueries[0];
+    // Unrestricted access
+    // Coded in accessbileBy as an empty object( {} )
+    if (this.isEmptyObject(query)) {
+      return {};
     }
 
-    return { $or: meaningfulQueries };
+    return query;
   }
 
   /**
