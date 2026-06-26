@@ -1,63 +1,34 @@
 import {
   AbilityBuilder,
   ExtractSubjectType,
-  InferSubjects,
   MongoAbility,
-  MongoQuery,
   createMongoAbility,
 } from "@casl/ability";
+import { accessibleBy } from "@casl/mongoose";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Attachment } from "src/attachments/schemas/attachment.schema";
+import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { JobConfig } from "src/config/job-config/jobconfig.interface";
-import { JobConfigService } from "src/config/job-config/jobconfig.service";
+import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
+import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
+import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
+import { Opensearch } from "src/opensearch/opensearch.subject";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
+import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
-import { UserIdentity } from "src/users/schemas/user-identity.schema";
-import { UserSettings } from "src/users/schemas/user-settings.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
-import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
-import { accessibleBy } from "@casl/mongoose";
-import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
-import { Opensearch } from "src/opensearch/opensearch.subject";
-
-type Subjects =
-  | string
-  | InferSubjects<
-      | typeof Attachment
-      | typeof Datablock
-      | typeof DatasetClass
-      | typeof Instrument
-      | typeof JobClass
-      | typeof Logbook
-      | typeof OrigDatablock
-      | typeof Policy
-      | typeof ProposalClass
-      | typeof PublishedData
-      | typeof SampleClass
-      | typeof User
-      | typeof UserIdentity
-      | typeof UserSettings
-      | typeof Opensearch
-      | typeof Datablock
-      | typeof RuntimeConfig
-      | typeof MetadataKeyClass
-    >
-  | "all";
-type PossibleAbilities = [Action, Subjects];
-type Conditions = MongoQuery;
+import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -75,22 +46,22 @@ export class CaslAbilityFactory {
   private endpointAccessors: {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
+    attachments: this.attachmentEndpointAccess,
+    datablocks: this.datablockEndpointAccess,
     datasets: this.datasetEndpointAccess,
-    opensearch: this.opensearchEndpointAccess,
-    jobs: this.jobsEndpointAccess,
+    history: this.historyEndpointAccess,
     instruments: this.instrumentEndpointAccess,
+    jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
+    metadataKeys: this.metadataKeysEndpointAccess,
+    opensearch: this.opensearchEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
+    runtimeconfig: this.runtimeConfigEndpointAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
-    attachments: this.attachmentEndpointAccess,
-    history: this.historyEndpointAccess,
-    datablocks: this.datablockEndpointAccess,
-    runtimeconfig: this.runtimeConfigEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -2314,7 +2285,7 @@ export class CaslAbilityFactory {
         can(Action.AttachmentUpdateInstance, Attachment);
         can(Action.AttachmentDeleteInstance, Attachment);
 
-        can(Action.accessAny, Attachment);
+        can(Action.AccessAny, Attachment);
       } else if (
         user.currentGroups.some((g) =>
           this.accessGroups?.attachmentPrivileged.includes(g),
@@ -2399,7 +2370,7 @@ export class CaslAbilityFactory {
       // users belonging to any of the group listed in ADMIN_GROUPS
       // -------------------------------------
 
-      can(Action.accessAny, PublishedData);
+      can(Action.AccessAny, PublishedData);
     }
 
     return build({
