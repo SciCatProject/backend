@@ -32,7 +32,6 @@ const mockOrigDatablock: OrigDatablock = {
 
 describe("OrigdatablocksService", () => {
   let service: OrigDatablocksService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let model: Model<OrigDatablock>;
 
   beforeEach(async () => {

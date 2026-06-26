@@ -15,7 +15,7 @@ describe("CaslAbilityFactory", () => {
         configService,
         new JobConfigService({}, {}, configService),
         new DatasetAbility(configService),
-      )
+      ),
     ).toBeDefined();
   });
 
