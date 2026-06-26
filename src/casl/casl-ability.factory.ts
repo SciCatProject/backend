@@ -4,7 +4,6 @@ import {
   MongoAbility,
   createMongoAbility,
 } from "@casl/ability";
-import { accessibleBy } from "@casl/mongoose";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
