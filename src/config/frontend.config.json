@@ -9,6 +9,7 @@
   "accessTokenPrefix": "Bearer ",
   "addDatasetEnabled": false,
   "allowConfigOverrides": true,
+  "addScientificMetadataKeysAsColumn": true,
   "archiveWorkflowEnabled": false,
   "datasetReduceEnabled": true,
   "datasetJsonScientificMetadata": true,
@@ -51,6 +52,12 @@
   "logbookEnabled": false,
   "loginFormEnabled": true,
   "thumbnailFetchLimitPerPage": 100,
+  "metadataFloatFormatEnabled": true,
+  "metadataFloatFormat": {
+    "significantDigits": 6,
+    "minCutoff": 0.001,
+    "maxCutoff": 1000
+  },
   "metadataPreviewEnabled": true,
   "metadataStructure": "",
   "multipleDownloadAction": "http:/127.0.0.1:3012/zip",
