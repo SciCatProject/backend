@@ -13,6 +13,7 @@ import {
   Req,
   ForbiddenException,
   NotFoundException,
+  UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -40,7 +41,6 @@ import { IOrigDatablockFields } from "./interfaces/origdatablocks.interface";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
 import { filterDescription, filterExample, parseDate } from "src/common/utils";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
@@ -48,6 +48,7 @@ import { CreateRawDatasetObsoleteDto } from "src/datasets/dto/create-raw-dataset
 import { CreateDerivedDatasetObsoleteDto } from "src/datasets/dto/create-derived-dataset-obsolete.dto";
 import { logger } from "@user-office-software/duo-logger";
 import { FullFacetFilters, FullFacetResponse } from "src/common/types";
+import { DatafilesMetadataValidationPipe } from "src/origdatablocks/pipes/datafiles-metadata-validation.pipe";
 
 @ApiBearerAuth()
 @ApiTags("origdatablocks")
@@ -163,6 +164,7 @@ export class OrigDatablocksController {
 
   // POST /origdatablocks
   @UseGuards(PoliciesGuard)
+  @UsePipes(DatafilesMetadataValidationPipe)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
@@ -213,22 +215,10 @@ export class OrigDatablocksController {
   }
 
   async updateDatasetSizeAndFiles(pid: string) {
-    // updates datasets size
-    const parsedFilters: IFilters<OrigDatablockDocument, IOrigDatablockFields> =
-      { where: { datasetId: pid } };
-    const datasetOrigdatablocks =
-      await this.origDatablocksService.findAll(parsedFilters);
+    const { size, numberOfFiles } =
+      await this.origDatablocksService.aggregateSizeAndFileCount(pid);
 
-    const updateDatasetDto: PartialUpdateDatasetDto = {
-      size: datasetOrigdatablocks
-        .map((od) => od.size)
-        .reduce((ps, a) => ps + a, 0),
-      numberOfFiles: datasetOrigdatablocks
-        .map((od) => od.dataFileList.length)
-        .reduce((ps, a) => ps + a, 0),
-    };
-
-    await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto);
+    await this.datasetsService.findByIdAndUpdate(pid, { size, numberOfFiles });
   }
 
   @UseGuards(PoliciesGuard)
@@ -619,6 +609,7 @@ export class OrigDatablocksController {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockUpdate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
   @ApiOperation({
     summary: "It updates the origdatablock.",
