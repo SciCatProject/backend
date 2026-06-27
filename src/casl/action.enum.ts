@@ -13,6 +13,9 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // MetadataKeys
+  MetadataKeyRead = "metadatakey_read",
+
   // ---------------
   // Datasets
   // endpoint authorization actions
@@ -266,15 +269,6 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
-
-  // -------------------------------------
-  // MetadataKeys
-  // -------------------------------------
-  // metadatakeys endpoint authorization
-  MetadataKeysReadEndpoint = "metadatakeys_read_endpoint",
-  // -------------------------------------
-  // metadatakeys data instance authorization
-  MetadataKeysReadInstance = "metadatakeys_read_instance",
 
   // -------------------------------------
   // RuntimeConfig
