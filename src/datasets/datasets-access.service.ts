@@ -40,26 +40,16 @@ export class DatasetsAccessService {
         return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
-        const ability =
-          this.caslAbilityFactory.origDatablockInstanceAccess(user);
-        const canViewAny = ability.can(
-          Action.OrigdatablockReadAny,
-          OrigDatablock,
-        );
-        const canViewAccess = ability.can(
-          Action.OrigdatablockReadManyAccess,
-          OrigDatablock,
-        );
-        const canViewOwner = ability.can(
-          Action.OrigdatablockReadManyOwner,
-          OrigDatablock,
-        );
-        const canViewPublic = ability.can(
-          Action.OrigdatablockReadManyPublic,
-          OrigDatablock,
-        );
+        const ability = this.caslAbilityFactory.origDatablockAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+        const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        return {
+          canViewAny,
+          canViewOwner: canView,
+          canViewAccess: canView,
+          canViewPublic: canView,
+        };
       }
       case DatasetLookupKeysEnum.datablocks: {
         const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
@@ -150,7 +140,7 @@ export class DatasetsAccessService {
       const { canViewAny, canViewAccess, canViewOwner } = access;
       if (!canViewAny) {
         let pipeline: PipelineStage.Lookup["$lookup"]["pipeline"];
-        if (canViewAccess) {
+        if (currentUser && canViewAccess) {
           pipeline = [
             {
               $match: {
@@ -163,7 +153,7 @@ export class DatasetsAccessService {
               },
             },
           ];
-        } else if (canViewOwner) {
+        } else if (currentUser && canViewOwner) {
           pipeline = [
             {
               $match: {
