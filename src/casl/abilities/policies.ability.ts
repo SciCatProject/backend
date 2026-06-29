@@ -22,9 +22,11 @@ export class PolicyAbility {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
   }
-  private accessGroups;
+  private accessGroups?: AccessGroupsType;
 
-  buildAbility(user: JWTUser): MongoAbility<PossibleAbilities, Conditions> {
+  buildAbility(
+    user: JWTUser | null,
+  ): MongoAbility<PossibleAbilities, Conditions> {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
