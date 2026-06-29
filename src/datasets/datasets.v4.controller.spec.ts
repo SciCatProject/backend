@@ -67,7 +67,7 @@ describe("DatasetsController (manual instantiate)", () => {
       can: () => true,
       cannot: () => false,
     }),
-    datasetInstanceAccess: jest.fn().mockReturnValue(true),
+    datasetAccess: jest.fn().mockReturnValue(true),
   } as unknown as jest.Mocked<CaslAbilityFactory>;
 
   class LogbooksServiceMock {}
