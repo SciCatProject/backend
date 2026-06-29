@@ -230,7 +230,7 @@ describe("2370: Change password", () => {
       })
       .set({ Authorization: `Bearer ${accessTokenUser1}` })
       .set("Accept", "application/json")
-      .expect(TestData.UnauthorizedStatusCode);
+      .expect(TestData.AccessForbiddenStatusCode);
   });
 
   it("0070: admin should fail to change password for user when new and confirmation passwords do not match", async () => {
