@@ -18,7 +18,9 @@ import { Logbook } from "src/logbooks/schemas/logbook.schema";
 export class LogbookAbility {
   constructor() {}
 
-  buildAbility(user: JWTUser): MongoAbility<PossibleAbilities, Conditions> {
+  buildAbility(
+    user: JWTUser | null,
+  ): MongoAbility<PossibleAbilities, Conditions> {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
