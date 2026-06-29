@@ -384,9 +384,11 @@ export class JobsControllerUtils {
         pid: { $in: datasetList.map((x) => x.pid) },
       },
     };
-    const requestUserGroups = this.isJobCreationPrivilegedUser(user)
+    const isPrivilegedUser = this.isPrivilegedUser(user);
+    const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
       : (user?.currentGroups ?? []);
+    const requestUserGroups = [...baseGroups];
     if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
       datasetsWhere.where.isPublished = true;
     else if (jobConfiguration.create.auth === CreateJobAuth.DatasetAccess) {
@@ -400,6 +402,8 @@ export class JobsControllerUtils {
         ];
     } else if (jobConfiguration.create.auth === CreateJobAuth.DatasetOwner) {
       if (!user) throw new UnauthorizedException("User not authenticated");
+      if (isPrivilegedUser)
+        requestUserGroups.push(jobCreateDto.ownerGroup as string);
       if (requestUserGroups.length === 0)
         throw new ForbiddenException(
           "User does not belong to any group, cannot create job with #datasetOwner authorization.",
