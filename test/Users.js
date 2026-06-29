@@ -212,7 +212,7 @@ describe("2370: Change password", () => {
 
   it("0050: anonymous user should not be able to access admin password change endpoint", async () => {
     return request(appUrl)
-      .patch(`/api/v3/users/${userIdAdmin}/password}`)
+      .patch(`/api/v3/users/${adminIngestorUserId}/password}`)
       .send({
         newPassword: "compromisedPassword",
         confirmPassword: "compromisedPassword",
@@ -223,7 +223,7 @@ describe("2370: Change password", () => {
 
   it("0060: authenticated user should not be able to access admin password change endpoint", async () => {
     return request(appUrl)
-      .patch(`/api/v3/users/${userIdAdmin}/password}`)
+      .patch(`/api/v3/users/${adminIngestorUserId}/password}`)
       .send({
         newPassword: "compromisedPassword",
         confirmPassword: "compromisedPassword",
