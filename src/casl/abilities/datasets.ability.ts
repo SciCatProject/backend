@@ -25,7 +25,7 @@ export class DatasetAbility {
   private accessGroups?: AccessGroupsType;
 
   buildAbility(
-    user: JWTUser |null,
+    user: JWTUser | null,
   ): MongoAbility<PossibleAbilities, Conditions> {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
