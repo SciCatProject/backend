@@ -13,6 +13,10 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // RuntimeConfig
+  RuntimeConfigRead = "runtimeconfig_read",
+  RuntimeConfigUpdate = "runtimeconfig_update",
+
   // ---------------
   // Datasets
   // endpoint authorization actions
@@ -275,11 +279,4 @@ export enum Action {
   // -------------------------------------
   // metadatakeys data instance authorization
   MetadataKeysReadInstance = "metadatakeys_read_instance",
-
-  // -------------------------------------
-  // RuntimeConfig
-  // -------------------------------------
-  // runtimeconfig endpoint authorization
-  RuntimeConfigReadEndpoint = "runtimeconfig_read_endpoint",
-  RuntimeConfigUpdateEndpoint = "runtimeconfig_update_endpoint",
 }
