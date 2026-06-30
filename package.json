@@ -33,7 +33,7 @@
     "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml up  -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
   },
   "dependencies": {
-    "@casl/ability": "^6.3.2",
+    "@casl/ability": "^7.0.0",
     "@casl/mongoose": "^8.0.4",
     "@nestjs-modules/mailer": "^2",
     "@nestjs/axios": "^4",
