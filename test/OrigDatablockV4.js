@@ -909,15 +909,57 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     });
   });
 
+  describe("OrigDatablocks v4 count tests", () => {
+    it("0600: should not be able to fetch the count of origdatablocks files if not logged in", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0601: should be able to fetch the count of origdatablocks files", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.greaterThan(0);
+        });
+    });
+  });
+
   describe("OrigDatablocks v4 delete tests", () => {
-    it("0600: should not be able to delete origdatablock if not logged in", () => {
+    it("0700: should not be able to delete origdatablock if not logged in", () => {
       return request(appUrl)
         .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0601: should not be able to delete origdatablock as owner", () => {
+    it("0701: should not be able to delete origdatablock as owner", () => {
       return request(appUrl)
         .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
         .auth(accessTokenUser1, { type: "bearer" })
@@ -925,7 +967,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0602: should not be able to delete origdatablock as adminIngestor", () => {
+    it("0702: should not be able to delete origdatablock as adminIngestor", () => {
       return request(appUrl)
         .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -933,7 +975,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0603: should be able to delete origdatablock as archivemanager", () => {
+    it("0703: should be able to delete origdatablock as archivemanager", () => {
       return request(appUrl)
         .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
         .auth(accessTokenArchiveManager, { type: "bearer" })

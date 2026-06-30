@@ -373,8 +373,33 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
     });
   });
 
+  describe("OrigDatablocks v4 public count tests", () => {
+    it("0300: should be able to fetch the count of origdatablocks files providing where filter", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/public/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+          res.body.count.should.be.greaterThan(0);
+        });
+    });
+  });
+
   describe("Cleanup after the tests", () => {
-    it("0300: delete all origdatablocks as archivemanager", async () => {
+    it("0400: delete all origdatablocks as archivemanager", async () => {
       return await request(appUrl)
         .get("/api/v4/origdatablocks")
         .auth(accessTokenArchiveManager, { type: "bearer" })
@@ -385,7 +410,7 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
         });
     });
 
-    it("0301: delete all datasets as archivemanager", async () => {
+    it("0401: delete all datasets as archivemanager", async () => {
       return await request(appUrl)
         .get("/api/v4/datasets")
         .auth(accessTokenArchiveManager, { type: "bearer" })
