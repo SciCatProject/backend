@@ -58,6 +58,10 @@ describe("DatasetsController (manual instantiate)", () => {
       .mockImplementation((pid: string, updateDto) => ({
         pid,
         ...updateDto,
+        toObject: jest.fn().mockReturnValue({
+          pid,
+          ...updateDto,
+        }),
       })),
   } as unknown as jest.Mocked<DatasetsService>;
 

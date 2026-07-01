@@ -19,6 +19,8 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
+  ClassSerializerInterceptor,
+  SerializeOptions,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -308,6 +310,11 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary:
       "It creates a new dataset. Type should be raw, derived or any of the customized types available in your instance",
@@ -338,7 +345,7 @@ export class DatasetsV4Controller {
     try {
       const createdDataset = await this.datasetsService.create(datasetDto);
 
-      return createdDataset;
+      return (createdDataset as DatasetDocument).toObject();
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
@@ -409,6 +416,11 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of datasets.",
     description:
@@ -679,6 +691,11 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiParam({
     name: "pid",
     description: "Id of the dataset to return",
@@ -734,6 +751,11 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Patch("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It partially updates the dataset.",
     description: `It updates the dataset through the pid specified. It updates only the specified fields.
@@ -805,7 +827,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       updateDatasetDtoForService,
       unmodifiedSince,
     );
-    return updatedDataset;
+    return updatedDataset
+      ? (updatedDataset as DatasetDocument).toObject()
+      : null;
   }
 
   // GET /datasets/:id/datasetlifecycle
@@ -966,7 +990,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       updateDatasetDto,
     );
 
-    return outputDatasetDto;
+    return outputDatasetDto
+      ? (outputDatasetDto as DatasetDocument).toObject()
+      : null;
   }
 
   // DELETE /datasets/:id
@@ -1002,7 +1028,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
 
     const removedDataset = await this.datasetsService.findByIdAndDelete(pid);
 
-    return removedDataset;
+    return removedDataset
+      ? (removedDataset as DatasetDocument).toObject()
+      : null;
   }
 
   @UseGuards(PoliciesGuard)
