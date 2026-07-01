@@ -4,13 +4,16 @@ import {
   Get,
   HttpStatus,
   Param,
+  Patch,
   Put,
   Req,
   UseGuards,
+  ValidationPipe,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -82,5 +85,44 @@ export class RuntimeConfigController {
       updateRuntimeConfigDto,
       user,
     );
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("runtimeconfig", (ability: AppAbility) =>
+    ability.can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig),
+  )
+  @Patch(":id")
+  @ApiConsumes("application/merge-patch+json", "application/json")
+  @ApiParam({
+    name: "id",
+    description: "Runtime config cid (e.g. frontendConfig, frontendTheme)",
+    schema: { type: "string" },
+  })
+  @ApiBody({
+    type: Object,
+    description:
+      "Partial runtime config data to merge into existing config (JSON Merge Patch - RFC 7396). " +
+      "Fields with non-null values are added/updated; fields with null values are removed.",
+  })
+  @ApiOkResponse({ type: OutputRuntimeConfigDto })
+  @ApiNotFoundResponse({ description: "Config ':id' not found" })
+  @ApiOperation({
+    summary: "Partially update runtime configuration by cid (JSON Merge Patch)",
+  })
+  async patchConfig(
+    @Req() request: Request,
+    @Param("id") cid: string,
+    @Body(
+      new ValidationPipe({
+        whitelist: false,
+        forbidNonWhitelisted: false,
+        forbidUnknownValues: false,
+        transform: false,
+      }),
+    )
+    patch: Record<string, unknown>,
+  ): Promise<OutputRuntimeConfigDto | null> {
+    const user: JWTUser = request.user as JWTUser;
+    return await this.runtimeConfigService.patchConfig(cid, patch, user);
   }
 }
