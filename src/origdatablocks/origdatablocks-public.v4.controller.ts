@@ -287,6 +287,8 @@ export class OrigDatablocksPublicV4Controller {
   ) {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
 
+    this.addPublicFilter(parsedFilter);
+
     return this.origDatablocksService.countFiles(parsedFilter);
   }
 }
