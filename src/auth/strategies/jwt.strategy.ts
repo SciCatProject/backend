@@ -29,7 +29,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         fromSseQueryAsBearerToken,
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>("jwt.secret") || "defaultSecret",
+      secretOrKey:
+        configService.get<string>("jwt.secret") ??
+        (process.env.NODE_ENV === "production"
+          ? (() => {
+              throw new Error("jwt.secret is required");
+            })()
+          : "defaultSecret"),
     });
   }
 
