@@ -1,11 +1,20 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from "@nestjs/common";
+import { Request } from "express";
 import { RolesService } from "src/users/roles.service";
 import { UsersService } from "src/users/users.service";
 import { JWTUser } from "../interfaces/jwt-user.interface";
 import { User } from "src/users/schemas/user.schema";
 import { ConfigService } from "@nestjs/config";
+
+const fromSseQueryAsBearerToken = (req: Request): string | null => {
+  if (req.path.endsWith("events/stream")) {
+    const token = req.query?.token;
+    return typeof token === "string" ? token : null;
+  }
+  return null;
+};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req) => req?.query?.token || null,
+        fromSseQueryAsBearerToken,
       ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>("jwt.secret") || "defaultSecret",
