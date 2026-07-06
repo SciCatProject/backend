@@ -1,4 +1,3 @@
-// src/serverSentEvent/sse.listener.ts
 import {
   Injectable,
   Logger,
@@ -8,31 +7,32 @@ import {
 import { InjectConnection } from "@nestjs/mongoose";
 import { Connection } from "mongoose";
 import { ChangeStream, ChangeStreamDocument } from "mongodb";
-import { ClassConstructor, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { SseService } from "./sse.service";
 
 import { OutputDatasetDto } from "src/datasets/dto/output-dataset.dto";
-import { Collection } from "./interfaces/sse-registry.interface";
+import {
+  SseRegistry,
+  WatchableCollection,
+} from "./interfaces/sse-registry.interface";
+import { SseAction } from "./interfaces/sse-event.interface";
 
-// Registry to define which collections and operations should be listened to,
-// and how to transform the raw MongoDB documents into DTOs for SSE messages.
-const REGISTRY: Partial<
-  Record<Collection, { entity: string; dto: ClassConstructor<object> }>
-> = {
+const REGISTRY: SseRegistry = {
   Dataset: { entity: "Dataset", dto: OutputDatasetDto },
 };
 
-// Map MongoDB operations to event action names. Only listed operations are processed.
-const ACTION_BY_OPERATION: Record<string, string> = {
+const ACTION_BY_OPERATION: Record<string, SseAction> = {
   insert: "created",
-  // update: "updated",
-  // replace: "updated",
-  // delete: "deleted",
 };
 
 @Injectable()
 export class SseListener implements OnModuleInit, OnModuleDestroy {
-  private changeStream: ChangeStream;
+  private static readonly MAX_RECONNECT_ATTEMPTS = 5;
+  private static readonly BASE_RECONNECT_DELAY_MS = 2000;
+  private changeStream: ChangeStream | null = null;
+  private reconnectAttempts = 0;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private isShuttingDown = false;
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
@@ -40,17 +40,31 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
-    const isReplicaSet = await this.isDbReplicaSet();
-
-    console.log("isReplicaSet", isReplicaSet);
-    if (!isReplicaSet) {
+    if (!(await this.isDbReplicaSet())) {
       Logger.debug(
         "MongoDB is not running as a replica set. SSE change streams are disabled.",
       );
       return;
     }
 
-    this.sseService.sseEnabled = isReplicaSet;
+    this.sseService.enable();
+    this.startChangeStream();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    this.isShuttingDown = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    await this.changeStream?.close();
+    this.changeStream = null;
+  }
+
+  private startChangeStream() {
+    if (this.changeStream || this.isShuttingDown) {
+      return;
+    }
 
     this.changeStream = this.connection.watch([
       {
@@ -61,30 +75,61 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
       },
     ]);
 
-    this.changeStream.on("change", (change) => this.onStream(change));
-    this.changeStream.on("error", (err) =>
-      Logger.error(`SSE change stream is closed due to error: ${err}`),
-    );
+    this.changeStream.on("change", (change) => this.onChange(change));
+    this.changeStream.on("error", (err) => this.onStreamError(err));
+
+    this.reconnectAttempts = 0;
+    Logger.log("SSE change stream started");
   }
 
-  private onStream(change: ChangeStreamDocument) {
+  private onChange(change: ChangeStreamDocument): void {
     if (!("ns" in change) || !("coll" in change.ns)) {
       return;
     }
-    const config = REGISTRY[change.ns.coll as Collection];
+    const registryEntry = REGISTRY[change.ns.coll as WatchableCollection];
     const action = ACTION_BY_OPERATION[change.operationType];
-
-    if (!config || !action) return;
-
     const rawDoc = "fullDocument" in change ? change.fullDocument : null;
-
-    if (!rawDoc) return;
+    if (!registryEntry || !action || !rawDoc) {
+      return;
+    }
 
     this.sseService.emit({
-      message: plainToInstance(config.dto, rawDoc),
-      action: action,
-      entity: config.entity,
+      entity: registryEntry.entity,
+      action,
+      message: plainToInstance(registryEntry.dto, rawDoc),
     });
+  }
+  private async onStreamError(error: unknown): Promise<void> {
+    Logger.error(`SSE change stream closed due to error: ${error}`);
+
+    try {
+      await this.changeStream?.close();
+    } catch (closeError) {
+      Logger.error(
+        `Failed to close SSE change stream after error: ${closeError}`,
+      );
+    } finally {
+      this.changeStream = null;
+    }
+
+    if (this.isShuttingDown) {
+      return;
+    }
+
+    if (this.reconnectAttempts >= SseListener.MAX_RECONNECT_ATTEMPTS) {
+      Logger.error(
+        `Max reconnect attempts (${SseListener.MAX_RECONNECT_ATTEMPTS}) reached. SSE change stream will not restart automatically.`,
+      );
+      return;
+    }
+
+    this.reconnectAttempts += 1;
+    const delay =
+      SseListener.BASE_RECONNECT_DELAY_MS * 2 ** (this.reconnectAttempts - 1);
+    Logger.warn(
+      `Restarting SSE change stream in ${delay}ms (attempt ${this.reconnectAttempts}/${SseListener.MAX_RECONNECT_ATTEMPTS})`,
+    );
+    this.reconnectTimer = setTimeout(() => this.startChangeStream(), delay);
   }
 
   private async isDbReplicaSet(): Promise<boolean> {
@@ -94,9 +139,5 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
     } catch {
       return false;
     }
-  }
-
-  onModuleDestroy() {
-    return this.changeStream?.close();
   }
 }
