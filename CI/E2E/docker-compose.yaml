@@ -19,7 +19,7 @@ services:
     healthcheck:
       test: >
         mongosh --quiet --eval "
-          try { rs.status().ok }
+           try { if (rs.status().ok !== 1) quit(1) }
           catch { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '$$MONGO_RS_HOST' }] }) }
         "
       interval: 10s
