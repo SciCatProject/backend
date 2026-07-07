@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   datasetPid = null,
   origDatablockMinPid = null,
   origDatablockPid = null;
@@ -26,25 +25,33 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
 
     await request(appUrl)
       .post("/api/v4/datasets")
-      .send({...TestData.RawCorrectMinV4, isPublished: true})
+      .send({ ...TestData.RawCorrectMinV4, isPublished: true })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
         datasetPid = res.body.pid;
       });
-    
+
     await request(appUrl)
       .post("/api/v4/origdatablocks")
-      .send({...TestData.OrigDatablockV4MinCorrect, datasetId: datasetPid, isPublished: true})
+      .send({
+        ...TestData.OrigDatablockV4MinCorrect,
+        datasetId: datasetPid,
+        isPublished: true,
+      })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
         origDatablockMinPid = res.body._id;
       });
-    
+
     await request(appUrl)
       .post("/api/v4/origdatablocks")
-      .send({...TestData.OrigDatablockV4Correct, datasetId: datasetPid, isPublished: true})
+      .send({
+        ...TestData.OrigDatablockV4Correct,
+        datasetId: datasetPid,
+        isPublished: true,
+      })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
@@ -75,7 +82,7 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
       await deleteDataset(item);
     }
   }
-  
+
   async function processOrigDatablockArray(array) {
     for (const item of array) {
       await deleteOrigDatablock(item);
@@ -321,7 +328,9 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
   describe("OrigDatablocks v4 public findById tests", () => {
     it("0200: should fetch origdatablock by id", () => {
       return request(appUrl)
-        .get(`/api/v4/origdatablocks/public/${encodeURIComponent(origDatablockMinPid)}`)
+        .get(
+          `/api/v4/origdatablocks/public/${encodeURIComponent(origDatablockMinPid)}`,
+        )
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
