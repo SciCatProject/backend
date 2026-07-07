@@ -168,6 +168,23 @@ export class OrigDatablocksService {
       pipeline.push({ $project: projection });
     }
 
+    pipeline.push({
+      $lookup: {
+        from: "Dataset",
+        as: "dataset_temp",
+        let: { datasetId: "$datasetId" },
+        pipeline: [{ $match: { $expr: { $eq: ["$pid", "$$datasetId"] } } }],
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        datasetExist: { $gt: [{ $size: "$dataset_temp" }, 0] },
+      },
+    });
+
+    pipeline.push({ $unset: "dataset_temp" });
+
     pipeline.push({ $unwind: "$dataFileList" });
 
     if (!isEmpty(limits.sort)) {
@@ -264,6 +281,20 @@ export class OrigDatablocksService {
 
     const pipelineStages: PipelineStage[] = [
       { $match: filterQuery },
+      {
+        $lookup: {
+          from: "Dataset",
+          as: "dataset_temp",
+          let: { datasetId: "$datasetId" },
+          pipeline: [{ $match: { $expr: { $eq: ["$pid", "$$datasetId"] } } }],
+        },
+      },
+      {
+        $addFields: {
+          datasetExist: { $gt: [{ $size: "$dataset_temp" }, 0] },
+        },
+      },
+      { $unset: "dataset_temp" },
       { $unwind: "$dataFileList" },
       ...modifiers,
     ];
