@@ -5,6 +5,7 @@ const { TestData } = require("./TestData");
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
   datasetPid = null,
+  datasetPid2 = null,
   origDatablockMinPid = null,
   origDatablockPid = null;
 
@@ -33,6 +34,15 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
       });
 
     await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({ ...TestData.RawCorrectMinV4 })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        datasetPid2 = res.body.pid;
+      });
+
+    await request(appUrl)
       .post("/api/v4/origdatablocks")
       .send({
         ...TestData.OrigDatablockV4MinCorrect,
@@ -44,6 +54,15 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
       .then((res) => {
         origDatablockMinPid = res.body._id;
       });
+
+    await request(appUrl)
+      .post("/api/v4/origdatablocks")
+      .send({
+        ...TestData.OrigDatablockV4MinCorrect,
+        datasetId: datasetPid2,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode);
 
     await request(appUrl)
       .post("/api/v4/origdatablocks")
@@ -383,7 +402,56 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
   });
 
   describe("OrigDatablocks v4 public count tests", () => {
-    it("0300: should be able to fetch the count of origdatablocks files providing where filter", async () => {
+    let expectedTotal,
+      expectedTotalPublic,
+      expectedCountForPublicDatasetPid,
+      expectedCountForPublicDatasetPid2;
+
+    before(async () => {
+      const countFiles = async (match) => {
+        const res = await db
+          .collection("OrigDatablock")
+          .aggregate([
+            { $match: match },
+            { $unwind: "$dataFileList" },
+            { $count: "count" },
+          ])
+          .toArray();
+
+        return res[0]?.count ?? 0;
+      };
+
+      expectedTotal = await countFiles({});
+      expectedTotalPublic = await countFiles({ isPublished: true });
+      expectedCountForPublicDatasetPid = await countFiles({
+        datasetId: datasetPid,
+        isPublished: true,
+      });
+      expectedCountForPublicDatasetPid2 = await countFiles({
+        datasetId: datasetPid2,
+        isPublished: true,
+      });
+    });
+
+    it("0300: should be able to fetch the count of origdatablocks files without where filter", async () => {
+      const filter = {
+        where: {},
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/public/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+          res.body.count.should.equal(expectedTotalPublic);
+        });
+    });
+
+    it("0305: should be able to fetch the count of origdatablocks files for datasetPid", async () => {
       const filter = {
         where: {
           datasetId: {
@@ -402,32 +470,87 @@ describe("2900: OrigDatablock v4 public endpoint tests", () => {
           res.body.should.be.a("object");
           res.body.should.have.property("count");
           res.body.count.should.be.a("number");
-          res.body.count.should.be.greaterThan(0);
+          res.body.count.should.equal(expectedCountForPublicDatasetPid);
+        });
+    });
+
+    it("0310: should not fetch count of origdatablocks files for unpublished datasetPid2", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid2,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/public/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+          res.body.count.should.equal(expectedCountForPublicDatasetPid2);
+        });
+    });
+
+    it("0315: should return public count even when authenticated as admin", async () => {
+      const filter = {
+        where: {},
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/public/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+          res.body.count.should.not.equal(expectedTotal);
+          res.body.count.should.equal(expectedTotalPublic);
+        });
+    });
+
+    it("0320: should not fetch count of origdatablocks files for unpublished datasetPid2 as admin", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid2,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/public/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+          res.body.count.should.equal(expectedCountForPublicDatasetPid2);
         });
     });
   });
 
-  describe("Cleanup after the tests", () => {
-    it("0400: delete all origdatablocks as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/origdatablocks")
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          return processOrigDatablockArray(res.body);
-        });
-    });
+  after(async () => {
+    const odbs = await request(appUrl)
+      .get("/api/v4/origdatablocks")
+      .auth(accessTokenArchiveManager, { type: "bearer" });
+    await processOrigDatablockArray(odbs.body);
 
-    it("0401: delete all datasets as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/datasets")
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          return processDatasetArray(res.body);
-        });
-    });
+    const datasets = await request(appUrl)
+      .get("/api/v4/datasets")
+      .auth(accessTokenArchiveManager, { type: "bearer" });
+    await processDatasetArray(datasets.body);
   });
 });
