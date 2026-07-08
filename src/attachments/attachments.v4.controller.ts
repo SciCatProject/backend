@@ -148,7 +148,7 @@ export class AttachmentsV4Controller {
       filter.where = {};
     }
     const ability = this.caslAbilityFactory.attachmentInstanceAccess(user);
-    const canAccessAny = ability.can(Action.accessAny, Attachment);
+    const canAccessAny = ability.can(Action.AccessAny, Attachment);
 
     if (!canAccessAny) {
       if (filter.where["$and"]) {
