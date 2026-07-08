@@ -58,6 +58,7 @@ import {
   IsValidResponse,
   FullFacetFilters,
   FullFacetResponse,
+  CountApiResponse,
 } from "src/common/types";
 import { getSwaggerOrigDatablockFilterContent } from "./types/origdatablock-filter-content";
 import {
@@ -695,6 +696,60 @@ export class OrigDatablocksV4Controller {
     );
   }
 
+  // GET /origdatablocks/files/count
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
+    ability.can(Action.OrigdatablockRead, OrigDatablock),
+  )
+  @Get("/files/count")
+  @ApiOperation({
+    summary: "It returns the count of files",
+    description:
+      "It returns the total number of files across all origdatablocks matching the provided filter.",
+  })
+  @ApiQuery({
+    name: "filter",
+    description: "Database filters to apply when retrieving count for files",
+    required: false,
+    type: String,
+    content: getSwaggerOrigDatablockFilterContent({
+      where: true,
+      include: false,
+      fields: false,
+      limits: false,
+    }),
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CountApiResponse,
+    description:
+      "Return the number of files in the following format: { count: integer }",
+  })
+  async countFiles(
+    @Req() request: Request,
+    @Query(
+      "filter",
+      new FilterValidationPipe(
+        ALLOWED_ORIGDATABLOCK_KEYS,
+        ALLOWED_ORIGDATABLOCK_FILTER_KEYS,
+        {
+          where: true,
+          include: false,
+          fields: false,
+          limits: false,
+        },
+      ),
+    )
+    queryFilter?: string,
+  ) {
+    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const mergedFilter = this.addAccessBasedFilters(
+      request.user as JWTUser,
+      parsedFilter,
+    );
+
+    return this.origDatablocksService.countFiles(mergedFilter);
+  }
   // GET /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
