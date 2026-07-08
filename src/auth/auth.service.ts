@@ -12,8 +12,8 @@ import { User } from "src/users/schemas/user.schema";
 import { UsersService } from "../users/users.service";
 import { Request } from "express";
 import { OidcConfig } from "src/config/configuration";
-import { flattenObject, parseBoolean } from "src/common/utils";
-import { Issuer, TokenSet } from "openid-client";
+import { parseBoolean } from "src/common/utils";
+import { TokenSet } from "openid-client";
 import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
@@ -103,6 +103,8 @@ export class AuthService {
     const logoutResult = await this.additionalLogoutTasks(req, logoutURL);
 
     if (expressSessionSecret) {
+      delete req.session?.idToken;
+
       req.logout(async (err) => {
         if (err) {
           // we should provide a message
@@ -134,28 +136,31 @@ export class AuthService {
           };
         }
 
-        // If there is no LOGOUT_URL set try to get one from the issuer
-        const trustIssuer = await Issuer.discover(
-          `${oidcConfig?.issuer}/.well-known/openid-configuration`,
-        );
-        // Flatten the object in case the end_session url is nested.
-        const flattenTrustIssuer = flattenObject(trustIssuer);
+        const idToken = req.session?.idToken;
 
-        // Note search for "end_session" key into the flatten object
-        const endSessionEndpointKey = Object.keys(flattenTrustIssuer).find(
-          (key) => key.includes("end_session"),
-        );
+        try {
+          const client = await this.oidcClientService.getClient();
+          const endSessionUrl = client.endSessionUrl({
+            id_token_hint: idToken,
+            post_logout_redirect_uri: oidcConfig?.callbackURL
+              ? oidcConfig.callbackURL.replace(
+                  "/auth/oidc/callback",
+                  "/auth/logout",
+                )
+              : undefined,
+            client_id: oidcConfig?.clientID,
+          });
 
-        if (endSessionEndpointKey) {
-          // Get the end_session endpoint value
-          const endSessionEndpoint = flattenTrustIssuer[endSessionEndpointKey];
-
-          if (endSessionEndpoint) {
+          if (endSessionUrl) {
             return {
               logout: "successful",
-              logoutURL: endSessionEndpoint,
+              logoutURL: endSessionUrl,
             };
           }
+        } catch (error) {
+          Logger.warn(
+            `Failed to build OIDC logout URL: ${(error as Error).message}`,
+          );
         }
       }
     }

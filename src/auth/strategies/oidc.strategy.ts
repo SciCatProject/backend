@@ -6,6 +6,7 @@ import { User } from "src/users/schemas/user.schema";
 import { Strategy, Client, TokenSet } from "openid-client";
 import { OidcConfig } from "src/config/configuration";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { Request } from "express";
 
 @Injectable()
 export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
@@ -23,12 +24,18 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
         redirect_uri: oidcConfig?.callbackURL,
         scope: oidcConfig?.scope,
       },
-      passReqToCallback: false,
+      passReqToCallback: true,
       usePKCE: false,
     });
   }
 
-  async validate(tokenset: TokenSet): Promise<Omit<User, "password">> {
+  async validate(
+    req: Request,
+    tokenset: TokenSet,
+  ): Promise<Omit<User, "password">> {
+    if (tokenset.id_token) {
+      req.session.idToken = tokenset.id_token;
+    }
     return this.oidcAuthService.validate(tokenset);
   }
 }

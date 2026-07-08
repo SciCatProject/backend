@@ -14,6 +14,7 @@ declare module "express-session" {
     client?: string;
     returnUrl?: string;
     successUrl?: string;
+    idToken?: string;
   }
 }
 
