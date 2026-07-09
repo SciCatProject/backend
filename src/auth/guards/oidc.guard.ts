@@ -15,6 +15,8 @@ declare module "express-session" {
     returnUrl?: string;
     successUrl?: string;
     idToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
   }
 }
 

@@ -19,6 +19,7 @@ import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
 import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { TokenRefreshService } from "src/auth/services/token-refresh.service";
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,7 @@ export class AuthService {
     private oidcClientService: OidcClientService,
     private oidcAuthService: OidcAuthService,
     private jwtService: JwtService,
+    private tokenRefreshService: TokenRefreshService,
   ) {}
 
   async validateUser(
@@ -100,16 +102,18 @@ export class AuthService {
       "expressSession.secret",
     );
 
+    this.tokenRefreshService.stopSessionRefresh(req.sessionID);
+
     const logoutResult = await this.additionalLogoutTasks(req, logoutURL);
 
     if (expressSessionSecret) {
       delete req.session?.idToken;
+      delete req.session?.accessToken;
+      delete req.session?.refreshToken;
 
       req.logout(async (err) => {
         if (err) {
-          // we should provide a message
           Logger.error("Logout error: ", err);
-          //res.status(HttpStatus.BAD_REQUEST);
         }
       });
 
@@ -117,6 +121,25 @@ export class AuthService {
     } else {
       return logoutResult;
     }
+  }
+
+  startOidcSessionRefresh(req: Request): void {
+    if (!req.session?.refreshToken) return;
+
+    this.tokenRefreshService.startSessionRefresh(
+      req.sessionID,
+      () => ({
+        refreshToken: req.session?.refreshToken,
+      }),
+      (tokens) => {
+        if (req.session) {
+          req.session.idToken = tokens.idToken;
+          if (tokens.accessToken) req.session.accessToken = tokens.accessToken;
+          if (tokens.refreshToken)
+            req.session.refreshToken = tokens.refreshToken;
+        }
+      },
+    );
   }
 
   async additionalLogoutTasks(req: Request, logoutURL: string) {

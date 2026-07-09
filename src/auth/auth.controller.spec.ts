@@ -23,6 +23,10 @@ class AuthServiceMock {
   whoami() {
     return { username: "Test User", email: "testUser@gmail.com" };
   }
+
+  startOidcSessionRefresh() {
+    return;
+  }
 }
 
 describe("AuthController", () => {

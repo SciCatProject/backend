@@ -1,9 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   Client,
   IdTokenClaims,
   Issuer,
+  TokenSet,
   UserinfoResponse,
   custom,
 } from "openid-client";
@@ -60,6 +61,32 @@ export class OidcClientService {
     } catch (err) {
       throw new Error(
         `OIDC issuer discovery failed: ${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
+
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ idToken: string; accessToken?: string; refreshToken?: string }> {
+    const client = await this.getClient();
+    try {
+      const tokenSet: TokenSet = await client.refresh(refreshToken);
+      const result: {
+        idToken: string;
+        accessToken?: string;
+        refreshToken?: string;
+      } = {
+        idToken: tokenSet.id_token ?? "",
+        accessToken: tokenSet.access_token ?? undefined,
+        refreshToken: tokenSet.refresh_token ?? undefined,
+      };
+      if (!result.idToken) {
+        Logger.warn("Token refresh returned no id_token");
+      }
+      return result;
+    } catch (error) {
+      throw new Error(
+        `OIDC token refresh failed: ${error instanceof Error ? error.message : error}`,
       );
     }
   }
