@@ -389,8 +389,10 @@ export const parseOrderLimits = (
   const limitFilters: ILimitsFilterV4 = structuredClone(limits);
   if (!limits.order) return limitFilters;
   const sort: Record<string, "asc" | "desc"> = {};
-  const [field, direction] = limits.order.split(":");
-  if (direction === "asc" || direction === "desc") sort[field] = direction;
+  for (const part of limits.order.split(",")) {
+    const [field, direction] = part.split(":");
+    if (direction === "asc" || direction === "desc") sort[field] = direction;
+  }
   limitFilters.sort = sort;
   return omit(limitFilters, "order");
 };
