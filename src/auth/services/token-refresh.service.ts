@@ -6,6 +6,12 @@ interface RefreshEntry {
   intervalId: ReturnType<typeof setInterval>;
 }
 
+export interface TokenRefreshResult {
+  idToken: string;
+  accessToken?: string;
+  refreshToken?: string;
+}
+
 @Injectable()
 export class TokenRefreshService implements OnModuleDestroy {
   private activeRefreshes = new Map<string, RefreshEntry>();
@@ -26,12 +32,10 @@ export class TokenRefreshService implements OnModuleDestroy {
     sessionId: string,
     getTokens: () => {
       refreshToken: string | undefined;
+      accessToken: string | undefined;
     },
-    setTokens: (tokens: {
-      idToken: string;
-      accessToken?: string;
-      refreshToken?: string;
-    }) => void,
+    setTokens: (tokens: TokenRefreshResult) => void,
+    onTokenRefreshed?: (accessToken: string) => Promise<void>,
   ): void {
     if (!this.oidcEnabled) return;
 
@@ -52,6 +56,13 @@ export class TokenRefreshService implements OnModuleDestroy {
         if (refreshed.idToken) {
           setTokens(refreshed);
           Logger.debug(`Refreshed OIDC tokens for session ${sessionId}`);
+          if (onTokenRefreshed && refreshed.accessToken) {
+            await onTokenRefreshed(refreshed.accessToken).catch((error) => {
+              Logger.warn(
+                `Post-refresh callback failed for session ${sessionId}: ${(error as Error).message}`,
+              );
+            });
+          }
         }
       } catch (error) {
         Logger.warn(

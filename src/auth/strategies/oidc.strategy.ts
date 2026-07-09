@@ -13,7 +13,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
   authStrategy = "oidc";
 
   constructor(
-    client: Client,
+    private client: Client,
     configService: ConfigService,
     private oidcAuthService: OidcAuthService,
   ) {
@@ -42,6 +42,6 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
     if (tokenset.refresh_token) {
       req.session.refreshToken = tokenset.refresh_token;
     }
-    return this.oidcAuthService.validate(tokenset);
+    return this.oidcAuthService.validate(tokenset, this.client);
   }
 }

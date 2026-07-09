@@ -4,7 +4,12 @@ import {
   Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { IdTokenClaims, TokenSet, UserinfoResponse } from "openid-client";
+import {
+  Client,
+  IdTokenClaims,
+  TokenSet,
+  UserinfoResponse,
+} from "openid-client";
 import { Profile } from "passport";
 import { OidcConfig } from "src/config/configuration";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
@@ -34,19 +39,36 @@ export class OidcAuthService {
     private usersService: UsersService,
   ) {}
 
-  async validate(tokenset: TokenSet): Promise<Omit<User, "password">> {
-    const userinfo: extendedIdTokenClaims = tokenset.claims();
+  async validate(
+    tokenset: TokenSet,
+    client?: Client,
+  ): Promise<Omit<User, "password">> {
+    const idTokenClaims: extendedIdTokenClaims = tokenset.claims();
+
+    let userinfoPayload: extendedIdTokenClaims = idTokenClaims;
+    const accessToken = tokenset.access_token;
+
+    if (client && accessToken) {
+      try {
+        const userinfoResponse = await client.userinfo(accessToken);
+        userinfoPayload = { ...idTokenClaims, ...userinfoResponse };
+      } catch (error) {
+        Logger.warn(
+          `Failed to fetch userinfo endpoint, falling back to ID token claims: ${(error as Error).message}`,
+        );
+      }
+    }
 
     const oidcConfig = this.configService.get<OidcConfig>("oidc");
 
-    const userProfile = this.parseUserInfo(userinfo);
+    const userProfile = this.parseUserInfo(userinfoPayload);
 
     const userPayload: UserPayload = {
       userId: userProfile.id,
       username: userProfile.username,
       email: userProfile.email,
       accessGroupProperty: oidcConfig?.accessGroupProperty,
-      payload: userinfo,
+      payload: userinfoPayload,
     };
     userProfile.accessGroups =
       await this.accessGroupService.getAccessGroups(userPayload);
@@ -104,6 +126,58 @@ export class OidcAuthService {
     returnUser.userId = returnUser._id;
 
     return returnUser;
+  }
+
+  async refreshUserAccessGroups(
+    userId: string,
+    client: Client,
+    accessToken: string,
+  ): Promise<void> {
+    let userinfoResponse: extendedIdTokenClaims;
+    try {
+      userinfoResponse = await client.userinfo(accessToken);
+    } catch (error) {
+      Logger.warn(
+        `Failed to fetch userinfo during token refresh: ${(error as Error).message}`,
+      );
+      return;
+    }
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    const userProfile = this.parseUserInfo(userinfoResponse);
+
+    const userPayload: UserPayload = {
+      userId: userProfile.id,
+      username: userProfile.username,
+      email: userProfile.email,
+      accessGroupProperty: oidcConfig?.accessGroupProperty,
+      payload: userinfoResponse,
+    };
+    userProfile.accessGroups =
+      await this.accessGroupService.getAccessGroups(userPayload);
+
+    const existingIdentity =
+      await this.usersService.findByIdUserIdentity(userId);
+    if (existingIdentity) {
+      const updatedProfile = {
+        ...existingIdentity.profile,
+        accessGroups: userProfile.accessGroups,
+        email: userProfile.email,
+        displayName: userProfile.displayName,
+        username: userProfile.username,
+      };
+      await this.usersService.updateUserIdentity(
+        {
+          profile: updatedProfile,
+          externalId: userProfile.id,
+          provider: userProfile.provider || "oidc",
+        },
+        userId,
+      );
+      Logger.log(
+        `Refreshed access groups for user ${userId}: ${userProfile.accessGroups.join(", ")}`,
+      );
+    }
   }
 
   getUserPhoto(thumbnailPhoto: string) {

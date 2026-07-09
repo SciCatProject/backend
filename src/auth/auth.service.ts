@@ -126,10 +126,13 @@ export class AuthService {
   startOidcSessionRefresh(req: Request): void {
     if (!req.session?.refreshToken) return;
 
+    const userId = (req.user as Omit<User, "password">)?._id;
+
     this.tokenRefreshService.startSessionRefresh(
       req.sessionID,
       () => ({
         refreshToken: req.session?.refreshToken,
+        accessToken: req.session?.accessToken,
       }),
       (tokens) => {
         if (req.session) {
@@ -139,6 +142,16 @@ export class AuthService {
             req.session.refreshToken = tokens.refreshToken;
         }
       },
+      userId
+        ? async (accessToken: string) => {
+            const client = await this.oidcClientService.getClient();
+            await this.oidcAuthService.refreshUserAccessGroups(
+              userId,
+              client,
+              accessToken,
+            );
+          }
+        : undefined,
     );
   }
 
