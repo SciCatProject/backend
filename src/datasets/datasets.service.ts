@@ -65,9 +65,9 @@ import {
 import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
-import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
-import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
+import type { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
@@ -207,7 +207,7 @@ export class DatasetsService {
       ),
     );
 
-    return savedDataset;
+    return savedDataset.toObject();
   }
 
   async findAll(
@@ -498,8 +498,7 @@ export class DatasetsService {
         updatedDataset,
       ),
     );
-    // we were able to find the dataset and update it
-    return updatedDataset;
+    return updatedDataset.toObject();
   }
 
   // PATCH dataset
@@ -562,8 +561,7 @@ export class DatasetsService {
         patchedDataset,
       ),
     );
-    // we were able to find the dataset and update it
-    return patchedDataset;
+    return patchedDataset.toObject();
   }
 
   // DELETE dataset
@@ -596,7 +594,7 @@ export class DatasetsService {
       ),
     );
 
-    return deletedDataset;
+    return deletedDataset.toObject();
   }
 
   // Get metadata keys
