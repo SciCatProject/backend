@@ -14,6 +14,7 @@ import {
   ForbiddenException,
   NotFoundException,
   InternalServerErrorException,
+  UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
 import { OrigDatablocksService } from "./origdatablocks.service";
@@ -57,6 +58,7 @@ import {
   IsValidResponse,
   FullFacetFilters,
   FullFacetResponse,
+  CountApiResponse,
 } from "src/common/types";
 import { getSwaggerOrigDatablockFilterContent } from "./types/origdatablock-filter-content";
 import {
@@ -67,6 +69,7 @@ import {
 } from "./types/origdatablock-lookup";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
+import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
 import { parseDate } from "src/common/utils";
 
 @ApiBearerAuth()
@@ -387,6 +390,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.CREATED)
   @Post()
   @ApiOperation({
@@ -444,6 +448,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockCreate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
   @ApiOperation({
@@ -691,6 +696,60 @@ export class OrigDatablocksV4Controller {
     );
   }
 
+  // GET /origdatablocks/files/count
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
+    ability.can(Action.OrigdatablockRead, OrigDatablock),
+  )
+  @Get("/files/count")
+  @ApiOperation({
+    summary: "It returns the count of files",
+    description:
+      "It returns the total number of files across all origdatablocks matching the provided filter.",
+  })
+  @ApiQuery({
+    name: "filter",
+    description: "Database filters to apply when retrieving count for files",
+    required: false,
+    type: String,
+    content: getSwaggerOrigDatablockFilterContent({
+      where: true,
+      include: false,
+      fields: false,
+      limits: false,
+    }),
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CountApiResponse,
+    description:
+      "Return the number of files in the following format: { count: integer }",
+  })
+  async countFiles(
+    @Req() request: Request,
+    @Query(
+      "filter",
+      new FilterValidationPipe(
+        ALLOWED_ORIGDATABLOCK_KEYS,
+        ALLOWED_ORIGDATABLOCK_FILTER_KEYS,
+        {
+          where: true,
+          include: false,
+          fields: false,
+          limits: false,
+        },
+      ),
+    )
+    queryFilter?: string,
+  ) {
+    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const mergedFilter = this.addAccessBasedFilters(
+      request.user as JWTUser,
+      parsedFilter,
+    );
+
+    return this.origDatablocksService.countFiles(mergedFilter);
+  }
   // GET /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
@@ -747,6 +806,7 @@ export class OrigDatablocksV4Controller {
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
     ability.can(Action.OrigdatablockUpdate, OrigDatablock),
   )
+  @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
   @ApiOperation({
     summary: "It updates the origdatablock",

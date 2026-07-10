@@ -1114,14 +1114,7 @@ describe("2500: Datasets v4 tests", () => {
 
   describe("Datasets v4 count tests", () => {
     it("0400: should not be able to fetch datasets count if not logged in", async () => {
-      const filter = {
-        limits: {
-          skip: 0,
-          sort: {
-            datasetName: "asc",
-          },
-        },
-      };
+      const filter = {};
 
       return request(appUrl)
         .get("/api/v4/datasets/count")
@@ -1332,10 +1325,12 @@ describe("2500: Datasets v4 tests", () => {
             unit: "mg",
             valueSI: 0.0006,
             unitSI: "kg",
+            human_name: "Pressure SI",
           });
           res.body.scientificMetadata.with_number.should.deep.eq({
             value: 111,
             unit: "",
+            human_name: "Sample Number",
           });
           res.body.datasetlifecycle.should.have
             .property("storageLocation")
@@ -1349,6 +1344,7 @@ describe("2500: Datasets v4 tests", () => {
           with_unit_and_value_si: {
             value: -2,
             unit: "km",
+            human_name: "new human name",
           },
         },
       };
@@ -1370,6 +1366,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "km",
             valueSI: -2000,
             unitSI: "m",
+            human_name: "new human name",
           });
         });
     });
@@ -1382,6 +1379,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "cm",
             valueSI: null,
             unitSI: null,
+            human_name: "new human name",
           },
           with_number: null,
         },
@@ -1408,6 +1406,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "cm",
             valueSI: -0.02,
             unitSI: "m",
+            human_name: "new human name",
           });
           res.body.scientificMetadata.should.not.have.property("with_number");
         });
@@ -1591,6 +1590,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "cm",
             valueSI: 555,
             unitSI: "cmcm",
+            human_name: "new human name",
           },
         },
       };
@@ -1611,6 +1611,7 @@ describe("2500: Datasets v4 tests", () => {
             unit: "cm",
             valueSI: 0.22,
             unitSI: "m",
+            human_name: "new human name",
           });
         });
     });

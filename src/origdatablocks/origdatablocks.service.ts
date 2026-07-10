@@ -284,17 +284,17 @@ export class OrigDatablocksService {
       {
         $lookup: {
           from: "Dataset",
-          as: "Dataset",
+          as: "dataset_temp",
           let: { datasetId: "$datasetId" },
           pipeline: [{ $match: { $expr: { $eq: ["$pid", "$$datasetId"] } } }],
         },
       },
       {
         $addFields: {
-          datasetExist: { $gt: [{ $size: "$Dataset" }, 0] },
+          datasetExist: { $gt: [{ $size: "$dataset_temp" }, 0] },
         },
       },
-      { $unset: "Dataset" },
+      { $unset: "dataset_temp" },
       { $unwind: "$dataFileList" },
       ...modifiers,
     ];
@@ -381,5 +381,41 @@ export class OrigDatablocksService {
       .countDocuments(whereFilter)
       .exec();
     return { count };
+  }
+
+  async countFiles(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<CountApiResponse> {
+    const pipeline: PipelineStage[] = [
+      { $match: filter.where ?? {} },
+      { $unwind: "$dataFileList" },
+      { $count: "count" },
+    ];
+    const [result] = await this.origDatablockModel
+      .aggregate<{ count: number }>(pipeline)
+      .exec();
+    return { count: result?.count ?? 0 };
+  }
+
+  async aggregateSizeAndFileCount(
+    datasetId: string,
+  ): Promise<{ size: number; numberOfFiles: number }> {
+    const [result] = await this.origDatablockModel
+      .aggregate<{ size: number; numberOfFiles: number }>([
+        { $match: { datasetId } },
+        {
+          $group: {
+            _id: null,
+            size: { $sum: "$size" },
+            numberOfFiles: {
+              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
+            },
+          },
+        },
+      ])
+      .exec();
+    return result
+      ? { size: result.size, numberOfFiles: result.numberOfFiles }
+      : { size: 0, numberOfFiles: 0 };
   }
 }

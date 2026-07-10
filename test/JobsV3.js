@@ -222,7 +222,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -246,7 +246,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -448,7 +448,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(jobCreateDtoForUser51)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -1111,6 +1111,22 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.be
           .an("array")
           .that.deep.contains({ all: [{ totalSets: 1 }] });
+      });
+  });
+
+  it("0318: Fullfacet via /api/v3 jobs with text search and access filters as user5.1", async () => {
+    return request(appUrl)
+      .get(`/api/v3/Jobs/fullfacet`)
+      .query("fields=" + encodeURIComponent(JSON.stringify({ text: "owner_access" })))
+      .query("facets=" + encodeURIComponent(JSON.stringify([])))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be
+          .an("array")
+          .that.deep.contains({ all: [{ totalSets: 6 }] });
       });
   });
 
