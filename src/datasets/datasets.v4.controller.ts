@@ -345,7 +345,7 @@ export class DatasetsV4Controller {
     try {
       const createdDataset = await this.datasetsService.create(datasetDto);
 
-      return (createdDataset as DatasetDocument).toObject();
+      return createdDataset;
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
@@ -827,9 +827,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       updateDatasetDtoForService,
       unmodifiedSince,
     );
-    return updatedDataset
-      ? (updatedDataset as DatasetDocument).toObject()
-      : null;
+    return updatedDataset;
   }
 
   // GET /datasets/:id/datasetlifecycle
@@ -990,9 +988,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       updateDatasetDto,
     );
 
-    return outputDatasetDto
-      ? (outputDatasetDto as DatasetDocument).toObject()
-      : null;
+    return outputDatasetDto;
   }
 
   // DELETE /datasets/:id
@@ -1028,9 +1024,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
 
     const removedDataset = await this.datasetsService.findByIdAndDelete(pid);
 
-    return removedDataset
-      ? (removedDataset as DatasetDocument).toObject()
-      : null;
+    return removedDataset;
   }
 
   @UseGuards(PoliciesGuard)
