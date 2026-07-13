@@ -39,26 +39,29 @@ export class OidcAuthService {
     private usersService: UsersService,
   ) {}
 
-  private async buildUserinfoPayload(
+  private async fetchUserinfo(
     tokenset: TokenSet,
     client?: Client,
     logContext = "validate",
-  ): Promise<extendedIdTokenClaims> {
-    const idTokenClaims: extendedIdTokenClaims = tokenset.claims();
+  ): Promise<extendedIdTokenClaims | null> {
     const accessToken = tokenset.access_token;
 
     if (!client || !accessToken) {
-      return idTokenClaims;
+      return null;
+    }
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (!oidcConfig?.userinfoEnabled) {
+      return null;
     }
 
     try {
-      const userinfoResponse = await client.userinfo(accessToken);
-      return { ...idTokenClaims, ...userinfoResponse };
+      return (await client.userinfo(accessToken)) as extendedIdTokenClaims;
     } catch (error) {
       Logger.warn(
-        `Failed to fetch userinfo during ${logContext}, falling back to ID token claims: ${(error as Error).message}`,
+        `Failed to fetch userinfo during ${logContext}: ${(error as Error).message}`,
       );
-      return idTokenClaims;
+      return null;
     }
   }
 
@@ -86,13 +89,17 @@ export class OidcAuthService {
     tokenset: TokenSet,
     client?: Client,
   ): Promise<Omit<User, "password">> {
-    const userinfoPayload = await this.buildUserinfoPayload(
+    const idTokenClaims: extendedIdTokenClaims = tokenset.claims();
+
+    const userinfoClaims = await this.fetchUserinfo(
       tokenset,
       client,
       "validate",
     );
-    const { userProfile } =
-      await this.buildProfileWithAccessGroups(userinfoPayload);
+
+    const { userProfile } = await this.buildProfileWithAccessGroups(
+      userinfoClaims ?? idTokenClaims,
+    );
 
     const userFilter: FilterQuery<UserDocument> =
       this.parseQueryFilter(userProfile);
@@ -154,6 +161,9 @@ export class OidcAuthService {
     client: Client,
     accessToken: string,
   ): Promise<void> {
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (!oidcConfig?.userinfoEnabled) return;
+
     let userinfoResponse: extendedIdTokenClaims;
     try {
       userinfoResponse = await client.userinfo(accessToken);

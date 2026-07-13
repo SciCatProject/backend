@@ -358,6 +358,8 @@ const configuration = () => {
       scope: process.env.OIDC_SCOPE, // Example: "openid profile email"
       accessGroups: process.env.OIDC_ACCESS_GROUPS, // Example: None
       accessGroupProperty: process.env.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
+      userinfoEnabled: process.env.OIDC_USERINFO_ENABLED !== "no",
+      tokenRefreshEnabled: process.env.OIDC_TOKEN_REFRESH_ENABLED !== "no",
       autoLogout: process.env.OIDC_AUTO_LOGOUT || false,
       frontendClients: oidcFrontendClients,
       clientConfig: clientConfig,

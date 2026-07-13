@@ -30,8 +30,12 @@ export class TokenRefreshService implements OnModuleDestroy {
     private configService: ConfigService,
     private oidcClientService: OidcClientService,
   ) {
-    const oidcConfig = this.configService.get<{ issuer?: string }>("oidc");
-    this.oidcEnabled = !!oidcConfig?.issuer;
+    const oidcConfig = this.configService.get<{
+      issuer?: string;
+      tokenRefreshEnabled?: boolean;
+    }>("oidc");
+    this.oidcEnabled =
+      !!oidcConfig?.issuer && oidcConfig?.tokenRefreshEnabled !== false;
     this.refreshIntervalMs =
       (this.configService.get<number>("jwt.expiresIn") ?? 3600) * 1000 * 0.75;
   }
@@ -41,12 +45,22 @@ export class TokenRefreshService implements OnModuleDestroy {
     tokenStore: SessionTokenStore,
     onTokenRefreshed?: (accessToken: string) => Promise<void>,
   ): void {
-    if (!this.oidcEnabled) return;
+    if (!this.oidcEnabled) {
+      Logger.debug(
+        `OIDC token refresh not started for session ${sessionId}: OIDC is disabled`,
+      );
+      return;
+    }
 
     this.stopSessionRefresh(sessionId);
 
     const { refreshToken } = tokenStore.getTokens();
-    if (!refreshToken) return;
+    if (!refreshToken) {
+      Logger.debug(
+        `OIDC token refresh not started for session ${sessionId}: no refresh token available`,
+      );
+      return;
+    }
 
     const intervalId = setInterval(
       () => this.refreshSessionTokens(sessionId, tokenStore, onTokenRefreshed),
@@ -54,8 +68,10 @@ export class TokenRefreshService implements OnModuleDestroy {
     );
 
     this.activeRefreshes.set(sessionId, { intervalId });
+    Logger.log(
+      `Started OIDC token refresh for session ${sessionId} (interval: ${this.refreshIntervalMs}ms)`,
+    );
   }
-
   private async refreshSessionTokens(
     sessionId: string,
     tokenStore: SessionTokenStore,
@@ -64,15 +80,17 @@ export class TokenRefreshService implements OnModuleDestroy {
     try {
       const { refreshToken } = tokenStore.getTokens();
       if (!refreshToken) {
+        Logger.debug(
+          `Stopping OIDC token refresh for session ${sessionId}: refresh token no longer available`,
+        );
         this.stopSessionRefresh(sessionId);
         return;
       }
 
       const refreshed = await this.oidcClientService.refreshToken(refreshToken);
-      if (!refreshed.idToken) return;
 
       tokenStore.setTokens(refreshed);
-      Logger.debug(`Refreshed OIDC tokens for session ${sessionId}`);
+      Logger.log(`Refreshed OIDC tokens for session ${sessionId}`);
 
       if (onTokenRefreshed && refreshed.accessToken) {
         try {
@@ -87,6 +105,7 @@ export class TokenRefreshService implements OnModuleDestroy {
       Logger.warn(
         `OIDC token refresh failed for session ${sessionId}: ${(error as Error).message}`,
       );
+      this.stopSessionRefresh(sessionId);
     }
   }
 

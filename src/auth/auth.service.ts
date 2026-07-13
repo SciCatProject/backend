@@ -124,9 +124,27 @@ export class AuthService {
   }
 
   startOidcSessionRefresh(req: Request): void {
-    if (!req.session?.refreshToken) return;
+    if (!req.session?.refreshToken) {
+      Logger.debug(
+        "OIDC session refresh not started: no refresh token in session",
+      );
+      return;
+    }
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (oidcConfig?.tokenRefreshEnabled === false) {
+      Logger.debug(
+        "OIDC session refresh not started: tokenRefreshEnabled is false",
+      );
+      return;
+    }
 
     const userId = (req.user as Omit<User, "password">)?._id;
+    const userinfoEnabled = oidcConfig?.userinfoEnabled !== false;
+
+    Logger.log(
+      `Starting OIDC session refresh for session ${req.sessionID} (userinfoEnabled: ${userinfoEnabled})`,
+    );
 
     this.tokenRefreshService.startSessionRefresh(
       req.sessionID,
@@ -145,7 +163,7 @@ export class AuthService {
           }
         },
       },
-      userId
+      userId && userinfoEnabled
         ? async (accessToken: string) => {
             const client = await this.oidcClientService.getClient();
             await this.oidcAuthService.refreshUserAccessGroups(

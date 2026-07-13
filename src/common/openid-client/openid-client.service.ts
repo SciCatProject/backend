@@ -82,6 +82,7 @@ export class OidcClientService {
       };
       if (!result.idToken) {
         Logger.warn("Token refresh returned no id_token");
+        throw new Error("Token refresh returned no id_token");
       }
       return result;
     } catch (error) {
