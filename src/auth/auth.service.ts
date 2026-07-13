@@ -130,17 +130,19 @@ export class AuthService {
 
     this.tokenRefreshService.startSessionRefresh(
       req.sessionID,
-      () => ({
-        refreshToken: req.session?.refreshToken,
-        accessToken: req.session?.accessToken,
-      }),
-      (tokens) => {
-        if (req.session) {
-          req.session.idToken = tokens.idToken;
-          if (tokens.accessToken) req.session.accessToken = tokens.accessToken;
-          if (tokens.refreshToken)
-            req.session.refreshToken = tokens.refreshToken;
-        }
+      {
+        getTokens: () => ({
+          refreshToken: req.session?.refreshToken,
+          accessToken: req.session?.accessToken,
+        }),
+        setTokens: (tokens) => {
+          if (req.session) {
+            req.session.idToken = tokens.idToken;
+            if (tokens.accessToken) req.session.accessToken = tokens.accessToken;
+            if (tokens.refreshToken)
+              req.session.refreshToken = tokens.refreshToken;
+          }
+        },
       },
       userId
         ? async (accessToken: string) => {

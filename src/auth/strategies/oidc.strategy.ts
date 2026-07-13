@@ -33,14 +33,16 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
     req: Request,
     tokenset: TokenSet,
   ): Promise<Omit<User, "password">> {
-    if (tokenset.id_token) {
-      req.session.idToken = tokenset.id_token;
-    }
-    if (tokenset.access_token) {
-      req.session.accessToken = tokenset.access_token;
-    }
-    if (tokenset.refresh_token) {
-      req.session.refreshToken = tokenset.refresh_token;
+    if (req.session) {
+      if (tokenset.id_token) {
+        req.session.idToken = tokenset.id_token;
+      }
+      if (tokenset.access_token) {
+        req.session.accessToken = tokenset.access_token;
+      }
+      if (tokenset.refresh_token) {
+        req.session.refreshToken = tokenset.refresh_token;
+      }
     }
     return this.oidcAuthService.validate(tokenset, this.client);
   }

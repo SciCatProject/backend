@@ -39,39 +39,60 @@ export class OidcAuthService {
     private usersService: UsersService,
   ) {}
 
-  async validate(
+  private async buildUserinfoPayload(
     tokenset: TokenSet,
     client?: Client,
-  ): Promise<Omit<User, "password">> {
+    logContext = "validate",
+  ): Promise<extendedIdTokenClaims> {
     const idTokenClaims: extendedIdTokenClaims = tokenset.claims();
-
-    let userinfoPayload: extendedIdTokenClaims = idTokenClaims;
     const accessToken = tokenset.access_token;
 
-    if (client && accessToken) {
-      try {
-        const userinfoResponse = await client.userinfo(accessToken);
-        userinfoPayload = { ...idTokenClaims, ...userinfoResponse };
-      } catch (error) {
-        Logger.warn(
-          `Failed to fetch userinfo endpoint, falling back to ID token claims: ${(error as Error).message}`,
-        );
-      }
+    if (!client || !accessToken) {
+      return idTokenClaims;
     }
 
-    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    try {
+      const userinfoResponse = await client.userinfo(accessToken);
+      return { ...idTokenClaims, ...userinfoResponse };
+    } catch (error) {
+      Logger.warn(
+        `Failed to fetch userinfo during ${logContext}, falling back to ID token claims: ${(error as Error).message}`,
+      );
+      return idTokenClaims;
+    }
+  }
 
-    const userProfile = this.parseUserInfo(userinfoPayload);
+  private async buildProfileWithAccessGroups(
+    userinfo: extendedIdTokenClaims,
+  ): Promise<{ userProfile: OidcProfile; userPayload: UserPayload }> {
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    const userProfile = this.parseUserInfo(userinfo);
 
     const userPayload: UserPayload = {
       userId: userProfile.id,
       username: userProfile.username,
       email: userProfile.email,
       accessGroupProperty: oidcConfig?.accessGroupProperty,
-      payload: userinfoPayload,
+      payload: userinfo,
     };
+
     userProfile.accessGroups =
       await this.accessGroupService.getAccessGroups(userPayload);
+
+    return { userProfile, userPayload };
+  }
+
+  async validate(
+    tokenset: TokenSet,
+    client?: Client,
+  ): Promise<Omit<User, "password">> {
+    const userinfoPayload = await this.buildUserinfoPayload(
+      tokenset,
+      client,
+      "validate",
+    );
+    const { userProfile } =
+      await this.buildProfileWithAccessGroups(userinfoPayload);
 
     const userFilter: FilterQuery<UserDocument> =
       this.parseQueryFilter(userProfile);
@@ -143,41 +164,31 @@ export class OidcAuthService {
       return;
     }
 
-    const oidcConfig = this.configService.get<OidcConfig>("oidc");
-    const userProfile = this.parseUserInfo(userinfoResponse);
-
-    const userPayload: UserPayload = {
-      userId: userProfile.id,
-      username: userProfile.username,
-      email: userProfile.email,
-      accessGroupProperty: oidcConfig?.accessGroupProperty,
-      payload: userinfoResponse,
-    };
-    userProfile.accessGroups =
-      await this.accessGroupService.getAccessGroups(userPayload);
+    const { userProfile } =
+      await this.buildProfileWithAccessGroups(userinfoResponse);
 
     const existingIdentity =
       await this.usersService.findByIdUserIdentity(userId);
-    if (existingIdentity) {
-      const updatedProfile = {
-        ...existingIdentity.profile,
-        accessGroups: userProfile.accessGroups,
-        email: userProfile.email,
-        displayName: userProfile.displayName,
-        username: userProfile.username,
-      };
-      await this.usersService.updateUserIdentity(
-        {
-          profile: updatedProfile,
-          externalId: userProfile.id,
-          provider: userProfile.provider || "oidc",
-        },
-        userId,
-      );
-      Logger.log(
-        `Refreshed access groups for user ${userId}: ${userProfile.accessGroups.join(", ")}`,
-      );
-    }
+    if (!existingIdentity) return;
+
+    const updatedProfile = {
+      ...existingIdentity.profile,
+      accessGroups: userProfile.accessGroups,
+      email: userProfile.email,
+      displayName: userProfile.displayName,
+      username: userProfile.username,
+    };
+    await this.usersService.updateUserIdentity(
+      {
+        profile: updatedProfile,
+        externalId: userProfile.id,
+        provider: userProfile.provider || "oidc",
+      },
+      userId,
+    );
+    Logger.log(
+      `Refreshed access groups for user ${userId}: ${userProfile.accessGroups.join(", ")}`,
+    );
   }
 
   getUserPhoto(thumbnailPhoto: string) {

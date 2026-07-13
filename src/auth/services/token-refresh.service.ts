@@ -12,6 +12,14 @@ export interface TokenRefreshResult {
   refreshToken?: string;
 }
 
+export interface SessionTokenStore {
+  getTokens(): {
+    refreshToken: string | undefined;
+    accessToken: string | undefined;
+  };
+  setTokens(tokens: TokenRefreshResult): void;
+}
+
 @Injectable()
 export class TokenRefreshService implements OnModuleDestroy {
   private activeRefreshes = new Map<string, RefreshEntry>();
@@ -30,48 +38,56 @@ export class TokenRefreshService implements OnModuleDestroy {
 
   startSessionRefresh(
     sessionId: string,
-    getTokens: () => {
-      refreshToken: string | undefined;
-      accessToken: string | undefined;
-    },
-    setTokens: (tokens: TokenRefreshResult) => void,
+    tokenStore: SessionTokenStore,
     onTokenRefreshed?: (accessToken: string) => Promise<void>,
   ): void {
     if (!this.oidcEnabled) return;
 
     this.stopSessionRefresh(sessionId);
 
-    if (!getTokens().refreshToken) return;
+    const { refreshToken } = tokenStore.getTokens();
+    if (!refreshToken) return;
 
-    const intervalId = setInterval(async () => {
-      try {
-        const refreshToken = getTokens().refreshToken;
-        if (!refreshToken) {
-          this.stopSessionRefresh(sessionId);
-          return;
-        }
-
-        const refreshed =
-          await this.oidcClientService.refreshToken(refreshToken);
-        if (refreshed.idToken) {
-          setTokens(refreshed);
-          Logger.debug(`Refreshed OIDC tokens for session ${sessionId}`);
-          if (onTokenRefreshed && refreshed.accessToken) {
-            await onTokenRefreshed(refreshed.accessToken).catch((error) => {
-              Logger.warn(
-                `Post-refresh callback failed for session ${sessionId}: ${(error as Error).message}`,
-              );
-            });
-          }
-        }
-      } catch (error) {
-        Logger.warn(
-          `OIDC token refresh failed for session ${sessionId}: ${(error as Error).message}`,
-        );
-      }
-    }, this.refreshIntervalMs);
+    const intervalId = setInterval(
+      () => this.refreshSessionTokens(sessionId, tokenStore, onTokenRefreshed),
+      this.refreshIntervalMs,
+    );
 
     this.activeRefreshes.set(sessionId, { intervalId });
+  }
+
+  private async refreshSessionTokens(
+    sessionId: string,
+    tokenStore: SessionTokenStore,
+    onTokenRefreshed?: (accessToken: string) => Promise<void>,
+  ): Promise<void> {
+    try {
+      const { refreshToken } = tokenStore.getTokens();
+      if (!refreshToken) {
+        this.stopSessionRefresh(sessionId);
+        return;
+      }
+
+      const refreshed = await this.oidcClientService.refreshToken(refreshToken);
+      if (!refreshed.idToken) return;
+
+      tokenStore.setTokens(refreshed);
+      Logger.debug(`Refreshed OIDC tokens for session ${sessionId}`);
+
+      if (onTokenRefreshed && refreshed.accessToken) {
+        try {
+          await onTokenRefreshed(refreshed.accessToken);
+        } catch (error) {
+          Logger.warn(
+            `Post-refresh callback failed for session ${sessionId}: ${(error as Error).message}`,
+          );
+        }
+      }
+    } catch (error) {
+      Logger.warn(
+        `OIDC token refresh failed for session ${sessionId}: ${(error as Error).message}`,
+      );
+    }
   }
 
   stopSessionRefresh(sessionId: string): void {
