@@ -65,9 +65,12 @@ export class OidcClientService {
     }
   }
 
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<{ idToken: string; accessToken?: string; refreshToken?: string }> {
+  async refreshToken(refreshToken: string): Promise<{
+    idToken: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+  }> {
     const client = await this.getClient();
     try {
       const tokenSet: TokenSet = await client.refresh(refreshToken);
@@ -75,10 +78,12 @@ export class OidcClientService {
         idToken: string;
         accessToken?: string;
         refreshToken?: string;
+        expiresIn?: number;
       } = {
         idToken: tokenSet.id_token ?? "",
         accessToken: tokenSet.access_token ?? undefined,
         refreshToken: tokenSet.refresh_token ?? undefined,
+        expiresIn: tokenSet.expires_in ?? undefined,
       };
       if (!result.idToken) {
         Logger.warn("Token refresh returned no id_token");

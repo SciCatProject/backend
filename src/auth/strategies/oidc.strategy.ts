@@ -43,6 +43,9 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
       if (tokenset.refresh_token) {
         req.session.refreshToken = tokenset.refresh_token;
       }
+      if (tokenset.expires_in) {
+        req.session.expiresIn = tokenset.expires_in;
+      }
     }
     return this.oidcAuthService.validate(tokenset, this.client);
   }

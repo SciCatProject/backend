@@ -17,6 +17,7 @@ declare module "express-session" {
     idToken?: string;
     accessToken?: string;
     refreshToken?: string;
+    expiresIn?: number;
   }
 }
 

@@ -3,19 +3,21 @@ import { ConfigService } from "@nestjs/config";
 import { OidcClientService } from "src/common/openid-client/openid-client.service";
 
 interface RefreshEntry {
-  intervalId: ReturnType<typeof setInterval>;
+  timeoutId: ReturnType<typeof setTimeout>;
 }
 
 export interface TokenRefreshResult {
   idToken: string;
   accessToken?: string;
   refreshToken?: string;
+  expiresIn?: number;
 }
 
 export interface SessionTokenStore {
   getTokens(): {
     refreshToken: string | undefined;
     accessToken: string | undefined;
+    expiresIn: number | undefined;
   };
   setTokens(tokens: TokenRefreshResult): void;
 }
@@ -23,7 +25,7 @@ export interface SessionTokenStore {
 @Injectable()
 export class TokenRefreshService implements OnModuleDestroy {
   private activeRefreshes = new Map<string, RefreshEntry>();
-  private readonly refreshIntervalMs: number;
+  private readonly defaultRefreshMs: number;
   private readonly oidcEnabled: boolean;
 
   constructor(
@@ -36,7 +38,7 @@ export class TokenRefreshService implements OnModuleDestroy {
     }>("oidc");
     this.oidcEnabled =
       !!oidcConfig?.issuer && oidcConfig?.tokenRefreshEnabled !== false;
-    this.refreshIntervalMs =
+    this.defaultRefreshMs =
       (this.configService.get<number>("jwt.expiresIn") ?? 3600) * 1000 * 0.75;
   }
 
@@ -62,16 +64,37 @@ export class TokenRefreshService implements OnModuleDestroy {
       return;
     }
 
-    const intervalId = setInterval(
-      () => this.refreshSessionTokens(sessionId, tokenStore, onTokenRefreshed),
-      this.refreshIntervalMs,
-    );
+    this.scheduleRefresh(sessionId, tokenStore, onTokenRefreshed);
+  }
 
-    this.activeRefreshes.set(sessionId, { intervalId });
+  private scheduleRefresh(
+    sessionId: string,
+    tokenStore: SessionTokenStore,
+    onTokenRefreshed?: (accessToken: string) => Promise<void>,
+  ): void {
+    const timeoutId = setTimeout(async () => {
+      await this.refreshSessionTokens(sessionId, tokenStore, onTokenRefreshed);
+    }, this.delayForSession(tokenStore));
+
+    this.activeRefreshes.set(sessionId, { timeoutId });
     Logger.log(
-      `Started OIDC token refresh for session ${sessionId} (interval: ${this.refreshIntervalMs}ms)`,
+      `Started OIDC token refresh for session ${sessionId} (initial delay: ${this.delayForSession(tokenStore)}ms)`,
     );
   }
+
+  private delayForSession(tokenStore: SessionTokenStore): number {
+    const { expiresIn } = tokenStore.getTokens();
+    if (expiresIn && expiresIn > 0) {
+      const refreshBeforeMs =
+        (this.configService.get<number>(
+          "oidc.tokenRefreshSecondsBeforeExpiry",
+        ) ?? 60) * 1000;
+      const delay = Math.max(expiresIn * 1000 - refreshBeforeMs, 0);
+      return delay;
+    }
+    return this.defaultRefreshMs;
+  }
+
   private async refreshSessionTokens(
     sessionId: string,
     tokenStore: SessionTokenStore,
@@ -101,6 +124,8 @@ export class TokenRefreshService implements OnModuleDestroy {
           );
         }
       }
+
+      this.scheduleRefresh(sessionId, tokenStore, onTokenRefreshed);
     } catch (error) {
       Logger.warn(
         `OIDC token refresh failed for session ${sessionId}: ${(error as Error).message}`,
@@ -112,14 +137,14 @@ export class TokenRefreshService implements OnModuleDestroy {
   stopSessionRefresh(sessionId: string): void {
     const entry = this.activeRefreshes.get(sessionId);
     if (entry) {
-      clearInterval(entry.intervalId);
+      clearTimeout(entry.timeoutId);
       this.activeRefreshes.delete(sessionId);
     }
   }
 
   onModuleDestroy(): void {
     for (const [, entry] of this.activeRefreshes) {
-      clearInterval(entry.intervalId);
+      clearTimeout(entry.timeoutId);
     }
     this.activeRefreshes.clear();
   }

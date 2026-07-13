@@ -152,6 +152,7 @@ export class AuthService {
         getTokens: () => ({
           refreshToken: req.session?.refreshToken,
           accessToken: req.session?.accessToken,
+          expiresIn: req.session?.expiresIn,
         }),
         setTokens: (tokens) => {
           if (req.session) {
@@ -160,6 +161,7 @@ export class AuthService {
               req.session.accessToken = tokens.accessToken;
             if (tokens.refreshToken)
               req.session.refreshToken = tokens.refreshToken;
+            if (tokens.expiresIn) req.session.expiresIn = tokens.expiresIn;
           }
         },
       },

@@ -360,6 +360,10 @@ const configuration = () => {
       accessGroupProperty: process.env.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
       userinfoEnabled: process.env.OIDC_USERINFO_ENABLED !== "no",
       tokenRefreshEnabled: process.env.OIDC_TOKEN_REFRESH_ENABLED !== "no",
+      tokenRefreshSecondsBeforeExpiry: parseInt(
+        process.env.OIDC_TOKEN_REFRESH_SECONDS_BEFORE_EXPIRY ?? "60",
+        10,
+      ),
       autoLogout: process.env.OIDC_AUTO_LOGOUT || false,
       frontendClients: oidcFrontendClients,
       clientConfig: clientConfig,
