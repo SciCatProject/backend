@@ -138,7 +138,8 @@ export class AuthService {
         setTokens: (tokens) => {
           if (req.session) {
             req.session.idToken = tokens.idToken;
-            if (tokens.accessToken) req.session.accessToken = tokens.accessToken;
+            if (tokens.accessToken)
+              req.session.accessToken = tokens.accessToken;
             if (tokens.refreshToken)
               req.session.refreshToken = tokens.refreshToken;
           }
