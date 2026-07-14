@@ -8,8 +8,8 @@ import type {
   TokenEndpointResponse,
   TokenEndpointResponseHelpers,
 } from "openid-client";
-import type { StrategyOptionsWithRequest } from "openid-client/build/passport";
-import { Strategy } from "openid-client/build/passport";
+import type { StrategyOptionsWithRequest } from "openid-client/passport";
+import { Strategy } from "openid-client/passport";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 import { OidcConfig } from "src/config/configuration";
 import { User } from "src/users/schemas/user.schema";
