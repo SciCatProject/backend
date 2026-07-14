@@ -204,11 +204,22 @@ export class AuthService {
           const returnUrl =
             oidcConfig?.clientConfig?.[frontendClient]?.returnUrl ??
             "/datasets";
+          const successUrl =
+            oidcConfig?.clientConfig?.[frontendClient]?.successUrl;
+
+          let postLogoutRedirectUri: string | undefined;
+          if (successUrl) {
+            try {
+              const url = new URL(successUrl);
+              postLogoutRedirectUri = `${url.origin}${returnUrl}`;
+            } catch {
+              postLogoutRedirectUri = successUrl;
+            }
+          }
+
           const endSessionUrl = oidcClient.endSessionUrl({
             id_token_hint: idToken,
-            post_logout_redirect_uri: oidcConfig?.callbackURL
-              ? oidcConfig.callbackURL.replace("/auth/oidc/callback", returnUrl)
-              : undefined,
+            post_logout_redirect_uri: postLogoutRedirectUri,
             client_id: oidcConfig?.clientID,
           });
 
