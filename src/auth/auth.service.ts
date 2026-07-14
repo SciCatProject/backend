@@ -198,14 +198,16 @@ export class AuthService {
         const idToken = req.session?.idToken;
 
         try {
-          const client = await this.oidcClientService.getClient();
-          const endSessionUrl = client.endSessionUrl({
+          const oidcClient = await this.oidcClientService.getClient();
+
+          const frontendClient = req.session?.client ?? "scicat";
+          const returnUrl =
+            oidcConfig?.clientConfig?.[frontendClient]?.returnUrl ??
+            "/datasets";
+          const endSessionUrl = oidcClient.endSessionUrl({
             id_token_hint: idToken,
             post_logout_redirect_uri: oidcConfig?.callbackURL
-              ? oidcConfig.callbackURL.replace(
-                  "/auth/oidc/callback",
-                  "/auth/logout",
-                )
+              ? oidcConfig.callbackURL.replace("/auth/oidc/callback", returnUrl)
               : undefined,
             client_id: oidcConfig?.clientID,
           });
