@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 
@@ -11,6 +11,7 @@ import { Request } from "express";
 @Injectable()
 export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
   authStrategy = "oidc";
+  private additionalAuthorizedParties: string[];
 
   constructor(
     private client: Client,
@@ -18,6 +19,8 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
     private oidcAuthService: OidcAuthService,
   ) {
     const oidcConfig = configService.get<OidcConfig>("oidc");
+    const additionalAuthorizedParties =
+      oidcConfig?.additionalAuthorizedParties ?? [];
     super({
       client: client,
       params: {
@@ -25,14 +28,24 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
         scope: oidcConfig?.scope,
       },
       passReqToCallback: true,
-      usePKCE: false,
-    });
+    } as StrategyOptionsWithRequest);
+    this.additionalAuthorizedParties = additionalAuthorizedParties;
   }
 
   async validate(
     req: Request,
     tokenset: TokenSet,
   ): Promise<Omit<User, "password">> {
+    if (this.additionalAuthorizedParties.length > 0 && tokenset.id_token) {
+      const claims = tokenset.claims();
+      const azp = claims?.azp;
+      if (azp && !this.additionalAuthorizedParties.includes(azp)) {
+        Logger.warn(
+          `Token azp "${azp}" not in additional authorized parties: ${this.additionalAuthorizedParties.join(", ")}`,
+        );
+      }
+    }
+
     if (req.session) {
       if (tokenset.id_token) {
         req.session.idToken = tokenset.id_token;
