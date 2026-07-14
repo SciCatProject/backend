@@ -4,29 +4,25 @@ import {
   Logger,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import {
-  Client,
-  IdTokenClaims,
-  TokenSet,
-  UserinfoResponse,
-} from "openid-client";
+import { FilterQuery } from "mongoose";
+import type { IDToken, UserInfoResponse } from "openid-client";
+import { Configuration, fetchUserInfo, skipSubjectCheck } from "openid-client";
 import { Profile } from "passport";
+import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
+import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 import { OidcConfig } from "src/config/configuration";
+import { CreateUserIdentityDto } from "src/users/dto/create-user-identity.dto";
+import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
 import { User, UserDocument, UserSchema } from "src/users/schemas/user.schema";
+import { UsersService } from "src/users/users.service";
 import {
   IOidcUserInfoMapping,
   IOidcUserQueryMapping,
 } from "./interfaces/oidc-user.interface";
-import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
-import { UsersService } from "src/users/users.service";
-import { FilterQuery } from "mongoose";
-import { UserPayload } from "src/auth/interfaces/userPayload.interface";
-import { CreateUserIdentityDto } from "src/users/dto/create-user-identity.dto";
-import { CreateUserDto } from "src/users/dto/create-user.dto";
 
-export type extendedIdTokenClaims = IdTokenClaims &
-  UserinfoResponse & {
+export type extendedIdTokenClaims = IDToken &
+  UserInfoResponse & {
     groups?: string[];
   };
 export type OidcProfile = Profile & UserProfile;
@@ -40,13 +36,12 @@ export class OidcAuthService {
   ) {}
 
   private async fetchUserinfo(
-    tokenset: TokenSet,
-    client?: Client,
+    accessToken: string,
+    config?: Configuration,
+    expectedSubject?: string,
     logContext = "validate",
   ): Promise<extendedIdTokenClaims | null> {
-    const accessToken = tokenset.access_token;
-
-    if (!client || !accessToken) {
+    if (!config || !accessToken) {
       return null;
     }
 
@@ -56,7 +51,11 @@ export class OidcAuthService {
     }
 
     try {
-      return (await client.userinfo(accessToken)) as extendedIdTokenClaims;
+      return (await fetchUserInfo(
+        config,
+        accessToken,
+        expectedSubject ?? skipSubjectCheck,
+      )) as extendedIdTokenClaims;
     } catch (error) {
       Logger.warn(
         `Failed to fetch userinfo during ${logContext}: ${(error as Error).message}`,
@@ -86,14 +85,19 @@ export class OidcAuthService {
   }
 
   async validate(
-    tokenset: TokenSet,
-    client?: Client,
+    tokenset: { id_token?: string; access_token?: string },
+    config?: Configuration,
   ): Promise<Omit<User, "password">> {
-    const idTokenClaims: extendedIdTokenClaims = tokenset.claims();
+    const idTokenClaims = tokenset.id_token
+      ? (JSON.parse(
+          Buffer.from(tokenset.id_token.split(".")[1], "base64url").toString(),
+        ) as extendedIdTokenClaims)
+      : ({} as extendedIdTokenClaims);
 
     const userinfoClaims = await this.fetchUserinfo(
-      tokenset,
-      client,
+      tokenset.access_token ?? "",
+      config,
+      idTokenClaims.sub,
       "validate",
     );
 
@@ -158,7 +162,7 @@ export class OidcAuthService {
 
   async refreshUserAccessGroups(
     userId: string,
-    client: Client,
+    config: Configuration,
     accessToken: string,
   ): Promise<void> {
     const oidcConfig = this.configService.get<OidcConfig>("oidc");
@@ -166,7 +170,11 @@ export class OidcAuthService {
 
     let userinfoResponse: extendedIdTokenClaims;
     try {
-      userinfoResponse = await client.userinfo(accessToken);
+      userinfoResponse = (await fetchUserInfo(
+        config,
+        accessToken,
+        skipSubjectCheck,
+      )) as extendedIdTokenClaims;
     } catch (error) {
       Logger.warn(
         `Failed to fetch userinfo during token refresh: ${(error as Error).message}`,

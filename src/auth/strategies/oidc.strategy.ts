@@ -2,11 +2,19 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 
-import { User } from "src/users/schemas/user.schema";
-import { Strategy, Client, TokenSet } from "openid-client";
-import { OidcConfig } from "src/config/configuration";
-import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
 import { Request } from "express";
+import type {
+  Configuration,
+  TokenEndpointResponse,
+  TokenEndpointResponseHelpers,
+} from "openid-client";
+import type { StrategyOptionsWithRequest } from "openid-client/build/passport";
+import { Strategy } from "openid-client/build/passport";
+import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { OidcConfig } from "src/config/configuration";
+import { User } from "src/users/schemas/user.schema";
+
+type OidcTokenSet = TokenEndpointResponse & TokenEndpointResponseHelpers;
 
 @Injectable()
 export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
@@ -14,7 +22,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
   private additionalAuthorizedParties: string[];
 
   constructor(
-    private client: Client,
+    private config: Configuration,
     configService: ConfigService,
     private oidcAuthService: OidcAuthService,
   ) {
@@ -22,11 +30,9 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
     const additionalAuthorizedParties =
       oidcConfig?.additionalAuthorizedParties ?? [];
     super({
-      client: client,
-      params: {
-        redirect_uri: oidcConfig?.callbackURL,
-        scope: oidcConfig?.scope,
-      },
+      config: config,
+      callbackURL: oidcConfig?.callbackURL,
+      scope: oidcConfig?.scope,
       passReqToCallback: true,
     } as StrategyOptionsWithRequest);
     this.additionalAuthorizedParties = additionalAuthorizedParties;
@@ -34,7 +40,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
 
   async validate(
     req: Request,
-    tokenset: TokenSet,
+    tokenset: OidcTokenSet,
   ): Promise<Omit<User, "password">> {
     if (this.additionalAuthorizedParties.length > 0 && tokenset.id_token) {
       const claims = tokenset.claims();
@@ -60,6 +66,6 @@ export class OidcStrategy extends PassportStrategy(Strategy, "oidc") {
         req.session.expiresIn = tokenset.expires_in;
       }
     }
-    return this.oidcAuthService.validate(tokenset, this.client);
+    return this.oidcAuthService.validate(tokenset, this.config);
   }
 }

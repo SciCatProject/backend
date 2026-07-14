@@ -1,25 +1,19 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { compare } from "bcrypt";
-import { User } from "src/users/schemas/user.schema";
-import { UsersService } from "../users/users.service";
 import { Request } from "express";
-import { OidcConfig } from "src/config/configuration";
-import { parseBoolean } from "src/common/utils";
-import { TokenSet } from "openid-client";
-import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
-import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
-import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
-import { OidcClientService } from "../common/openid-client/openid-client.service";
-import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { buildEndSessionUrl } from "openid-client";
 import { TokenRefreshService } from "src/auth/services/token-refresh.service";
+import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { parseBoolean } from "src/common/utils";
+import { OidcConfig } from "src/config/configuration";
+import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
+import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
+import { User } from "src/users/schemas/user.schema";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
+import { UsersService } from "../users/users.service";
+import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 
 @Injectable()
 export class AuthService {
@@ -69,18 +63,7 @@ export class AuthService {
   }
 
   async oidcTokenLogin(idToken: string): Promise<ReturnedAuthLoginDto> {
-    let tokenSet: TokenSet;
-    const client = await this.oidcClientService.getClient();
-    const callbackUrl = this.configService.get<string>("oidc.callbackURL");
-
-    try {
-      tokenSet = await client.callback(callbackUrl, { id_token: idToken }, {});
-    } catch (error) {
-      throw new UnauthorizedException(
-        `Invalid idToken: ${(error as Error).message}`,
-      );
-    }
-    const user = await this.oidcAuthService.validate(tokenSet);
+    const user = await this.oidcAuthService.validate({ id_token: idToken });
     const expiresIn = this.configService.get<number>("jwt.expiresIn");
     const accessToken = this.jwtService.sign(user, { expiresIn });
     await this.postLoginTasks(user);
@@ -217,16 +200,16 @@ export class AuthService {
             }
           }
 
-          const endSessionUrl = oidcClient.endSessionUrl({
-            id_token_hint: idToken,
-            post_logout_redirect_uri: postLogoutRedirectUri,
-            client_id: oidcConfig?.clientID,
+          const endSessionUrl = buildEndSessionUrl(oidcClient, {
+            id_token_hint: idToken ?? "",
+            post_logout_redirect_uri: postLogoutRedirectUri ?? "",
+            client_id: oidcConfig?.clientID ?? "",
           });
 
           if (endSessionUrl) {
             return {
               logout: "successful",
-              logoutURL: endSessionUrl,
+              logoutURL: endSessionUrl.href,
             };
           }
         } catch (error) {

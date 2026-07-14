@@ -1,63 +1,49 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import type { IDToken, UserInfoResponse } from "openid-client";
 import {
-  Client,
-  IdTokenClaims,
-  Issuer,
-  TokenSet,
-  UserinfoResponse,
-  custom,
+  ClientSecretPost,
+  Configuration,
+  discovery,
+  refreshTokenGrant,
 } from "openid-client";
 import { Profile } from "passport";
 import { OidcConfig } from "src/config/configuration";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
 
-export type extendedIdTokenClaims = IdTokenClaims &
-  UserinfoResponse & {
+export type extendedIdTokenClaims = IDToken &
+  UserInfoResponse & {
     groups?: string[];
   };
 export type OidcProfile = Profile & UserProfile;
 
 @Injectable()
 export class OidcClientService {
-  private client: Client | null = null;
+  private config: Configuration | null = null;
   private oidcConfig?: OidcConfig;
 
   constructor(private configService: ConfigService) {
     this.oidcConfig = this.configService.get<OidcConfig>("oidc");
-
-    // Set a reasonable timeout for HTTP requests made by the openid-client library
-    custom.setHttpOptionsDefaults({
-      timeout: 7000,
-    });
   }
 
-  async getClient(): Promise<Client> {
-    if (this.client) return this.client;
+  async getClient(): Promise<Configuration> {
+    if (this.config) return this.config;
 
     if (!this.oidcConfig?.clientID) {
       throw new Error("OIDC clientID not defined in the configuration.");
     }
     try {
-      const issuer = await Issuer.discover(
-        `${this.oidcConfig.issuer}/.well-known/openid-configuration`,
+      const issuerUrl = new URL(this.oidcConfig.issuer!);
+
+      this.config = await discovery(
+        issuerUrl,
+        this.oidcConfig.clientID,
+        { client_secret: this.oidcConfig.clientSecret },
+        ClientSecretPost(this.oidcConfig.clientSecret),
+        { timeout: 7 },
       );
 
-      this.client = new issuer.Client(
-        {
-          client_id: this.oidcConfig.clientID,
-          client_secret: this.oidcConfig.clientSecret,
-        },
-        undefined, // use issuer's JWKS
-        this.oidcConfig.additionalAuthorizedParties?.length
-          ? {
-              additionalAuthorizedParties:
-                this.oidcConfig.additionalAuthorizedParties,
-            }
-          : undefined,
-      );
-
-      return this.client;
+      return this.config;
     } catch (err) {
       throw new Error(
         `OIDC issuer discovery failed: ${err instanceof Error ? err.message : err}`,
@@ -71,19 +57,19 @@ export class OidcClientService {
     refreshToken?: string;
     expiresIn?: number;
   }> {
-    const client = await this.getClient();
+    const config = await this.getClient();
     try {
-      const tokenSet: TokenSet = await client.refresh(refreshToken);
+      const tokenResponse = await refreshTokenGrant(config, refreshToken);
       const result: {
         idToken: string;
         accessToken?: string;
         refreshToken?: string;
         expiresIn?: number;
       } = {
-        idToken: tokenSet.id_token ?? "",
-        accessToken: tokenSet.access_token ?? undefined,
-        refreshToken: tokenSet.refresh_token ?? undefined,
-        expiresIn: tokenSet.expires_in ?? undefined,
+        idToken: tokenResponse.id_token ?? "",
+        accessToken: tokenResponse.access_token ?? undefined,
+        refreshToken: tokenResponse.refresh_token ?? undefined,
+        expiresIn: tokenResponse.expires_in ?? undefined,
       };
       if (!result.idToken) {
         Logger.warn("Token refresh returned no id_token");
