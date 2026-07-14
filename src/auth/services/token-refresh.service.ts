@@ -4,6 +4,8 @@ import { OidcClientService } from "src/common/openid-client/openid-client.servic
 
 interface RefreshEntry {
   timeoutId: ReturnType<typeof setTimeout>;
+  startedAt: number;
+  sessionDurationMs: number;
 }
 
 export interface TokenRefreshResult {
@@ -64,7 +66,22 @@ export class TokenRefreshService implements OnModuleDestroy {
       return;
     }
 
+    const sessionDurationMs =
+      (this.configService.get<number>("jwt.expiresIn") ?? 3600) * 1000;
+
+    this.activeRefreshes.set(sessionId, {
+      timeoutId: undefined as unknown as ReturnType<typeof setTimeout>,
+      startedAt: Date.now(),
+      sessionDurationMs,
+    });
+
     this.scheduleRefresh(sessionId, tokenStore, onTokenRefreshed);
+  }
+
+  private isSessionExpired(sessionId: string): boolean {
+    const entry = this.activeRefreshes.get(sessionId);
+    if (!entry) return true;
+    return Date.now() - entry.startedAt >= entry.sessionDurationMs;
   }
 
   private scheduleRefresh(
@@ -72,13 +89,26 @@ export class TokenRefreshService implements OnModuleDestroy {
     tokenStore: SessionTokenStore,
     onTokenRefreshed?: (accessToken: string) => Promise<void>,
   ): void {
+    if (this.isSessionExpired(sessionId)) {
+      Logger.log(
+        `Stopping OIDC token refresh for session ${sessionId}: session duration exceeded`,
+      );
+      this.stopSessionRefresh(sessionId);
+      return;
+    }
+
+    const delay = this.delayForSession(tokenStore);
     const timeoutId = setTimeout(async () => {
       await this.refreshSessionTokens(sessionId, tokenStore, onTokenRefreshed);
-    }, this.delayForSession(tokenStore));
+    }, delay);
 
-    this.activeRefreshes.set(sessionId, { timeoutId });
+    const entry = this.activeRefreshes.get(sessionId);
+    if (entry) {
+      entry.timeoutId = timeoutId;
+    }
+
     Logger.log(
-      `Started OIDC token refresh for session ${sessionId} (initial delay: ${this.delayForSession(tokenStore)}ms)`,
+      `Scheduled OIDC token refresh for session ${sessionId} in ${delay}ms`,
     );
   }
 
