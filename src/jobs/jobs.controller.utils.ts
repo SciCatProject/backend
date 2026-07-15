@@ -45,6 +45,7 @@ import { loadDatasets } from "src/config/job-config/actions/actionutils";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
+import { generateJobUserToken } from "../config/job-config/token.utils";
 
 @Injectable()
 export class JobsControllerUtils {
@@ -444,19 +445,6 @@ export class JobsControllerUtils {
   }
 
   /**
-   * Extract the Bearer token from the Authorization header of the request.
-   */
-  private extractBearerToken(request: Request): string | undefined {
-    const authHeader = request.headers?.authorization;
-    if (!authHeader) return undefined;
-    const parts = authHeader.split(" ");
-    if (parts.length === 2 && parts[0].toLowerCase() === "bearer") {
-      return parts[1];
-    }
-    return undefined;
-  }
-
-  /**
    * Create job implementation
    */
   async createJob(
@@ -470,11 +458,6 @@ export class JobsControllerUtils {
       createJobDto,
       request.user as JWTUser,
     );
-    // Extract JWT from Authorization header
-    const accessToken = this.extractBearerToken(request);
-    if (accessToken) {
-      jobInstance.accessToken = accessToken;
-    }
     // Allow actions to validate DTO
     const jobConfig = this.getJobTypeConfiguration(createJobDto.type);
     const validateContext = { request: createJobDto, env: process.env };
@@ -485,10 +468,19 @@ export class JobsControllerUtils {
     await validateActions(jobConfig.create.actions, contextWithDatasets);
     // Create actual job in database
     const createdJobInstance = await this.jobsService.create(jobInstance);
+
+    // Generate short-lived JWT for job execution using the stored userId
+    const jobObject = toObject(createdJobInstance) as JobClass;
+    const userToken = await generateJobUserToken(
+      this.usersService,
+      jobObject.userId,
+    );
+
     // Perform the action that is specified in the create portion of the job configuration
     const performContext = {
       ...contextWithDatasets,
-      job: toObject(createdJobInstance) as JobClass,
+      job: jobObject,
+      userToken, // Inject the generated short-lived JWT
     };
     await performActions(jobConfig.create.actions, performContext);
     return createdJobInstance;
@@ -556,9 +548,18 @@ export class JobsControllerUtils {
     // Perform the action that is specified in the update portion of the job configuration
     if (updatedJob !== null) {
       await this.checkConfigVersion(jobConfig, updatedJob);
+
+      // Generate short-lived JWT for job execution using the stored userId
+      const jobObject = toObject(updatedJob) as JobClass;
+      const userToken = await generateJobUserToken(
+        this.usersService,
+        jobObject.userId,
+      );
+
       const performContext = {
         ...contextWithDatasets,
-        job: toObject(updatedJob) as JobClass,
+        job: jobObject,
+        userToken, // Inject the generated short-lived JWT
       };
       await performActions(jobConfig.update.actions, performContext);
     }

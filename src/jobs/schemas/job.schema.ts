@@ -112,15 +112,14 @@ export class JobClass extends OwnableClass {
   jobResultObject: Record<string, unknown>;
 
   /**
-   * JWT access token provided by the user at job creation time.
-   * Stored for reuse by actions performed within the job.
-   * Not exposed in API responses for security reasons.
+   * User ID extracted from the JWT token at job creation.
+   * Used to generate short-lived tokens at job execution time.
    */
   @Prop({
     type: String,
     required: false,
   })
-  accessToken?: string;
+  userId?: string;
 }
 export const JobSchema = SchemaFactory.createForClass(JobClass);
 
