@@ -12,10 +12,6 @@ export type JobDocument = JobClass & Document;
   timestamps: true,
   toJSON: {
     getters: true,
-    transform: (_doc: Document, ret: Record<string, unknown>) => {
-      delete ret.accessToken;
-      return ret;
-    },
   },
 })
 export class JobClass extends OwnableClass {
