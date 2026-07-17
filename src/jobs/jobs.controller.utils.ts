@@ -471,9 +471,13 @@ export class JobsControllerUtils {
 
     // Generate short-lived JWT for job execution using the owner's username
     const jobObject = toObject(createdJobInstance) as JobClass;
+    const jobTokenExpiresIn = this.configService.get<string>(
+      "jwt.jobTokenExpiresIn",
+    );
     const userToken = await generateJobUserToken(
       this.usersService,
       jobObject.ownerUser,
+      jobTokenExpiresIn,
     );
 
     // Perform the action that is specified in the create portion of the job configuration
@@ -554,6 +558,7 @@ export class JobsControllerUtils {
       const userToken = await generateJobUserToken(
         this.usersService,
         jobObject.ownerUser,
+        this.configService.get<string>("jwt.jobTokenExpiresIn"),
       );
 
       const performContext = {

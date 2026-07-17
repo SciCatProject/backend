@@ -183,7 +183,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `HTTP_TIMEOUT` | number | Yes | Timeout for HTTP requests in ms. | 5000 |
 | `JWT_SECRET` | string | | The secret for your JWT token, used for authorization. | |
 | `JWT_EXPIRES_IN` | number | Yes | How long, in seconds, the JWT token is valid. | 3600 |
-| `JOB_TOKEN_EXPIRES_IN` | string | Yes | How long purpose-created job JWTs are valid (e.g. "24h", "7d"). Falls back to `JWT_EXPIRES_IN`. | |
+| `JOB_TOKEN_EXPIRES_IN` | string | Yes | How long purpose-created job JWTs are valid (e.g. "24h", "7d"). Falls back to `JWT_EXPIRES_IN` when not set. | |
 | `LDAP_URL` | string | Yes | The URL to your LDAP server. | |
 | `LDAP_BIND_DN` | string | Yes | Bind*DN for your LDAP server. | |
 | `LDAP_BIND_CREDENTIALS` | string | Yes | Credentials for your LDAP server. | |

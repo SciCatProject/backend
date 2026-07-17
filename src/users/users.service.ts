@@ -379,10 +379,7 @@ export class UsersService implements OnModuleInit {
     expiresIn?: string,
   ): Promise<CreateUserJWT | null> {
     const expiresInOption =
-      expiresIn ||
-      this.configService.get<string>("jwt.jobTokenExpiresIn") ||
-      this.configService.get<string>("jwt.expiresIn") ||
-      "1h";
+      expiresIn || this.configService.get<string>("jwt.expiresIn") || "1h";
 
     if (!accessToken) {
       const payload = {

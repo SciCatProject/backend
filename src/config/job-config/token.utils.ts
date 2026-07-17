@@ -8,11 +8,13 @@ import { UsersService } from "src/users/users.service";
  *
  * @param usersService - UsersService instance for user lookup and token generation
  * @param ownerUser - The username of the job owner (from ownerUser field)
+ * @param expiresIn - Optional token expiry duration (e.g. "24h", "7d"). Falls back to jwt.expiresIn.
  * @returns JWT token string, or undefined if user not found or ownerUser is undefined
  */
 export async function generateJobUserToken(
   usersService: UsersService,
   ownerUser: string | undefined,
+  expiresIn?: string,
 ): Promise<string | undefined> {
   if (!ownerUser) {
     Logger.debug("No ownerUser provided for token generation", "TokenUtils");
@@ -29,7 +31,7 @@ export async function generateJobUserToken(
     }
 
     // Generate JWT using the default expiration from jwt.expiresIn config
-    const jwtResult = await usersService.createUserJWT(jwtUser);
+    const jwtResult = await usersService.createUserJWT(jwtUser, expiresIn);
 
     if (!jwtResult?.jwt) {
       Logger.warn(

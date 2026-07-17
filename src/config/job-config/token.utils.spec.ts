@@ -56,7 +56,10 @@ describe("token.utils", () => {
 
       const result = await generateJobUserToken(usersService, "testuser");
       expect(result).toBeUndefined();
-      expect(usersService.createUserJWT).toHaveBeenCalledWith(mockUser);
+      expect(usersService.createUserJWT).toHaveBeenCalledWith(
+        mockUser,
+        undefined,
+      );
     });
 
     it("should return JWT token when successful", async () => {
@@ -75,7 +78,10 @@ describe("token.utils", () => {
       expect(usersService.findByUsername2JWTUser).toHaveBeenCalledWith(
         "testuser",
       );
-      expect(usersService.createUserJWT).toHaveBeenCalledWith(mockUser);
+      expect(usersService.createUserJWT).toHaveBeenCalledWith(
+        mockUser,
+        undefined,
+      );
     });
   });
 });
