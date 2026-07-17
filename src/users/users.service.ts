@@ -376,9 +376,13 @@ export class UsersService implements OnModuleInit {
 
   async createUserJWT(
     accessToken: JWTUser | undefined,
+    expiresIn?: string,
   ): Promise<CreateUserJWT | null> {
     const expiresInOption =
-      this.configService.get<string>("jwt.expiresIn") || "1h";
+      expiresIn ||
+      this.configService.get<string>("jwt.jobTokenExpiresIn") ||
+      this.configService.get<string>("jwt.expiresIn") ||
+      "1h";
 
     if (!accessToken) {
       const payload = {
