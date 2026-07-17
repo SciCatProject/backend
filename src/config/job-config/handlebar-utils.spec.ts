@@ -28,7 +28,7 @@ describe("handlebar-utils", () => {
     });
 
     it("should make userToken available in templates", () => {
-      const template = compileJobTemplate("Bearer {{userToken}}");
+      const template = compileJobTemplate("{{userToken}}");
       const job = { id: "test-job-123" } as JobClass;
       const context = {
         request: createMockRequest(),
@@ -39,7 +39,7 @@ describe("handlebar-utils", () => {
       };
 
       const result = template(context);
-      expect(result).toBe("Bearer my-jwt-token-abc123");
+      expect(result).toBe("my-jwt-token-abc123");
     });
 
     it("should render empty string when userToken is undefined", () => {

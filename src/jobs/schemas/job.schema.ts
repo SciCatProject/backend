@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Document } from "mongoose";
+import { Document, SchemaTypes } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { OwnableClass } from "src/common/schemas/ownable.schema";
 
@@ -101,21 +101,11 @@ export class JobClass extends OwnableClass {
    * Contains the dataset archiving results. Initially empty, then provided during update.
    */
   @Prop({
-    type: Object,
+    type: SchemaTypes.Mixed,
     required: true,
     default: {},
   })
   jobResultObject: Record<string, unknown>;
-
-  /**
-   * User ID extracted from the JWT token at job creation.
-   * Used to generate short-lived tokens at job execution time.
-   */
-  @Prop({
-    type: String,
-    required: false,
-  })
-  userId?: string;
 }
 export const JobSchema = SchemaFactory.createForClass(JobClass);
 

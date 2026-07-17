@@ -469,11 +469,11 @@ export class JobsControllerUtils {
     // Create actual job in database
     const createdJobInstance = await this.jobsService.create(jobInstance);
 
-    // Generate short-lived JWT for job execution using the stored userId
+    // Generate short-lived JWT for job execution using the owner's username
     const jobObject = toObject(createdJobInstance) as JobClass;
     const userToken = await generateJobUserToken(
       this.usersService,
-      jobObject.userId,
+      jobObject.ownerUser,
     );
 
     // Perform the action that is specified in the create portion of the job configuration
@@ -549,11 +549,11 @@ export class JobsControllerUtils {
     if (updatedJob !== null) {
       await this.checkConfigVersion(jobConfig, updatedJob);
 
-      // Generate short-lived JWT for job execution using the stored userId
+      // Generate short-lived JWT for job execution using the owner's username
       const jobObject = toObject(updatedJob) as JobClass;
       const userToken = await generateJobUserToken(
         this.usersService,
-        jobObject.userId,
+        jobObject.ownerUser,
       );
 
       const performContext = {

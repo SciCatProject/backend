@@ -12,7 +12,7 @@ describe("token.utils", () => {
         {
           provide: UsersService,
           useValue: {
-            findById2JWTUser: jest.fn(),
+            findByUsername2JWTUser: jest.fn(),
             createUserJWT: jest.fn(),
           },
         },
@@ -25,19 +25,22 @@ describe("token.utils", () => {
   });
 
   describe("generateJobUserToken", () => {
-    it("should return undefined when userId is undefined", async () => {
+    it("should return undefined when ownerUser is undefined", async () => {
       const result = await generateJobUserToken(usersService, undefined);
       expect(result).toBeUndefined();
-      expect(usersService.findById2JWTUser).not.toHaveBeenCalled();
+      expect(usersService.findByUsername2JWTUser).not.toHaveBeenCalled();
     });
 
     it("should return undefined when user is not found", async () => {
-      usersService.findById2JWTUser.mockResolvedValue(null);
+      usersService.findByUsername2JWTUser.mockResolvedValue(null);
 
-      const result = await generateJobUserToken(usersService, "nonexistent-id");
+      const result = await generateJobUserToken(
+        usersService,
+        "nonexistent-user",
+      );
       expect(result).toBeUndefined();
-      expect(usersService.findById2JWTUser).toHaveBeenCalledWith(
-        "nonexistent-id",
+      expect(usersService.findByUsername2JWTUser).toHaveBeenCalledWith(
+        "nonexistent-user",
       );
     });
 
@@ -48,10 +51,10 @@ describe("token.utils", () => {
         email: "test@example.com",
         currentGroups: ["public"],
       };
-      usersService.findById2JWTUser.mockResolvedValue(mockUser);
+      usersService.findByUsername2JWTUser.mockResolvedValue(mockUser);
       usersService.createUserJWT.mockResolvedValue(null);
 
-      const result = await generateJobUserToken(usersService, "test-id");
+      const result = await generateJobUserToken(usersService, "testuser");
       expect(result).toBeUndefined();
       expect(usersService.createUserJWT).toHaveBeenCalledWith(mockUser);
     });
@@ -64,12 +67,14 @@ describe("token.utils", () => {
         currentGroups: ["public"],
       };
       const mockJwt = { jwt: "test-jwt-token" };
-      usersService.findById2JWTUser.mockResolvedValue(mockUser);
+      usersService.findByUsername2JWTUser.mockResolvedValue(mockUser);
       usersService.createUserJWT.mockResolvedValue(mockJwt);
 
-      const result = await generateJobUserToken(usersService, "test-id");
+      const result = await generateJobUserToken(usersService, "testuser");
       expect(result).toBe("test-jwt-token");
-      expect(usersService.findById2JWTUser).toHaveBeenCalledWith("test-id");
+      expect(usersService.findByUsername2JWTUser).toHaveBeenCalledWith(
+        "testuser",
+      );
       expect(usersService.createUserJWT).toHaveBeenCalledWith(mockUser);
     });
   });

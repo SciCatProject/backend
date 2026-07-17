@@ -51,10 +51,6 @@ export class JobsService {
   async create(createJobDto: JobClass): Promise<JobDocument> {
     const username = this.getUsername();
 
-    // Extract userId from the authenticated user's JWT payload
-    const jwtUser = this.request.user as JWTUser;
-    const userId = jwtUser?._id;
-
     const jobData = addCreatedByFields(createJobDto, username);
     const statusCode =
       createJobDto.statusCode ||
@@ -63,11 +59,9 @@ export class JobsService {
       createJobDto.statusMessage ||
       this.configService.get<string>("jobDefaultStatusMessage")!;
 
-    // Merge the userId into the document before saving
-    const createdJob = new this.jobModel({
-      ...this.addStatusFields(jobData, statusCode, statusMessage),
-      userId, // Store user ID for generating short-lived tokens at execution time
-    });
+    const createdJob = new this.jobModel(
+      this.addStatusFields(jobData, statusCode, statusMessage),
+    );
 
     return createdJob.save();
   }
