@@ -2626,13 +2626,10 @@ export class DatasetsController {
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
     // remove datablock
-    await this.datablocksService.removeAndUpdateDatasetSizeAndFileCount(
-      {
-        _id: did,
-        datasetId: pid,
-      },
-      pid,
-    );
+    await this.datablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: did,
+      datasetId: pid,
+    });
   }
 
   // DELETE /datasets/:id/datablocks

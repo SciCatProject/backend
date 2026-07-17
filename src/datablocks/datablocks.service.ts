@@ -80,7 +80,9 @@ export class DatablocksService {
    * @param filter - The filter to find the document to remove.
    * @returns The removed document or null if not found.
    */
-  async remove(filter: FilterQuery<DatablockDocument>): Promise<unknown> {
+  async remove(
+    filter: FilterQuery<DatablockDocument>,
+  ): Promise<Datablock | null> {
     return await this.datablockModel.findOneAndDelete(filter).exec();
   }
 
@@ -109,7 +111,7 @@ export class DatablocksService {
   async updateAndUpdateDatasetSizeAndFileCount(
     filter: FilterQuery<DatablockDocument>,
     updateDatablockDto: PartialUpdateDatablockDto,
-  ): Promise<Datablock | null> {
+  ): Promise<Datablock> {
     const datablock = await this.update(filter, updateDatablockDto);
     if (!datablock) throw new DatablocksFilterNotFoundException(filter);
     await this.updateDatasetSizeAndFiles(datablock.datasetId);
@@ -118,11 +120,10 @@ export class DatablocksService {
 
   async removeAndUpdateDatasetSizeAndFileCount(
     filter: FilterQuery<DatablockDocument>,
-    datasetId: string,
-  ): Promise<unknown> {
+  ): Promise<Datablock> {
     const datablock = await this.remove(filter);
     if (!datablock) throw new DatablocksFilterNotFoundException(filter);
-    await this.updateDatasetSizeAndFiles(datasetId);
+    await this.updateDatasetSizeAndFiles(datablock.datasetId);
     return datablock;
   }
 

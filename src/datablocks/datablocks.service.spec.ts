@@ -188,10 +188,9 @@ describe("DatablocksService", () => {
         exec: jest.fn().mockResolvedValue(mockDatablock),
       });
 
-      const result = await service.removeAndUpdateDatasetSizeAndFileCount(
-        { _id: "testId" },
-        "testPid",
-      );
+      const result = await service.removeAndUpdateDatasetSizeAndFileCount({
+        _id: "testId",
+      });
 
       expect(result).toEqual(mockDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
@@ -208,10 +207,7 @@ describe("DatablocksService", () => {
       });
 
       await expect(
-        service.removeAndUpdateDatasetSizeAndFileCount(
-          { _id: "missing" },
-          "testPid",
-        ),
+        service.removeAndUpdateDatasetSizeAndFileCount({ _id: "missing" }),
       ).rejects.toThrow(NotFoundException);
       expect(datasetsService.updateDatasetSizeAndFiles).not.toHaveBeenCalled();
     });

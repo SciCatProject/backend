@@ -312,10 +312,9 @@ export class DatablocksController {
     if (!dataset)
       throw new NotFoundException(`dataset: ${datablock.datasetId} not found`);
 
-    return this.datablocksService.removeAndUpdateDatasetSizeAndFileCount(
-      { _id: id },
-      datablock.datasetId,
-    );
+    return this.datablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: id,
+    });
   }
 }
 
