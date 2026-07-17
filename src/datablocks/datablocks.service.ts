@@ -1,6 +1,7 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { InjectModel } from "@nestjs/mongoose";
+import { DatasetsService } from "src/datasets/datasets.service";
 import { Request } from "express";
 import { DeleteResult, FilterQuery, Model } from "mongoose";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -16,6 +17,7 @@ export class DatablocksService {
   constructor(
     @InjectModel(Datablock.name)
     private datablockModel: Model<DatablockDocument>,
+    private readonly datasetsService: DatasetsService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -94,5 +96,51 @@ export class DatablocksService {
     const count = await this.datablockModel.countDocuments(whereFilter).exec();
 
     return { count };
+  }
+
+  async createAndUpdateDatasetSizeAndFileCount(
+    createDatablockDto: CreateDatablockDto,
+  ): Promise<Datablock> {
+    const datablock = await this.create(createDatablockDto);
+    if (datablock) await this.updateDatasetSizeAndFiles(datablock.datasetId);
+    return datablock;
+  }
+
+  async updateAndUpdateDatasetSizeAndFileCount(
+    filter: FilterQuery<DatablockDocument>,
+    updateDatablockDto: PartialUpdateDatablockDto,
+  ): Promise<Datablock | null> {
+    const datablock = await this.update(filter, updateDatablockDto);
+    if (!datablock) throw new DatablocksFilterNotFoundException(filter);
+    await this.updateDatasetSizeAndFiles(datablock.datasetId);
+    return datablock;
+  }
+
+  async removeAndUpdateDatasetSizeAndFileCount(
+    filter: FilterQuery<DatablockDocument>,
+    datasetId: string,
+  ): Promise<unknown> {
+    const datablock = await this.remove(filter);
+    if (!datablock) throw new DatablocksFilterNotFoundException(filter);
+    await this.updateDatasetSizeAndFiles(datasetId);
+    return datablock;
+  }
+
+  async updateDatasetSizeAndFiles(pid: string) {
+    await this.datasetsService.updateDatasetSizeAndFiles(
+      pid,
+      this.datablockModel,
+      "packedSize",
+      "numberOfFilesArchived",
+    );
+  }
+}
+
+class DatablocksFilterNotFoundException extends NotFoundException {
+  constructor(filter: FilterQuery<DatablockDocument>) {
+    const errorMessage = filter._id
+      ? `datablock: ${filter._id} not found`
+      : `datablock not found for filter: ${JSON.stringify(filter)}`;
+    super(errorMessage);
   }
 }
