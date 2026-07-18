@@ -18,11 +18,12 @@ import { Attachment } from "src/attachments/schemas/attachment.schema";
 
 @Injectable()
 export class AttachmentAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -56,9 +57,9 @@ export class AttachmentAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.attachment.includes(g),
+        this.accessGroups?.attachment?.includes(g),
       ) ||
-      this.accessGroups?.attachment.includes("#all")
+      this.accessGroups?.attachment?.includes("#all")
     ) {
       /**
        * User belonging to ATTACHMENT_GROUPS
@@ -70,7 +71,7 @@ export class AttachmentAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.attachmentPrivileged.includes(g),
+        this.accessGroups?.attachmentPrivileged?.includes(g),
       )
     ) {
       /**
@@ -81,7 +82,7 @@ export class AttachmentAbility {
       can(Action.AttachmentDelete, Attachment, ifOwner);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -93,7 +94,9 @@ export class AttachmentAbility {
       can(Action.AttachmentDelete, Attachment);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */

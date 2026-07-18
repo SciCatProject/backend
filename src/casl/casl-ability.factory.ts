@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  attachmentAccess(user: JWTUser) {
+  attachmentAccess(user: JWTUser | null) {
     return this.attachmentAbility.buildAbility(user);
   }
 
