@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  logbookAccess(user: JWTUser) {
+  logbookAccess(user: JWTUser | null) {
     return this.logbookAbility.buildAbility(user);
   }
 

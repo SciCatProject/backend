@@ -16,8 +16,6 @@ import { Logbook } from "src/logbooks/schemas/logbook.schema";
 
 @Injectable()
 export class LogbookAbility {
-  constructor() {}
-
   buildAbility(
     user: JWTUser | null,
   ): MongoAbility<PossibleAbilities, Conditions> {
