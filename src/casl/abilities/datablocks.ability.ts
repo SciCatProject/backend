@@ -18,11 +18,12 @@ import { Datablock } from "src/datablocks/schemas/datablock.schema";
 
 @Injectable()
 export class DatablockAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -59,9 +60,9 @@ export class DatablockAbility {
     if (
       user.currentGroups.some(
         (g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g) ||
-          this.accessGroups?.createDatasetWithPid.includes(g) ||
-          this.accessGroups?.createDataset.includes(g),
+          this.accessGroups?.createDatasetPrivileged?.includes(g) ||
+          this.accessGroups?.createDatasetWithPid?.includes(g) ||
+          this.accessGroups?.createDataset?.includes(g),
       )
     ) {
       /**
@@ -72,7 +73,7 @@ export class DatablockAbility {
       can(Action.DatablockUpdate, Datablock);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -83,7 +84,9 @@ export class DatablockAbility {
       can(Action.DatablockUpdate, Datablock);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */

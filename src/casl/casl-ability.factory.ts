@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  datablockAccess(user: JWTUser) {
+  datablockAccess(user: JWTUser | null) {
     return this.datablockAbility.buildAbility(user);
   }
 
