@@ -26,11 +26,12 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 
 @Injectable()
 export class HistoryAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -51,7 +52,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyAttachments.includes(g),
+        this.accessGroups?.historyAttachments?.includes(g),
       )
     ) {
       /**
@@ -63,7 +64,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyDatablocks.includes(g),
+        this.accessGroups?.historyDatablocks?.includes(g),
       )
     ) {
       /**
@@ -75,7 +76,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyDataset.includes(g),
+        this.accessGroups?.historyDataset?.includes(g),
       )
     ) {
       /**
@@ -87,7 +88,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyInstrument.includes(g),
+        this.accessGroups?.historyInstrument?.includes(g),
       )
     ) {
       /**
@@ -99,7 +100,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyPolicies.includes(g),
+        this.accessGroups?.historyPolicies?.includes(g),
       )
     ) {
       /**
@@ -111,7 +112,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyProposal.includes(g),
+        this.accessGroups?.historyProposal?.includes(g),
       )
     ) {
       /**
@@ -123,7 +124,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historyPublishedData.includes(g),
+        this.accessGroups?.historyPublishedData?.includes(g),
       )
     ) {
       /**
@@ -135,7 +136,7 @@ export class HistoryAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.historySample.includes(g),
+        this.accessGroups?.historySample?.includes(g),
       )
     ) {
       /**
@@ -145,7 +146,7 @@ export class HistoryAbility {
       can(Action.HistoryRead, SampleClass);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
