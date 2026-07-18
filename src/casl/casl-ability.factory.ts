@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  datasetAccess(user: JWTUser) {
+  datasetAccess(user: JWTUser | null) {
     return this.datasetAbility.buildAbility(user);
   }
 

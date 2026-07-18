@@ -18,11 +18,12 @@ import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 
 @Injectable()
 export class DatasetAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -73,9 +74,9 @@ export class DatasetAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.createDataset.includes(g),
+        this.accessGroups?.createDataset?.includes(g),
       ) ||
-      this.accessGroups?.createDataset.includes("#all")
+      this.accessGroups?.createDataset?.includes("#all")
     ) {
       /**
        * User belonging to CREATE_DATASET_GROUPS
@@ -100,9 +101,9 @@ export class DatasetAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.createDatasetWithPid.includes(g),
+        this.accessGroups?.createDatasetWithPid?.includes(g),
       ) ||
-      this.accessGroups?.createDatasetWithPid.includes("#all")
+      this.accessGroups?.createDatasetWithPid?.includes("#all")
     ) {
       /**
        * User belonging to CREATE_DATASET_WITH_PID_GROUPS
@@ -124,7 +125,7 @@ export class DatasetAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.createDatasetPrivileged.includes(g),
+        this.accessGroups?.createDatasetPrivileged?.includes(g),
       )
     ) {
       /**
@@ -145,7 +146,7 @@ export class DatasetAbility {
       can(Action.DatasetDatablockUpdate, DatasetClass, ifOwner);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -172,7 +173,9 @@ export class DatasetAbility {
       can(Action.DatasetLogbookRead, DatasetClass);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */
