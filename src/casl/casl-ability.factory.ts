@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  instrumentAccess(user: JWTUser) {
+  instrumentAccess(user: JWTUser | null) {
     return this.instrumentAbility.buildAbility(user);
   }
 
