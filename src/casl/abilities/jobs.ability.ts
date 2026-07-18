@@ -20,14 +20,15 @@ import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 
 @Injectable()
 export class JobAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
   ) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -115,7 +116,7 @@ export class JobAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.createJobPrivileged.includes(g),
+        this.accessGroups?.createJobPrivileged?.includes(g),
       )
     ) {
       /**
@@ -127,7 +128,7 @@ export class JobAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.updateJobPrivileged.includes(g),
+        this.accessGroups?.updateJobPrivileged?.includes(g),
       )
     ) {
       /**
@@ -137,7 +138,7 @@ export class JobAbility {
       can(Action.JobUpdate, JobClass);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -147,7 +148,7 @@ export class JobAbility {
     }
 
     if (
-      user.currentGroups.some((g) => this.accessGroups?.deleteJob.includes(g))
+      user.currentGroups.some((g) => this.accessGroups?.deleteJob?.includes(g))
     ) {
       /**
        * User belonging to DELETE_JOB_GROUPS
@@ -161,9 +162,9 @@ export class JobAbility {
     if (
       user.currentGroups.some(
         (g) =>
-          this.accessGroups?.createJobPrivileged.includes(g) &&
-          !this.accessGroups?.updateJobPrivileged.includes(g) &&
-          !this.accessGroups?.admin.includes(g),
+          this.accessGroups?.createJobPrivileged?.includes(g) &&
+          !this.accessGroups?.updateJobPrivileged?.includes(g) &&
+          !this.accessGroups?.admin?.includes(g),
       )
     ) {
       /**
@@ -175,9 +176,9 @@ export class JobAbility {
     if (
       user.currentGroups.some(
         (g) =>
-          !this.accessGroups?.createJobPrivileged.includes(g) &&
-          this.accessGroups?.updateJobPrivileged.includes(g) &&
-          !this.accessGroups?.admin.includes(g),
+          !this.accessGroups?.createJobPrivileged?.includes(g) &&
+          this.accessGroups?.updateJobPrivileged?.includes(g) &&
+          !this.accessGroups?.admin?.includes(g),
       )
     ) {
       /**
