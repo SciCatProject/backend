@@ -13,7 +13,6 @@ import { AccessGroupsType } from "src/config/configuration";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
-import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
@@ -29,6 +28,7 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { InstrumentAbility } from "./abilities/instruments.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private instrumentAbility: InstrumentAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -50,7 +51,7 @@ export class CaslAbilityFactory {
     datablocks: this.datablockEndpointAccess,
     datasets: this.datasetEndpointAccess,
     history: this.historyEndpointAccess,
-    instruments: this.instrumentEndpointAccess,
+    instruments: this.instrumentAccess,
     jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  instrumentAccess(user: JWTUser | null) {
+    return this.instrumentAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -313,52 +318,6 @@ export class CaslAbilityFactory {
         */
       can(Action.Manage, Opensearch);
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  instrumentEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      can(Action.InstrumentRead, Instrument);
-      cannot(Action.InstrumentCreate, Instrument);
-      cannot(Action.InstrumentUpdate, Instrument);
-      cannot(Action.InstrumentDelete, Instrument);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-         * user that belongs to any of the group listed in DELETE_GROUPS
-         */
-
-        can(Action.InstrumentDelete, Instrument);
-      } else {
-        cannot(Action.InstrumentDelete, Instrument);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-
-        can(Action.InstrumentRead, Instrument);
-        can(Action.InstrumentCreate, Instrument);
-        can(Action.InstrumentUpdate, Instrument);
-      } else {
-        can(Action.InstrumentRead, Instrument);
-        cannot(Action.InstrumentCreate, Instrument);
-        cannot(Action.InstrumentUpdate, Instrument);
-      }
-    }
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
