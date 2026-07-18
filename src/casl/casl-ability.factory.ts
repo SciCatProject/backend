@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  metadataKeyAccess(user: JWTUser) {
+  metadataKeyAccess(user: JWTUser | null) {
     return this.metadataKeyAbility.buildAbility(user);
   }
 

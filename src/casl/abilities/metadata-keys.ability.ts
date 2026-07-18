@@ -18,11 +18,12 @@ import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 
 @Injectable()
 export class MetadataKeyAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -51,7 +52,7 @@ export class MetadataKeyAbility {
      */
     can(Action.MetadataKeyRead, MetadataKeyClass, ifAccess);
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
