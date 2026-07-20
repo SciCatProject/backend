@@ -132,7 +132,7 @@ jobs:
         env:
           COMPOSE_PROFILES: ${{ matrix.opensearch_enabled == 'yes' && 'opensearch' || ''}}
           OPENSEARCH_ENABLED: ${{ matrix.opensearch_enabled }}
-          OIDC_ISSUER: http://localhost:8080/local-test
+          OIDC_ISSUER: https://localhost:8443/local-test
           OIDC_CLIENT_ID: scicat-client-test
           OIDC_CLIENT_SECRET: secret
           OIDC_SCOPE: openid profile email
