@@ -2266,7 +2266,7 @@ export class DatasetsController {
     @Param("pid") pid: string,
     @Param("oid") oid: string,
     @Body() updateOrigdatablockDto: UpdateOrigDatablockDto,
-  ): Promise<OrigDatablock | null> {
+  ): Promise<OrigDatablock> {
     await this.checkPermissionsForDatasetExtended(
       request,
       pid,

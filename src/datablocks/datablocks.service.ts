@@ -141,7 +141,7 @@ class DatablocksFilterNotFoundException extends NotFoundException {
   constructor(filter: FilterQuery<DatablockDocument>) {
     const errorMessage = filter._id
       ? `datablock: ${filter._id} not found`
-      : `datablock not found for filter: ${JSON.stringify(filter)}`;
+      : "datablock not found";
     super(errorMessage);
   }
 }

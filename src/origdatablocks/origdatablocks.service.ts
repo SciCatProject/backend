@@ -445,7 +445,7 @@ class OrigDatablocksFilterNotFoundException extends NotFoundException {
   constructor(filter: FilterQuery<OrigDatablockDocument>) {
     const errorMessage = filter._id
       ? `origDatablock: ${filter._id} not found`
-      : `origDatablock not found for filter: ${JSON.stringify(filter)}`;
+      : "origDatablock not found";
     super(errorMessage);
   }
 }

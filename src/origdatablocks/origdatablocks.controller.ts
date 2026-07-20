@@ -656,7 +656,7 @@ export class OrigDatablocksController {
   })
   @ApiResponse({
     status: 200,
-    description: "No value is returned",
+    description: "The deleted origdatablock",
   })
   async remove(@Param("id") id: string): Promise<OrigDatablock> {
     return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
