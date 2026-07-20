@@ -40,7 +40,6 @@ import { IOrigDatablockFields } from "./interfaces/origdatablocks.interface";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
 import { filterDescription, filterExample, parseDate } from "src/common/utils";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
@@ -207,28 +206,9 @@ export class OrigDatablocksController {
       createOrigDatablockDto,
     );
 
-    await this.updateDatasetSizeAndFiles(dataset.pid);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(dataset.pid);
 
     return origdatablock;
-  }
-
-  async updateDatasetSizeAndFiles(pid: string) {
-    // updates datasets size
-    const parsedFilters: IFilters<OrigDatablockDocument, IOrigDatablockFields> =
-      { where: { datasetId: pid } };
-    const datasetOrigdatablocks =
-      await this.origDatablocksService.findAll(parsedFilters);
-
-    const updateDatasetDto: PartialUpdateDatasetDto = {
-      size: datasetOrigdatablocks
-        .map((od) => od.size)
-        .reduce((ps, a) => ps + a, 0),
-      numberOfFiles: datasetOrigdatablocks
-        .map((od) => od.dataFileList.length)
-        .reduce((ps, a) => ps + a, 0),
-    };
-
-    await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto);
   }
 
   @UseGuards(PoliciesGuard)
@@ -659,7 +639,9 @@ export class OrigDatablocksController {
     if (!origdatablock) {
       throw new NotFoundException("Datablock not found");
     }
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(
+      origdatablock.datasetId,
+    );
     return origdatablock;
   }
 
@@ -688,7 +670,9 @@ export class OrigDatablocksController {
       _id: id,
     })) as OrigDatablock;
 
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(
+      origdatablock.datasetId,
+    );
 
     return origdatablock;
   }

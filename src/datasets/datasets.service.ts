@@ -74,6 +74,8 @@ import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto"
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 import { withOCCFilter } from "./utils/occ-util";
+import { DatablockDocument } from "src/datablocks/schemas/datablock.schema";
+import { OrigDatablockDocument } from "src/origdatablocks/schemas/origdatablock.schema";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -728,5 +730,46 @@ export class DatasetsService {
       Logger.error(`Sync failed: ${errorMessage}`, "OpensearchSync");
       throw error;
     }
+  }
+
+  async updateDatasetSizeAndFiles(
+    pid: string,
+    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
+    sizeField: string,
+    filesField: string,
+  ): Promise<void> {
+    const { numberOfFiles, size } = await this.aggregateSizeAndFileCount(
+      pid,
+      model,
+      sizeField,
+    );
+    await this.findByIdAndUpdate(pid, {
+      [sizeField]: size,
+      [filesField]: numberOfFiles,
+    });
+  }
+
+  async aggregateSizeAndFileCount(
+    datasetId: string,
+    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
+    sizeField: string,
+  ): Promise<{ numberOfFiles: number; size: number }> {
+    const [result] = await model
+      .aggregate<{ numberOfFiles: number; size: number }>([
+        { $match: { datasetId } },
+        {
+          $group: {
+            _id: null,
+            size: { $sum: `$${sizeField}` },
+            numberOfFiles: {
+              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
+            },
+          },
+        },
+      ])
+      .exec();
+    return result
+      ? { numberOfFiles: result.numberOfFiles, size: result.size }
+      : { numberOfFiles: 0, size: 0 };
   }
 }

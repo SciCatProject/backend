@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
+import { DatasetsService } from "src/datasets/datasets.service";
 import { InjectModel } from "@nestjs/mongoose";
 import {
   FilterQuery,
@@ -53,6 +54,7 @@ export class OrigDatablocksService {
   constructor(
     @InjectModel(OrigDatablock.name)
     private origDatablockModel: Model<OrigDatablockDocument>,
+    private readonly datasetsService: DatasetsService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -381,5 +383,28 @@ export class OrigDatablocksService {
       .countDocuments(whereFilter)
       .exec();
     return { count };
+  }
+
+  async countFiles(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<CountApiResponse> {
+    const pipeline: PipelineStage[] = [
+      { $match: filter.where ?? {} },
+      { $unwind: "$dataFileList" },
+      { $count: "count" },
+    ];
+    const [result] = await this.origDatablockModel
+      .aggregate<{ count: number }>(pipeline)
+      .exec();
+    return { count: result?.count ?? 0 };
+  }
+
+  async updateDatasetSizeAndFiles(pid: string) {
+    await this.datasetsService.updateDatasetSizeAndFiles(
+      pid,
+      this.origDatablockModel,
+      "size",
+      "numberOfFiles",
+    );
   }
 }

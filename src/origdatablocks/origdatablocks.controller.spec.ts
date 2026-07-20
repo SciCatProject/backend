@@ -10,6 +10,7 @@ import { Request } from "express";
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
   findByIdAndUpdate = jest.fn();
+  updateDatasetSizeAndFiles = jest.fn();
 }
 
 class DatasetsServiceMock {}
@@ -34,10 +35,7 @@ describe("OrigDatablocksController", () => {
     controller = module.get<OrigDatablocksController>(OrigDatablocksController);
     origDatablocksService = module.get<OrigDatablocksService>(
       OrigDatablocksService,
-    );
-
-    // Mock internal methods
-    controller["updateDatasetSizeAndFiles"] = jest.fn();
+    ) as unknown as OrigDatablocksServiceMock;
   });
 
   it("should be defined", () => {
@@ -106,9 +104,9 @@ describe("OrigDatablocksController", () => {
       const result = await controller.update(mockRequest, "123", mockDto);
 
       expect(result).toEqual(updatedDatablock);
-      expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-        "ds1",
-      );
+      expect(
+        origDatablocksService.updateDatasetSizeAndFiles,
+      ).toHaveBeenCalledWith("ds1");
     });
 
     describe("update", () => {
@@ -137,9 +135,9 @@ describe("OrigDatablocksController", () => {
         const result = await controller.update(mockRequest, "123", mockDto);
 
         expect(result).toEqual(updatedDatablock);
-        expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-          "ds1",
-        );
+        expect(
+          origDatablocksService.updateDatasetSizeAndFiles,
+        ).toHaveBeenCalledWith("ds1");
       });
 
       it("should proceed with update if 'if-unmodified-since' header is malformed", async () => {
@@ -154,9 +152,9 @@ describe("OrigDatablocksController", () => {
         const result = await controller.update(mockRequest, "123", mockDto);
 
         expect(result).toEqual(updatedDatablock);
-        expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-          "ds1",
-        );
+        expect(
+          origDatablocksService.updateDatasetSizeAndFiles,
+        ).toHaveBeenCalledWith("ds1");
       });
     });
   });
