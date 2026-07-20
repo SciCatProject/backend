@@ -34,7 +34,6 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetObsoleteDto } from "src/datasets/dto/update-dataset-obsolete.dto";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
 import { PartialUpdateDatablockDto } from "./dto/update-datablock.dto";
@@ -100,20 +99,15 @@ export class DatablocksController {
           pid: createDatablockDto.datasetId,
         },
       });
-      const datablock = await this.datablocksService.create({
+      const datablock = {
         ...createDatablockDto,
         ownerGroup: createDatablockDto.ownerGroup || dataset?.ownerGroup || "",
         accessGroups:
           createDatablockDto.accessGroups || dataset?.accessGroups || [],
-      });
-      if (dataset) {
-        await this.datasetsService.findByIdAndUpdate(datablock.datasetId, {
-          packedSize: (dataset.packedSize ?? 0) + datablock.packedSize,
-          numberOfFilesArchived:
-            dataset.numberOfFilesArchived + datablock.dataFileList.length,
-        });
-      }
-      return datablock;
+      };
+      return await this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
+        datablock,
+      );
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
@@ -279,11 +273,10 @@ export class DatablocksController {
         throw new ForbiddenException("Unauthorized to update this datablock");
       }
 
-      const datablock = await this.datablocksService.update(
+      return await this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
         { _id: id },
         updateDatablockDto,
       );
-      return datablock;
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
@@ -304,6 +297,11 @@ export class DatablocksController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<unknown> {
+    const user: JWTUser = request.user as JWTUser;
+    const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
+    if (ability.cannot(Action.DatablockDeleteAny, Datablock)) {
+      throw new ForbiddenException("Unauthorized to delete this datablock");
+    }
     const datablock = await this.datablocksService.findOne({
       where: { _id: id },
     });
@@ -314,21 +312,9 @@ export class DatablocksController {
     if (!dataset)
       throw new NotFoundException(`dataset: ${datablock.datasetId} not found`);
 
-    const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datablockInstanceAccess(user);
-    if (ability.cannot(Action.DatablockDeleteAny, Datablock)) {
-      throw new ForbiddenException("Unauthorized to delete this datablock");
-    }
-
-    const res = (await this.datablocksService.remove({ _id: id })) as Datablock;
-    const updateDatasetDto: PartialUpdateDatasetObsoleteDto = {
-      packedSize: (dataset.packedSize ?? 0) - res.packedSize,
-      numberOfFilesArchived:
-        dataset.numberOfFilesArchived - res.dataFileList.length,
-    };
-    await this.datasetsService.findByIdAndUpdate(dataset.pid, updateDatasetDto);
-
-    return res;
+    return this.datablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: id,
+    });
   }
 }
 

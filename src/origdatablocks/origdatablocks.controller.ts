@@ -209,16 +209,9 @@ export class OrigDatablocksController {
       createOrigDatablockDto,
     );
 
-    await this.updateDatasetSizeAndFiles(dataset.pid);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(dataset.pid);
 
     return origdatablock;
-  }
-
-  async updateDatasetSizeAndFiles(pid: string) {
-    const { size, numberOfFiles } =
-      await this.origDatablocksService.aggregateSizeAndFileCount(pid);
-
-    await this.datasetsService.findByIdAndUpdate(pid, { size, numberOfFiles });
   }
 
   @UseGuards(PoliciesGuard)
@@ -650,7 +643,9 @@ export class OrigDatablocksController {
     if (!origdatablock) {
       throw new NotFoundException("Datablock not found");
     }
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(
+      origdatablock.datasetId,
+    );
     return origdatablock;
   }
 
@@ -679,7 +674,9 @@ export class OrigDatablocksController {
       _id: id,
     })) as OrigDatablock;
 
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
+    await this.origDatablocksService.updateDatasetSizeAndFiles(
+      origdatablock.datasetId,
+    );
 
     return origdatablock;
   }

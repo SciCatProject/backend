@@ -296,6 +296,7 @@ describe("Datablocks", () => {
         datasetId: historyDatasetId, // Override with our specific values
         ownerGroup: historyOwnerGroup,
         size: originalSize,
+        packedSize: originalSize,
         archiveId: "original-archive-id",
       };
 
@@ -312,10 +313,26 @@ describe("Datablocks", () => {
         });
     });
 
+    it("1005: should update the dataset packedSize and numberOfFilesArchived after creating the datablock", async () => {
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(originalSize);
+          res.body.should.have
+            .property("numberOfFilesArchived")
+            .and.equal(TestData.DataBlockCorrect.dataFileList.length);
+        });
+    });
+
     it("1010: should update datablock with new archiveId and size", async () => {
       const updatePayload = {
         archiveId: "994394",
         size: 737243,
+        packedSize: 737243,
       };
 
       return request(appUrl)
@@ -332,6 +349,9 @@ describe("Datablocks", () => {
             .property("archiveId")
             .equal(updatePayload.archiveId);
           res.body.should.have.property("size").equal(updatePayload.size);
+          res.body.should.have
+            .property("packedSize")
+            .equal(updatePayload.packedSize);
         });
     });
 
@@ -346,6 +366,21 @@ describe("Datablocks", () => {
           res.body.should.be.a("object");
           res.body.should.have.property("archiveId").equal("994394");
           res.body.should.have.property("size").equal(737243);
+        });
+    });
+
+    it("1025: should update the dataset packedSize after the datablock size was updated", async () => {
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(737243);
+          res.body.should.have
+            .property("numberOfFilesArchived")
+            .and.equal(TestData.DataBlockCorrect.dataFileList.length);
         });
     });
 
@@ -396,6 +431,25 @@ describe("Datablocks", () => {
           // After should have the updated values
           updateHistory.after.should.have.property("archiveId").equal("994394");
           updateHistory.after.should.have.property("size").equal(737243);
+        });
+    });
+
+    it("1035: should reset the dataset packedSize and numberOfFilesArchived after deleting the datablock", async () => {
+      await request(appUrl)
+        .delete(`/api/v3/datablocks/${historyDatablockId}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+        .expect(TestData.SuccessfulDeleteStatusCode);
+
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(0);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(0);
         });
     });
 
