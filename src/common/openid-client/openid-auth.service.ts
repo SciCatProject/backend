@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { FilterQuery } from "mongoose";
@@ -93,6 +94,19 @@ export class OidcAuthService {
           Buffer.from(tokenset.id_token.split(".")[1], "base64url").toString(),
         ) as extendedIdTokenClaims)
       : ({} as extendedIdTokenClaims);
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    const azp = idTokenClaims?.azp;
+    const allowedParties = [
+      ...(oidcConfig?.additionalAuthorizedParties ?? []),
+      oidcConfig?.clientID,
+    ].filter(Boolean);
+
+    if (azp && allowedParties.length > 0 && !allowedParties.includes(azp)) {
+      throw new UnauthorizedException(
+        `Token azp "${azp}" is not an authorized party`,
+      );
+    }
 
     const userinfoClaims = await this.fetchUserinfo(
       tokenset.access_token ?? "",
