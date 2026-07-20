@@ -8,8 +8,10 @@ services:
       JSON_CONFIG: |
         {
           "interactiveLogin": false,
-          "httpServer": "NettyWrapper",
-          "ssl": {},
+          "httpServer": {
+            "type": "NettyWrapper",
+            "ssl": {}
+          },
           "tokenCallbacks": [
             {
               "issuerId": "local-test",
