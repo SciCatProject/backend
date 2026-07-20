@@ -137,6 +137,7 @@ jobs:
           OIDC_CLIENT_SECRET: secret
           OIDC_SCOPE: openid profile email
           OIDC_ADDITIONAL_AUTHORIZED_PARTIES: additional-authorized-client-test-1, additional-authorized-client-test-2
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
 
         # Start mongo container and app before running api tests
         run: |
