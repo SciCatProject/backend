@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  opensearchAccess(user: JWTUser) {
+  opensearchAccess(user: JWTUser | null) {
     return this.opensearchAbility.buildAbility(user);
   }
 

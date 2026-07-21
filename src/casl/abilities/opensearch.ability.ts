@@ -18,11 +18,12 @@ import { Opensearch } from "src/opensearch/opensearch.subject";
 
 @Injectable()
 export class OpensearchAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -33,7 +34,7 @@ export class OpensearchAbility {
 
     if (
       user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))
     ) {
       /**
        * User belonging to ADMIN_GROUPS
