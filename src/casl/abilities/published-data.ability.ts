@@ -18,11 +18,12 @@ import { PublishedData } from "src/published-data/schemas/published-data.schema"
 
 @Injectable()
 export class PublishedDataAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -48,14 +49,16 @@ export class PublishedDataAbility {
     can(Action.Read, PublishedData);
     can(Action.Update, PublishedData);
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
       can(Action.AccessAny, PublishedData);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */
