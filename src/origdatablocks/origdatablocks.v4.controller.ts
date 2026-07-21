@@ -124,44 +124,9 @@ export class OrigDatablocksV4Controller {
     const origDatablockInstance =
       await this.generateOrigDatablockInstanceForPermissions(origdatablock);
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
 
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.OrigdatablockCreate:
-        canDoAction =
-          ability.can(Action.OrigdatablockCreateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockCreateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockRead:
-        canDoAction =
-          ability.can(Action.OrigdatablockReadAny, origDatablockInstance) ||
-          ability.can(
-            Action.OrigdatablockReadOnePublic,
-            origDatablockInstance,
-          ) ||
-          ability.can(
-            Action.OrigdatablockReadOneAccess,
-            origDatablockInstance,
-          ) ||
-          ability.can(Action.OrigdatablockReadOneOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockUpdate:
-        canDoAction =
-          ability.can(Action.OrigdatablockUpdateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockUpdateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockDelete:
-        canDoAction =
-          ability.can(Action.OrigdatablockDeleteAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockDeleteOwner, origDatablockInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const canDoAction = ability.can(group, origDatablockInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
@@ -315,49 +280,35 @@ export class OrigDatablocksV4Controller {
       IOrigDatablockFields
     >,
   ): IOrigDatablockFiltersV4<OrigDatablockDocument, IOrigDatablockFields> {
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    const canViewOwner = ability.can(
-      Action.OrigdatablockReadManyOwner,
-      OrigDatablock,
-    );
-    const canViewAccess = ability.can(
-      Action.OrigdatablockReadManyAccess,
-      OrigDatablock,
-    );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!filter.where) {
-      filter.where = {};
-    }
-
-    if (!canViewAny) {
-      if (canViewAccess) {
-        if (filter.where["$and"]) {
-          filter.where["$and"].push({
+    if (!user) {
+      // In API v4 unauthorized users must use the public endpoints
+      throw new ForbiddenException("Unauthorized access");
+    } else if (!canViewAny && canView) {
+      filter.where = filter.where ?? {};
+      if (filter.where["$and"]) {
+        filter.where["$and"].push({
+          $or: [
+            { ownerGroup: { $in: user.currentGroups } },
+            { accessGroups: { $in: user.currentGroups } },
+            { sharedWith: { $in: [user.email] } },
+            { isPublished: true },
+          ],
+        });
+      } else {
+        filter.where["$and"] = [
+          {
             $or: [
               { ownerGroup: { $in: user.currentGroups } },
               { accessGroups: { $in: user.currentGroups } },
               { sharedWith: { $in: [user.email] } },
               { isPublished: true },
             ],
-          });
-        } else {
-          filter.where["$and"] = [
-            {
-              $or: [
-                { ownerGroup: { $in: user.currentGroups } },
-                { accessGroups: { $in: user.currentGroups } },
-                { sharedWith: { $in: [user.email] } },
-                { isPublished: true },
-              ],
-            },
-          ];
-        }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
+          },
+        ];
       }
     }
 
@@ -586,26 +537,17 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters: IFacets<IOrigDatablockFields> = {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "{}"),
@@ -636,26 +578,17 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters = {
       fields: fields,
       limits: JSON.parse(filters.facets ?? "{}"),
