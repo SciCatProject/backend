@@ -18,7 +18,6 @@ import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
-import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
@@ -29,6 +28,7 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private metadataKeyAbility: MetadataKeyAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -53,7 +54,7 @@ export class CaslAbilityFactory {
     instruments: this.instrumentEndpointAccess,
     jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
+    metadataKeys: this.metadataKeyAccess,
     opensearch: this.opensearchEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
     policies: this.policyEndpointAccess,
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  metadataKeyAccess(user: JWTUser | null) {
+    return this.metadataKeyAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -926,20 +931,6 @@ export class CaslAbilityFactory {
         */
       can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metadataKeysEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.MetadataKeysReadEndpoint, MetadataKeyClass);
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -2429,42 +2420,6 @@ export class CaslAbilityFactory {
         can(Action.DatablockUpdateAny, Datablock);
       }
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  metadataKeyInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass);
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-          userGroups: { $in: user.currentGroups },
-        });
-      }
-    }
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
