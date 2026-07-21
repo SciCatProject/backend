@@ -202,13 +202,9 @@ export class OrigDatablocksController {
       };
     }
 
-    const origdatablock = await this.origDatablocksService.create(
+    return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
       createOrigDatablockDto,
     );
-
-    await this.origDatablocksService.updateDatasetSizeAndFiles(dataset.pid);
-
-    return origdatablock;
   }
 
   @UseGuards(PoliciesGuard)
@@ -631,18 +627,11 @@ export class OrigDatablocksController {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
+    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
       id,
       updateOrigDatablockDto,
       unmodifiedSince,
     );
-    if (!origdatablock) {
-      throw new NotFoundException("Datablock not found");
-    }
-    await this.origDatablocksService.updateDatasetSizeAndFiles(
-      origdatablock.datasetId,
-    );
-    return origdatablock;
   }
 
   // DELETE /origdatablocks/:id
@@ -663,17 +652,11 @@ export class OrigDatablocksController {
   })
   @ApiResponse({
     status: 200,
-    description: "No value is returned",
+    description: "The deleted origdatablock",
   })
-  async remove(@Param("id") id: string): Promise<unknown> {
-    const origdatablock = (await this.origDatablocksService.remove({
+  async remove(@Param("id") id: string): Promise<OrigDatablock> {
+    return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
       _id: id,
-    })) as OrigDatablock;
-
-    await this.origDatablocksService.updateDatasetSizeAndFiles(
-      origdatablock.datasetId,
-    );
-
-    return origdatablock;
+    });
   }
 }
