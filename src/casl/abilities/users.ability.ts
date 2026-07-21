@@ -18,11 +18,12 @@ import { User } from "src/users/schemas/user.schema";
 
 @Injectable()
 export class UserAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -51,7 +52,7 @@ export class UserAbility {
     can(Action.UserUpdate, User, matchUid);
     can(Action.UserDelete, User, matchUid);
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
