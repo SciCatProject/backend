@@ -99,10 +99,13 @@ const mockDataset: DatasetClass = {
 };
 
 const mockDatasetModel = function (data: DatasetClass) {
-  return {
+  const doc = {
     ...data,
-    save: jest.fn().mockResolvedValue(data),
     toObject: jest.fn().mockReturnValue(data),
+  };
+  return {
+    ...doc,
+    save: jest.fn().mockResolvedValue(doc),
   };
 };
 mockDatasetModel.collection = { name: "Dataset" };

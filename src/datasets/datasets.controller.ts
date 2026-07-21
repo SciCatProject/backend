@@ -86,7 +86,6 @@ import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { CreateDerivedDatasetObsoleteDto } from "./dto/create-derived-dataset-obsolete.dto";
 import { CreateRawDatasetObsoleteDto } from "./dto/create-raw-dataset-obsolete.dto";
 import { OutputDatasetObsoleteDto } from "./dto/output-dataset-obsolete.dto";
-import { PartialUpdateDatasetObsoleteDto } from "./dto/update-dataset-obsolete.dto";
 import {
   PartialUpdateDatasetDto,
   PartialUpdateDatasetLifecycleDto,
@@ -2098,15 +2097,9 @@ export class DatasetsController {
       accessGroups: dataset.accessGroups,
       instrumentGroup: dataset.instrumentGroup,
     };
-    const datablock =
-      await this.origDatablocksService.create(createOrigDatablock);
-
-    const updateDatasetDto: PartialUpdateDatasetObsoleteDto = {
-      size: dataset.size + datablock.size,
-      numberOfFiles: dataset.numberOfFiles + datablock.dataFileList.length,
-    };
-    await this.datasetsService.findByIdAndUpdate(dataset.pid, updateDatasetDto);
-    return datablock;
+    return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
+      createOrigDatablock,
+    );
   }
 
   // POST /datasets/:id/origdatablocks/isValid
@@ -2273,31 +2266,16 @@ export class DatasetsController {
     @Param("pid") pid: string,
     @Param("oid") oid: string,
     @Body() updateOrigdatablockDto: UpdateOrigDatablockDto,
-  ): Promise<OrigDatablock | null> {
-    const dataset = await this.checkPermissionsForDatasetExtended(
+  ): Promise<OrigDatablock> {
+    await this.checkPermissionsForDatasetExtended(
       request,
       pid,
       Action.DatasetOrigdatablockUpdate,
     );
-    const origDatablockBeforeUpdate = await this.origDatablocksService.findOne({
-      _id: oid,
-    });
-
-    if (!origDatablockBeforeUpdate)
-      throw new NotFoundException(`origDatablock: ${oid} not found`);
-
-    const origDatablock = (await this.origDatablocksService.update(
-      { _id: oid },
+    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
+      oid,
       updateOrigdatablockDto,
-    )) as OrigDatablock;
-    await this.datasetsService.findByIdAndUpdate(pid, {
-      size: dataset.size - origDatablockBeforeUpdate.size + origDatablock.size,
-      numberOfFiles:
-        dataset.numberOfFiles -
-        origDatablockBeforeUpdate.dataFileList.length +
-        origDatablock.dataFileList.length,
-    });
-    return origDatablock;
+    );
   }
 
   // DELETE /datasets/:id/origdatablocks
@@ -2377,23 +2355,16 @@ export class DatasetsController {
     @Param("pid") pid: string,
     @Param("oid") oid: string,
   ): Promise<unknown> {
-    const dataset = await this.checkPermissionsForDatasetExtended(
+    await this.checkPermissionsForDatasetExtended(
       request,
       pid,
       Action.DatasetOrigdatablockDelete,
     );
-    const odb = (await this.origDatablocksService.remove({
+
+    return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
       _id: oid,
       datasetId: pid,
-    })) as OrigDatablock;
-    if (!odb) throw new NotFoundException(`origDatablock: ${oid} not found`);
-    // update dataset size and files number
-    const updateDatasetDto: PartialUpdateDatasetObsoleteDto = {
-      size: dataset.size - odb.size,
-      numberOfFiles: dataset.numberOfFiles - odb.dataFileList.length,
-    };
-    await this.datasetsService.findByIdAndUpdate(dataset.pid, updateDatasetDto);
-    return odb;
+    });
   }
 
   // POST /datasets/:id/datablocks
@@ -2444,13 +2415,9 @@ export class DatasetsController {
       accessGroups: dataset.accessGroups,
       instrumentGroup: dataset.instrumentGroup,
     };
-    const datablock = await this.datablocksService.create(createDatablock);
-    await this.datasetsService.findByIdAndUpdate(pid, {
-      packedSize: (dataset.packedSize ?? 0) + datablock.packedSize,
-      numberOfFilesArchived:
-        dataset.numberOfFilesArchived + datablock.dataFileList.length,
-    });
-    return datablock;
+    return this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
+      createDatablock,
+    );
   }
 
   // GET /datasets/:id/datablocks
@@ -2583,27 +2550,10 @@ export class DatasetsController {
     );
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
-    const datablockBeforeUpdate = await this.datablocksService.findOne({
-      where: { _id: did },
-    });
-    if (!datablockBeforeUpdate)
-      throw new NotFoundException(`datablock: ${did} not found`);
-
-    const datablock = (await this.datablocksService.update(
-      { _id: did },
+    return this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
+      { _id: did, datasetId: pid },
       updateDatablockDto,
-    )) as Datablock;
-    await this.datasetsService.findByIdAndUpdate(pid, {
-      packedSize:
-        (dataset.packedSize ?? 0) -
-        datablockBeforeUpdate.packedSize +
-        datablock.packedSize,
-      numberOfFilesArchived:
-        dataset.numberOfFilesArchived -
-        datablockBeforeUpdate.dataFileList.length +
-        datablock.dataFileList.length,
-    });
-    return datablock;
+    );
   }
 
   // DELETE /datasets/:id/datablocks/:fk
@@ -2646,19 +2596,10 @@ export class DatasetsController {
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
     // remove datablock
-    const datablock = (await this.datablocksService.remove({
+    await this.datablocksService.removeAndUpdateDatasetSizeAndFileCount({
       _id: did,
       datasetId: pid,
-    })) as Datablock;
-
-    if (!datablock) throw new NotFoundException(`datablock: ${did} not found`);
-    // update dataset size and files number
-    const updateDatasetDto: PartialUpdateDatasetObsoleteDto = {
-      packedSize: (dataset.packedSize ?? 0) - datablock.packedSize,
-      numberOfFilesArchived:
-        dataset.numberOfFilesArchived - datablock.dataFileList.length,
-    };
-    await this.datasetsService.findByIdAndUpdate(dataset.pid, updateDatasetDto);
+    });
   }
 
   // DELETE /datasets/:id/datablocks
