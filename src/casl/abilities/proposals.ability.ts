@@ -18,11 +18,12 @@ import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 
 @Injectable()
 export class ProposalAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -61,7 +62,7 @@ export class ProposalAbility {
 
     if (
       user.currentGroups.some((g) => {
-        return this.accessGroups?.proposal.includes(g);
+        return this.accessGroups?.proposal?.includes(g);
       })
     ) {
       /**
@@ -78,7 +79,7 @@ export class ProposalAbility {
       can(Action.ProposalAttachmentDelete, ProposalClass, ifOwner);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -94,7 +95,9 @@ export class ProposalAbility {
       can(Action.ProposalAttachmentDelete, ProposalClass);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */
