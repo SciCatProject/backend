@@ -18,11 +18,12 @@ import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.
 
 @Injectable()
 export class RuntimeConfigAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -38,7 +39,7 @@ export class RuntimeConfigAbility {
 
     if (
       user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
+      user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))
     ) {
       /**
        * User belonging to ADMIN_GROUPS

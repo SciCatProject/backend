@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  runtimeConfigAccess(user: JWTUser) {
+  runtimeConfigAccess(user: JWTUser | null) {
     return this.runtimeConfigAbility.buildAbility(user);
   }
 
