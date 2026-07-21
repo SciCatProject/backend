@@ -75,7 +75,7 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
-  sampleAccess(user: JWTUser) {
+  sampleAccess(user: JWTUser | null) {
     return this.sampleAbility.buildAbility(user);
   }
 

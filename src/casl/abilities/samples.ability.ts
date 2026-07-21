@@ -18,11 +18,12 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 
 @Injectable()
 export class SampleAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -60,8 +61,8 @@ export class SampleAbility {
     can(Action.SampleAttachmentRead, SampleClass, ifPublished);
 
     if (
-      user.currentGroups.some((g) => this.accessGroups?.sample.includes(g)) ||
-      this.accessGroups?.sample.includes("#all")
+      user.currentGroups.some((g) => this.accessGroups?.sample?.includes(g)) ||
+      this.accessGroups?.sample?.includes("#all")
     ) {
       /**
        * User belonging to SAMPLE_GROUPS
@@ -76,7 +77,7 @@ export class SampleAbility {
 
     if (
       user.currentGroups.some((g) =>
-        this.accessGroups?.samplePrivileged.includes(g),
+        this.accessGroups?.samplePrivileged?.includes(g),
       )
     ) {
       /**
@@ -90,7 +91,7 @@ export class SampleAbility {
       can(Action.SampleAttachmentDelete, SampleClass, ifOwner);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) {
+    if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
@@ -106,7 +107,9 @@ export class SampleAbility {
       can(Action.SampleAttachmentDelete, SampleClass);
     }
 
-    if (user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))) {
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
+    ) {
       /**
        * User belonging to DELETE_GROUPS
        */
