@@ -24,11 +24,11 @@ import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
-import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private runtimeConfigAbility: RuntimeConfigAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -59,7 +60,7 @@ export class CaslAbilityFactory {
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
-    runtimeconfig: this.runtimeConfigEndpointAccess,
+    runtimeconfig: this.runtimeConfigAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
   };
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  runtimeConfigAccess(user: JWTUser | null) {
+    return this.runtimeConfigAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -906,26 +911,6 @@ export class CaslAbilityFactory {
       cannot(Action.DatablockDeleteEndpoint, Datablock);
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-  runtimeConfigEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.RuntimeConfigReadEndpoint, RuntimeConfig);
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-      can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
