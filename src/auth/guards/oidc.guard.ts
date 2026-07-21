@@ -14,6 +14,10 @@ declare module "express-session" {
     client?: string;
     returnUrl?: string;
     successUrl?: string;
+    idToken?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
   }
 }
 

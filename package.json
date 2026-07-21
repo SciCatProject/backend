@@ -74,7 +74,7 @@
     "migrate-mongo": "^14.0.7",
     "mongoose": "^8.20.3",
     "node-fetch": "^3.3.0",
-    "openid-client": "^5.1.8",
+    "openid-client": "^6.8.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.0",
     "passport-ldapauth": "^3.0.1",

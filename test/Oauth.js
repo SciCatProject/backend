@@ -7,7 +7,7 @@ describe("OIDC E2E", () => {
     if (!isCI) this.skip();
   });
 
-  const keycloakUrl = "http://localhost:8080";
+  const keycloakUrl = "https://localhost:8443";
 
   const testUser = {
     username: "test-username",

@@ -1,24 +1,19 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { compare } from "bcrypt";
-import { User } from "src/users/schemas/user.schema";
-import { UsersService } from "../users/users.service";
 import { Request } from "express";
-import { OidcConfig } from "src/config/configuration";
-import { flattenObject, parseBoolean } from "src/common/utils";
-import { Issuer, TokenSet } from "openid-client";
-import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
-import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
-import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
-import { OidcClientService } from "../common/openid-client/openid-client.service";
+import { buildEndSessionUrl } from "openid-client";
+import { TokenRefreshService } from "src/auth/services/token-refresh.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { parseBoolean } from "src/common/utils";
+import { OidcConfig } from "src/config/configuration";
+import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
+import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
+import { User } from "src/users/schemas/user.schema";
+import { OidcClientService } from "../common/openid-client/openid-client.service";
+import { UsersService } from "../users/users.service";
+import { ReturnedAuthLoginDto } from "./dto/returnedLogin.dto";
 
 @Injectable()
 export class AuthService {
@@ -28,6 +23,7 @@ export class AuthService {
     private oidcClientService: OidcClientService,
     private oidcAuthService: OidcAuthService,
     private jwtService: JwtService,
+    private tokenRefreshService: TokenRefreshService,
   ) {}
 
   async validateUser(
@@ -67,18 +63,7 @@ export class AuthService {
   }
 
   async oidcTokenLogin(idToken: string): Promise<ReturnedAuthLoginDto> {
-    let tokenSet: TokenSet;
-    const client = await this.oidcClientService.getClient();
-    const callbackUrl = this.configService.get<string>("oidc.callbackURL");
-
-    try {
-      tokenSet = await client.callback(callbackUrl, { id_token: idToken }, {});
-    } catch (error) {
-      throw new UnauthorizedException(
-        `Invalid idToken: ${(error as Error).message}`,
-      );
-    }
-    const user = await this.oidcAuthService.validate(tokenSet);
+    const user = await this.oidcAuthService.validate({ id_token: idToken });
     const expiresIn = this.configService.get<number>("jwt.expiresIn");
     const accessToken = this.jwtService.sign(user, { expiresIn });
     await this.postLoginTasks(user);
@@ -100,14 +85,18 @@ export class AuthService {
       "expressSession.secret",
     );
 
+    this.tokenRefreshService.stopSessionRefresh(req.sessionID);
+
     const logoutResult = await this.additionalLogoutTasks(req, logoutURL);
 
     if (expressSessionSecret) {
+      delete req.session?.idToken;
+      delete req.session?.accessToken;
+      delete req.session?.refreshToken;
+
       req.logout(async (err) => {
         if (err) {
-          // we should provide a message
           Logger.error("Logout error: ", err);
-          //res.status(HttpStatus.BAD_REQUEST);
         }
       });
 
@@ -115,6 +104,61 @@ export class AuthService {
     } else {
       return logoutResult;
     }
+  }
+
+  startOidcSessionRefresh(req: Request): void {
+    if (!req.session?.refreshToken) {
+      Logger.debug(
+        "OIDC session refresh not started: no refresh token in session",
+      );
+      return;
+    }
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (oidcConfig?.tokenRefreshEnabled === false) {
+      Logger.debug(
+        "OIDC session refresh not started: tokenRefreshEnabled is false",
+      );
+      return;
+    }
+
+    const userId = (req.user as Omit<User, "password">)?._id;
+    const userinfoEnabled = oidcConfig?.userinfoEnabled !== false;
+
+    Logger.log(
+      `Starting OIDC session refresh for session ${req.sessionID} (userinfoEnabled: ${userinfoEnabled})`,
+    );
+
+    this.tokenRefreshService.startSessionRefresh(
+      req.sessionID,
+      {
+        getTokens: () => ({
+          refreshToken: req.session?.refreshToken,
+          accessToken: req.session?.accessToken,
+          expiresIn: req.session?.expiresIn,
+        }),
+        setTokens: (tokens) => {
+          if (req.session) {
+            req.session.idToken = tokens.idToken;
+            if (tokens.accessToken)
+              req.session.accessToken = tokens.accessToken;
+            if (tokens.refreshToken)
+              req.session.refreshToken = tokens.refreshToken;
+            if (tokens.expiresIn) req.session.expiresIn = tokens.expiresIn;
+          }
+        },
+      },
+      userId && userinfoEnabled
+        ? async (accessToken: string) => {
+            const client = await this.oidcClientService.getClient();
+            await this.oidcAuthService.refreshUserAccessGroups(
+              userId,
+              client,
+              accessToken,
+            );
+          }
+        : undefined,
+    );
   }
 
   async additionalLogoutTasks(req: Request, logoutURL: string) {
@@ -134,28 +178,44 @@ export class AuthService {
           };
         }
 
-        // If there is no LOGOUT_URL set try to get one from the issuer
-        const trustIssuer = await Issuer.discover(
-          `${oidcConfig?.issuer}/.well-known/openid-configuration`,
-        );
-        // Flatten the object in case the end_session url is nested.
-        const flattenTrustIssuer = flattenObject(trustIssuer);
+        const idToken = req.session?.idToken;
 
-        // Note search for "end_session" key into the flatten object
-        const endSessionEndpointKey = Object.keys(flattenTrustIssuer).find(
-          (key) => key.includes("end_session"),
-        );
+        try {
+          const oidcClient = await this.oidcClientService.getClient();
 
-        if (endSessionEndpointKey) {
-          // Get the end_session endpoint value
-          const endSessionEndpoint = flattenTrustIssuer[endSessionEndpointKey];
+          const frontendClient = req.session?.client ?? "scicat";
+          const returnUrl =
+            oidcConfig?.clientConfig?.[frontendClient]?.returnUrl ??
+            "/datasets";
+          const successUrl =
+            oidcConfig?.clientConfig?.[frontendClient]?.successUrl;
 
-          if (endSessionEndpoint) {
+          let postLogoutRedirectUri: string | undefined;
+          if (successUrl) {
+            try {
+              const url = new URL(successUrl);
+              postLogoutRedirectUri = `${url.origin}${returnUrl}`;
+            } catch {
+              postLogoutRedirectUri = successUrl;
+            }
+          }
+
+          const endSessionUrl = buildEndSessionUrl(oidcClient, {
+            id_token_hint: idToken ?? "",
+            post_logout_redirect_uri: postLogoutRedirectUri ?? "",
+            client_id: oidcConfig?.clientID ?? "",
+          });
+
+          if (endSessionUrl) {
             return {
               logout: "successful",
-              logoutURL: endSessionEndpoint,
+              logoutURL: endSessionUrl.href,
             };
           }
+        } catch (error) {
+          Logger.warn(
+            `Failed to build OIDC logout URL: ${(error as Error).message}`,
+          );
         }
       }
     }

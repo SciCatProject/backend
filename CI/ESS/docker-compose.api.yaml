@@ -2,13 +2,16 @@ services:
   mock-oauth:
     image: ghcr.io/navikt/mock-oauth2-server:latest
     ports:
-      - "8080:8080"
+      - "8443:8443"
     environment:
-      SERVER_PORT: 8080
+      SERVER_PORT: 8443
       JSON_CONFIG: |
         {
           "interactiveLogin": false,
-          "httpServer": "NettyWrapper",
+          "httpServer": {
+            "type": "NettyWrapper",
+            "ssl": {}
+          },
           "tokenCallbacks": [
             {
               "issuerId": "local-test",
@@ -63,12 +66,12 @@ services:
           ]
         }
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8080/local-test/.well-known/openid-configuration"]
+      test: ["CMD", "wget", "-q", "-O-", "--no-check-certificate", "https://localhost:8443/local-test/.well-known/openid-configuration"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 10s  
-      
+      start_period: 10s
+
   mongodb:
     image: mongo:latest
     volumes:

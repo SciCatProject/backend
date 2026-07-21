@@ -2,26 +2,28 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { IdTokenClaims, TokenSet, UserinfoResponse } from "openid-client";
+import { FilterQuery } from "mongoose";
+import type { IDToken, UserInfoResponse } from "openid-client";
+import { Configuration, fetchUserInfo, skipSubjectCheck } from "openid-client";
 import { Profile } from "passport";
+import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
+import { UserPayload } from "src/auth/interfaces/userPayload.interface";
 import { OidcConfig } from "src/config/configuration";
+import { CreateUserIdentityDto } from "src/users/dto/create-user-identity.dto";
+import { CreateUserDto } from "src/users/dto/create-user.dto";
 import { UserProfile } from "src/users/schemas/user-profile.schema";
 import { User, UserDocument, UserSchema } from "src/users/schemas/user.schema";
+import { UsersService } from "src/users/users.service";
 import {
   IOidcUserInfoMapping,
   IOidcUserQueryMapping,
 } from "./interfaces/oidc-user.interface";
-import { AccessGroupService } from "src/auth/access-group-provider/access-group.service";
-import { UsersService } from "src/users/users.service";
-import { FilterQuery } from "mongoose";
-import { UserPayload } from "src/auth/interfaces/userPayload.interface";
-import { CreateUserIdentityDto } from "src/users/dto/create-user-identity.dto";
-import { CreateUserDto } from "src/users/dto/create-user.dto";
 
-export type extendedIdTokenClaims = IdTokenClaims &
-  UserinfoResponse & {
+export type extendedIdTokenClaims = IDToken &
+  UserInfoResponse & {
     groups?: string[];
   };
 export type OidcProfile = Profile & UserProfile;
@@ -34,11 +36,39 @@ export class OidcAuthService {
     private usersService: UsersService,
   ) {}
 
-  async validate(tokenset: TokenSet): Promise<Omit<User, "password">> {
-    const userinfo: extendedIdTokenClaims = tokenset.claims();
+  private async fetchUserinfo(
+    accessToken: string,
+    config?: Configuration,
+    expectedSubject?: string,
+    logContext = "validate",
+  ): Promise<extendedIdTokenClaims | null> {
+    if (!config || !accessToken) {
+      return null;
+    }
 
     const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (!oidcConfig?.userinfoEnabled) {
+      return null;
+    }
 
+    try {
+      return (await fetchUserInfo(
+        config,
+        accessToken,
+        expectedSubject ?? skipSubjectCheck,
+      )) as extendedIdTokenClaims;
+    } catch (error) {
+      Logger.warn(
+        `Failed to fetch userinfo during ${logContext}: ${(error as Error).message}`,
+      );
+      return null;
+    }
+  }
+
+  private async buildProfileWithAccessGroups(
+    userinfo: extendedIdTokenClaims,
+  ): Promise<{ userProfile: OidcProfile; userPayload: UserPayload }> {
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
     const userProfile = this.parseUserInfo(userinfo);
 
     const userPayload: UserPayload = {
@@ -48,8 +78,46 @@ export class OidcAuthService {
       accessGroupProperty: oidcConfig?.accessGroupProperty,
       payload: userinfo,
     };
+
     userProfile.accessGroups =
       await this.accessGroupService.getAccessGroups(userPayload);
+
+    return { userProfile, userPayload };
+  }
+
+  async validate(
+    tokenset: { id_token?: string; access_token?: string },
+    config?: Configuration,
+  ): Promise<Omit<User, "password">> {
+    const idTokenClaims = tokenset.id_token
+      ? (JSON.parse(
+          Buffer.from(tokenset.id_token.split(".")[1], "base64url").toString(),
+        ) as extendedIdTokenClaims)
+      : ({} as extendedIdTokenClaims);
+
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    const azp = idTokenClaims?.azp;
+    const allowedParties = [
+      ...(oidcConfig?.additionalAuthorizedParties ?? []),
+      oidcConfig?.clientID,
+    ].filter(Boolean);
+
+    if (azp && allowedParties.length > 0 && !allowedParties.includes(azp)) {
+      throw new UnauthorizedException(
+        `Token azp "${azp}" is not an authorized party`,
+      );
+    }
+
+    const userinfoClaims = await this.fetchUserinfo(
+      tokenset.access_token ?? "",
+      config,
+      idTokenClaims.sub,
+      "validate",
+    );
+
+    const { userProfile } = await this.buildProfileWithAccessGroups(
+      userinfoClaims ?? idTokenClaims,
+    );
 
     const userFilter: FilterQuery<UserDocument> =
       this.parseQueryFilter(userProfile);
@@ -104,6 +172,55 @@ export class OidcAuthService {
     returnUser.userId = returnUser._id;
 
     return returnUser;
+  }
+
+  async refreshUserAccessGroups(
+    userId: string,
+    config: Configuration,
+    accessToken: string,
+  ): Promise<void> {
+    const oidcConfig = this.configService.get<OidcConfig>("oidc");
+    if (!oidcConfig?.userinfoEnabled) return;
+
+    let userinfoResponse: extendedIdTokenClaims;
+    try {
+      userinfoResponse = (await fetchUserInfo(
+        config,
+        accessToken,
+        skipSubjectCheck,
+      )) as extendedIdTokenClaims;
+    } catch (error) {
+      Logger.warn(
+        `Failed to fetch userinfo during token refresh: ${(error as Error).message}`,
+      );
+      return;
+    }
+
+    const { userProfile } =
+      await this.buildProfileWithAccessGroups(userinfoResponse);
+
+    const existingIdentity =
+      await this.usersService.findByIdUserIdentity(userId);
+    if (!existingIdentity) return;
+
+    const updatedProfile = {
+      ...existingIdentity.profile,
+      accessGroups: userProfile.accessGroups,
+      email: userProfile.email,
+      displayName: userProfile.displayName,
+      username: userProfile.username,
+    };
+    await this.usersService.updateUserIdentity(
+      {
+        profile: updatedProfile,
+        externalId: userProfile.id,
+        provider: userProfile.provider || "oidc",
+      },
+      userId,
+    );
+    Logger.log(
+      `Refreshed access groups for user ${userId}: ${userProfile.accessGroups.join(", ")}`,
+    );
   }
 
   getUserPhoto(thumbnailPhoto: string) {

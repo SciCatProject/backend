@@ -21,6 +21,7 @@ import {
 import { UserIdentitiesController } from "./user-identities.controller";
 import { UserIdentitiesService } from "./user-identities.service";
 import { AuthService } from "src/auth/auth.service";
+import { TokenRefreshService } from "src/auth/services/token-refresh.service";
 import { accessGroupServiceFactory } from "src/auth/access-group-provider/access-group-service-factory";
 
 @Module({
@@ -62,6 +63,7 @@ import { accessGroupServiceFactory } from "src/auth/access-group-provider/access
     UsersService,
     UserIdentitiesService,
     RolesService,
+    TokenRefreshService,
     accessGroupServiceFactory,
   ],
   exports: [UsersService, RolesService, UserIdentitiesService],

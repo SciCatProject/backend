@@ -19,6 +19,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "allowJs": true
+    "allowJs": true,
+    "paths": {
+      "openid-client/passport": ["./node_modules/openid-client/build/passport"]
+    }
   }
 }
