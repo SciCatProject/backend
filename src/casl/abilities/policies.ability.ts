@@ -18,11 +18,12 @@ import { Policy } from "src/policies/schemas/policy.schema";
 
 @Injectable()
 export class PolicyAbility {
+  private accessGroups?: AccessGroupsType;
   constructor(private configService: ConfigService) {
     this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
+      this.configService.get<AccessGroupsType>("accessGroups") ??
+      ({} as AccessGroupsType);
   }
-  private accessGroups?: AccessGroupsType;
 
   buildAbility(
     user: JWTUser | null,
@@ -35,8 +36,8 @@ export class PolicyAbility {
       user &&
       user.currentGroups.some(
         (g) =>
-          this.accessGroups?.admin.includes(g) ||
-          this.accessGroups?.policy.includes(g),
+          this.accessGroups?.admin?.includes(g) ||
+          this.accessGroups?.policy?.includes(g),
       )
     ) {
       /**
@@ -50,7 +51,7 @@ export class PolicyAbility {
 
     if (
       user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      user.currentGroups.some((g) => this.accessGroups?.delete?.includes(g))
     ) {
       /**
        * User belonging to DELETE_GROUPS
