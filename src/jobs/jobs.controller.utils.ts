@@ -45,6 +45,7 @@ import { loadDatasets } from "src/config/job-config/actions/actionutils";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
+import { generateJobUserToken } from "../config/job-config/token.utils";
 
 @Injectable()
 export class JobsControllerUtils {
@@ -467,10 +468,23 @@ export class JobsControllerUtils {
     await validateActions(jobConfig.create.actions, contextWithDatasets);
     // Create actual job in database
     const createdJobInstance = await this.jobsService.create(jobInstance);
+
+    // Generate short-lived JWT for job execution using the owner's username
+    const jobObject = toObject(createdJobInstance) as JobClass;
+    const jobTokenExpiresIn = this.configService.get<string>(
+      "jwt.jobTokenExpiresIn",
+    );
+    const userToken = await generateJobUserToken(
+      this.usersService,
+      jobObject.ownerUser,
+      jobTokenExpiresIn,
+    );
+
     // Perform the action that is specified in the create portion of the job configuration
     const performContext = {
       ...contextWithDatasets,
-      job: toObject(createdJobInstance) as JobClass,
+      job: jobObject,
+      userToken, // Inject the generated short-lived JWT
     };
     await performActions(jobConfig.create.actions, performContext);
     return createdJobInstance;
@@ -538,9 +552,19 @@ export class JobsControllerUtils {
     // Perform the action that is specified in the update portion of the job configuration
     if (updatedJob !== null) {
       await this.checkConfigVersion(jobConfig, updatedJob);
+
+      // Generate short-lived JWT for job execution using the owner's username
+      const jobObject = toObject(updatedJob) as JobClass;
+      const userToken = await generateJobUserToken(
+        this.usersService,
+        jobObject.ownerUser,
+        this.configService.get<string>("jwt.jobTokenExpiresIn"),
+      );
+
       const performContext = {
         ...contextWithDatasets,
-        job: toObject(updatedJob) as JobClass,
+        job: jobObject,
+        userToken, // Inject the generated short-lived JWT
       };
       await performActions(jobConfig.update.actions, performContext);
     }

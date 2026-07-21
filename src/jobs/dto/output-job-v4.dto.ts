@@ -1,11 +1,11 @@
 import { PartialType } from "@nestjs/swagger";
 import { CreateJobDto } from "./create-job.dto";
 import {
+  IsArray,
   IsDateString,
   IsObject,
   IsOptional,
   IsString,
-  IsArray,
 } from "class-validator";
 import { PartialOutputDatasetDto } from "src/datasets/dto/output-dataset.dto";
 

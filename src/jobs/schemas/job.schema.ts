@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Document } from "mongoose";
+import { Document, SchemaTypes } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { OwnableClass } from "src/common/schemas/ownable.schema";
 
@@ -101,7 +101,7 @@ export class JobClass extends OwnableClass {
    * Contains the dataset archiving results. Initially empty, then provided during update.
    */
   @Prop({
-    type: Object,
+    type: SchemaTypes.Mixed,
     required: true,
     default: {},
   })
