@@ -41,7 +41,7 @@ import {
   OrigDatablock,
   OrigDatablockDocument,
 } from "./schemas/origdatablock.schema";
-import { IFacets, IFilters } from "src/common/interfaces/common.interface";
+import { IFacets } from "src/common/interfaces/common.interface";
 import {
   IOrigDatablockFields,
   IOrigDatablockFiltersV4,
@@ -49,7 +49,6 @@ import {
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateDatasetDto } from "src/datasets/dto/create-dataset.dto";
@@ -365,26 +364,6 @@ export class OrigDatablocksV4Controller {
     return filter;
   }
 
-  async updateDatasetSizeAndFiles(pid: string) {
-    const parsedFilters: IFilters<OrigDatablockDocument, IOrigDatablockFields> =
-      { where: { datasetId: pid } };
-    const datasetOrigdatablocks =
-      (await this.origDatablocksService.findAllComplete(
-        parsedFilters,
-      )) as OutputOrigDatablockDto[];
-
-    const updateDatasetDto: PartialUpdateDatasetDto = {
-      size: datasetOrigdatablocks
-        .map((odb) => odb.size)
-        .reduce((ps, a) => ps + a, 0),
-      numberOfFiles: datasetOrigdatablocks
-        .map((odb) => odb.dataFileList.length)
-        .reduce((ps, a) => ps + a, 0),
-    };
-
-    await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto);
-  }
-
   // POST /origdatablocks
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
@@ -431,16 +410,9 @@ export class OrigDatablocksV4Controller {
       createOrigDatablockDto,
       Action.OrigdatablockCreate,
     );
-
-    const origdatablock = await this.origDatablocksService.create(
+    return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
       createOrigDatablockDto,
     );
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
   }
 
   // POST /origdatablocks/isValid
@@ -839,17 +811,11 @@ export class OrigDatablocksV4Controller {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
+    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
       id,
       updateOrigDatablockDto,
       unmodifiedSince,
     );
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
   }
 
   // DELETE /origdatablocks/:id
@@ -869,26 +835,21 @@ export class OrigDatablocksV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputOrigDatablockDto,
+    type: OrigDatablock,
     description: "Removed origdatablock value is returned",
   })
   async findByIdAndDelete(
     @Req() request: Request,
     @Param("id") id: string,
-  ): Promise<OutputOrigDatablockDto | null> {
+  ): Promise<OrigDatablock | null> {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
       Action.OrigdatablockDelete,
     );
 
-    const origdatablock =
-      await this.origDatablocksService.findByIdAndDelete(id);
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
+    return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: id,
+    });
   }
 }

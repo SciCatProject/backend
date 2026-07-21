@@ -332,7 +332,9 @@ export class OrigDatablocksService {
       .exec();
   }
 
-  async remove(filter: FilterQuery<OrigDatablockDocument>): Promise<unknown> {
+  async remove(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<OrigDatablock | null> {
     return this.origDatablockModel.findOneAndDelete(filter).exec();
   }
 
@@ -371,10 +373,6 @@ export class OrigDatablocksService {
     return patchedOrigDatablock;
   }
 
-  async findByIdAndDelete(id: string): Promise<OutputOrigDatablockDto | null> {
-    return await this.origDatablockModel.findOneAndDelete({ _id: id });
-  }
-
   async count(
     filter: IFilters<OrigDatablockDocument>,
   ): Promise<CountApiResponse> {
@@ -399,6 +397,40 @@ export class OrigDatablocksService {
     return { count: result?.count ?? 0 };
   }
 
+  async createAndUpdateDatasetSizeAndFileCount(
+    createDatablockDto: CreateOrigDatablockDto,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.create(createDatablockDto);
+    if (origDatablock)
+      await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
+  async findByIdAndUpdateDatasetSizeAndFileCount(
+    _id: string,
+    updateDatablockDto: PartialUpdateOrigDatablockDto,
+    unmodifiedSince?: Date,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.findByIdAndUpdate(
+      _id,
+      updateDatablockDto,
+      unmodifiedSince,
+    );
+    if (!origDatablock)
+      throw new OrigDatablocksFilterNotFoundException({ _id });
+    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
+  async removeAndUpdateDatasetSizeAndFileCount(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.remove(filter);
+    if (!origDatablock) throw new OrigDatablocksFilterNotFoundException(filter);
+    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
   async updateDatasetSizeAndFiles(pid: string) {
     await this.datasetsService.updateDatasetSizeAndFiles(
       pid,
@@ -406,5 +438,14 @@ export class OrigDatablocksService {
       "size",
       "numberOfFiles",
     );
+  }
+}
+
+class OrigDatablocksFilterNotFoundException extends NotFoundException {
+  constructor(filter: FilterQuery<OrigDatablockDocument>) {
+    const errorMessage = filter._id
+      ? `origDatablock: ${filter._id} not found`
+      : "origDatablock not found";
+    super(errorMessage);
   }
 }
