@@ -215,8 +215,8 @@ export class DatasetClass extends OwnableClass {
     description:
       "Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
   })
-  @Prop({ type: [String], required: false })
-  keywords: string[];
+  @Prop({ type: [String], required: false, default: [] })
+  keywords: string[] = [];
 
   @ApiProperty({
     type: String,
@@ -366,7 +366,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "First and last name of principal investigator(s). Multiple PIs can be provided as separate strings in the array. This field is required if the dataset is a Raw dataset.",
   })
-  @Prop({ type: [String], required: false })
+  @Prop({ type: [String], required: false, default: [] })
   principalInvestigators?: string[];
 
   @ApiProperty({
@@ -420,7 +420,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "The ID of the proposal to which the dataset belongs to and it has been acquired under.",
   })
-  @Prop({ type: [String], ref: "Proposal", required: false })
+  @Prop({ type: [String], ref: "Proposal", required: false, default: [] })
   proposalIds?: string[];
 
   @ApiProperty({
@@ -429,7 +429,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "Single ID or array of IDS of the samples used when collecting the data.",
   })
-  @Prop({ type: [String], ref: "Sample", required: false })
+  @Prop({ type: [String], ref: "Sample", required: false, default: [] })
   sampleIds?: string[];
 
   @ApiProperty({
@@ -438,7 +438,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "Id of the instrument or array of IDS of the instruments where the data contained in this dataset was created/acquired.",
   })
-  @Prop({ type: [String], ref: "Instrument", required: false })
+  @Prop({ type: [String], ref: "Instrument", required: false, default: [] })
   instrumentIds?: string[];
 
   @ApiProperty({
@@ -447,7 +447,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "Array of input dataset identifiers used in producing the derived dataset. Ideally these are the global identifier to existing datasets inside this or federated data catalogs.",
   })
-  @Prop({ type: [String], required: false })
+  @Prop({ type: [String], required: false, default: [] })
   inputDatasets?: string[];
 
   @ApiProperty({
@@ -456,7 +456,7 @@ export class DatasetClass extends OwnableClass {
     description:
       "A list of links to software repositories which uniquely identifies the pieces of software, including versions, used for yielding the derived data.",
   })
-  @Prop({ type: [String], required: false })
+  @Prop({ type: [String], required: false, default: [] })
   usedSoftware?: string[];
 
   @ApiProperty({
