@@ -1342,12 +1342,9 @@ export function decodeMetadataKeyStrings(keys: string[]): string[] {
 
 export function filterNullFromArray<T>(
   value: (T | null | undefined)[] | undefined,
-): T[] | undefined {
-  if (!value) return undefined;
-  const filtered = value.filter(
-    (item): item is T => item !== null && item !== undefined,
-  );
-  return filtered.length > 0 ? filtered : undefined;
+): T[] {
+  if (!value) return [];
+  return value.filter((item): item is T => item !== null && item !== undefined);
 }
 
 export function parseDate(dateString?: string): Date | undefined {
