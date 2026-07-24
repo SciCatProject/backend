@@ -5,30 +5,41 @@ import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
+import { DatasetAbility } from "./abilities/datasets.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
-    expect(new CaslAbilityFactory(new ConfigService())).toBeDefined();
+    const configService = new ConfigService();
+    expect(
+      new CaslAbilityFactory(
+        configService,
+        new JobConfigService({}, {}, configService),
+        new DatasetAbility(configService),
+      ),
+    ).toBeDefined();
   });
 
   describe("DatasetLifecycleUpdate permission", () => {
-    const buildFactory = (updateDatasetLifecycle: unknown) =>
-      new CaslAbilityFactory(
-        {
-          get: (key: string) =>
-            key === "accessGroups"
-              ? {
-                  admin: [],
-                  delete: [],
-                  createDataset: [],
-                  createDatasetWithPid: [],
-                  createDatasetPrivileged: [],
-                  updateDatasetLifecycle,
-                }
-              : undefined,
-        } as unknown as ConfigService,
+    const buildFactory = (updateDatasetLifecycle: unknown) => {
+      const configService = {
+        get: (key: string) =>
+          key === "accessGroups"
+            ? {
+                admin: [],
+                delete: [],
+                createDataset: [],
+                createDatasetWithPid: [],
+                createDatasetPrivileged: [],
+                updateDatasetLifecycle,
+              }
+            : undefined,
+      } as unknown as ConfigService;
+      return new CaslAbilityFactory(
+        configService,
         { allJobConfigs: {} } as unknown as JobConfigService,
+        new DatasetAbility(configService),
       );
+    };
 
     const userInSubstringGroup: JWTUser = {
       _id: "uid",
