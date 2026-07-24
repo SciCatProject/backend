@@ -10,7 +10,6 @@ import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Instrument } from "src/instruments/schemas/instrument.schema";
@@ -29,6 +28,7 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { AttachmentAbility } from "./abilities/attachments.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private attachmentAbility: AttachmentAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -46,7 +47,7 @@ export class CaslAbilityFactory {
   private endpointAccessors: {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
-    attachments: this.attachmentEndpointAccess,
+    attachments: this.attachmentAccess,
     datablocks: this.datablockEndpointAccess,
     datasets: this.datasetEndpointAccess,
     history: this.historyEndpointAccess,
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  attachmentAccess(user: JWTUser | null) {
+    return this.attachmentAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -356,67 +361,6 @@ export class CaslAbilityFactory {
         can(Action.InstrumentRead, Instrument);
         cannot(Action.InstrumentCreate, Instrument);
         cannot(Action.InstrumentUpdate, Instrument);
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  attachmentEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    /*
-     * default allow anyone to read attachments
-     */
-    can(Action.AttachmentReadEndpoint, Attachment);
-
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-         * user that belongs to any of the group listed in DELETE_GROUPS
-         */
-
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachmentPrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
-        //
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachment.includes(g),
-        ) ||
-        this.accessGroups?.attachment.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
-        //
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
       }
     }
 
@@ -2242,111 +2186,6 @@ export class CaslAbilityFactory {
         });
         can(Action.SampleAttachmentReadAccess, SampleClass, {
           isPublished: true,
-        });
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  attachmentInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.AttachmentReadInstance, Attachment, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        // -------------------------------------
-        // users that belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        can(Action.AttachmentDeleteInstance, Attachment);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.AttachmentReadInstance, Attachment);
-        can(Action.AttachmentCreateInstance, Attachment);
-        can(Action.AttachmentUpdateInstance, Attachment);
-        can(Action.AttachmentDeleteInstance, Attachment);
-
-        can(Action.AccessAny, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachmentPrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
-        //
-
-        can(Action.AttachmentCreateInstance, Attachment);
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
-        });
-
-        can(Action.AttachmentUpdateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentDeleteInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachment.includes(g),
-        ) ||
-        this.accessGroups?.attachment.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
-        //
-
-        can(Action.AttachmentCreateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          isPublished: true,
-        });
-        can(Action.AttachmentUpdateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentDeleteInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
         });
       }
     }
