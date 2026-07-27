@@ -713,6 +713,8 @@ export class DatasetsV4Controller {
     type: String,
     required: false,
     isArray: true,
+    style: "form",
+    explode: true,
   })
   async findById(
     @Req() request: Request,
