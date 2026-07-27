@@ -33,7 +33,6 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetObsoleteDto } from "src/datasets/dto/update-dataset-obsolete.dto";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
 import { PartialUpdateDatablockDto } from "./dto/update-datablock.dto";
@@ -96,20 +95,15 @@ export class DatablocksController {
           pid: createDatablockDto.datasetId,
         },
       });
-      const datablock = await this.datablocksService.create({
+      const datablock = {
         ...createDatablockDto,
         ownerGroup: createDatablockDto.ownerGroup || dataset?.ownerGroup || "",
         accessGroups:
           createDatablockDto.accessGroups || dataset?.accessGroups || [],
-      });
-      if (dataset) {
-        await this.datasetsService.findByIdAndUpdate(datablock.datasetId, {
-          packedSize: (dataset.packedSize ?? 0) + datablock.packedSize,
-          numberOfFilesArchived:
-            dataset.numberOfFilesArchived + datablock.dataFileList.length,
-        });
-      }
-      return datablock;
+      };
+      return await this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
+        datablock,
+      );
     } catch (error) {
       if ((error as MongoError).code === 11000) {
         throw new ConflictException(
@@ -252,21 +246,30 @@ export class DatablocksController {
     @Req() request: Request,
     @Body() updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock | null> {
-    const datablockInstance = await this.datablocksService.findOne({
-      where: { _id: id },
-    });
+    try {
+      const datablockInstance = await this.datablocksService.findOne({
+        where: { _id: id },
+      });
 
-    if (!datablockInstance) {
-      throw new NotFoundException();
+      if (!datablockInstance) {
+        throw new NotFoundException();
+      }
+
+      this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
+
+      return await this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
+        { _id: id },
+        updateDatablockDto,
+      );
+    } catch (error) {
+      if ((error as MongoError).code === 11000) {
+        throw new ConflictException(
+          "A datablock with this this unique key already exists!",
+        );
+      } else {
+        throw new InternalServerErrorException(error);
+      }
     }
-
-    this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
-
-    const datablock = await this.datablocksService.update(
-      { _id: id },
-      updateDatablockDto,
-    );
-    return datablock;
   }
 
   @UseGuards(PoliciesGuard)
@@ -279,6 +282,15 @@ export class DatablocksController {
     @Param("id") id: string,
   ): Promise<unknown> {
     const user: JWTUser = request.user as JWTUser;
+    const datablockInstance =
+      this.generateDatablockInstanceForPermissions(datablock);
+
+    const ability = this.caslAbilityFactory.datablockAccess(user);
+    const canDelete = ability.can(Action.DatablockDelete, datablockInstance);
+
+    if (!canDelete) {
+      throw new ForbiddenException("Unauthorized to delete this datablock");
+    }
 
     const datablock = await this.datablocksService.findOne({
       where: { _id: id },
@@ -294,25 +306,9 @@ export class DatablocksController {
       throw new NotFoundException(`dataset: ${datablock.datasetId} not found`);
     }
 
-    const datablockInstance =
-      this.generateDatablockInstanceForPermissions(datablock);
-
-    const ability = this.caslAbilityFactory.datablockAccess(user);
-    const canDelete = ability.can(Action.DatablockDelete, datablockInstance);
-
-    if (!canDelete) {
-      throw new ForbiddenException("Unauthorized to delete this datablock");
-    }
-
-    const res = (await this.datablocksService.remove({ _id: id })) as Datablock;
-    const updateDatasetDto: PartialUpdateDatasetObsoleteDto = {
-      packedSize: (dataset.packedSize ?? 0) - res.packedSize,
-      numberOfFilesArchived:
-        dataset.numberOfFilesArchived - res.dataFileList.length,
-    };
-    await this.datasetsService.findByIdAndUpdate(dataset.pid, updateDatasetDto);
-
-    return res;
+    return this.datablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: id,
+    });
   }
 
   private addAccessControlFilters(
