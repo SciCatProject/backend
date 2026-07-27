@@ -282,6 +282,13 @@ export class DatablocksController {
     @Param("id") id: string,
   ): Promise<unknown> {
     const user: JWTUser = request.user as JWTUser;
+    const datablock = await this.datablocksService.findOne({
+      where: { _id: id },
+    });
+    if (!datablock) {
+      throw new NotFoundException(`datablock: ${id} not found`);
+    }
+
     const datablockInstance =
       this.generateDatablockInstanceForPermissions(datablock);
 
@@ -290,13 +297,6 @@ export class DatablocksController {
 
     if (!canDelete) {
       throw new ForbiddenException("Unauthorized to delete this datablock");
-    }
-
-    const datablock = await this.datablocksService.findOne({
-      where: { _id: id },
-    });
-    if (!datablock) {
-      throw new NotFoundException(`datablock: ${id} not found`);
     }
 
     const dataset = await this.datasetsService.findOne({
