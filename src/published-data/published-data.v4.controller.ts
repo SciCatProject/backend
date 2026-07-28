@@ -101,6 +101,7 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
+    await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
@@ -390,6 +391,7 @@ export class PublishedDataV4Controller {
       }
     }
 
+    await this.validatorService.validate(updatePublishedDataDto);
     return this.publishedDataService.update(
       { doi: id },
       updatePublishedDataDto,
@@ -715,6 +717,7 @@ export class PublishedDataV4Controller {
       );
     }
 
+    await this.validatorService.validate(data);
     await this.publishedDataService.update({ doi: id }, data);
 
     return returnValue;
