@@ -402,23 +402,32 @@ export class OrigDatablocksService {
   ): Promise<OrigDatablock> {
     const origDatablock = await this.create(createDatablockDto);
     if (origDatablock)
-      await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+      await this.updateDatasetSizeAndFiles(
+        origDatablock.datasetId,
+        origDatablock,
+      );
     return origDatablock;
   }
 
-  async findByIdAndUpdateDatasetSizeAndFileCount(
-    _id: string,
+  async updateOneAndUpdateDatasetSizeAndFileCount(
+    filter: FilterQuery<OrigDatablockDocument>,
     updateDatablockDto: PartialUpdateOrigDatablockDto,
     unmodifiedSince?: Date,
   ): Promise<OrigDatablock> {
+    const oldOrigDatablock = await this.findOne(filter);
+    if (!oldOrigDatablock)
+      throw new OrigDatablocksFilterNotFoundException(filter);
     const origDatablock = await this.findByIdAndUpdate(
-      _id,
+      filter._id as string,
       updateDatablockDto,
       unmodifiedSince,
     );
-    if (!origDatablock)
-      throw new OrigDatablocksFilterNotFoundException({ _id });
-    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    if (!origDatablock) throw new OrigDatablocksFilterNotFoundException(filter);
+    await this.updateDatasetSizeAndFiles(
+      origDatablock.datasetId,
+      origDatablock,
+      oldOrigDatablock,
+    );
     return origDatablock;
   }
 
@@ -427,16 +436,25 @@ export class OrigDatablocksService {
   ): Promise<OrigDatablock> {
     const origDatablock = await this.remove(filter);
     if (!origDatablock) throw new OrigDatablocksFilterNotFoundException(filter);
-    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    await this.updateDatasetSizeAndFiles(
+      origDatablock.datasetId,
+      undefined,
+      origDatablock,
+    );
     return origDatablock;
   }
 
-  async updateDatasetSizeAndFiles(pid: string) {
+  private async updateDatasetSizeAndFiles(
+    pid: string,
+    newDocument?: OrigDatablock,
+    oldDocument?: OrigDatablock,
+  ): Promise<void> {
     await this.datasetsService.updateDatasetSizeAndFiles(
       pid,
-      this.origDatablockModel,
       "size",
       "numberOfFiles",
+      newDocument,
+      oldDocument,
     );
   }
 }
