@@ -88,9 +88,7 @@ export class OrigDatablocksV4Controller {
 
   async generateOrigDatablockInstanceForPermissions(
     origdatablock:
-      | CreateOrigDatablockDto
-      | OutputOrigDatablockDto
-      | OrigDatablock,
+      CreateOrigDatablockDto | OutputOrigDatablockDto | OrigDatablock,
   ): Promise<OrigDatablock> {
     const origDatablockInstance = new OrigDatablock();
     origDatablockInstance.datasetId = origdatablock.datasetId || "";

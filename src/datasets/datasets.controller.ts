@@ -516,9 +516,7 @@ export class DatasetsController {
     }
 
     let outputDataset:
-      | CreateDatasetDto
-      | UpdateDatasetDto
-      | PartialUpdateDatasetDto = {};
+      CreateDatasetDto | UpdateDatasetDto | PartialUpdateDatasetDto = {};
     if (
       inputObsoleteDataset instanceof CreateRawDatasetObsoleteDto ||
       inputObsoleteDataset instanceof CreateDerivedDatasetObsoleteDto ||
