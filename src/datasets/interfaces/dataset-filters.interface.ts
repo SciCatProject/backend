@@ -79,11 +79,9 @@ export type IDatasetFiltersV3<T, Y = null> = Omit<IFilters<T, Y>, "include"> & {
 };
 
 export type IDatasetFilters<T, Y = null> =
-  | IDatasetFiltersV3<T, Y>
-  | IDatasetFiltersV4<T, Y>;
+  IDatasetFiltersV3<T, Y> | IDatasetFiltersV4<T, Y>;
 
 export type IDatasetScopes = IDatasetScopesV3 | IDatasetScopesV4;
 
 export type IDatasetRelation =
-  | IDatasetRelationV4<IDatasetScopesV3>
-  | IDatasetRelationV4;
+  IDatasetRelationV4<IDatasetScopesV3> | IDatasetRelationV4;
