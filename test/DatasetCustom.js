@@ -600,6 +600,32 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   describe("Datasets v3 custom dataset size fields should survive unrelated patches", () => {
     let sizeFieldsPid = null;
 
+    it("0895: adds a new custom dataset without size, packedSize, numberOfFiles or numberOfFilesArchived and defaults them to 0", async () => {
+      const { size, numberOfFiles, ...customDatasetWithoutSizeFields } =
+        TestData.CustomDatasetCorrect;
+
+      return request(appUrl)
+        .post("/api/v3/Datasets")
+        .send(customDatasetWithoutSizeFields)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then(async (res) => {
+          res.body.should.have.property("pid").and.be.a("string");
+          res.body.should.have.property("size").and.equal(0);
+          res.body.should.have.property("packedSize").and.equal(0);
+          res.body.should.have.property("numberOfFiles").and.equal(0);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(0);
+
+          await request(appUrl)
+            .delete("/api/v3/Datasets/" + encodeURIComponent(res.body.pid))
+            .set("Accept", "application/json")
+            .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+            .expect(TestData.SuccessfulDeleteStatusCode);
+        });
+    });
+
     it("0900: adds a new custom dataset with explicit size and numberOfFiles", async () => {
       const customDatasetWithSize = {
         ...TestData.CustomDatasetCorrect,
