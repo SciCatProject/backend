@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
+import { DatasetsService } from "src/datasets/datasets.service";
 import { InjectModel } from "@nestjs/mongoose";
 import {
   FilterQuery,
@@ -53,6 +54,7 @@ export class OrigDatablocksService {
   constructor(
     @InjectModel(OrigDatablock.name)
     private origDatablockModel: Model<OrigDatablockDocument>,
+    private readonly datasetsService: DatasetsService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -284,17 +286,17 @@ export class OrigDatablocksService {
       {
         $lookup: {
           from: "Dataset",
-          as: "Dataset",
+          as: "dataset_temp",
           let: { datasetId: "$datasetId" },
           pipeline: [{ $match: { $expr: { $eq: ["$pid", "$$datasetId"] } } }],
         },
       },
       {
         $addFields: {
-          datasetExist: { $gt: [{ $size: "$Dataset" }, 0] },
+          datasetExist: { $gt: [{ $size: "$dataset_temp" }, 0] },
         },
       },
-      { $unset: "Dataset" },
+      { $unset: "dataset_temp" },
       { $unwind: "$dataFileList" },
       ...modifiers,
     ];
@@ -330,7 +332,9 @@ export class OrigDatablocksService {
       .exec();
   }
 
-  async remove(filter: FilterQuery<OrigDatablockDocument>): Promise<unknown> {
+  async remove(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<OrigDatablock | null> {
     return this.origDatablockModel.findOneAndDelete(filter).exec();
   }
 
@@ -369,10 +373,6 @@ export class OrigDatablocksService {
     return patchedOrigDatablock;
   }
 
-  async findByIdAndDelete(id: string): Promise<OutputOrigDatablockDto | null> {
-    return await this.origDatablockModel.findOneAndDelete({ _id: id });
-  }
-
   async count(
     filter: IFilters<OrigDatablockDocument>,
   ): Promise<CountApiResponse> {
@@ -383,25 +383,69 @@ export class OrigDatablocksService {
     return { count };
   }
 
-  async aggregateSizeAndFileCount(
-    datasetId: string,
-  ): Promise<{ size: number; numberOfFiles: number }> {
+  async countFiles(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<CountApiResponse> {
+    const pipeline: PipelineStage[] = [
+      { $match: filter.where ?? {} },
+      { $unwind: "$dataFileList" },
+      { $count: "count" },
+    ];
     const [result] = await this.origDatablockModel
-      .aggregate<{ size: number; numberOfFiles: number }>([
-        { $match: { datasetId } },
-        {
-          $group: {
-            _id: null,
-            size: { $sum: "$size" },
-            numberOfFiles: {
-              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
-            },
-          },
-        },
-      ])
+      .aggregate<{ count: number }>(pipeline)
       .exec();
-    return result
-      ? { size: result.size, numberOfFiles: result.numberOfFiles }
-      : { size: 0, numberOfFiles: 0 };
+    return { count: result?.count ?? 0 };
+  }
+
+  async createAndUpdateDatasetSizeAndFileCount(
+    createDatablockDto: CreateOrigDatablockDto,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.create(createDatablockDto);
+    if (origDatablock)
+      await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
+  async findByIdAndUpdateDatasetSizeAndFileCount(
+    _id: string,
+    updateDatablockDto: PartialUpdateOrigDatablockDto,
+    unmodifiedSince?: Date,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.findByIdAndUpdate(
+      _id,
+      updateDatablockDto,
+      unmodifiedSince,
+    );
+    if (!origDatablock)
+      throw new OrigDatablocksFilterNotFoundException({ _id });
+    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
+  async removeAndUpdateDatasetSizeAndFileCount(
+    filter: FilterQuery<OrigDatablockDocument>,
+  ): Promise<OrigDatablock> {
+    const origDatablock = await this.remove(filter);
+    if (!origDatablock) throw new OrigDatablocksFilterNotFoundException(filter);
+    await this.updateDatasetSizeAndFiles(origDatablock.datasetId);
+    return origDatablock;
+  }
+
+  async updateDatasetSizeAndFiles(pid: string) {
+    await this.datasetsService.updateDatasetSizeAndFiles(
+      pid,
+      this.origDatablockModel,
+      "size",
+      "numberOfFiles",
+    );
+  }
+}
+
+class OrigDatablocksFilterNotFoundException extends NotFoundException {
+  constructor(filter: FilterQuery<OrigDatablockDocument>) {
+    const errorMessage = filter._id
+      ? `origDatablock: ${filter._id} not found`
+      : "origDatablock not found";
+    super(errorMessage);
   }
 }

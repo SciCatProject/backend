@@ -410,9 +410,7 @@ export class UsersService implements OnModuleInit {
       ...jwtProperties,
     };
     const expiresInValue = signAndVerifyOptions.expiresIn as
-      | string
-      | number
-      | undefined;
+      string | number | undefined;
     if (expiresInValue === "never") {
       signAndVerifyOptions.expiresIn = (this.configService.get<string>(
         "jwt.neverExpires",
