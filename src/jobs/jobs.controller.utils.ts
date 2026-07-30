@@ -366,14 +366,12 @@ export class JobsControllerUtils {
     jobUser: JWTUser | null,
   ) {
     if (this.isAdminUser(user)) return;
-    if (
-      !(
-        jobConfiguration.create.auth &&
-        Object.values(this.jobDatasetAuthorization).includes(
-          jobConfiguration.create.auth,
-        )
+    if (!(
+      jobConfiguration.create.auth &&
+      Object.values(this.jobDatasetAuthorization).includes(
+        jobConfiguration.create.auth,
       )
-    )
+    ))
       return;
     if (!jobCreateDto.jobParams[JobParams.DatasetList])
       throw new UnprocessableEntityException(
@@ -660,8 +658,7 @@ export class JobsControllerUtils {
    */
   removeFields<
     T extends PartialIntermediateOutputJobDto | JobClass =
-      | PartialIntermediateOutputJobDto
-      | JobClass,
+      PartialIntermediateOutputJobDto | JobClass,
   >(filter: FilterQuery<JobDocument>, job: T): PartialOutputJobDto {
     if (filter.fields && filter.fields.length > 0) {
       for (const field of mandatoryFields as (keyof T)[]) {
