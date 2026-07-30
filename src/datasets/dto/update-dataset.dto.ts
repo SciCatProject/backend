@@ -105,7 +105,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly size?: number = 0;
+  readonly size?: number;
 
   @ApiProperty({
     type: Number,
@@ -116,7 +116,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly packedSize?: number = 0;
+  readonly packedSize?: number;
 
   @ApiProperty({
     type: Number,
@@ -127,7 +127,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly numberOfFiles?: number = 0;
+  readonly numberOfFiles?: number;
 
   @ApiProperty({
     type: Number,
