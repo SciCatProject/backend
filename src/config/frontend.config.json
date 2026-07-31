@@ -11,6 +11,7 @@
   "allowConfigOverrides": true,
   "archiveWorkflowEnabled": false,
   "datasetReduceEnabled": true,
+  "datasetRelationshipsEnabled": false,
   "datasetJsonScientificMetadata": true,
   "editDatasetEnabled": true,
   "editDatasetSampleEnabled": true,
