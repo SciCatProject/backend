@@ -127,8 +127,7 @@ describe("DatablocksService", () => {
       );
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockCreateDatablockDto.datasetId,
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         result,
         undefined,
       );
@@ -158,8 +157,7 @@ describe("DatablocksService", () => {
       expect(result).toEqual(mockDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockDatablock.datasetId,
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         mockDatablock,
         oldDatablock,
       );
@@ -211,8 +209,7 @@ describe("DatablocksService", () => {
       expect(result).toEqual(mockDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         "testPid",
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         undefined,
         mockDatablock,
       );

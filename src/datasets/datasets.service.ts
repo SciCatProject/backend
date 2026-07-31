@@ -735,32 +735,24 @@ export class DatasetsService {
     }
   }
 
-  private async _updateDatasetSizeAndFiles(
-    pid: string,
-    sizesDelta:
-      | Pick<DatasetDocument, "size" | "numberOfFiles">
-      | Pick<DatasetDocument, "packedSize" | "numberOfFilesArchived">,
-  ): Promise<void> {
-    await this.datasetModel
-      .updateOne({ _id: pid }, { $inc: sizesDelta })
-      .exec();
-  }
-
   async updateDatasetSizeAndFiles<T extends Datablock | OrigDatablock>(
     pid: string,
-    sizeKey: Extract<keyof T, "size" | "packedSize">,
-    numberOfFilesKey: "numberOfFiles" | "numberOfFilesArchived",
+    sizeKeys:
+      | { size: "size"; numberOfFiles: "numberOfFiles" }
+      | { size: "packedSize"; numberOfFiles: "numberOfFilesArchived" },
     newDocument?: T,
     oldDocument?: T,
   ): Promise<void> {
-    const newSize = (newDocument?.[sizeKey] ?? 0) as number;
+    const newSize = (newDocument?.[sizeKeys.size as keyof T] ?? 0) as number;
     const newFiles = newDocument?.dataFileList?.length ?? 0;
-    const oldSize = (oldDocument?.[sizeKey] ?? 0) as number;
+    const oldSize = (oldDocument?.[sizeKeys.size as keyof T] ?? 0) as number;
     const oldFiles = oldDocument?.dataFileList?.length ?? 0;
 
-    await this._updateDatasetSizeAndFiles(pid, {
-      [sizeKey]: newSize - oldSize,
-      [numberOfFilesKey]: newFiles - oldFiles,
-    } as Parameters<typeof this._updateDatasetSizeAndFiles>[1]);
+    const delta = {
+      [sizeKeys.size]: newSize - oldSize,
+      [sizeKeys.numberOfFiles]: newFiles - oldFiles,
+    };
+
+    await this.datasetModel.updateOne({ _id: pid }, { $inc: delta }).exec();
   }
 }

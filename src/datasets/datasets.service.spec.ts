@@ -225,8 +225,7 @@ describe("DatasetsService", () => {
 
       await service.updateDatasetSizeAndFiles(
         "testPid",
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         newDocument,
         oldDocument,
       );
@@ -245,8 +244,7 @@ describe("DatasetsService", () => {
 
       await service.updateDatasetSizeAndFiles(
         "testPid",
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         newDocument,
       );
 
@@ -264,8 +262,7 @@ describe("DatasetsService", () => {
 
       await service.updateDatasetSizeAndFiles(
         "testPid",
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
         undefined,
         oldDocument,
       );

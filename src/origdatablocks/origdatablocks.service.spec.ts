@@ -47,30 +47,37 @@ class DatasetsServiceMock {
   updateDatasetSizeAndFiles = jest.fn().mockResolvedValue(undefined);
 }
 
-function MockOrigDatablockModel(
-  this: Record<string, unknown>,
-  data: Record<string, unknown>,
-) {
-  Object.assign(this, data);
-  this.save = jest.fn().mockResolvedValue({ ...mockOrigDatablock, ...data });
+interface MockOrigDatablockModelType {
+  (this: Record<string, unknown>, data: Record<string, unknown>): void;
+  findOne: jest.Mock;
+  findOneAndUpdate: jest.Mock;
+  findOneAndDelete: jest.Mock;
+  schema: { path: jest.Mock };
 }
-MockOrigDatablockModel.find = jest.fn();
-MockOrigDatablockModel.findOne = jest.fn();
-MockOrigDatablockModel.findOneAndUpdate = jest.fn();
-MockOrigDatablockModel.findOneAndDelete = jest.fn();
-MockOrigDatablockModel.deleteMany = jest.fn();
-MockOrigDatablockModel.countDocuments = jest.fn();
-MockOrigDatablockModel.aggregate = jest.fn();
-MockOrigDatablockModel.schema = {
-  path: jest.fn().mockReturnValue({ instance: "String" }),
-};
 
 describe("OrigdatablocksService", () => {
   let service: OrigDatablocksService;
   let datasetsService: DatasetsServiceMock;
+  let MockOrigDatablockModel: MockOrigDatablockModelType;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    MockOrigDatablockModel = function (
+      this: Record<string, unknown>,
+      data: Record<string, unknown>,
+    ) {
+      Object.assign(this, data);
+      this.save = jest
+        .fn()
+        .mockResolvedValue({ ...mockOrigDatablock, ...data });
+    } as MockOrigDatablockModelType;
+    MockOrigDatablockModel.findOne = jest.fn();
+    MockOrigDatablockModel.findOneAndUpdate = jest.fn();
+    MockOrigDatablockModel.findOneAndDelete = jest.fn();
+    // findOne() builds its filter via createFullqueryFilter, which
+    // inspects the schema for every filter key (e.g. "_id").
+    MockOrigDatablockModel.schema = {
+      path: jest.fn().mockReturnValue({ instance: "String" }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -107,8 +114,7 @@ describe("OrigdatablocksService", () => {
       );
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockCreateOrigDatablockDto.datasetId,
-        "size",
-        "numberOfFiles",
+        { size: "size", numberOfFiles: "numberOfFiles" },
         result,
         undefined,
       );
@@ -123,10 +129,8 @@ describe("OrigdatablocksService", () => {
     };
 
     it("should update the origdatablock and then update the dataset size and file count", async () => {
-      (MockOrigDatablockModel.findOne as jest.Mock).mockResolvedValue(
-        oldOrigDatablock,
-      );
-      (MockOrigDatablockModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+      MockOrigDatablockModel.findOne.mockResolvedValue(oldOrigDatablock);
+      MockOrigDatablockModel.findOneAndUpdate.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockOrigDatablock),
       });
 
@@ -138,15 +142,14 @@ describe("OrigdatablocksService", () => {
       expect(result).toEqual(mockOrigDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockOrigDatablock.datasetId,
-        "size",
-        "numberOfFiles",
+        { size: "size", numberOfFiles: "numberOfFiles" },
         mockOrigDatablock,
         oldOrigDatablock,
       );
     });
 
     it("should throw ForbiddenException and not touch the dataset when the original origdatablock does not exist", async () => {
-      (MockOrigDatablockModel.findOne as jest.Mock).mockResolvedValue(null);
+      MockOrigDatablockModel.findOne.mockResolvedValue(null);
 
       await expect(
         service.updateOneAndUpdateDatasetSizeAndFileCount(
@@ -159,10 +162,8 @@ describe("OrigdatablocksService", () => {
     });
 
     it("should throw NotFoundException and not touch the dataset when the origdatablock disappears during update", async () => {
-      (MockOrigDatablockModel.findOne as jest.Mock).mockResolvedValue(
-        oldOrigDatablock,
-      );
-      (MockOrigDatablockModel.findOneAndUpdate as jest.Mock).mockReturnValue({
+      MockOrigDatablockModel.findOne.mockResolvedValue(oldOrigDatablock);
+      MockOrigDatablockModel.findOneAndUpdate.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
@@ -178,7 +179,7 @@ describe("OrigdatablocksService", () => {
 
   describe("removeAndUpdateDatasetSizeAndFileCount", () => {
     it("should remove the origdatablock and then update the dataset size and file count with negated values", async () => {
-      (MockOrigDatablockModel.findOneAndDelete as jest.Mock).mockReturnValue({
+      MockOrigDatablockModel.findOneAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockOrigDatablock),
       });
 
@@ -189,15 +190,14 @@ describe("OrigdatablocksService", () => {
       expect(result).toEqual(mockOrigDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockOrigDatablock.datasetId,
-        "size",
-        "numberOfFiles",
+        { size: "size", numberOfFiles: "numberOfFiles" },
         undefined,
         mockOrigDatablock,
       );
     });
 
     it("should throw NotFoundException and not touch the dataset when the origdatablock does not exist", async () => {
-      (MockOrigDatablockModel.findOneAndDelete as jest.Mock).mockReturnValue({
+      MockOrigDatablockModel.findOneAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 

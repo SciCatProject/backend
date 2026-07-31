@@ -451,8 +451,7 @@ export class OrigDatablocksService {
   ): Promise<void> {
     await this.datasetsService.updateDatasetSizeAndFiles(
       pid,
-      "size",
-      "numberOfFiles",
+      { size: "size", numberOfFiles: "numberOfFiles" },
       newDocument,
       oldDocument,
     );

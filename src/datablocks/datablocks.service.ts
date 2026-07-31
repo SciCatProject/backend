@@ -148,8 +148,7 @@ export class DatablocksService {
   ): Promise<void> {
     await this.datasetsService.updateDatasetSizeAndFiles(
       pid,
-      "packedSize",
-      "numberOfFilesArchived",
+      { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
       newDocument,
       oldDocument,
     );
