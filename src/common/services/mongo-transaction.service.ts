@@ -59,10 +59,10 @@ export class MongoTransactionService {
       if (currentSession) return fn(currentSession);
     }
 
-    if (this.transactionsSupported === false) return fn(undefined);
-
     let session: ClientSession | undefined;
     try {
+      if (this.transactionsSupported === false) return await fn(undefined);
+
       session = await this.connection.startSession();
       let result!: T;
       await session.withTransaction(async () => {
@@ -78,7 +78,7 @@ export class MongoTransactionService {
         error.code === TRANSACTIONS_NOT_SUPPORTED_CODE
       ) {
         this.transactionsSupported = false;
-        return fn(undefined);
+        return await fn(undefined);
       }
       throw error;
     } finally {
