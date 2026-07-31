@@ -68,24 +68,32 @@ export const accessGroupServiceFactory = {
         "loading graphql processor",
       );
 
-      const rpModule = await import(
-        accessGroupsGraphQlConfig.responseProcessorSrc
-      );
-      const gh = rpModule.graphHandler;
-      const responseProcessor: (response: Record<string, unknown>) => string[] =
-        gh.responseProcessor;
-      const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
-      accessGroupServices.push(
-        new AccessGroupFromGraphQLApiService(
-          graphqlTemplateQuery,
-          accessGroupsGraphQlConfig.apiUrl,
-          {
-            Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
-          },
-          responseProcessor,
-          new HttpService(),
-        ),
-      );
+      try {
+        const rpModule = await import(
+          accessGroupsGraphQlConfig.responseProcessorSrc
+        );
+        const gh = rpModule.graphHandler;
+        const responseProcessor: (
+          response: Record<string, unknown>,
+        ) => string[] = gh.responseProcessor;
+        const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
+        accessGroupServices.push(
+          new AccessGroupFromGraphQLApiService(
+            graphqlTemplateQuery,
+            accessGroupsGraphQlConfig.apiUrl,
+            {
+              Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
+            },
+            responseProcessor,
+            new HttpService(),
+          ),
+        );
+      } catch (error) {
+        Logger.error(
+          `Failed to load graphql response processor from "${accessGroupsGraphQlConfig.responseProcessorSrc}", skipping this access group provider: ${error}`,
+          "accessGroupServiceFactory",
+        );
+      }
     }
     if (accessGroupsRestConfig?.enabled == true) {
       Logger.log(
