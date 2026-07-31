@@ -65,13 +65,15 @@ import {
 import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
-import { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
-import { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
+import type { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 import { withOCCFilter } from "./utils/occ-util";
+import { DatablockDocument } from "src/datablocks/schemas/datablock.schema";
+import { OrigDatablockDocument } from "src/origdatablocks/schemas/origdatablock.schema";
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -146,8 +148,7 @@ export class DatasetsService {
 
   private extractRelationsAndScopes(
     datasetLookupFields:
-      | (DatasetLookupKeysEnum | IDatasetRelation)[]
-      | undefined,
+      (DatasetLookupKeysEnum | IDatasetRelation)[] | undefined,
   ) {
     const scopes = {} as Record<DatasetLookupKeysEnum, IDatasetScopes>;
     const fieldsList: DatasetLookupKeysEnum[] = [];
@@ -207,7 +208,7 @@ export class DatasetsService {
       ),
     );
 
-    return savedDataset;
+    return savedDataset.toObject();
   }
 
   async findAll(
@@ -498,8 +499,7 @@ export class DatasetsService {
         updatedDataset,
       ),
     );
-    // we were able to find the dataset and update it
-    return updatedDataset;
+    return updatedDataset.toObject();
   }
 
   // PATCH dataset
@@ -508,8 +508,7 @@ export class DatasetsService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto:
-      | PartialUpdateDatasetDto
-      | PartialUpdateDatasetWithHistoryDto,
+      PartialUpdateDatasetDto | PartialUpdateDatasetWithHistoryDto,
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
     const username = (this.request.user as JWTUser).username;
@@ -562,8 +561,7 @@ export class DatasetsService {
         patchedDataset,
       ),
     );
-    // we were able to find the dataset and update it
-    return patchedDataset;
+    return patchedDataset.toObject();
   }
 
   // DELETE dataset
@@ -596,7 +594,7 @@ export class DatasetsService {
       ),
     );
 
-    return deletedDataset;
+    return deletedDataset.toObject();
   }
 
   // Get metadata keys
@@ -735,5 +733,46 @@ export class DatasetsService {
       Logger.error(`Sync failed: ${errorMessage}`, "OpensearchSync");
       throw error;
     }
+  }
+
+  async updateDatasetSizeAndFiles(
+    pid: string,
+    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
+    sizeField: string,
+    filesField: string,
+  ): Promise<void> {
+    const { numberOfFiles, size } = await this.aggregateSizeAndFileCount(
+      pid,
+      model,
+      sizeField,
+    );
+    await this.findByIdAndUpdate(pid, {
+      [sizeField]: size,
+      [filesField]: numberOfFiles,
+    });
+  }
+
+  async aggregateSizeAndFileCount(
+    datasetId: string,
+    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
+    sizeField: string,
+  ): Promise<{ numberOfFiles: number; size: number }> {
+    const [result] = await model
+      .aggregate<{ numberOfFiles: number; size: number }>([
+        { $match: { datasetId } },
+        {
+          $group: {
+            _id: null,
+            size: { $sum: `$${sizeField}` },
+            numberOfFiles: {
+              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
+            },
+          },
+        },
+      ])
+      .exec();
+    return result
+      ? { numberOfFiles: result.numberOfFiles, size: result.size }
+      : { numberOfFiles: 0, size: 0 };
   }
 }
