@@ -26,9 +26,9 @@ import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
-import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { UserAbility } from "./abilities/users.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private userAbility: UserAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -61,7 +62,7 @@ export class CaslAbilityFactory {
     publisheddata: this.publishedDataEndpointAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
     samples: this.samplesEndpointAccess,
-    users: this.userEndpointAccess,
+    users: this.userAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  userAccess(user: JWTUser | null) {
+    return this.userAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -1196,68 +1201,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  userEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      cannot(Action.UserReadOwn, User);
-      cannot(Action.UserCreateOwn, User);
-      cannot(Action.UserUpdateOwn, User);
-      cannot(Action.UserDeleteOwn, User);
-      cannot(Action.UserReadAny, User);
-      cannot(Action.UserCreateAny, User);
-      cannot(Action.UserUpdateAny, User);
-      cannot(Action.UserDeleteAny, User);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-        // can(Action.ReadAll, UserIdentity); NOT used?
-
-        // -------------------------------------
-        // user endpoint, including useridentity
-        can(Action.UserReadAny, User);
-        can(Action.UserReadOwn, User);
-        can(Action.UserCreateAny, User);
-        can(Action.UserUpdateAny, User);
-        can(Action.UserDeleteAny, User);
-        can(Action.UserCreateJwt, User);
-        can(Action.UserListAll, User);
-
-        // -------------------------------------
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-        cannot(Action.UserReadAny, User);
-        cannot(Action.UserCreateAny, User);
-        cannot(Action.UserUpdateAny, User);
-        cannot(Action.UserDeleteAny, User);
-        cannot(Action.UserCreateJwt, User);
-        cannot(Action.UserListAll, User);
-      }
-      can(Action.UserReadOwn, User, { _id: user._id });
-      can(Action.UserCreateOwn, User, { _id: user._id });
-      can(Action.UserUpdateOwn, User, { _id: user._id });
-      can(Action.UserDeleteOwn, User, { _id: user._id });
-      can(Action.UserListOwn, User);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
