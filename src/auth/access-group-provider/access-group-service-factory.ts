@@ -13,7 +13,7 @@ import { Logger } from "@nestjs/common";
  */
 export const accessGroupServiceFactory = {
   provide: AccessGroupService,
-  useFactory: (configService: ConfigService) => {
+  useFactory: async (configService: ConfigService) => {
     Logger.debug("Service factory starting", "accessGroupServiceFactory");
     const accessGroupsStaticConfig = configService.get(
       "accessGroupsStaticConfig",
@@ -68,25 +68,23 @@ export const accessGroupServiceFactory = {
         "loading graphql processor",
       );
 
-      import(accessGroupsGraphQlConfig.responseProcessorSrc).then(
-        (rpModule) => {
-          const gh = rpModule.graphHandler;
-          const responseProcessor: (
-            response: Record<string, unknown>,
-          ) => string[] = gh.responseProcessor;
-          const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
-          accessGroupServices.push(
-            new AccessGroupFromGraphQLApiService(
-              graphqlTemplateQuery,
-              accessGroupsGraphQlConfig.apiUrl,
-              {
-                Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
-              },
-              responseProcessor,
-              new HttpService(),
-            ),
-          );
-        },
+      const rpModule = await import(
+        accessGroupsGraphQlConfig.responseProcessorSrc
+      );
+      const gh = rpModule.graphHandler;
+      const responseProcessor: (response: Record<string, unknown>) => string[] =
+        gh.responseProcessor;
+      const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
+      accessGroupServices.push(
+        new AccessGroupFromGraphQLApiService(
+          graphqlTemplateQuery,
+          accessGroupsGraphQlConfig.apiUrl,
+          {
+            Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
+          },
+          responseProcessor,
+          new HttpService(),
+        ),
       );
     }
     if (accessGroupsRestConfig?.enabled == true) {
