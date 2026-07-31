@@ -9,7 +9,7 @@ import { Request } from "express";
 
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
-  findByIdAndUpdate = jest.fn();
+  findByIdAndUpdateDatasetSizeAndFileCount = jest.fn();
   findOneComplete = jest.fn();
 }
 
@@ -60,12 +60,6 @@ describe("OrigDatablocksV4Controller", () => {
       name: "Updated Name",
     };
 
-    beforeEach(() => {
-      jest
-        .spyOn(controller, "updateDatasetSizeAndFiles")
-        .mockResolvedValue(undefined);
-    });
-
     it("should throw NotFoundException if datablock not found", async () => {
       jest.spyOn(origDatablocksService, "findOne").mockResolvedValue(null);
 
@@ -82,11 +76,7 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should throw HttpException if service throws exception (when header date is older than updatedAt)", async () => {
-      jest.spyOn(origDatablocksService, "findOne").mockResolvedValue({
-        ...mockDatablock,
-        updatedAt: new Date(),
-      });
-      origDatablocksService.findByIdAndUpdate.mockRejectedValue(
+      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
         new PreconditionFailedException("Resource has been modified on server"),
       );
 
@@ -104,7 +94,9 @@ describe("OrigDatablocksV4Controller", () => {
       await expect(
         controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
       ).rejects.toThrow(PreconditionFailedException);
-      expect(origDatablocksService.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect(
+        origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount,
+      ).toHaveBeenCalledWith(
         "db123",
         mockUpdateDto,
         new Date(mockRequest.headers["if-unmodified-since"] as string),
@@ -112,12 +104,13 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should throw NotFoundException if update returns null", async () => {
+      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+        new NotFoundException("OrigDatablock #db123 not found"),
+      );
+
       jest
-        .spyOn(origDatablocksService, "findOne")
-        .mockResolvedValue(mockDatablock);
-      jest
-        .spyOn(origDatablocksService, "findByIdAndUpdate")
-        .mockResolvedValue(null);
+        .spyOn(controller, "checkPermissionsForOrigDatablockWrite")
+        .mockResolvedValue(updatedDatablock);
 
       const mockRequest = {
         user: { id: "user123" },
@@ -127,17 +120,14 @@ describe("OrigDatablocksV4Controller", () => {
       } as unknown as Request;
 
       await expect(
-        controller.findByIdAndUpdate(mockRequest, "db123", {}, mockUpdateDto),
+        controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
       ).rejects.toThrow(NotFoundException);
     });
 
     it("should return updated datablock on success", async () => {
-      jest
-        .spyOn(origDatablocksService, "findOne")
-        .mockResolvedValue(mockDatablock);
-      jest
-        .spyOn(origDatablocksService, "findByIdAndUpdate")
-        .mockResolvedValue(updatedDatablock);
+      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+        updatedDatablock,
+      );
 
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablockWrite")
@@ -157,12 +147,9 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should succeed if 'if-unmodified-since' header is missing", async () => {
-      jest
-        .spyOn(origDatablocksService, "findOne")
-        .mockResolvedValue(mockDatablock);
-      jest
-        .spyOn(origDatablocksService, "findByIdAndUpdate")
-        .mockResolvedValue(updatedDatablock);
+      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+        updatedDatablock,
+      );
 
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablockWrite")
@@ -182,12 +169,9 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should succeed if 'if-unmodified-since' header is malformed", async () => {
-      jest
-        .spyOn(origDatablocksService, "findOne")
-        .mockResolvedValue(mockDatablock);
-      jest
-        .spyOn(origDatablocksService, "findByIdAndUpdate")
-        .mockResolvedValue(updatedDatablock);
+      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+        updatedDatablock,
+      );
 
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablockWrite")

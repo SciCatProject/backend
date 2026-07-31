@@ -10,7 +10,11 @@ import {
   ILimitsFilter,
 } from "src/common/interfaces/common.interface";
 import { JobLookupKeysEnum, JOB_LOOKUP_FIELDS } from "./types/job-lookup";
-import { parsePipelineProjection, parsePipelineSort } from "src/common/utils";
+import {
+  parsePipelineProjection,
+  parsePipelineSort,
+  addAccessMatchToPipeline,
+} from "src/common/utils";
 import {
   addCreatedByFields,
   addUpdatedByField,
@@ -200,9 +204,7 @@ export class JobsService {
       JobDocument,
       IJobFields
     >(this.jobModel, "id", fields, facets);
-    pipeline.unshift({
-      $match: access,
-    });
+    addAccessMatchToPipeline(pipeline, access, fields);
     return await this.jobModel.aggregate(pipeline).exec();
   }
 
