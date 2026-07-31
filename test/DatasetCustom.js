@@ -596,4 +596,114 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
         });
     });
   });
+
+  describe("Datasets v3 custom dataset size fields should survive unrelated patches", () => {
+    let sizeFieldsPid = null;
+
+    it("0895: adds a new custom dataset without size, packedSize, numberOfFiles or numberOfFilesArchived and defaults them to 0", async () => {
+      const { size, numberOfFiles, ...customDatasetWithoutSizeFields } =
+        TestData.CustomDatasetCorrect;
+
+      return request(appUrl)
+        .post("/api/v3/Datasets")
+        .send(customDatasetWithoutSizeFields)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then(async (res) => {
+          res.body.should.have.property("pid").and.be.a("string");
+          res.body.should.have.property("size").and.equal(0);
+          res.body.should.have.property("packedSize").and.equal(0);
+          res.body.should.have.property("numberOfFiles").and.equal(0);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(0);
+
+          await request(appUrl)
+            .delete("/api/v3/Datasets/" + encodeURIComponent(res.body.pid))
+            .set("Accept", "application/json")
+            .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+            .expect(TestData.SuccessfulDeleteStatusCode);
+        });
+    });
+
+    it("0900: adds a new custom dataset with explicit size and numberOfFiles", async () => {
+      const customDatasetWithSize = {
+        ...TestData.CustomDatasetCorrect,
+        size: 12345,
+        numberOfFiles: 6,
+      };
+
+      return request(appUrl)
+        .post("/api/v3/Datasets")
+        .send(customDatasetWithSize)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("pid").and.be.a("string");
+          res.body.should.have.property("size").and.equal(12345);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          sizeFieldsPid = res.body["pid"];
+        });
+    });
+
+    it("0910: explicitly sets packedSize and numberOfFilesArchived", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ packedSize: 6789, numberOfFilesArchived: 3 })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0915: patches only size and preserves packedSize, numberOfFiles and numberOfFilesArchived", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ size: 54321 })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("size").and.equal(54321);
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0920: preserves size, packedSize, numberOfFiles and numberOfFilesArchived when patching an unrelated field", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ datasetName: "Updated custom dataset name" })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have
+            .property("datasetName")
+            .and.equal("Updated custom dataset name");
+          res.body.should.have.property("size").and.equal(54321);
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0930: should delete the size fields test dataset", async () => {
+      return request(appUrl)
+        .delete("/api/v3/Datasets/" + encodeURIComponent(sizeFieldsPid))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+        .expect(TestData.SuccessfulDeleteStatusCode)
+        .expect("Content-Type", /json/);
+    });
+  });
 });
