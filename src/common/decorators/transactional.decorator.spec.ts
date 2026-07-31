@@ -1,14 +1,13 @@
 import { Transactional } from "./transactional.decorator";
-import { MongoTransactionModule } from "../modules/mongo-transaction.module";
 import { MongoTransactionService } from "../services/mongo-transaction.service";
 import { getCurrentSession } from "../utils/session-context.util";
 
-function registerMongoTransactionService(service: MongoTransactionService) {
-  new MongoTransactionModule(service).onModuleInit();
-}
-
 describe("Transactional", () => {
   class TestService {
+    mongoTransactionService = {
+      run: jest.fn().mockImplementation((fn) => fn()),
+    };
+
     @Transactional()
     async withArgs(a: string, b: string) {
       return { a, b };
@@ -16,22 +15,29 @@ describe("Transactional", () => {
   }
 
   let service: TestService;
-  const fakeMongoTransactionService = {
-    run: jest.fn().mockImplementation((fn) => fn()),
-  };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    fakeMongoTransactionService.run.mockImplementation((fn) => fn());
-    registerMongoTransactionService(fakeMongoTransactionService as never);
     service = new TestService();
   });
 
-  it("delegates to MongoTransactionService.run and forwards all arguments unchanged", async () => {
+  it("delegates to mongoTransactionService.run and forwards all arguments unchanged", async () => {
     const result = await service.withArgs("x", "y");
 
-    expect(fakeMongoTransactionService.run).toHaveBeenCalledTimes(1);
+    expect(service.mongoTransactionService.run).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ a: "x", b: "y" });
+  });
+
+  it("throws a clear error when the owning class doesn't inject MongoTransactionService", async () => {
+    class MissingService {
+      @Transactional()
+      async doThing() {
+        return "done";
+      }
+    }
+
+    await expect(new MissingService().doThing()).rejects.toThrow(
+      "@Transactional() requires MissingService to inject MongoTransactionService as this.mongoTransactionService",
+    );
   });
 
   describe("nesting on top of the real MongoTransactionService", () => {
@@ -44,6 +50,9 @@ describe("Transactional", () => {
     };
 
     class RealTransactionService {
+      mongoTransactionService = new MongoTransactionService(
+        connection as never,
+      );
       sessionsSeen: unknown[] = [];
 
       @Transactional()
@@ -63,9 +72,6 @@ describe("Transactional", () => {
       jest.clearAllMocks();
       mockSession.withTransaction.mockImplementation((fn) => fn());
       connection.startSession.mockResolvedValue(mockSession);
-      registerMongoTransactionService(
-        new MongoTransactionService(connection as never),
-      );
     });
 
     it("joins the outer transaction instead of nesting a second one", async () => {
