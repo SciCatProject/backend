@@ -111,19 +111,6 @@ describe("DatablocksService", () => {
     });
   });
 
-  describe("updateDatasetSizeAndFiles", () => {
-    it("should delegate to the datasets service using the datablock model and its packedSize/numberOfFilesArchived fields", async () => {
-      await service.updateDatasetSizeAndFiles("testPid");
-
-      expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
-        "testPid",
-        model,
-        "packedSize",
-        "numberOfFilesArchived",
-      );
-    });
-  });
-
   describe("createAndUpdateDatasetSizeAndFileCount", () => {
     it("should create the datablock and then update the dataset size and file count", async () => {
       const result = await service.createAndUpdateDatasetSizeAndFileCount(
@@ -137,41 +124,68 @@ describe("DatablocksService", () => {
       );
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockCreateDatablockDto.datasetId,
-        model,
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        result,
+        undefined,
       );
     });
   });
 
-  describe("updateAndUpdateDatasetSizeAndFileCount", () => {
-    it("should update the datablock and then update the dataset size and file count", async () => {
+  describe("updateOneAndUpdateDatasetSizeAndFileCount", () => {
+    const oldDatablock: Datablock = {
+      ...mockDatablock,
+      packedSize: 800,
+      dataFileList: [],
+    };
+
+    it("should update the datablock and then update the dataset size and file count by the delta", async () => {
+      (model.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(oldDatablock),
+      });
       (model.findOneAndUpdate as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockDatablock),
       });
 
-      const result = await service.updateAndUpdateDatasetSizeAndFileCount(
+      const result = await service.updateOneAndUpdateDatasetSizeAndFileCount(
         { _id: "testId" },
-        { size: 2000 },
+        { packedSize: mockDatablock.packedSize },
       );
 
       expect(result).toEqual(mockDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         mockDatablock.datasetId,
-        model,
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        mockDatablock,
+        oldDatablock,
       );
     });
 
-    it("should throw NotFoundException and not touch the dataset when the datablock does not exist", async () => {
+    it("should throw NotFoundException and not touch the dataset when the original datablock does not exist", async () => {
+      (model.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        service.updateOneAndUpdateDatasetSizeAndFileCount(
+          { _id: "missing" },
+          { size: 2000 },
+        ),
+      ).rejects.toThrow(NotFoundException);
+      expect(model.findOneAndUpdate).not.toHaveBeenCalled();
+      expect(datasetsService.updateDatasetSizeAndFiles).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundException and not touch the dataset when the datablock disappears during update", async () => {
+      (model.findOne as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(oldDatablock),
+      });
       (model.findOneAndUpdate as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
       await expect(
-        service.updateAndUpdateDatasetSizeAndFileCount(
-          { _id: "missing" },
+        service.updateOneAndUpdateDatasetSizeAndFileCount(
+          { _id: "testId" },
           { size: 2000 },
         ),
       ).rejects.toThrow(NotFoundException);
@@ -180,7 +194,7 @@ describe("DatablocksService", () => {
   });
 
   describe("removeAndUpdateDatasetSizeAndFileCount", () => {
-    it("should remove the datablock and then update the dataset size and file count", async () => {
+    it("should remove the datablock and then update the dataset size and file count with negated values", async () => {
       (model.findOneAndDelete as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockDatablock),
       });
@@ -192,9 +206,9 @@ describe("DatablocksService", () => {
       expect(result).toEqual(mockDatablock);
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
         "testPid",
-        model,
-        "packedSize",
-        "numberOfFilesArchived",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        undefined,
+        mockDatablock,
       );
     });
 

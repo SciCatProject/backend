@@ -9,7 +9,7 @@ import { Request } from "express";
 
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
-  findByIdAndUpdateDatasetSizeAndFileCount = jest.fn();
+  updateOneAndUpdateDatasetSizeAndFileCount = jest.fn();
 }
 
 class DatasetsServiceMock {}
@@ -64,7 +64,7 @@ describe("OrigDatablocksController", () => {
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
         .mockResolvedValue(mockDatablock);
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
         new PreconditionFailedException(
           "OrigDatablock #123 has been modified on server",
         ),
@@ -79,7 +79,7 @@ describe("OrigDatablocksController", () => {
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
         .mockResolvedValue(mockDatablock);
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
         new NotFoundException("OrigDatablock #123 not found"),
       );
 
@@ -94,7 +94,7 @@ describe("OrigDatablocksController", () => {
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
         .mockResolvedValue(mockDatablock);
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
         updatedDatablock,
       );
 
@@ -102,9 +102,9 @@ describe("OrigDatablocksController", () => {
 
       expect(result).toEqual(updatedDatablock);
       expect(
-        origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount,
+        origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
       ).toHaveBeenCalledWith(
-        "123",
+        { _id: "123" },
         mockDto,
         new Date(mockRequest.headers["if-unmodified-since"] as string),
       );
@@ -123,7 +123,7 @@ describe("OrigDatablocksController", () => {
         jest
           .spyOn(controller, "checkPermissionsForOrigDatablock")
           .mockResolvedValue(mockDatablock);
-        origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+        origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
           updatedDatablock,
         );
       });
@@ -135,8 +135,8 @@ describe("OrigDatablocksController", () => {
 
         expect(result).toEqual(updatedDatablock);
         expect(
-          origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount,
-        ).toHaveBeenCalledWith("123", mockDto, undefined);
+          origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
+        ).toHaveBeenCalledWith({ _id: "123" }, mockDto, undefined);
       });
 
       it("should proceed with update if 'if-unmodified-since' header is malformed", async () => {
@@ -148,8 +148,8 @@ describe("OrigDatablocksController", () => {
 
         expect(result).toEqual(updatedDatablock);
         expect(
-          origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount,
-        ).toHaveBeenCalledWith("123", mockDto, undefined);
+          origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
+        ).toHaveBeenCalledWith({ _id: "123" }, mockDto, undefined);
       });
     });
   });

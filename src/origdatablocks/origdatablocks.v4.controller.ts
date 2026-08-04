@@ -751,8 +751,8 @@ export class OrigDatablocksV4Controller {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
-      id,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: id },
       updateOrigDatablockDto,
       unmodifiedSince,
     );

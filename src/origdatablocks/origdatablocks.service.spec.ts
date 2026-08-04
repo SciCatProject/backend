@@ -1,9 +1,10 @@
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Model } from "mongoose";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { OrigDatablocksService } from "./origdatablocks.service";
+import { CreateOrigDatablockDto } from "./dto/create-origdatablock.dto";
 import { OrigDatablock } from "./schemas/origdatablock.schema";
 
 const mockOrigDatablock: OrigDatablock = {
@@ -32,29 +33,58 @@ const mockOrigDatablock: OrigDatablock = {
   ],
 };
 
+const mockCreateOrigDatablockDto: CreateOrigDatablockDto = {
+  datasetId: mockOrigDatablock.datasetId,
+  size: mockOrigDatablock.size,
+  ownerGroup: mockOrigDatablock.ownerGroup,
+  accessGroups: mockOrigDatablock.accessGroups,
+  instrumentGroup: mockOrigDatablock.instrumentGroup,
+  chkAlg: mockOrigDatablock.chkAlg,
+  dataFileList: mockOrigDatablock.dataFileList,
+};
+
 class DatasetsServiceMock {
   updateDatasetSizeAndFiles = jest.fn().mockResolvedValue(undefined);
 }
 
+interface MockOrigDatablockModelType {
+  (this: Record<string, unknown>, data: Record<string, unknown>): void;
+  findOne: jest.Mock;
+  findOneAndUpdate: jest.Mock;
+  findOneAndDelete: jest.Mock;
+  schema: { path: jest.Mock };
+}
+
 describe("OrigdatablocksService", () => {
   let service: OrigDatablocksService;
-
-  let model: Model<OrigDatablock>;
   let datasetsService: DatasetsServiceMock;
+  let MockOrigDatablockModel: MockOrigDatablockModelType;
 
   beforeEach(async () => {
+    MockOrigDatablockModel = function (
+      this: Record<string, unknown>,
+      data: Record<string, unknown>,
+    ) {
+      Object.assign(this, data);
+      this.save = jest
+        .fn()
+        .mockResolvedValue({ ...mockOrigDatablock, ...data });
+    } as MockOrigDatablockModelType;
+    MockOrigDatablockModel.findOne = jest.fn();
+    MockOrigDatablockModel.findOneAndUpdate = jest.fn();
+    MockOrigDatablockModel.findOneAndDelete = jest.fn();
+    // findOne() builds its filter via createFullqueryFilter, which
+    // inspects the schema for every filter key (e.g. "_id").
+    MockOrigDatablockModel.schema = {
+      path: jest.fn().mockReturnValue({ instance: "String" }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrigDatablocksService,
         {
           provide: getModelToken("OrigDatablock"),
-          useValue: {
-            new: jest.fn().mockResolvedValue(mockOrigDatablock),
-            constructors: jest.fn().mockResolvedValue(mockOrigDatablock),
-            find: jest.fn(),
-            create: jest.fn(),
-            exec: jest.fn(),
-          },
+          useValue: MockOrigDatablockModel,
         },
         { provide: DatasetsService, useClass: DatasetsServiceMock },
         { provide: REQUEST, useValue: { user: { username: "testUser" } } },
@@ -64,7 +94,6 @@ describe("OrigdatablocksService", () => {
     service = await module.resolve<OrigDatablocksService>(
       OrigDatablocksService,
     );
-    model = module.get<Model<OrigDatablock>>(getModelToken("OrigDatablock"));
     datasetsService = module.get<DatasetsServiceMock>(DatasetsService);
   });
 
@@ -72,37 +101,110 @@ describe("OrigdatablocksService", () => {
     expect(service).toBeDefined();
   });
 
-  describe("updateDatasetSizeAndFiles", () => {
-    it("should delegate size and file count aggregation to the datasets service, keyed on the origdatablock model and its size/numberOfFiles fields", async () => {
-      await service.updateDatasetSizeAndFiles("testPid");
+  describe("createAndUpdateDatasetSizeAndFileCount", () => {
+    it("should create the origdatablock and then update the dataset size and file count", async () => {
+      const result = await service.createAndUpdateDatasetSizeAndFileCount(
+        mockCreateOrigDatablockDto,
+      );
 
+      expect(result).toEqual(
+        expect.objectContaining({
+          datasetId: mockCreateOrigDatablockDto.datasetId,
+        }),
+      );
       expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
-        "testPid",
-        model,
-        "size",
-        "numberOfFiles",
+        mockCreateOrigDatablockDto.datasetId,
+        { size: "size", numberOfFiles: "numberOfFiles" },
+        result,
+        undefined,
+      );
+    });
+  });
+
+  describe("updateOneAndUpdateDatasetSizeAndFileCount", () => {
+    const oldOrigDatablock: OrigDatablock = {
+      ...mockOrigDatablock,
+      size: 800,
+      dataFileList: [],
+    };
+
+    it("should update the origdatablock and then update the dataset size and file count", async () => {
+      MockOrigDatablockModel.findOne.mockResolvedValue(oldOrigDatablock);
+      MockOrigDatablockModel.findOneAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockOrigDatablock),
+      });
+
+      const result = await service.updateOneAndUpdateDatasetSizeAndFileCount(
+        { _id: "testId" },
+        { size: mockOrigDatablock.size },
+      );
+
+      expect(result).toEqual(mockOrigDatablock);
+      expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
+        mockOrigDatablock.datasetId,
+        { size: "size", numberOfFiles: "numberOfFiles" },
+        mockOrigDatablock,
+        oldOrigDatablock,
       );
     });
 
-    it("should forward the given datasetId unchanged", async () => {
-      await service.updateDatasetSizeAndFiles("ds123");
-
-      expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
-        "ds123",
-        expect.anything(),
-        "size",
-        "numberOfFiles",
-      );
-    });
-
-    it("should propagate errors raised by the datasets service", async () => {
-      datasetsService.updateDatasetSizeAndFiles.mockRejectedValueOnce(
-        new Error("aggregation failed"),
-      );
+    it("should throw ForbiddenException and not touch the dataset when the original origdatablock does not exist", async () => {
+      MockOrigDatablockModel.findOne.mockResolvedValue(null);
 
       await expect(
-        service.updateDatasetSizeAndFiles("testPid"),
-      ).rejects.toThrow("aggregation failed");
+        service.updateOneAndUpdateDatasetSizeAndFileCount(
+          { _id: "missing" },
+          { size: 2000 },
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(MockOrigDatablockModel.findOneAndUpdate).not.toHaveBeenCalled();
+      expect(datasetsService.updateDatasetSizeAndFiles).not.toHaveBeenCalled();
+    });
+
+    it("should throw NotFoundException and not touch the dataset when the origdatablock disappears during update", async () => {
+      MockOrigDatablockModel.findOne.mockResolvedValue(oldOrigDatablock);
+      MockOrigDatablockModel.findOneAndUpdate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        service.updateOneAndUpdateDatasetSizeAndFileCount(
+          { _id: "testId" },
+          { size: 2000 },
+        ),
+      ).rejects.toThrow(NotFoundException);
+      expect(datasetsService.updateDatasetSizeAndFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("removeAndUpdateDatasetSizeAndFileCount", () => {
+    it("should remove the origdatablock and then update the dataset size and file count with negated values", async () => {
+      MockOrigDatablockModel.findOneAndDelete.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockOrigDatablock),
+      });
+
+      const result = await service.removeAndUpdateDatasetSizeAndFileCount({
+        _id: "testId",
+      });
+
+      expect(result).toEqual(mockOrigDatablock);
+      expect(datasetsService.updateDatasetSizeAndFiles).toHaveBeenCalledWith(
+        mockOrigDatablock.datasetId,
+        { size: "size", numberOfFiles: "numberOfFiles" },
+        undefined,
+        mockOrigDatablock,
+      );
+    });
+
+    it("should throw NotFoundException and not touch the dataset when the origdatablock does not exist", async () => {
+      MockOrigDatablockModel.findOneAndDelete.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        service.removeAndUpdateDatasetSizeAndFileCount({ _id: "missing" }),
+      ).rejects.toThrow(NotFoundException);
+      expect(datasetsService.updateDatasetSizeAndFiles).not.toHaveBeenCalled();
     });
   });
 });

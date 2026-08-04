@@ -2272,8 +2272,8 @@ export class DatasetsController {
       pid,
       Action.DatasetOrigdatablockUpdate,
     );
-    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
-      oid,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: oid, datasetId: pid },
       updateOrigdatablockDto,
     );
   }
@@ -2550,7 +2550,7 @@ export class DatasetsController {
     );
     if (!dataset) throw new NotFoundException(`dataset: ${pid} not found`);
 
-    return this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
+    return this.datablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
       { _id: did, datasetId: pid },
       updateDatablockDto,
     );
