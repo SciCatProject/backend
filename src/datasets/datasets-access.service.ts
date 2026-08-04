@@ -83,22 +83,16 @@ export class DatasetsAccessService {
         return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
       }
       case DatasetLookupKeysEnum.samples: {
-        const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-        const canViewAny = ability.can(Action.SampleReadAny, SampleClass);
-        const canViewAccess = ability.can(
-          Action.SampleReadManyAccess,
-          SampleClass,
-        );
-        const canViewOwner = ability.can(
-          Action.SampleReadManyOwner,
-          SampleClass,
-        );
-        const canViewPublic = ability.can(
-          Action.SampleReadManyPublic,
-          SampleClass,
-        );
+        const ability = this.caslAbilityFactory.sampleAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, SampleClass);
+        const canView = ability.can(Action.SampleRead, SampleClass);
 
-        return { canViewAny, canViewOwner, canViewAccess, canViewPublic };
+        return {
+          canViewAny,
+          canViewOwner: canView,
+          canViewAccess: canView,
+          canViewPublic: canView,
+        };
       }
       case DatasetLookupKeysEnum.instruments: {
         // TODO: Fix this if the instrument access change
@@ -150,7 +144,7 @@ export class DatasetsAccessService {
       const { canViewAny, canViewAccess, canViewOwner } = access;
       if (!canViewAny) {
         let pipeline: PipelineStage.Lookup["$lookup"]["pipeline"];
-        if (canViewAccess) {
+        if (currentUser && canViewAccess) {
           pipeline = [
             {
               $match: {
@@ -163,7 +157,7 @@ export class DatasetsAccessService {
               },
             },
           ];
-        } else if (canViewOwner) {
+        } else if (currentUser && canViewOwner) {
           pipeline = [
             {
               $match: {
