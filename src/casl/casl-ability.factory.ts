@@ -23,12 +23,12 @@ import { Opensearch } from "src/opensearch/opensearch.subject";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
-import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { PublishedDataAbility } from "./abilities/published-data.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -37,6 +37,7 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
+    private publishedDataAbility: PublishedDataAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -58,7 +59,7 @@ export class CaslAbilityFactory {
     origdatablocks: this.origDatablockEndpointAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
-    publisheddata: this.publishedDataEndpointAccess,
+    publisheddata: this.publishedDataAccess,
     runtimeconfig: this.runtimeConfigEndpointAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
@@ -72,6 +73,10 @@ export class CaslAbilityFactory {
       );
     }
     return accessFunction.call(this, user);
+  }
+
+  publishedDataAccess(user: JWTUser | null) {
+    return this.publishedDataAbility.buildAbility(user);
   }
 
   datasetEndpointAccess(user: JWTUser) {
@@ -1056,31 +1061,6 @@ export class CaslAbilityFactory {
 
         cannot(Action.ProposalsDelete, ProposalClass);
       }
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  publishedDataEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (user) {
-      can(Action.Read, PublishedData);
-      can(Action.Update, PublishedData);
-      can(Action.Create, PublishedData);
-    }
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, PublishedData);
     }
     return build({
       detectSubjectType: (item) =>
@@ -2349,28 +2329,6 @@ export class CaslAbilityFactory {
           accessGroups: { $in: user.currentGroups },
         });
       }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  publishedDataInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      // -------------------------------------
-      // users belonging to any of the group listed in ADMIN_GROUPS
-      // -------------------------------------
-
-      can(Action.AccessAny, PublishedData);
     }
 
     return build({
