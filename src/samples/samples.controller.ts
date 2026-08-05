@@ -950,8 +950,10 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<DatasetClass[] | null> {
+    await this.checkPermissionsForSample(request, id, Action.SampleRead);
+
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
+    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
 
@@ -960,22 +962,11 @@ export class SamplesController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-      const canViewPublic = ability.can(
-        Action.DatasetReadManyPublic,
-        DatasetClass,
-      );
       if (canViewAccess) {
         fields.userGroups = user.currentGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
         // fields.sharedWith = user.email;
-      } else if (canViewOwner) {
-        fields.ownerGroup = user.currentGroups ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      } else if (canViewPublic) {
+      } else {
         fields.isPublished = true;
       }
     }

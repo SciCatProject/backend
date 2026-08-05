@@ -972,8 +972,14 @@ export class ProposalsController {
     @Req() request: Request,
     @Param("pid") proposalId: string,
   ): Promise<DatasetClass[] | null> {
+    await this.checkPermissionsForProposal(
+      request,
+      proposalId,
+      Action.ProposalsRead,
+    );
+
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
+    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
     const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
 
@@ -982,22 +988,11 @@ export class ProposalsController {
         Action.DatasetReadManyAccess,
         DatasetClass,
       );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-      const canViewPublic = ability.can(
-        Action.DatasetReadManyPublic,
-        DatasetClass,
-      );
       if (canViewAccess) {
         fields.userGroups = user.currentGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
         // fields.sharedWith = user.email;
-      } else if (canViewOwner) {
-        fields.ownerGroup = user.currentGroups ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      } else if (canViewPublic) {
+      } else {
         fields.isPublished = true;
       }
     }

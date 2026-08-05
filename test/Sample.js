@@ -4,10 +4,57 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
+  accessTokenUser1 = null,
+  accessTokenUser2 = null,
 
   sampleId = null,
   attachmentId = null,
-  datasetId = null;
+  datasetId = null,
+  datasetId2 = null,
+  sampleIdSpecial = null,
+  sampleIdNested = null;
+
+const SampleCorrectWithSpecialMetadataKeys = {
+  ...TestData.SampleCorrect,
+  sampleCharacteristics: {
+    "test field1": {
+      value: "test value",
+      unit: "",
+    },
+    "test.field2": {
+      value: "test value",
+      unit: "",
+    },
+  },
+  description: "Sample with special characters in metadata keys",
+  ownerGroup: "group4",
+  accessGroups: ["group6"],
+};
+
+const SampleCorrectWithNestedMetadata = {
+  ...TestData.SampleCorrect,
+  sampleCharacteristics: {
+    "experiment test": {
+      "nested test1": {
+        value: "Test Value 1",
+        unit: "",
+        type: "string",
+      },
+      "nested.test2": {
+        value: "Test Value 2",
+        unit: "",
+        type: "string",
+      },
+    },
+    regular_field: {
+      value: 1,
+      unit: "",
+    },
+  },
+  description: "Sample with nested metadata",
+  ownerGroup: "group4",
+  accessGroups: ["group6"],
+};
 
 describe("2200: Sample: Simple Sample", () => {
   before(async () => {
@@ -23,12 +70,22 @@ describe("2200: Sample: Simple Sample", () => {
       username: "archiveManager",
       password: TestData.Accounts["archiveManager"]["password"],
     });
+
+    accessTokenUser1 = await utils.getToken(appUrl, {
+      username: "user1",
+      password: TestData.Accounts["user1"]["password"],
+    });
+
+    accessTokenUser2 = await utils.getToken(appUrl, {
+      username: "user2",
+      password: TestData.Accounts["user2"]["password"],
+    });
   });
 
   it("0010: adds a new sample", async () => {
     return request(appUrl)
       .post("/api/v3/Samples")
-      .send(TestData.SampleCorrect)
+      .send({ ...TestData.SampleCorrect, accessGroups: ["group1"] })
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -163,9 +220,10 @@ describe("2200: Sample: Simple Sample", () => {
       });
   });
 
-  it("0080: insert dataset using this sample", async () => {
+  it("0080: insert dataset using this sample with group1 owner", async () => {
     let dataset = { ...TestData.RawCorrect };
     dataset.sampleId = sampleId;
+    dataset.ownerGroup = "group1";
     return request(appUrl)
       .post("/api/v3/Datasets")
       .send(dataset)
@@ -181,7 +239,40 @@ describe("2200: Sample: Simple Sample", () => {
       });
   });
 
-  it("0090: should retrieve dataset for sample", async () => {
+  it("0081: insert dataset using this sample with adminingestor owner", async () => {
+    let dataset = { ...TestData.RawCorrect };
+    dataset.sampleId = sampleId;
+    dataset.ownerGroup = "adminingestor";
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(dataset)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("owner").and.be.string;
+        res.body.should.have.property("type").and.equal("raw");
+        res.body.should.have.property("pid").and.be.string;
+        datasetId2 = encodeURIComponent(res.body["pid"]);
+      });
+  });
+
+  it("0090: should retrieve one dataset for sample as user1", async () => {
+    return request(appUrl)
+      .get("/api/v3/Samples/" + sampleId + "/datasets")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array);
+        res.body.length.should.be.equal(1);
+        res.body[0].pid.should.be.equal(decodeURIComponent(datasetId));
+      });
+  });
+
+  it("0091: should retrieve two datasets for sample as adminIngestor", async () => {
     return request(appUrl)
       .get("/api/v3/Samples/" + sampleId + "/datasets")
       .set("Accept", "application/json")
@@ -190,9 +281,18 @@ describe("2200: Sample: Simple Sample", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.instanceof(Array);
-        res.body.length.should.be.equal(1);
+        res.body.length.should.be.equal(2);
         res.body[0].pid.should.be.equal(decodeURIComponent(datasetId));
+        res.body[1].pid.should.be.equal(decodeURIComponent(datasetId2));
       });
+  });
+
+  it("0092: should deny access as user2", async () => {
+    return request(appUrl)
+      .get("/api/v3/Samples/" + sampleId + "/datasets")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.AccessForbiddenStatusCode);
   });
 
   it("0100: should delete the dataset linked to sample", function (done) {
