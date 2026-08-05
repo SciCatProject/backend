@@ -50,6 +50,7 @@ export class JobsService {
 
   async create(createJobDto: JobClass): Promise<JobDocument> {
     const username = this.getUsername();
+
     const jobData = addCreatedByFields(createJobDto, username);
     const statusCode =
       createJobDto.statusCode ||
@@ -57,9 +58,11 @@ export class JobsService {
     const statusMessage =
       createJobDto.statusMessage ||
       this.configService.get<string>("jobDefaultStatusMessage")!;
+
     const createdJob = new this.jobModel(
       this.addStatusFields(jobData, statusCode, statusMessage),
     );
+
     return createdJob.save();
   }
 
