@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../../runtime-config/">
+        <link rel="prev" href="../pr-guidelines/">
       
       
-        <link rel="next" href="../release-guidelines/">
+        <link rel="next" href="../../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Contributing - SciCat Documentation</title>
+        <title>Release Versioning Guide - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pull-request-guidelines" class="md-skip">
+        <a href="#release-versioning-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Release Versioning Guide
             
           </span>
         </div>
@@ -532,10 +532,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../release-guidelines/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Versioning Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -551,6 +578,109 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#the-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-make-a-major-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to make a major release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to make a major release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-the-command-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the command line
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#footer-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Footer formatting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixing-a-pr-that-was-merged-without-the-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixing a PR that was merged without the footer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Releasing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-before-you-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking before you release
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -736,10 +866,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#pr-title-format" class="md-nav__link">
+  <a href="#the-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        PR Title Format
+        The rules
       
     </span>
   </a>
@@ -747,10 +877,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#how-to-make-a-major-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        How to make a major release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to make a major release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-the-command-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From the command line
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#footer-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Footer formatting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixing-a-pr-that-was-merged-without-the-footer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixing a PR that was merged without the footer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#releasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Releasing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-before-you-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking before you release
       
     </span>
   </a>
@@ -774,36 +965,147 @@
 
 
 
-<h1 id="pull-request-guidelines">Pull Request Guidelines<a class="headerlink" href="#pull-request-guidelines" title="Permanent link">¶</a></h1>
-<p>When creating a pull request (PR) for this repository, it's important to follow the guidelines for PR titles and PR template to ensure consistency and clarity. Proper PR titles help maintain a clear and understandable project history and facilitate better release notes.</p>
-<h2 id="pr-title-format">PR Title Format<a class="headerlink" href="#pr-title-format" title="Permanent link">¶</a></h2>
-<p>All PR titles must adhere to the conventional commits format. This format helps in automating the release process and generating changelogs. The format is as follows:</p>
-<div class="highlight"><pre><span></span><code>&lt;type&gt;(&lt;scope&gt;): &lt;description&gt;
+<h1 id="release-versioning-guide">Release Versioning Guide<a class="headerlink" href="#release-versioning-guide" title="Permanent link">¶</a></h1>
+<p>When code lands on the <code>release</code> branch, a workflow reads the commit messages
+since the last tag and bumps the version automatically.</p>
+<hr>
+<h2 id="the-rules">The rules<a class="headerlink" href="#the-rules" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Commit message</th>
+<th>Bump</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anything else</td>
+<td><strong>patch</strong> (default)</td>
+<td><code>chore: update deps</code> → <code>1.2.3</code> → <code>1.2.4</code></td>
+</tr>
+<tr>
+<td><code>fix: ...</code></td>
+<td><strong>patch</strong></td>
+<td><code>1.2.3</code> → <code>1.2.4</code></td>
+</tr>
+<tr>
+<td><code>feat: ...</code></td>
+<td><strong>minor</strong></td>
+<td><code>1.2.3</code> → <code>1.3.0</code></td>
+</tr>
+<tr>
+<td><code>BREAKING CHANGE:</code> in the <strong>body</strong></td>
+<td><strong>major</strong></td>
+<td><code>1.2.3</code> → <code>2.0.0</code></td>
+</tr>
+</tbody>
+</table>
+<p>Patch is the fallback. If nothing in the batch matches a rule, you still get a
+patch bump — never nothing.</p>
+<p>The highest match wins. A batch containing three <code>fix:</code> and one <code>feat:</code> gives a
+minor bump.</p>
+<hr>
+<h2 id="how-to-make-a-major-release">How to make a major release<a class="headerlink" href="#how-to-make-a-major-release" title="Permanent link">¶</a></h2>
+<p>The <code>BREAKING CHANGE:</code> footer in the commit <strong>body</strong> is what triggers the bump.
+Mark the title with <code>!</code> as well (<code>feat!: ...</code>) — it's the convention for
+signalling a breaking change, even though the footer does the actual work.</p>
+<p>When squash-merging a PR, GitHub shows two fields. Put the type in the
+<strong>Commit message</strong> box and the footer in the <strong>Extended description</strong> box:</p>
+<div class="highlight"><pre><span></span><code>┌─ Commit message ──────────────────────────────────────┐
+│ feat!: some major change                              │
+└───────────────────────────────────────────────────────┘
+
+┌─ Extended description ────────────────────────────────┐
+│ BREAKING CHANGE: this will trigger release major bump │
+│                                                       │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+
+           [ Confirm merge ]   [ Cancel ]
 </code></pre></div>
-<p>type: The type of change being made. It must be one of the following:</p>
-<ul>
-<li><code>feat:</code> A new feature</li>
-<li><code>fix:</code> A bug fix</li>
-<li><code>ci:</code> Continuous integration-related changes.</li>
-<li><code>docs:</code> Documentation only changes</li>
-<li><code>style:</code> Changes that do not affect the meaning of the code (white -space, formatting, missing semi -colons, etc)</li>
-<li><code>refactor:</code> A code change that neither fixes a bug nor adds a feature</li>
-<li><code>revert</code>: Reverts a previous commit.</li>
-<li><code>perf:</code> A code change that improves performance</li>
-<li><code>test:</code> Adding missing or correcting existing tests</li>
-<li><code>chore:</code> Changes to the build process or auxiliary tools and libraries such as documentation generation</li>
-<li><code>build:</code> Changes that affect the build system or external dependencies.</li>
-<li><code>BREAKING CHANGE:</code> A change that introduces a breaking API change.</li>
-</ul>
-<p>scope: An <code>optional</code> description of the section of the codebase affected by the changes (e.g., api, ui, docs). This is enclosed in parentheses.</p>
-<p>description: A brief summary of the changes made.</p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
-<ul>
-<li>feat(api): add new endpoint for data retrieval</li>
-<li>fix(ui): correct button alignment on mobile devices</li>
-<li>docs: update contributing guidelines</li>
-<li>BREAKING CHANGE: refactor authentication middleware to use new library</li>
-</ul>
+<p>GitHub inserts the blank line between the two fields for you, producing:</p>
+<div class="highlight"><pre><span></span><code>feat!: some major change
+
+BREAKING CHANGE: this will trigger release major bump
+</code></pre></div>
+<h3 id="from-the-command-line">From the command line<a class="headerlink" href="#from-the-command-line" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>commit<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span><span class="s2">"feat!: some major change"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span><span class="s2">"BREAKING CHANGE: this will trigger release major bump"</span>
+</code></pre></div>
+<p>Two <code>-m</code> flags produce the subject and body with the blank line between them.</p>
+<hr>
+<h2 id="footer-formatting">Footer formatting<a class="headerlink" href="#footer-formatting" title="Permanent link">¶</a></h2>
+<p>The footer must be on its own line, flush left, with a blank line above it.</p>
+<p>✅ Correct:</p>
+<div class="highlight"><pre><span></span><code>feat: new API
+
+BREAKING CHANGE: removed the old endpoint
+</code></pre></div>
+<p>❌ These all fail silently and give you a minor bump:</p>
+<div class="highlight"><pre><span></span><code>feat: new API BREAKING CHANGE: removed old endpoint      ← same line as subject
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>feat: new API
+
+- BREAKING CHANGE: removed old endpoint                  ← bullet prefix
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>feat: new API
+
+  BREAKING CHANGE: removed old endpoint                  ← indented
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>feat: new API
+
+BREAKING CHANGES: removed old endpoint                   ← plural
+</code></pre></div>
+<p>Also never use it as the title — <code>BREAKING CHANGE: fix the thing</code> has a space in
+the type position, so the whole message fails to parse and falls back to patch.</p>
+<hr>
+<h2 id="fixing-a-pr-that-was-merged-without-the-footer">Fixing a PR that was merged without the footer<a class="headerlink" href="#fixing-a-pr-that-was-merged-without-the-footer" title="Permanent link">¶</a></h2>
+<p>Someone merged a breaking change but forgot the <code>BREAKING CHANGE:</code> footer. Push
+an empty commit to <code>master</code> before releasing:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>master
+git<span class="w"> </span>pull
+git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span><span class="s2">"feat: some major change"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span><span class="s2">"BREAKING CHANGE: this will trigger release major bump"</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>master
+</code></pre></div>
+<p>The workflow scans <strong>every</strong> commit since the last tag, so one qualifying commit
+anywhere in the batch is enough. No force push, no rewritten history.</p>
+<p>Then merge master into release as usual.</p>
+<p>⚠️ Do this <strong>before</strong> pushing to <code>release</code>. Once the workflow runs it creates the
+tag, the GitHub release, and the Docker images — and those can't be corrected
+without deleting a published version.</p>
+<hr>
+<h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>release
+git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>release
+git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>master
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>release
+</code></pre></div>
+<p><strong>Never squash master into release.</strong> Squashing collapses every commit into one
+and throws away all the conventional-commit metadata — including any
+<code>BREAKING CHANGE:</code> footers.</p>
+<p>The PR title for a master → release PR doesn't matter. The individual commits
+from master are what get parsed.</p>
+<hr>
+<h2 id="checking-before-you-release">Checking before you release<a class="headerlink" href="#checking-before-you-release" title="Permanent link">¶</a></h2>
+<p>Merge locally — <strong>without pushing</strong> — and check what the version would be:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>release
+git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>release
+git<span class="w"> </span>fetch<span class="w"> </span>--tags
+git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>master<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Merge branch 'master' into release"</span>
+
+npx<span class="w"> </span>-p<span class="w"> </span>conventional-recommended-bump<span class="w"> </span>-p<span class="w"> </span>conventional-changelog-angular<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>conventional-recommended-bump<span class="w"> </span>-p<span class="w"> </span>angular
+</code></pre></div>
+<p>It prints <code>major</code>, <code>minor</code>, or <code>patch</code> — the same result the workflow will get.</p>
+<p>Not what you expected? Throw the local merge away:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>origin/release
+</code></pre></div>
+<p>Then fix the commit messages on master (or add an empty commit with the footer)
+and check again.</p>
 
 
 
