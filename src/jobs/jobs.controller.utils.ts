@@ -366,14 +366,12 @@ export class JobsControllerUtils {
     jobUser: JWTUser | null,
   ) {
     if (this.isAdminUser(user)) return;
-    if (
-      !(
-        jobConfiguration.create.auth &&
-        Object.values(this.jobDatasetAuthorization).includes(
-          jobConfiguration.create.auth,
-        )
+    if (!(
+      jobConfiguration.create.auth &&
+      Object.values(this.jobDatasetAuthorization).includes(
+        jobConfiguration.create.auth,
       )
-    )
+    ))
       return;
     if (!jobCreateDto.jobParams[JobParams.DatasetList])
       throw new UnprocessableEntityException(
@@ -384,9 +382,11 @@ export class JobsControllerUtils {
         pid: { $in: datasetList.map((x) => x.pid) },
       },
     };
-    const requestUserGroups = this.isJobCreationPrivilegedUser(user)
+    const isPrivilegedUser = this.isPrivilegedUser(user);
+    const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
       : (user?.currentGroups ?? []);
+    const requestUserGroups = [...baseGroups];
     if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
       datasetsWhere.where.isPublished = true;
     else if (jobConfiguration.create.auth === CreateJobAuth.DatasetAccess) {
@@ -400,6 +400,8 @@ export class JobsControllerUtils {
         ];
     } else if (jobConfiguration.create.auth === CreateJobAuth.DatasetOwner) {
       if (!user) throw new UnauthorizedException("User not authenticated");
+      if (isPrivilegedUser)
+        requestUserGroups.push(jobCreateDto.ownerGroup as string);
       if (requestUserGroups.length === 0)
         throw new ForbiddenException(
           "User does not belong to any group, cannot create job with #datasetOwner authorization.",
@@ -656,8 +658,7 @@ export class JobsControllerUtils {
    */
   removeFields<
     T extends PartialIntermediateOutputJobDto | JobClass =
-      | PartialIntermediateOutputJobDto
-      | JobClass,
+      PartialIntermediateOutputJobDto | JobClass,
   >(filter: FilterQuery<JobDocument>, job: T): PartialOutputJobDto {
     if (filter.fields && filter.fields.length > 0) {
       for (const field of mandatoryFields as (keyof T)[]) {

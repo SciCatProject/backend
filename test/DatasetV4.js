@@ -1114,14 +1114,7 @@ describe("2500: Datasets v4 tests", () => {
 
   describe("Datasets v4 count tests", () => {
     it("0400: should not be able to fetch datasets count if not logged in", async () => {
-      const filter = {
-        limits: {
-          skip: 0,
-          sort: {
-            datasetName: "asc",
-          },
-        },
-      };
+      const filter = {};
 
       return request(appUrl)
         .get("/api/v4/datasets/count")

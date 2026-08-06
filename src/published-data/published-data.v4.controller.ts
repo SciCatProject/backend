@@ -147,7 +147,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       publishedDataFilters.where = {
         ...publishedDataFilters.where,
         $or: [
@@ -193,7 +193,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       jsonFilters.where = {
         ...jsonFilters.where,
         $or: [
@@ -290,7 +290,7 @@ export class PublishedDataV4Controller {
     const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
       request.user as JWTUser,
     );
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       filter.$or = [
         { createdBy: (request.user as JWTUser)?.username },
         { status: PublishedDataStatus.REGISTERED },
@@ -369,7 +369,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -468,7 +468,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (!canAccessAny) {
       throw new HttpException(
@@ -517,7 +517,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -683,7 +683,7 @@ export class PublishedDataV4Controller {
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (

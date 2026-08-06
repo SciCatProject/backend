@@ -11,7 +11,7 @@ export enum Action {
   // ---------------
   // Generic access any action that can be applied to any resource
   // Currently used by addAccessBasedFilters for admin/special group users
-  accessAny = "access_any",
+  AccessAny = "access_any",
 
   // ---------------
   // Datasets

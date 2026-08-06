@@ -79,31 +79,6 @@ export class OrigDatablocksController {
     return origDatablock;
   }
 
-  // async checkPermissionsForDataset(request: Request, id: string) {
-  //   const user: JWTUser = request.user as JWTUser;
-  //   const dataset = await this.datasetsService.findOne({
-  //     where: { pid: id },
-  //   });
-  //   if (dataset) {
-  //     // NOTE: We need DatasetClass instance because casl module
-  //     // can not recognize the type from dataset mongo database model.
-  //     // If other fields are needed can be added later.
-  //     const newDatasetClass = new DatasetClass();
-  //     newDatasetClass.ownerGroup = dataset.ownerGroup;
-
-  //     if (user) {
-  //       const ability = this.caslAbilityFactory.createOrigDatablockForUser(user);
-  //       const canUpdate = ability.can(Action.Update, newDatasetClass);
-  //       if (!canUpdate) {
-  //         throw new ForbiddenException("Unauthorized access");
-  //       }
-  //     }
-  //   } else {
-  //     throw new BadRequestException("Invalid datasetId");
-  //   }
-  //   return dataset;
-  // }
-
   async generateOrigDatablockInstanceInstanceForPermissions(
     dataset:
       | CreateRawDatasetObsoleteDto
@@ -205,20 +180,9 @@ export class OrigDatablocksController {
       };
     }
 
-    const origdatablock = await this.origDatablocksService.create(
+    return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
       createOrigDatablockDto,
     );
-
-    await this.updateDatasetSizeAndFiles(dataset.pid);
-
-    return origdatablock;
-  }
-
-  async updateDatasetSizeAndFiles(pid: string) {
-    const { size, numberOfFiles } =
-      await this.origDatablocksService.aggregateSizeAndFileCount(pid);
-
-    await this.datasetsService.findByIdAndUpdate(pid, { size, numberOfFiles });
   }
 
   @UseGuards(PoliciesGuard)
@@ -642,16 +606,11 @@ export class OrigDatablocksController {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
-      id,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: id },
       updateOrigDatablockDto,
       unmodifiedSince,
     );
-    if (!origdatablock) {
-      throw new NotFoundException("Datablock not found");
-    }
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    return origdatablock;
   }
 
   // DELETE /origdatablocks/:id
@@ -672,15 +631,11 @@ export class OrigDatablocksController {
   })
   @ApiResponse({
     status: 200,
-    description: "No value is returned",
+    description: "The deleted origdatablock",
   })
-  async remove(@Param("id") id: string): Promise<unknown> {
-    const origdatablock = (await this.origDatablocksService.remove({
+  async remove(@Param("id") id: string): Promise<OrigDatablock> {
+    return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
       _id: id,
-    })) as OrigDatablock;
-
-    await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-
-    return origdatablock;
+    });
   }
 }
