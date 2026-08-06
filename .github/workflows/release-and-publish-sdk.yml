@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v7
 
       ## Commit message examples for Release type (patch|minor|major) can be found:
-      ## https://github.com/mathieudutour/github-tag-action
+      ## https://github.com/mathieudutour/github-tag-action12344556
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
