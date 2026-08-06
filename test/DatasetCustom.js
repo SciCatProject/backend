@@ -237,6 +237,26 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
       });
   });
 
+  it("0175: should not be able to add a dataset with a type not supported in datasetTypes.json", async () => {
+    const customDatasetWithUnsupportedType = {
+      ...TestData.CustomDatasetCorrect,
+      pid: TestData.PidPrefix + "/" + uuidv4(),
+      type: "unsupportedType",
+    };
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(customDatasetWithUnsupportedType)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("message")
+          .and.equal("Invalid dataset type!");
+      });
+  });
+
   it("0180: should fetch several custom datasets", async () => {
     const filter = {
       where: {
