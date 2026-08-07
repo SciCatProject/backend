@@ -6,6 +6,7 @@ import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { JobAbility } from "./abilities/jobs.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -13,8 +14,11 @@ describe("CaslAbilityFactory", () => {
     expect(
       new CaslAbilityFactory(
         configService,
-        new JobConfigService({}, {}, configService),
         new DatasetAbility(configService),
+        new JobAbility(
+          configService,
+          new JobConfigService({}, {}, configService),
+        ),
       ),
     ).toBeDefined();
   });
@@ -36,8 +40,10 @@ describe("CaslAbilityFactory", () => {
       } as unknown as ConfigService;
       return new CaslAbilityFactory(
         configService,
-        { allJobConfigs: {} } as unknown as JobConfigService,
         new DatasetAbility(configService),
+        new JobAbility(configService, {
+          allJobConfigs: {},
+        } as unknown as JobConfigService),
       );
     };
 
