@@ -203,6 +203,9 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `OIDC_FRONTEND_CLIENTS` | string | Yes | Comma separated list of additional frontend OIDC clients for this backend. Example: scilog,maxiv. Their success and return URLs can be configured by setting `OIDC*${CLIENT}_SUCCESS_URL` (E.g. `OIDC_SCILOG_SUCCESS_URL`) and `OIDC_${CLIENT}\_RETURN_URL`| |
 |`OIDC_ACCESS_GROUPS`| string | Yes | Functionality is still unclear. | |
 |`OIDC_ACCESS_GROUPS_PROPERTY`| string | Yes | Target field to get the access groups value from OIDC response. | |
+|`OIDC_USERINFO_ENABLED`| string | Yes | Enables querying the OIDC userinfo endpoint for user profile data and access groups. Set to `no` to use ID token claims directly instead. | "yes" |
+|`OIDC_TOKEN_REFRESH_ENABLED`| string | Yes | Enables periodic background refresh of OIDC tokens using the refresh token. Set to `no` to disable token refresh. | "yes" |
+|`OIDC_TOKEN_REFRESH_SECONDS_BEFORE_EXPIRY`| number | Yes | How many seconds before the OIDC access token expires to initiate a refresh. For short-lived tokens (e.g. 5 min) use 60; for longer-lived tokens use a higher value to ensure continuous access. | 60 |
 |`OIDC_USERINFO_MAPPING_FIELD_USERNAME`| string | Yes | Comma-separated list of fields from the OIDC response to use as the user's profile username. Example:`OIDC_USERINFO_MAPPING_FIELD_USERNAME="iss, sub"`. | "preferred_username" \|\| "name" |
 | `OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME`| string | Yes | Field from the OIDC response to use as the user's profile display name. Example:`OIDC_USERINFO_MAPPING_FIELD_DISPLAYNAME="preferred_username"`. | "name" |
 | `OIDC_USERINFO_MAPPING_FIELD_EMAIL`| string | Yes | Field from the OIDC response to use as the user's profile email. | "email" |

@@ -5,6 +5,7 @@ import { UsersService } from "src/users/users.service";
 import { AuthService } from "./auth.service";
 import { OidcClientService } from "src/common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { TokenRefreshService } from "./services/token-refresh.service";
 
 class JwtServiceMock {
   sign = jest.fn();
@@ -22,6 +23,11 @@ class OidcClientServiceMock {
 class OidcAuthServiceMock {
   validate = jest.fn();
 }
+
+class TokenRefreshServiceMock {
+  startSessionRefresh = jest.fn();
+  stopSessionRefresh = jest.fn();
+}
 describe("AuthService", () => {
   let authService: AuthService;
   let oidcClientService: OidcClientServiceMock;
@@ -38,6 +44,7 @@ describe("AuthService", () => {
         { provide: UsersService, useClass: UsersServiceMock },
         { provide: OidcClientService, useClass: OidcClientServiceMock },
         { provide: OidcAuthService, useClass: OidcAuthServiceMock },
+        { provide: TokenRefreshService, useClass: TokenRefreshServiceMock },
       ],
     }).compile();
 
