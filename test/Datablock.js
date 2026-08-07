@@ -209,6 +209,49 @@ describe("Datablocks", () => {
     });
   });
 
+  it("0067: should update the packedSize and dataFileList of the first datablock and remove the old contribution while adding the new one", async () => {
+    const updatedPackedSize = TestData.DataBlockCorrect.packedSize + 999;
+    const updatedDataFileList = [TestData.DataBlockCorrect.dataFileList[0]];
+
+    await request(appUrl)
+      .patch(`/api/v3/datablocks/${datablockId}`)
+      .send({
+        packedSize: updatedPackedSize,
+        dataFileList: updatedDataFileList,
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("packedSize")
+          .and.equal(updatedPackedSize);
+        res.body.should.have
+          .property("dataFileList")
+          .and.be.instanceof(Array)
+          .and.to.have.length(updatedDataFileList.length);
+      });
+
+    return request(appUrl)
+      .get("/api/v3/Datasets/" + encodeURIComponent(datasetId))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("packedSize")
+          .and.equal(updatedPackedSize + TestData.DataBlockCorrect.packedSize);
+        res.body.should.have
+          .property("numberOfFilesArchived")
+          .and.equal(
+            updatedDataFileList.length +
+              TestData.DataBlockCorrect.dataFileList.length,
+          );
+      });
+  });
+
   it("0070: should delete first datablock", async () => {
     return request(appUrl)
       .delete(`/api/v3/datablocks/${datablockId}`)
