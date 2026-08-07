@@ -257,7 +257,7 @@ export class DatablocksController {
 
       this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
 
-      return await this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
+      return await this.datablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
         { _id: id },
         updateDatablockDto,
       );

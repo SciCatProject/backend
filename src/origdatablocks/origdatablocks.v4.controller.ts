@@ -88,9 +88,7 @@ export class OrigDatablocksV4Controller {
 
   async generateOrigDatablockInstanceForPermissions(
     origdatablock:
-      | CreateOrigDatablockDto
-      | OutputOrigDatablockDto
-      | OrigDatablock,
+      CreateOrigDatablockDto | OutputOrigDatablockDto | OrigDatablock,
   ): Promise<OrigDatablock> {
     const origDatablockInstance = new OrigDatablock();
     origDatablockInstance.datasetId = origdatablock.datasetId || "";
@@ -181,28 +179,8 @@ export class OrigDatablocksV4Controller {
     const datasetInstance =
       await this.generateDatasetInstanceForPermissions(dataset);
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.DatasetRead:
-        canDoAction =
-          ability.can(Action.DatasetReadAny, datasetInstance) ||
-          ability.can(Action.DatasetReadOneOwner, datasetInstance) ||
-          ability.can(Action.DatasetReadOneAccess, datasetInstance) ||
-          ability.can(Action.DatasetReadOnePublic, datasetInstance);
-        break;
-      case Action.DatasetUpdate:
-        canDoAction =
-          ability.can(Action.DatasetUpdateAny, datasetInstance) ||
-          ability.can(Action.DatasetUpdateOwner, datasetInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canDoAction = ability.can(group, datasetInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
@@ -811,8 +789,8 @@ export class OrigDatablocksV4Controller {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
-      id,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: id },
       updateOrigDatablockDto,
       unmodifiedSince,
     );
