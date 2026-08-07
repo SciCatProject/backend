@@ -13,7 +13,6 @@ import {
   Req,
   ForbiddenException,
   NotFoundException,
-  InternalServerErrorException,
   UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
