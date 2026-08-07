@@ -16,6 +16,7 @@ import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
 import { REQUEST } from "@nestjs/core";
 import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
+import { Datablock } from "src/datablocks/schemas/datablock.schema";
 
 class InitialDatasetsServiceMock {}
 
@@ -203,5 +204,73 @@ describe("DatasetsService", () => {
     await expect(
       service.findByIdAndUpdate("testId", updateDto, unmodifiedSince),
     ).rejects.toThrow(PreconditionFailedException);
+  });
+
+  describe("updateDatasetSizeAndFiles", () => {
+    beforeEach(() => {
+      model.updateOne = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(undefined) });
+    });
+
+    it("should $inc by the delta between the old and new document", async () => {
+      const oldDocument = {
+        packedSize: 800,
+        dataFileList: [],
+      } as unknown as Datablock;
+      const newDocument = {
+        packedSize: 1000,
+        dataFileList: [{}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        newDocument,
+        oldDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: 200, numberOfFilesArchived: 1 } },
+      );
+    });
+
+    it("should treat a missing old document as zero, e.g. on create", async () => {
+      const newDocument = {
+        packedSize: 1000,
+        dataFileList: [{}, {}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        newDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: 1000, numberOfFilesArchived: 2 } },
+      );
+    });
+
+    it("should treat a missing new document as zero, e.g. on remove", async () => {
+      const oldDocument = {
+        packedSize: 1000,
+        dataFileList: [{}, {}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        undefined,
+        oldDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: -1000, numberOfFilesArchived: -2 } },
+      );
+    });
   });
 });
