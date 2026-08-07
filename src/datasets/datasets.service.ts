@@ -72,8 +72,8 @@ import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto"
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
 import { withOCCFilter } from "./utils/occ-util";
-import { DatablockDocument } from "src/datablocks/schemas/datablock.schema";
-import { OrigDatablockDocument } from "src/origdatablocks/schemas/origdatablock.schema";
+import { Datablock } from "src/datablocks/schemas/datablock.schema";
+import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -148,8 +148,7 @@ export class DatasetsService {
 
   private extractRelationsAndScopes(
     datasetLookupFields:
-      | (DatasetLookupKeysEnum | IDatasetRelation)[]
-      | undefined,
+      (DatasetLookupKeysEnum | IDatasetRelation)[] | undefined,
   ) {
     const scopes = {} as Record<DatasetLookupKeysEnum, IDatasetScopes>;
     const fieldsList: DatasetLookupKeysEnum[] = [];
@@ -509,8 +508,7 @@ export class DatasetsService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto:
-      | PartialUpdateDatasetDto
-      | PartialUpdateDatasetWithHistoryDto,
+      PartialUpdateDatasetDto | PartialUpdateDatasetWithHistoryDto,
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
     const username = (this.request.user as JWTUser).username;
@@ -737,44 +735,24 @@ export class DatasetsService {
     }
   }
 
-  async updateDatasetSizeAndFiles(
+  async updateDatasetSizeAndFiles<T extends Datablock | OrigDatablock>(
     pid: string,
-    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
-    sizeField: string,
-    filesField: string,
+    sizeKeys:
+      | { size: "size"; numberOfFiles: "numberOfFiles" }
+      | { size: "packedSize"; numberOfFiles: "numberOfFilesArchived" },
+    newDocument?: T,
+    oldDocument?: T,
   ): Promise<void> {
-    const { numberOfFiles, size } = await this.aggregateSizeAndFileCount(
-      pid,
-      model,
-      sizeField,
-    );
-    await this.findByIdAndUpdate(pid, {
-      [sizeField]: size,
-      [filesField]: numberOfFiles,
-    });
-  }
+    const newSize = (newDocument?.[sizeKeys.size as keyof T] ?? 0) as number;
+    const newFiles = newDocument?.dataFileList?.length ?? 0;
+    const oldSize = (oldDocument?.[sizeKeys.size as keyof T] ?? 0) as number;
+    const oldFiles = oldDocument?.dataFileList?.length ?? 0;
 
-  async aggregateSizeAndFileCount(
-    datasetId: string,
-    model: Model<DatablockDocument> | Model<OrigDatablockDocument>,
-    sizeField: string,
-  ): Promise<{ numberOfFiles: number; size: number }> {
-    const [result] = await model
-      .aggregate<{ numberOfFiles: number; size: number }>([
-        { $match: { datasetId } },
-        {
-          $group: {
-            _id: null,
-            size: { $sum: `$${sizeField}` },
-            numberOfFiles: {
-              $sum: { $size: { $ifNull: ["$dataFileList", []] } },
-            },
-          },
-        },
-      ])
-      .exec();
-    return result
-      ? { numberOfFiles: result.numberOfFiles, size: result.size }
-      : { numberOfFiles: 0, size: 0 };
+    const delta = {
+      [sizeKeys.size]: newSize - oldSize,
+      [sizeKeys.numberOfFiles]: newFiles - oldFiles,
+    };
+
+    await this.datasetModel.updateOne({ _id: pid }, { $inc: delta }).exec();
   }
 }
