@@ -22,12 +22,10 @@ export class DatasetsAccessService {
   getRelationViewAccess(field: DatasetLookupKeysEnum, user: JWTUser) {
     switch (field) {
       case DatasetLookupKeysEnum.proposals: {
-        const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
-        const canViewAny = ability.can(Action.ProposalsReadAny, ProposalClass);
-        const canView = ability.can(
-          Action.ProposalsReadManyAccess,
-          ProposalClass,
-        );
+        const ability = this.caslAbilityFactory.proposalAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, ProposalClass);
+        const canView = ability.can(Action.ProposalRead, ProposalClass);
+
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
