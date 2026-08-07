@@ -6,6 +6,10 @@ import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
 
 const configuration = () => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET is required in production");
+  }
   const accessGroupsStaticValues =
     process.env.ACCESS_GROUPS_STATIC_VALUES || "";
   const adminGroups = process.env.ADMIN_GROUPS || "";
@@ -332,7 +336,7 @@ const configuration = () => {
     httpMaxRedirects: process.env.HTTP_MAX_REDIRECTS ?? 5,
     httpTimeOut: process.env.HTTP_TIMEOUT ?? 5000,
     jwt: {
-      secret: process.env.JWT_SECRET,
+      secret: jwtSecret,
       expiresIn: parseInt(process.env.JWT_EXPIRES_IN ?? "3600", 10),
       neverExpires: process.env.JWT_NEVER_EXPIRES ?? "100y",
     },
