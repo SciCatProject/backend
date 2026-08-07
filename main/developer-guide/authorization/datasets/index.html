@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../pr-guidelines/">
+        <link rel="prev" href="../../runtime-config/">
       
       
-        <link rel="next" href="../../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/">
+        <link rel="next" href="../../contributing/pr-guidelines/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Release Versioning Guide - SciCat Documentation</title>
+        <title>Datasets Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#release-versioning-guide" class="md-skip">
+        <a href="#datasets-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Release Versioning Guide
+              Datasets Authorization Model
             
           </span>
         </div>
@@ -483,83 +483,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../../authorization/datasets/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datasets Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" checked="">
-        
-          
-          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contributing
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Contributing
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
     
   
   
@@ -579,7 +502,7 @@
   <span class="md-ellipsis">
     
   
-    Release Versioning Guide
+    Datasets Authorization Model
   
 
     
@@ -597,7 +520,7 @@
   <span class="md-ellipsis">
     
   
-    Release Versioning Guide
+    Datasets Authorization Model
   
 
     
@@ -623,10 +546,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#the-rules" class="md-nav__link">
+  <a href="#actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The rules
+        Actions
       
     </span>
   </a>
@@ -634,22 +557,99 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-make-a-major-release" class="md-nav__link">
+  <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to make a major release
+        Permissions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How to make a major release">
+    <nav class="md-nav" aria-label="Permissions">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#from-the-command-line" class="md-nav__link">
+  <a href="#unauthenticated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From the command line
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_with_pid_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_WITH_PID_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_privileged_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_PRIVILEGED_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_dataset_lifecycle_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPDATE_DATASET_LIFECYCLE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -662,10 +662,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#footer-formatting" class="md-nav__link">
+  <a href="#permission-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Footer formatting
+        Permission Matrix
       
     </span>
   </a>
@@ -673,32 +673,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fixing-a-pr-that-was-merged-without-the-footer" class="md-nav__link">
+  <a href="#implementation-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixing a PR that was merged without the footer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-before-you-release" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Checking before you release
+        Implementation Notes
       
     </span>
   </a>
@@ -709,6 +687,81 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/release-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Versioning Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -894,10 +947,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#the-rules" class="md-nav__link">
+  <a href="#actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The rules
+        Actions
       
     </span>
   </a>
@@ -905,22 +958,99 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-make-a-major-release" class="md-nav__link">
+  <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to make a major release
+        Permissions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How to make a major release">
+    <nav class="md-nav" aria-label="Permissions">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#from-the-command-line" class="md-nav__link">
+  <a href="#unauthenticated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From the command line
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_with_pid_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_WITH_PID_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_privileged_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_PRIVILEGED_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_dataset_lifecycle_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPDATE_DATASET_LIFECYCLE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -933,10 +1063,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#footer-formatting" class="md-nav__link">
+  <a href="#permission-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Footer formatting
+        Permission Matrix
       
     </span>
   </a>
@@ -944,32 +1074,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fixing-a-pr-that-was-merged-without-the-footer" class="md-nav__link">
+  <a href="#implementation-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixing a PR that was merged without the footer
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#releasing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Releasing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-before-you-release" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Checking before you release
+        Implementation Notes
       
     </span>
   </a>
@@ -993,147 +1101,286 @@
 
 
 
-<h1 id="release-versioning-guide">Release Versioning Guide<a class="headerlink" href="#release-versioning-guide" title="Permanent link">¶</a></h1>
-<p>When code lands on the <code>release</code> branch, a workflow reads the commit messages
-since the last tag and bumps the version automatically.</p>
-<hr>
-<h2 id="the-rules">The rules<a class="headerlink" href="#the-rules" title="Permanent link">¶</a></h2>
+<h1 id="datasets-authorization-model">Datasets Authorization Model<a class="headerlink" href="#datasets-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for datasets and associated endpoints.</p>
+<h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
+<p>The following actions are defined for datasets:</p>
+<ul>
+<li><code>DatasetCreate</code></li>
+<li><code>DatasetRead</code></li>
+<li><code>DatasetUpdate</code></li>
+<li><code>DatasetDelete</code></li>
+<li><code>DatasetLifecycleUpdate</code></li>
+<li><code>DatasetAttachmentCreate</code></li>
+<li><code>DatasetAttachmentRead</code></li>
+<li><code>DatasetAttachmentUpdate</code></li>
+<li><code>DatasetAttachmentDelete</code></li>
+<li><code>DatasetOrigdatablockCreate</code></li>
+<li><code>DatasetOrigdatablockRead</code></li>
+<li><code>DatasetOrigdatablockUpdate</code></li>
+<li><code>DatasetOrigdatablockDelete</code></li>
+<li><code>DatasetDatablockCreate</code></li>
+<li><code>DatasetDatablockRead</code></li>
+<li><code>DatasetDatablockUpdate</code></li>
+<li><code>DatasetDatablockDelete</code></li>
+<li><code>DatasetLogbookRead</code></li>
+</ul>
+<p>The first four actions are the major actions used on most endpoints. <code>DatasetLifecycleUpdate</code> is used for a special update endpoint with strict control on the request content.
+The other actions are used for specific endpoints giving access to linked resources from a given dataset, and exist mostly for compatibility with API v3.</p>
+<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
+<p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
+<h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
+<p>An unauthenticated user may read datasets and associated attachments, datablocks and origdatablocks only if the dataset is public. This checks the <code>isPublished</code> field only on the dataset, linked attachments, datablocks and origdatablocks inherit the public status.</p>
+<p>Unauthenticated users do not have write access.</p>
+<h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
+<p>An authenticated user may read any datasets and associated attachments, datablocks and origdatablocks if the dataset is public or if they are a member of the dataset's <code>ownerGroup</code> or one of the <code>accessGroups</code>. Access to linked attachments, datablocks and origdatablocks is inherited from the dataset.</p>
+<p>Authenticated users do not have write access by default.</p>
+<h3 id="create_dataset_groups">CREATE_DATASET_GROUPS<a class="headerlink" href="#create_dataset_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are allowed to create and update datasets and linked attachments, datablocks and origdatablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>. Importantly, it is not necessary that <code>ownerGroup</code> be in <code>CREATE_DATASET_GROUPS</code>.
+Users in this category may delete attachments linked to an owned dataset, but no other resources.
+On dataset create requests, users in this category are not permitted to provide an explicit <code>pid</code>, it must be generated from the backend.</p>
+<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_GROUPS</code> in configuration.</p>
+<h3 id="create_dataset_with_pid_groups">CREATE_DATASET_WITH_PID_GROUPS<a class="headerlink" href="#create_dataset_with_pid_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_WITH_PID_GROUPS</code>, the permission are identical to <code>CREATE_DATASET_GROUPS</code> with one exception:
+On dataset create requests, users in this category are permitted to provide an explicit <code>pid</code> to supersede the backend's automatic generation.</p>
+<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_WITH_PID_GROUPS</code> in configuration.</p>
+<h3 id="create_dataset_privileged_groups">CREATE_DATASET_PRIVILEGED_GROUPS<a class="headerlink" href="#create_dataset_privileged_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_PRIVILEGED_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create datasets and linked attachments, datablocks and origdatablocks for any <code>ownerGroup</code>.
+They may update datasets and linked attachments, datablocks and origdatablocks only if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.
+They may delete attachments linked to an owned dataset.</p>
+<h3 id="update_dataset_lifecycle_groups">UPDATE_DATASET_LIFECYCLE_GROUPS<a class="headerlink" href="#update_dataset_lifecycle_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>UPDATE_DATASET_LIFECYCLE_GROUPS</code>, they receive unrestricted read access to all datasets, but not to linked attachments, datablocks and origdatablocks.
+They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any dataset, which is limited to only accept changes to the dataset's <code>datasetLifecycle</code> field.</p>
+<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read and update access to all datasets and all linked attachments, datablocks and origdatablocks in the database. They also have unrestricted delete access to any attachments linked to any dataset.</p>
+<h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all datasets and all linked attachments, datablocks and origdatablocks in the database.</p>
+<h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
+<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
 <table>
 <thead>
 <tr>
-<th>Commit message</th>
-<th>Bump</th>
-<th>Example</th>
+<th>Operation</th>
+<th>Unauthenticated</th>
+<th>Authenticated</th>
+<th><code>CREATE_DATASET_GROUPS</code></th>
+<th><code>CREATE_DATASET_WITH_PID_GROUPS</code></th>
+<th><code>CREATE_DATASET_PRIVILEGED_GROUPS</code></th>
+<th><code>UPDATE_DATASET_LIFECYCLE_GROUPS</code></th>
+<th><code>ADMIN_GROUPS</code></th>
+<th><code>DELETE_GROUPS</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Anything else</td>
-<td><strong>patch</strong> (default)</td>
-<td><code>chore: update deps</code> → <code>1.2.3</code> → <code>1.2.4</code></td>
+<td><code>DatasetCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner, no <code>pid</code></td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
 </tr>
 <tr>
-<td><code>fix: ...</code></td>
-<td><strong>patch</strong></td>
-<td><code>1.2.3</code> → <code>1.2.4</code></td>
+<td><code>DatasetRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>any</td>
+<td>public/owner/access</td>
 </tr>
 <tr>
-<td><code>feat: ...</code></td>
-<td><strong>minor</strong></td>
-<td><code>1.2.3</code> → <code>1.3.0</code></td>
+<td><code>DatasetUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
 </tr>
 <tr>
-<td><code>BREAKING CHANGE:</code> in the <strong>body</strong></td>
-<td><strong>major</strong></td>
-<td><code>1.2.3</code> → <code>2.0.0</code></td>
+<td><code>DatasetDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>DatasetLifecycleUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetAttachmentCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetAttachmentRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>DatasetAttachmentUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetAttachmentDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>-</td>
+<td>any</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>DatasetOrigdatablockCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetOrigdatablockRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>DatasetOrigdatablockUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetOrigdatablockDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>DatasetDatablockCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetDatablockRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>DatasetDatablockUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>-</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>DatasetDatablockDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>DatasetLogbookRead</code></td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>owner</td>
 </tr>
 </tbody>
 </table>
-<p>Patch is the fallback. If nothing in the batch matches a rule, you still get a
-patch bump — never nothing.</p>
-<p>The highest match wins. A batch containing three <code>fix:</code> and one <code>feat:</code> gives a
-minor bump.</p>
-<hr>
-<h2 id="how-to-make-a-major-release">How to make a major release<a class="headerlink" href="#how-to-make-a-major-release" title="Permanent link">¶</a></h2>
-<p>The <code>BREAKING CHANGE:</code> footer in the commit <strong>body</strong> is what triggers the bump.
-Mark the title with <code>!</code> as well (<code>feat!: ...</code>) — it's the convention for
-signalling a breaking change, even though the footer does the actual work.</p>
-<p>When squash-merging a PR, GitHub shows two fields. Put the type in the
-<strong>Commit message</strong> box and the footer in the <strong>Extended description</strong> box:</p>
-<div class="highlight"><pre><span></span><code>┌─ Commit message ──────────────────────────────────────┐
-│ feat!: some major change                              │
-└───────────────────────────────────────────────────────┘
-
-┌─ Extended description ────────────────────────────────┐
-│ BREAKING CHANGE: this will trigger release major bump │
-│                                                       │
-│                                                       │
-└───────────────────────────────────────────────────────┘
-
-           [ Confirm merge ]   [ Cancel ]
-</code></pre></div>
-<p>GitHub inserts the blank line between the two fields for you, producing:</p>
-<div class="highlight"><pre><span></span><code>feat!: some major change
-
-BREAKING CHANGE: this will trigger release major bump
-</code></pre></div>
-<h3 id="from-the-command-line">From the command line<a class="headerlink" href="#from-the-command-line" title="Permanent link">¶</a></h3>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>commit<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-m<span class="w"> </span><span class="s2">"feat!: some major change"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-m<span class="w"> </span><span class="s2">"BREAKING CHANGE: this will trigger release major bump"</span>
-</code></pre></div>
-<p>Two <code>-m</code> flags produce the subject and body with the blank line between them.</p>
-<hr>
-<h2 id="footer-formatting">Footer formatting<a class="headerlink" href="#footer-formatting" title="Permanent link">¶</a></h2>
-<p>The footer must be on its own line, flush left, with a blank line above it.</p>
-<p>✅ Correct:</p>
-<div class="highlight"><pre><span></span><code>feat: new API
-
-BREAKING CHANGE: removed the old endpoint
-</code></pre></div>
-<p>❌ These all fail silently and give you a minor bump:</p>
-<div class="highlight"><pre><span></span><code>feat: new API BREAKING CHANGE: removed old endpoint      ← same line as subject
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>feat: new API
-
-- BREAKING CHANGE: removed old endpoint                  ← bullet prefix
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>feat: new API
-
-  BREAKING CHANGE: removed old endpoint                  ← indented
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>feat: new API
-
-BREAKING CHANGES: removed old endpoint                   ← plural
-</code></pre></div>
-<p>Also never use it as the title — <code>BREAKING CHANGE: fix the thing</code> has a space in
-the type position, so the whole message fails to parse and falls back to patch.</p>
-<hr>
-<h2 id="fixing-a-pr-that-was-merged-without-the-footer">Fixing a PR that was merged without the footer<a class="headerlink" href="#fixing-a-pr-that-was-merged-without-the-footer" title="Permanent link">¶</a></h2>
-<p>Someone merged a breaking change but forgot the <code>BREAKING CHANGE:</code> footer. Push
-an empty commit to <code>master</code> before releasing:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>master
-git<span class="w"> </span>pull
-git<span class="w"> </span>commit<span class="w"> </span>--allow-empty<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-m<span class="w"> </span><span class="s2">"feat: some major change"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-m<span class="w"> </span><span class="s2">"BREAKING CHANGE: this will trigger release major bump"</span>
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>master
-</code></pre></div>
-<p>The workflow scans <strong>every</strong> commit since the last tag, so one qualifying commit
-anywhere in the batch is enough. No force push, no rewritten history.</p>
-<p>Then merge master into release as usual.</p>
-<p>⚠️ Do this <strong>before</strong> pushing to <code>release</code>. Once the workflow runs it creates the
-tag, the GitHub release, and the Docker images — and those can't be corrected
-without deleting a published version.</p>
-<hr>
-<h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">¶</a></h2>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>release
-git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>release
-git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>master
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>release
-</code></pre></div>
-<p><strong>Never squash master into release.</strong> Squashing collapses every commit into one
-and throws away all the conventional-commit metadata — including any
-<code>BREAKING CHANGE:</code> footers.</p>
-<p>The PR title for a master → release PR doesn't matter. The individual commits
-from master are what get parsed.</p>
-<hr>
-<h2 id="checking-before-you-release">Checking before you release<a class="headerlink" href="#checking-before-you-release" title="Permanent link">¶</a></h2>
-<p>Merge locally — <strong>without pushing</strong> — and check what the version would be:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>release
-git<span class="w"> </span>pull<span class="w"> </span>origin<span class="w"> </span>release
-git<span class="w"> </span>fetch<span class="w"> </span>--tags
-git<span class="w"> </span>merge<span class="w"> </span>--no-ff<span class="w"> </span>master<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Merge branch 'master' into release"</span>
-
-npx<span class="w"> </span>-p<span class="w"> </span>conventional-recommended-bump<span class="w"> </span>-p<span class="w"> </span>conventional-changelog-angular<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>conventional-recommended-bump<span class="w"> </span>-p<span class="w"> </span>angular
-</code></pre></div>
-<p>It prints <code>major</code>, <code>minor</code>, or <code>patch</code> — the same result the workflow will get.</p>
-<p>Not what you expected? Throw the local merge away:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>origin/release
-</code></pre></div>
-<p>Then fix the commit messages on master (or add an empty commit with the footer)
-and check again.</p>
+<p>Legend:
+- public: dataset's <code>isPublished</code> field must be <code>true</code>
+- owner: dataset's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
+- access: one of the dataset's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- any: unrestricted access</p>
+<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
+<p>The definition is implemented in the casl module under <code>/src/casl/abilities/datasets.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.datasetAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>DatasetAbility</code> module in <code>/src/casl/abilities/datasets.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for datasets currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
 
 
 
