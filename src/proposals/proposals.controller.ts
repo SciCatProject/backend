@@ -855,7 +855,7 @@ export class ProposalsController {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
 
-    const ability = this.caslAbilityFactory.proposalAccess(user);
+    const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
     const canView = ability.can(Action.DatasetRead, DatasetClass);
 
