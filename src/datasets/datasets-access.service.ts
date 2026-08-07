@@ -56,7 +56,7 @@ export class DatasetsAccessService {
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.instruments: {
-        const ability = this.caslAbilityFactory.instrumentEndpointAccess(user);
+        const ability = this.caslAbilityFactory.instrumentAccess(user);
         const canViewAny = ability.can(Action.InstrumentRead, Instrument);
         return {
           canViewAny,
