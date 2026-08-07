@@ -16,7 +16,6 @@ import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
-import { Logbook } from "src/logbooks/schemas/logbook.schema";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
@@ -29,6 +28,7 @@ import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { LogbookAbility } from "./abilities/logbooks.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -38,6 +38,7 @@ export class CaslAbilityFactory {
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
     private datasetAbility: DatasetAbility,
+    private logbookAbility: LogbookAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -53,7 +54,7 @@ export class CaslAbilityFactory {
     history: this.historyEndpointAccess,
     instruments: this.instrumentEndpointAccess,
     jobs: this.jobsEndpointAccess,
-    logbooks: this.logbookEndpointAccess,
+    logbooks: this.logbookAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
     opensearch: this.opensearchEndpointAccess,
     origdatablocks: this.origDatablockEndpointAccess,
@@ -77,6 +78,10 @@ export class CaslAbilityFactory {
 
   datasetAccess(user: JWTUser | null) {
     return this.datasetAbility.buildAbility(user);
+  }
+
+  logbookAccess(user: JWTUser | null) {
+    return this.logbookAbility.buildAbility(user);
   }
 
   opensearchEndpointAccess(user: JWTUser) {
@@ -543,23 +548,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  logbookEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (user) {
-      /*
-        / authenticated user
-        */
-      can(Action.Read, Logbook);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
