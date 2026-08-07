@@ -19,7 +19,6 @@ import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
-import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
@@ -29,6 +28,7 @@ import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -38,6 +38,7 @@ export class CaslAbilityFactory {
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
     private datasetAbility: DatasetAbility,
+    private origDatablockAbility: OrigDatablockAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -56,7 +57,7 @@ export class CaslAbilityFactory {
     logbooks: this.logbookEndpointAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
     opensearch: this.opensearchEndpointAccess,
-    origdatablocks: this.origDatablockEndpointAccess,
+    origdatablocks: this.origDatablockAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
@@ -77,6 +78,10 @@ export class CaslAbilityFactory {
 
   datasetAccess(user: JWTUser | null) {
     return this.datasetAbility.buildAbility(user);
+  }
+
+  origDatablockAccess(user: JWTUser | null) {
+    return this.origDatablockAbility.buildAbility(user);
   }
 
   opensearchEndpointAccess(user: JWTUser) {
@@ -566,103 +571,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  origDatablockEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.OrigdatablockReadManyPublic, OrigDatablock);
-      can(Action.OrigdatablockReadOnePublic, OrigDatablock, {
-        isPublished: true,
-      });
-      cannot(Action.OrigdatablockCreate, OrigDatablock);
-      cannot(Action.OrigdatablockRead, OrigDatablock);
-      cannot(Action.OrigdatablockUpdate, OrigDatablock);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /**
-        /*  user that belongs to any of the groups listed in DELETE_GROUPS
-        **/
-
-        can(Action.OrigdatablockDelete, OrigDatablock);
-      } else {
-        /**
-        /*  user that does not belong to any of the groups listed in DELETE_GROUPS
-        **/
-
-        cannot(Action.OrigdatablockDelete, OrigDatablock);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-        /*  user that belongs to any of the group listed in ADMIN_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-
-        cannot(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        cannot(Action.OrigdatablockUpdate, OrigDatablock);
-      }
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   datablockEndpointAccess(user: JWTUser) {
     const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1037,137 +945,6 @@ export class CaslAbilityFactory {
       can(Action.UserUpdateOwn, User, { _id: user._id });
       can(Action.UserDeleteOwn, User, { _id: user._id });
       can(Action.UserListOwn, User);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  origDatablockInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.OrigdatablockReadManyPublic, OrigDatablock);
-      can(Action.OrigdatablockReadOnePublic, OrigDatablock, {
-        isPublished: true,
-      });
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /**
-        /* user that belongs to any of the group listed in DELETE_GROUPS
-        **/
-
-        can(Action.OrigdatablockDeleteAny, OrigDatablock);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-        /* user that belongs to any of the group listed in ADMIN_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateAny, OrigDatablock);
-        can(Action.OrigdatablockReadAny, OrigDatablock);
-        can(Action.OrigdatablockUpdateAny, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateAny, OrigDatablock);
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-      }
     }
     return build({
       detectSubjectType: (item) =>

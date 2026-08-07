@@ -13,6 +13,12 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // Origdatablock
+  OrigdatablockCreate = "origdatablock_create",
+  OrigdatablockRead = "origdatablock_read",
+  OrigdatablockUpdate = "origdatablock_update",
+  OrigdatablockDelete = "origdatablock_delete",
+
   // ---------------
   // Datasets
   DatasetCreate = "dataset_create",
@@ -38,28 +44,6 @@ export enum Action {
   DatasetDatablockDelete = "dataset_datablock_delete",
 
   DatasetLogbookRead = "dataset_logbook_read",
-  //
-  // -------------
-  // Origdatablock
-  // endpoint authorization actions
-  OrigdatablockCreate = "origdatablock_create",
-  OrigdatablockRead = "origdatablock_read",
-  OrigdatablockUpdate = "origdatablock_update",
-  OrigdatablockDelete = "origdatablock_delete",
-  // individual actions
-  OrigdatablockCreateOwner = "origdatablock_create_owner",
-  OrigdatablockCreateAny = "origdatablock_create_any",
-  OrigdatablockReadManyPublic = "origdatablock_read_many_public",
-  OrigdatablockReadManyAccess = "origdatablock_read_many_access",
-  OrigdatablockReadManyOwner = "origdatablock_read_many_owner",
-  OrigdatablockReadOnePublic = "origdatablock_read_one_public",
-  OrigdatablockReadOneAccess = "origdatablock_read_one_access",
-  OrigdatablockReadOneOwner = "origdatablock_read_one_owner",
-  OrigdatablockReadAny = "origdatablock_read_any",
-  OrigdatablockUpdateOwner = "origdatablock_update_owner",
-  OrigdatablockUpdateAny = "origdatablock_update_any",
-  OrigdatablockDeleteOwner = "origdatablock_delete_owner",
-  OrigdatablockDeleteAny = "origdatablock_delete_any",
 
   // -------------
   // Datablock
