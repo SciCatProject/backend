@@ -30,7 +30,6 @@ import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
 
-
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
 @Injectable()
