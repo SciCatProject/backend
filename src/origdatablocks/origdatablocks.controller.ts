@@ -79,31 +79,6 @@ export class OrigDatablocksController {
     return origDatablock;
   }
 
-  // async checkPermissionsForDataset(request: Request, id: string) {
-  //   const user: JWTUser = request.user as JWTUser;
-  //   const dataset = await this.datasetsService.findOne({
-  //     where: { pid: id },
-  //   });
-  //   if (dataset) {
-  //     // NOTE: We need DatasetClass instance because casl module
-  //     // can not recognize the type from dataset mongo database model.
-  //     // If other fields are needed can be added later.
-  //     const newDatasetClass = new DatasetClass();
-  //     newDatasetClass.ownerGroup = dataset.ownerGroup;
-
-  //     if (user) {
-  //       const ability = this.caslAbilityFactory.createOrigDatablockForUser(user);
-  //       const canUpdate = ability.can(Action.Update, newDatasetClass);
-  //       if (!canUpdate) {
-  //         throw new ForbiddenException("Unauthorized access");
-  //       }
-  //     }
-  //   } else {
-  //     throw new BadRequestException("Invalid datasetId");
-  //   }
-  //   return dataset;
-  // }
-
   async generateOrigDatablockInstanceInstanceForPermissions(
     dataset:
       | CreateRawDatasetObsoleteDto
@@ -553,8 +528,8 @@ export class OrigDatablocksController {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    return this.origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount(
-      id,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: id },
       updateOrigDatablockDto,
       unmodifiedSince,
     );
