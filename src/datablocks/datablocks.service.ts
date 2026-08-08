@@ -104,17 +104,27 @@ export class DatablocksService {
     createDatablockDto: CreateDatablockDto,
   ): Promise<Datablock> {
     const datablock = await this.create(createDatablockDto);
-    if (datablock) await this.updateDatasetSizeAndFiles(datablock.datasetId);
+    if (datablock)
+      await this.updateDatasetSizeAndFiles(datablock.datasetId, datablock);
     return datablock;
   }
 
-  async updateAndUpdateDatasetSizeAndFileCount(
+  async updateOneAndUpdateDatasetSizeAndFileCount(
     filter: FilterQuery<DatablockDocument>,
     updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock> {
+    const oldDatablock = await this.findOne({
+      where: filter,
+      fields: { packedSize: 1, dataFileList: 1 },
+    });
+    if (!oldDatablock) throw new DatablocksFilterNotFoundException(filter);
     const datablock = await this.update(filter, updateDatablockDto);
     if (!datablock) throw new DatablocksFilterNotFoundException(filter);
-    await this.updateDatasetSizeAndFiles(datablock.datasetId);
+    await this.updateDatasetSizeAndFiles(
+      datablock.datasetId,
+      datablock,
+      oldDatablock,
+    );
     return datablock;
   }
 
@@ -123,16 +133,24 @@ export class DatablocksService {
   ): Promise<Datablock> {
     const datablock = await this.remove(filter);
     if (!datablock) throw new DatablocksFilterNotFoundException(filter);
-    await this.updateDatasetSizeAndFiles(datablock.datasetId);
+    await this.updateDatasetSizeAndFiles(
+      datablock.datasetId,
+      undefined,
+      datablock,
+    );
     return datablock;
   }
 
-  async updateDatasetSizeAndFiles(pid: string) {
+  private async updateDatasetSizeAndFiles(
+    pid: string,
+    newDocument?: Datablock,
+    oldDocument?: Datablock,
+  ): Promise<void> {
     await this.datasetsService.updateDatasetSizeAndFiles(
       pid,
-      this.datablockModel,
-      "packedSize",
-      "numberOfFilesArchived",
+      { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+      newDocument,
+      oldDocument,
     );
   }
 }
