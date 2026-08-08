@@ -273,7 +273,7 @@ export class DatablocksController {
         throw new ForbiddenException("Unauthorized to update this datablock");
       }
 
-      return await this.datablocksService.updateAndUpdateDatasetSizeAndFileCount(
+      return await this.datablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
         { _id: id },
         updateDatablockDto,
       );

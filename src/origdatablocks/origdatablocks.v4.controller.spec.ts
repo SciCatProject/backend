@@ -9,7 +9,7 @@ import { Request } from "express";
 
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
-  findByIdAndUpdateDatasetSizeAndFileCount = jest.fn();
+  updateOneAndUpdateDatasetSizeAndFileCount = jest.fn();
   findOneComplete = jest.fn();
 }
 
@@ -76,7 +76,7 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should throw HttpException if service throws exception (when header date is older than updatedAt)", async () => {
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
         new PreconditionFailedException("Resource has been modified on server"),
       );
 
@@ -95,16 +95,16 @@ describe("OrigDatablocksV4Controller", () => {
         controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
       ).rejects.toThrow(PreconditionFailedException);
       expect(
-        origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount,
+        origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
       ).toHaveBeenCalledWith(
-        "db123",
+        { _id: "db123" },
         mockUpdateDto,
         new Date(mockRequest.headers["if-unmodified-since"] as string),
       );
     });
 
     it("should throw NotFoundException if update returns null", async () => {
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
         new NotFoundException("OrigDatablock #db123 not found"),
       );
 
@@ -125,7 +125,7 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should return updated datablock on success", async () => {
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
         updatedDatablock,
       );
 
@@ -147,7 +147,7 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should succeed if 'if-unmodified-since' header is missing", async () => {
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
         updatedDatablock,
       );
 
@@ -169,7 +169,7 @@ describe("OrigDatablocksV4Controller", () => {
     });
 
     it("should succeed if 'if-unmodified-since' header is malformed", async () => {
-      origDatablocksService.findByIdAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
         updatedDatablock,
       );
 
