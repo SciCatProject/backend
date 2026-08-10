@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@casl/ability": "^6.3.2",
-    "@casl/mongoose": "^8.0.4",
+    "@casl/mongoose": "^9.0.1",
     "@nestjs-modules/mailer": "^2",
     "@nestjs/axios": "^4",
     "@nestjs/common": "^11",
