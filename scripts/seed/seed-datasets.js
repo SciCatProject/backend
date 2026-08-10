@@ -182,6 +182,7 @@ async function main() {
   await client.connect();
   const db = client.db(DB_NAME);
   const col = db.collection(COLLECTION);
+  await col.createIndex({ pid: 1 });
 
   console.log(`Inserting ${TOTAL} migration test datasets...`);
   console.log(`Shared keys: ${SHARED_KEYS.join(", ")}`);
