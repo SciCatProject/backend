@@ -930,6 +930,12 @@
 <td>Show/hide the "Create Dataset" button in the Datasets Dashboard.</td>
 </tr>
 <tr>
+<td><code>addScientificMetadataKeysAsColumn</code></td>
+<td>boolean</td>
+<td><code>false</code></td>
+<td>Allow users to add Scientific Metadata keys as columns in the Dataset table from the metadata and metadata tree view.</td>
+</tr>
+<tr>
 <td><code>archiveWorkflowEnabled</code></td>
 <td>boolean</td>
 <td><code>false</code></td>
@@ -1108,6 +1114,36 @@
 <td>boolean</td>
 <td><code>true</code></td>
 <td>Enable/disable the local Login form. Should be disabled if using oAuth2 for authentication.</td>
+</tr>
+<tr>
+<td><code>metadataFloatFormatEnabled</code></td>
+<td>boolean</td>
+<td><code>false</code></td>
+<td>Enable/disable configured formatting for finite non-integer Scientific Metadata numbers. When disabled, only very large or small numeric values use JavaScript exponential notation.</td>
+</tr>
+<tr>
+<td><strong><code>metadataFloatFormat</code></strong></td>
+<td>object</td>
+<td></td>
+<td>Defines how finite non-integer Scientific Metadata numbers are formatted when <code>metadataFloatFormatEnabled</code> is enabled. Integers are not formatted.</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<code>significantDigits</code></td>
+<td>number</td>
+<td><code>3</code></td>
+<td>Number of significant digits to display. Values outside the configured cutoff range use scientific notation with <code>significantDigits - 1</code> decimal places.</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<code>minCutoff</code></td>
+<td>number</td>
+<td><code>0.001</code></td>
+<td>Lower absolute-value cutoff for regular precision formatting. Non-integer values below this cutoff use scientific notation.</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<code>maxCutoff</code></td>
+<td>number</td>
+<td><code>1000</code></td>
+<td>Upper absolute-value cutoff for regular precision formatting. Non-integer values above this cutoff use scientific notation.</td>
 </tr>
 <tr>
 <td><code>metadataPreviewEnabled</code></td>
