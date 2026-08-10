@@ -670,6 +670,9 @@ export class DatasetsController {
     if (
       this.customDatasetTypes.length > 0 &&
       outputDatasetDto instanceof CreateDatasetDto &&
+      !Object.values(DatasetType).includes(
+        outputDatasetDto.type as DatasetType,
+      ) &&
       !this.customDatasetTypes.includes(outputDatasetDto.type)
     ) {
       throw new HttpException(
