@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../../authorization/origdatablocks/">
+        <link rel="prev" href="../datasets/">
       
       
-        <link rel="next" href="../release-guidelines/">
+        <link rel="next" href="../../contributing/pr-guidelines/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Contributing - SciCat Documentation</title>
+        <title>Origdatablocks Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pull-request-guidelines" class="md-skip">
+        <a href="#origdatablocks-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Origdatablocks Authorization Model
             
           </span>
         </div>
@@ -483,18 +483,20 @@
                 
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" checked="">
         
           
           <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
@@ -515,7 +517,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -530,10 +532,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../authorization/origdatablocks/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Origdatablocks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -549,6 +578,153 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unauthenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_with_pid_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_WITH_PID_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_privileged_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_PRIVILEGED_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permission-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permission Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -566,20 +742,18 @@
                 
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" checked="">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
         
           
           <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
@@ -600,7 +774,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -618,7 +792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../release-guidelines/" class="md-nav__link">
+      <a href="../../contributing/release-guidelines/" class="md-nav__link">
         
   
   
@@ -819,10 +993,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#pr-title-format" class="md-nav__link">
+  <a href="#actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        PR Title Format
+        Actions
       
     </span>
   </a>
@@ -830,10 +1004,115 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
+  <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples
+        Permissions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unauthenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_with_pid_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_WITH_PID_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create_dataset_privileged_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CREATE_DATASET_PRIVILEGED_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permission-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permission Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
       
     </span>
   </a>
@@ -857,36 +1136,104 @@
 
 
 
-<h1 id="pull-request-guidelines">Pull Request Guidelines<a class="headerlink" href="#pull-request-guidelines" title="Permanent link">¶</a></h1>
-<p>When creating a pull request (PR) for this repository, it's important to follow the guidelines for PR titles and PR template to ensure consistency and clarity. Proper PR titles help maintain a clear and understandable project history and facilitate better release notes.</p>
-<h2 id="pr-title-format">PR Title Format<a class="headerlink" href="#pr-title-format" title="Permanent link">¶</a></h2>
-<p>All PR titles must adhere to the conventional commits format. This format helps in automating the release process and generating changelogs. The format is as follows:</p>
-<div class="highlight"><pre><span></span><code>&lt;type&gt;(&lt;scope&gt;): &lt;description&gt;
-</code></pre></div>
-<p>type: The type of change being made. It must be one of the following:</p>
+<h1 id="origdatablocks-authorization-model">Origdatablocks Authorization Model<a class="headerlink" href="#origdatablocks-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for origdatablocks and associated endpoints.</p>
+<h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
+<p>The following actions are defined for origdatablocks:</p>
 <ul>
-<li><code>feat:</code> A new feature</li>
-<li><code>fix:</code> A bug fix</li>
-<li><code>ci:</code> Continuous integration-related changes.</li>
-<li><code>docs:</code> Documentation only changes</li>
-<li><code>style:</code> Changes that do not affect the meaning of the code (white -space, formatting, missing semi -colons, etc)</li>
-<li><code>refactor:</code> A code change that neither fixes a bug nor adds a feature</li>
-<li><code>revert</code>: Reverts a previous commit.</li>
-<li><code>perf:</code> A code change that improves performance</li>
-<li><code>test:</code> Adding missing or correcting existing tests</li>
-<li><code>chore:</code> Changes to the build process or auxiliary tools and libraries such as documentation generation</li>
-<li><code>build:</code> Changes that affect the build system or external dependencies.</li>
-<li><code>BREAKING CHANGE:</code> A change that introduces a breaking API change.</li>
+<li><code>AccessAny</code></li>
+<li><code>OrigdatablockCreate</code></li>
+<li><code>OrigdatablockRead</code></li>
+<li><code>OrigdatablockUpdate</code></li>
+<li><code>OrigdatablockDelete</code></li>
 </ul>
-<p>scope: An <code>optional</code> description of the section of the codebase affected by the changes (e.g., api, ui, docs). This is enclosed in parentheses.</p>
-<p>description: A brief summary of the changes made.</p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">¶</a></h2>
-<ul>
-<li>feat(api): add new endpoint for data retrieval</li>
-<li>fix(ui): correct button alignment on mobile devices</li>
-<li>docs: update contributing guidelines</li>
-<li>BREAKING CHANGE: refactor authentication middleware to use new library</li>
-</ul>
+<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
+<p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
+<h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
+<p>An unauthenticated user may read origdatablocks only if the origdatablock is public.
+Unauthenticated users do not have write access.</p>
+<h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
+<p>An authenticated user may read origdatablocks if the origdatablock is public or if they are a member of the origdatablock's <code>ownerGroup</code> or one of the <code>accessGroups</code>.</p>
+<p>Authenticated users do not have write access by default.</p>
+<h3 id="create_dataset_groups">CREATE_DATASET_GROUPS<a class="headerlink" href="#create_dataset_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create and update origdatablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>. Importantly, it is not necessary that <code>ownerGroup</code> be in <code>CREATE_DATASET_GROUPS</code>.</p>
+<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_GROUPS</code> in configuration.</p>
+<h3 id="create_dataset_with_pid_groups">CREATE_DATASET_WITH_PID_GROUPS<a class="headerlink" href="#create_dataset_with_pid_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_WITH_PID_GROUPS</code>, they receive identical rights to members of <code>CREATE_DATASET_GROUPS</code> with regard to origdatablocks.</p>
+<h3 id="create_dataset_privileged_groups">CREATE_DATASET_PRIVILEGED_GROUPS<a class="headerlink" href="#create_dataset_privileged_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_PRIVILEGED_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create origdatablocks for any <code>ownerGroup</code>.
+They may update origdatablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
+<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read and update access to all origdatablocks.</p>
+<h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all origdatablocks in the database.</p>
+<h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
+<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Unauthenticated</th>
+<th>Authenticated</th>
+<th><code>CREATE_DATASET_GROUPS</code></th>
+<th><code>CREATE_DATASET_WITH_PID_GROUPS</code></th>
+<th><code>CREATE_DATASET_PRIVILEGED_GROUPS</code></th>
+<th><code>ADMIN_GROUPS</code></th>
+<th><code>DELETE_GROUPS</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OrigdatablockCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>OrigdatablockRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>OrigdatablockUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>OrigdatablockDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+</tr>
+</tbody>
+</table>
+<p>Legend:
+- public: origdatablock's <code>isPublished</code> field must be <code>true</code>
+- owner: origdatablock's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
+- access: one of the origdatablock's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- any: unrestricted access</p>
+<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
+<p>The definition is implemented in the casl module under <code>/src/casl/abilities/origdatablocks.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.origdatablockAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>OrigDatablockAbility</code> module in <code>/src/casl/abilities/origdatablocks.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for origdatablocks currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
 
 
 
