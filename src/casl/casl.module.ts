@@ -8,7 +8,12 @@ import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 @Module({
   imports: [JobConfigModule, ConfigModule],
-  providers: [CaslAbilityFactory, AttachmentAbility, DatasetAbility, OrigDatablockAbility],
+  providers: [
+    CaslAbilityFactory,
+    AttachmentAbility,
+    DatasetAbility,
+    OrigDatablockAbility,
+  ],
   exports: [CaslAbilityFactory],
 })
 export class CaslModule {}
