@@ -983,6 +983,12 @@ export class ProposalsController {
     @Req() request: Request,
     @Param("pid") proposalId: string,
   ): Promise<DatasetClass[] | null> {
+    await this.checkPermissionsForProposal(
+      request,
+      proposalId,
+      Action.ProposalsRead,
+    );
+
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
 
@@ -992,9 +998,13 @@ export class ProposalsController {
 
     if (!user) {
       fields.isPublished = true;
-    } else if (!canViewAny && canView && !fields.isPublished) {
-      fields.userGroups = fields.userGroups ?? [];
-      fields.userGroups.push(...user.currentGroups);
+    } else if (!canViewAny) {
+      if (canView && !fields.isPublished) {
+        fields.userGroups = fields.userGroups ?? [];
+        fields.userGroups.push(...user.currentGroups);
+      } else {
+        fields.isPublished = true;
+      }
     }
 
     const dataset = await this.datasetsService.fullquery({

@@ -7,6 +7,7 @@ import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -17,6 +18,7 @@ describe("CaslAbilityFactory", () => {
         new JobConfigService({}, {}, configService),
         new AttachmentAbility(configService),
         new DatasetAbility(configService),
+        new OrigDatablockAbility(configService),
       ),
     ).toBeDefined();
   });
@@ -41,6 +43,7 @@ describe("CaslAbilityFactory", () => {
         { allJobConfigs: {} } as unknown as JobConfigService,
         new AttachmentAbility(configService),
         new DatasetAbility(configService),
+        new OrigDatablockAbility(configService),
       );
     };
 

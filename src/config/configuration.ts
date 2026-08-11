@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { merge } from "lodash";
 import { boolean } from "mathjs";
-import { DatasetType } from "src/datasets/types/dataset-type.enum";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
 
@@ -141,11 +140,6 @@ const configuration = () => {
     }
   });
 
-  // NOTE: Add the default dataset types here
-  Object.assign(jsonConfigMap.datasetTypes, {
-    Raw: DatasetType.Raw,
-    Derived: DatasetType.Derived,
-  });
   // NOTE: Add the default proposal type here
   Object.assign(jsonConfigMap.proposalTypes, {
     DefaultProposal: DEFAULT_PROPOSAL_TYPE,
@@ -455,7 +449,7 @@ const configuration = () => {
       policyPublicationShiftInYears: process.env.POLICY_PUBLICATION_SHIFT ?? 3,
       policyRetentionShiftInYears: process.env.POLICY_RETENTION_SHIFT ?? -1,
     },
-    datasetTypes: jsonConfigMap.datasetTypes,
+    customDatasetTypes: jsonConfigMap.datasetTypes,
     proposalTypes: jsonConfigMap.proposalTypes,
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
