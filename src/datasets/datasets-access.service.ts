@@ -50,9 +50,10 @@ export class DatasetsAccessService {
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.samples: {
-        const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-        const canViewAny = ability.can(Action.SampleReadAny, SampleClass);
-        const canView = ability.can(Action.SampleReadManyAccess, SampleClass);
+        const ability = this.caslAbilityFactory.sampleAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, SampleClass);
+        const canView = ability.can(Action.SampleRead, SampleClass);
+
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.instruments: {
