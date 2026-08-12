@@ -303,16 +303,69 @@ export class PublishedDataController {
   })
   @Patch("/:id")
   async update(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body(V3_TO_V4_DTO_BODY_PIPE)
     updatePublishedDataDto: PartialUpdatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto | null> {
+    const filter = this.getAccessBasedFilters(request, id);
+
+    const publishedData = await this.publishedDataService.findOne(filter);
+    if (!publishedData) {
+      throw new NotFoundException(`Published data with id ${id} not found.`);
+    }
+
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+      request.user as JWTUser,
+    );
+
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
+
+    if (canAccessAny) {
+      if (
+        publishedData.status === PublishedDataStatus.REGISTERED ||
+        publishedData.status === PublishedDataStatus.AMENDED
+      ) {
+        throw new HttpException(
+          `Published data with id ${id} is already registered or amended. It cannot be updated.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } else {
+      if (publishedData.status !== PublishedDataStatus.PRIVATE) {
+        throw new HttpException(
+          `Published data can only be updated if it is in ${PublishedDataStatus.PRIVATE} state.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     const updatedData = await this.publishedDataService.update(
       { doi: id },
       updatePublishedDataDto as unknown as PublishedData,
     );
 
     return updatedData as unknown as PublishedDataObsoleteDto;
+  }
+
+  getAccessBasedFilters(request: Request, doi: string) {
+    const filter: FilterQuery<PublishedData> = {
+      doi,
+    };
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+      request.user as JWTUser,
+    );
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
+      filter.$or = [
+        { createdBy: (request.user as JWTUser)?.username },
+        { status: PublishedDataStatus.REGISTERED },
+        { status: PublishedDataStatus.PUBLIC },
+        { status: PublishedDataStatus.AMENDED },
+      ];
+      return filter;
+    }
+
+    return filter;
   }
 
   // DELETE /publisheddata/:id
