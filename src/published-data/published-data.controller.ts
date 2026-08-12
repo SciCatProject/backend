@@ -13,6 +13,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   SerializeOptions,
   UseGuards,
   UseInterceptors,
@@ -28,16 +29,20 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
-import { QueryOptions } from "mongoose";
+import { Request } from "express";
+import { cloneDeep } from "lodash";
+import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
+import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataDto } from "./dto/create-published-data.dto";
@@ -53,6 +58,7 @@ import {
   ICount,
   IPublishedDataFilters,
   IRegister,
+  PublishedDataStatus,
 } from "./interfaces/published-data.interface";
 import {
   IdToDoiPipe,
@@ -74,9 +80,11 @@ export class PublishedDataController {
     private readonly attachmentsService: AttachmentsService,
     private readonly configService: ConfigService,
     private readonly datasetsService: DatasetsService,
+    private readonly datasetsController: DatasetsV4Controller,
     private readonly httpService: HttpService,
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
+    private readonly caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
   // POST /publisheddata
@@ -357,7 +365,10 @@ export class PublishedDataController {
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
   @Post("/:id/register")
-  async register(@Param("id") id: string): Promise<IRegister | null> {
+  async register(
+    @Req() request: Request,
+    @Param("id") id: string,
+  ): Promise<IRegister | null> {
     const publishedData = await this.publishedDataService.findOne({ doi: id });
 
     const publishedDataObsolete = plainToInstance(
@@ -376,12 +387,19 @@ export class PublishedDataController {
 
       const xml = formRegistrationXML(publishedDataObsolete);
 
+      const mergePatchRequest = cloneDeep(request);
+      mergePatchRequest.headers["content-type"] =
+        "application/merge-patch+json";
       await Promise.all(
         publishedDataObsolete.pidArray.map(async (pid) => {
-          await this.datasetsService.findByIdAndUpdate(pid, {
-            isPublished: true,
-            datasetlifecycle: { publishedOn: data.registeredTime },
-          });
+          await this.datasetsController.findByIdAndUpdate(
+            mergePatchRequest,
+            pid,
+            {
+              isPublished: true,
+              datasetlifecycle: { publishedOn: data.registeredTime },
+            },
+          );
         }),
       );
       const fullDoi = publishedDataObsolete.doi;
