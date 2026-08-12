@@ -598,11 +598,14 @@ export class SamplesController {
     description: "Return sample requested",
   })
   async findOne(
+    @Req() request: Request,
     @Query("filter") queryFilters?: string,
   ): Promise<SampleWithAttachmentsAndDatasets | null> {
-    const jsonFilters: IFilters<SampleDocument, ISampleFields> = queryFilters
-      ? JSON.parse(queryFilters)
-      : {};
+    const jsonFilters: IFilters<SampleDocument, ISampleFields> =
+      this.updateFiltersForList(
+        request,
+        queryFilters ? JSON.parse(queryFilters) : {},
+      );
     const whereFilters = jsonFilters.where ?? {};
 
     const sample = (
