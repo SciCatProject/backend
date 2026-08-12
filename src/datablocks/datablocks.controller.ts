@@ -34,6 +34,7 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
 import { PartialUpdateDatablockDto } from "./dto/update-datablock.dto";
@@ -56,6 +57,20 @@ export class DatablocksController {
     const instance = new Datablock();
     instance.accessGroups = datablock?.accessGroups || [];
     instance.ownerGroup = datablock?.ownerGroup || "";
+
+    return instance;
+  }
+
+  private generateDatasetInstanceForPermissions(
+    dataset: DatasetClass,
+  ): DatasetClass {
+    const instance = new DatasetClass();
+    instance._id = "";
+    instance.pid = dataset.pid || "";
+    instance.accessGroups = dataset.accessGroups || [];
+    instance.ownerGroup = dataset.ownerGroup;
+    instance.sharedWith = dataset.sharedWith;
+    instance.isPublished = dataset.isPublished || false;
 
     return instance;
   }
@@ -87,24 +102,38 @@ export class DatablocksController {
     @Req() req: Request,
     @Body() createDatablockDto: CreateDatablockDto,
   ): Promise<Datablock> {
-    this.checkPermission(
-      req,
-      createDatablockDto,
-      Action.DatablockCreateInstance,
-    );
+    const user: JWTUser = req.user as JWTUser;
+    const dataset = await this.datasetsService.findOne({
+      where: {
+        pid: createDatablockDto.datasetId,
+      },
+    });
+    if (!dataset) {
+      throw new NotFoundException(
+        `dataset: ${createDatablockDto.datasetId} not found`,
+      );
+    }
+
+    const datasetAbility = this.caslAbilityFactory.datasetAccess(user);
+    if (
+      datasetAbility.cannot(
+        Action.DatasetDatablockCreate,
+        this.generateDatasetInstanceForPermissions(dataset),
+      )
+    ) {
+      throw new ForbiddenException("Unauthorized access");
+    }
+
+    const datablock = {
+      ...createDatablockDto,
+      ownerGroup: dataset.ownerGroup,
+      accessGroups: dataset.accessGroups,
+      instrumentGroup: dataset.instrumentGroup,
+    };
+
+    this.checkPermission(req, datablock, Action.DatablockCreateInstance);
 
     try {
-      const dataset = await this.datasetsService.findOne({
-        where: {
-          pid: createDatablockDto.datasetId,
-        },
-      });
-      const datablock = {
-        ...createDatablockDto,
-        ownerGroup: createDatablockDto.ownerGroup || dataset?.ownerGroup || "",
-        accessGroups:
-          createDatablockDto.accessGroups || dataset?.accessGroups || [],
-      };
       return await this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
         datablock,
       );
