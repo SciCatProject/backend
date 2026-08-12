@@ -197,11 +197,13 @@ export class PublishedDataController {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string) {
+  async formPopulate(@Req() request: Request, @Query("pid") pid: string) {
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid },
-    })) as unknown as DatasetClass;
+    const dataset = (await this.datasetsController.checkPermissionsForDatasetExtended(
+      request,
+      pid,
+      Action.DatasetRead,
+    )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {

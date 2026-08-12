@@ -239,12 +239,17 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string[] | string) {
+  async formPopulate(
+    @Req() request: Request,
+    @Query("pid") pid: string[] | string,
+  ) {
     pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid: pid[0] },
-    })) as unknown as DatasetClass;
+    const dataset = (await this.datasetsController.checkPermissionsForDatasetExtended(
+      request,
+      pid[0],
+      Action.DatasetRead,
+    )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
