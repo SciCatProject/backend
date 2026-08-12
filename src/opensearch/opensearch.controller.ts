@@ -5,7 +5,6 @@ import {
   Post,
   Get,
   Query,
-  UseInterceptors,
   UseGuards,
   Body,
 } from "@nestjs/common";
@@ -22,7 +21,6 @@ import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { SubDatasetsPublicInterceptor } from "src/datasets/interceptors/datasets-public.interceptor";
 import { CreateIndexDto } from "./dto/create-index.dto";
 
 import { UpdateIndexDto } from "./dto/update-index.dto";

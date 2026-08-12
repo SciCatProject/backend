@@ -1,92 +1,74 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { MustFields } from "./fields.enum";
-
-import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl";
+import { Injectable } from "@nestjs/common";
+import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl.js";
 import { ISearchFilter } from "../interfaces/os-common.type";
+
+/** `fast` = analyzed token lookup. `wildcard` = pattern scan, for mid-token fragments. */
+export type SearchMode = "fast" | "wildcard";
 
 @Injectable()
 export class SearchQueryService {
-  readonly mustFields = [...Object.values(MustFields)];
-  readonly textQuerySplitMethod = /[ ,]+/;
-
-  public buildSearchQuery(filter: ISearchFilter) {
-    try {
-      const accessFilter = this.buildFilterFields(filter);
-      const textQuery = this.buildTextQuery(filter);
-
-      return this.constructFinalQuery(accessFilter, textQuery);
-    } catch (err) {
-      Logger.error("Open search build search query failed", err);
-      throw err;
-    }
-  }
-  private buildFilterFields(fields: ISearchFilter): QueryContainer[] {
-    const filter: QueryContainer[] = [];
-
-    if (fields.userGroups && fields.userGroups.length > 0) {
-      filter.push({
-        bool: {
-          should: [
-            { terms: { ownerGroup: fields.userGroups } },
-            { terms: { accessGroup: fields.userGroups } },
-          ],
-          minimum_should_match: 1,
-        },
-      });
-    }
-    if (fields.isPublished) {
-      filter.push({
-        term: {
-          isPublished: true,
-        },
-      });
-    }
-
-    return filter;
-  }
-
-  private buildTextQuery(filter: ISearchFilter): QueryContainer[] {
-    let wildcardQueries: QueryContainer[] = [];
-
-    if (filter.text) {
-      wildcardQueries = this.buildWildcardQueries(filter.text);
-    }
-
-    return wildcardQueries.length > 0
-      ? [{ bool: { should: wildcardQueries, minimum_should_match: 1 } }]
-      : [];
-  }
-
-  private splitSearchText(text: string): string[] {
-    return text
-      .toLowerCase()
-      .trim()
-      .split(this.textQuerySplitMethod)
-      .filter(Boolean);
-  }
-
-  private buildWildcardQueries(text: string): QueryContainer[] {
-    const terms = this.splitSearchText(text);
-    return terms.flatMap((term) =>
-      this.mustFields.map((fieldName) => ({
-        wildcard: { [fieldName]: { value: `*${term}*` } },
-      })),
-    );
-  }
-
-  private constructFinalQuery(
-    accessFilter: QueryContainer[],
-    textQuery: QueryContainer[],
-  ) {
+  buildQuery(filter: ISearchFilter, mode: SearchMode) {
     const finalQuery = {
-      query: {
-        bool: {
-          filter: accessFilter,
-          must: textQuery,
-        },
+      bool: {
+        must: [this.textQuery(filter.text, mode)],
+        filter: this.filters(filter),
       },
     };
 
     return finalQuery;
+  }
+
+  private textQuery(
+    text: string | undefined,
+    mode: SearchMode,
+  ): QueryContainer {
+    const q = text?.trim();
+    if (!q) return { match_all: {} };
+
+    if (mode === "fast") {
+      return {
+        simple_query_string: {
+          query: q,
+          fields: ["all_text"],
+          default_operator: "and",
+          flags: "WHITESPACE",
+        },
+      };
+    }
+
+    const wildcardPattern = `*${q.replace(/([*?\\])/g, "\\$1")}*`;
+    return {
+      wildcard: {
+        "all_text.wild": {
+          value: wildcardPattern,
+          case_insensitive: true,
+        },
+      },
+    };
+  }
+
+  private accessFilter(f: ISearchFilter): QueryContainer | null {
+    // ReadAny — no restriction
+    if (!f.userGroups?.length && !f.isPublished) return null;
+
+    const should: QueryContainer[] = [{ term: { isPublished: true } }];
+
+    if (f.userGroups?.length) {
+      should.push(
+        { terms: { ownerGroup: f.userGroups } },
+        { terms: { accessGroups: f.userGroups } },
+      );
+    }
+
+    return { bool: { should, minimum_should_match: 1 } };
+  }
+
+  private filters(f: ISearchFilter): QueryContainer[] {
+    const out: QueryContainer[] = [];
+
+    const access = this.accessFilter(f);
+    if (access) out.push(access);
+
+    return out;
   }
 }

@@ -65,8 +65,6 @@ import {
 import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
-import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
 import type { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
@@ -74,6 +72,8 @@ import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opens
 import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
+import { flattenScientificMetadata } from "src/opensearch/utils/opensearch.util";
+
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -148,7 +148,8 @@ export class DatasetsService {
 
   private extractRelationsAndScopes(
     datasetLookupFields:
-      (DatasetLookupKeysEnum | IDatasetRelation)[] | undefined,
+      | (DatasetLookupKeysEnum | IDatasetRelation)[]
+      | undefined,
   ) {
     const scopes = {} as Record<DatasetLookupKeysEnum, IDatasetScopes>;
     const fieldsList: DatasetLookupKeysEnum[] = [];
@@ -298,6 +299,7 @@ export class DatasetsService {
     };
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
+    console.log("---whereClause---", whereClause);
     const datasets = await this.datasetModel
       .find(whereClause, null, modifiers)
       .exec();
@@ -308,6 +310,9 @@ export class DatasetsService {
   async opensearchQuery(
     filter: IFilters<DatasetDocument, IDatasetFields>,
   ): Promise<DatasetDocument[] | null> {
+    const { text, isPublished, userGroups } = filter.fields || {};
+    const modifiers: QueryOptions = parseLimitFilters(filter.limits);
+
     if (
       !this.isOsEnabled ||
       !filter.fields?.text ||
@@ -317,7 +322,15 @@ export class DatasetsService {
       return this.fullquery(filter);
     }
 
-    const { text, isPublished, userGroups } = filter.fields || {};
+    const osResult = await this.opensearchService.search({
+      filter: { text, userGroups, isPublished },
+      index: this.osDefaultIndex,
+      skip: modifiers.skip,
+    });
+
+    if (!osResult) {
+      return this.fullquery(filter);
+    }
 
     const mongoQuery: FilterQuery<DatasetDocument> =
       createFullqueryFilter<DatasetDocument>(
@@ -326,18 +339,11 @@ export class DatasetsService {
         filter.fields as FilterQuery<DatasetDocument>,
       );
 
-    const modifiers: QueryOptions = parseLimitFilters(filter.limits);
-
     delete mongoQuery.$text;
 
-    const osResult = await this.opensearchService.search(
-      { text, userGroups, isPublished },
-      this.osDefaultIndex,
-      modifiers.limit,
-      modifiers.skip,
-    );
+    const osResultIds = osResult.hits;
     const datasets = await this.datasetModel
-      .find({ pid: { $in: osResult.data }, ...mongoQuery })
+      .find({ pid: { $in: osResultIds }, ...mongoQuery })
       .sort(modifiers.sort)
       .exec();
 
@@ -364,14 +370,8 @@ export class DatasetsService {
   async opensearchFacet(
     filters: IFacets<IDatasetFields>,
   ): Promise<Record<string, unknown>[]> {
-    const osConfig =
-      this.configService.get<{
-        settings: IndexSettings;
-        mappings: TypeMapping;
-      }>("opensearchConfig") || null;
-    const osMaxResultWindow = Number(
-      osConfig?.settings?.index?.max_result_window,
-    );
+    const fields = filters.fields ?? {};
+    const facets = filters.facets ?? [];
 
     if (
       !this.isOsEnabled ||
@@ -381,20 +381,22 @@ export class DatasetsService {
     ) {
       return this.fullFacet(filters);
     }
-    const fields = filters.fields ?? {};
-    const facets = filters.facets ?? [];
 
-    const osResult = await this.opensearchService.search(
-      {
+    const osResult = await this.opensearchService.search({
+      filter: {
         text: fields.text,
         userGroups: fields.userGroups,
         isPublished: fields.isPublished,
       },
-      this.osDefaultIndex,
-      osMaxResultWindow,
-    );
+      index: this.osDefaultIndex,
+    });
 
-    fields.openSearchIdList = osResult.data;
+    if (!osResult) {
+      return this.fullFacet(filters);
+    }
+
+    fields.openSearchIdList = osResult.hits;
+
     delete fields.text;
     const pipeline = createFullfacetPipeline<
       DatasetDocument,
@@ -508,7 +510,8 @@ export class DatasetsService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto:
-      PartialUpdateDatasetDto | PartialUpdateDatasetWithHistoryDto,
+      | PartialUpdateDatasetDto
+      | PartialUpdateDatasetWithHistoryDto,
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
     const username = (this.request.user as JWTUser).username;
@@ -661,77 +664,38 @@ export class DatasetsService {
     }
   }
 
-  async syncDatasetsToOpensearch(index: string) {
+  async syncDatasetsToOpensearch(index: string): Promise<BulkStats> {
+    await this.opensearchService.checkIndexExists(index);
+
+    const cursor = this.datasetModel
+      .find({}, DATASET_OPENSEARCH_PROJECTION)
+      .lean()
+      .cursor({ batchSize: this.osSyncBatchSize });
+
     try {
-      await this.opensearchService.checkIndexExists(index);
-
-      const bulkOperationFinalResult: BulkStats = {
-        total: 0,
-        failed: 0,
-        retry: 0,
-        successful: 0,
-        noop: 0,
-        time: 0,
-        bytes: 0,
-        aborted: false,
-      };
-
-      const cursor = this.datasetModel
-        .find({}, DATASET_OPENSEARCH_PROJECTION)
-        .lean()
-        .cursor({ batchSize: this.osSyncBatchSize });
-
-      let batch: DatasetClass[] = [];
-      let isCursorExhausted = false;
-
-      while (!isCursorExhausted) {
-        const doc = await cursor.next();
-
-        if (doc) {
-          batch.push(doc as DatasetClass);
-        } else {
-          isCursorExhausted = true;
-        }
-
-        // Condition: Is the batch full OR are we at the very end with a non-empty tail?
-        const isBatchReady = batch.length >= this.osSyncBatchSize;
-        const isFinalBatch = isCursorExhausted && batch.length > 0;
-
-        if (!isBatchReady && !isFinalBatch) {
-          continue;
-        }
-
-        // Single source of truth for the bulk operation
-        const bulk =
-          await this.opensearchService.performBulkOperation<DatasetClass>(
-            batch,
-            index,
-          );
-
-        // Aggregate bulk stats
-        bulkOperationFinalResult.total += bulk.total;
-        bulkOperationFinalResult.failed += bulk.failed;
-        bulkOperationFinalResult.retry += bulk.retry;
-        bulkOperationFinalResult.successful += bulk.successful;
-        bulkOperationFinalResult.noop += bulk.noop;
-        bulkOperationFinalResult.time += bulk.time;
-        bulkOperationFinalResult.bytes += bulk.bytes;
-        bulkOperationFinalResult.aborted = bulk.aborted;
-
-        Logger.log(
-          `Synced ${bulkOperationFinalResult.total} datasets to OpenSearch (Final Batch: ${isFinalBatch})`,
-          "OpensearchSync",
+      const result =
+        await this.opensearchService.performBulkOperation<DatasetClass>(
+          cursor,
+          index,
+          (doc) => ({
+            ...doc,
+            scientificMetadataText: flattenScientificMetadata(
+              doc.scientificMetadata,
+            ),
+          }),
+          (count) =>
+            Logger.log(`Indexed ${count} datasets...`, "OpensearchSync"),
         );
 
-        batch = [];
-      }
+      Logger.log(`Sync complete: ${JSON.stringify(result)}`, "OpensearchSync");
 
-      return bulkOperationFinalResult;
+      return result;
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      Logger.error(`Sync failed: ${errorMessage}`, "OpensearchSync");
+      const message = error instanceof Error ? error.message : "Unknown error";
+      Logger.error(`Sync failed: ${message}`, "OpensearchSync");
       throw error;
+    } finally {
+      await cursor.close();
     }
   }
 
