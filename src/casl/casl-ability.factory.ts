@@ -16,7 +16,6 @@ import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
-import { Opensearch } from "src/opensearch/opensearch.subject";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
@@ -28,6 +27,7 @@ import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
@@ -40,6 +40,7 @@ export class CaslAbilityFactory {
     private attachmentAbility: AttachmentAbility,
     private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
+    private opensearchAbility: OpensearchAbility,
     private origDatablockAbility: OrigDatablockAbility,
   ) {
     this.accessGroups =
@@ -58,7 +59,7 @@ export class CaslAbilityFactory {
     jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
-    opensearch: this.opensearchEndpointAccess,
+    opensearch: this.opensearchAccess,
     origdatablocks: this.origDatablockAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
@@ -90,28 +91,12 @@ export class CaslAbilityFactory {
     return this.datasetAbility.buildAbility(user);
   }
 
-  origDatablockAccess(user: JWTUser | null) {
-    return this.origDatablockAbility.buildAbility(user);
+  opensearchAccess(user: JWTUser | null) {
+    return this.opensearchAbility.buildAbility(user);
   }
 
-  opensearchEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-      can(Action.Manage, Opensearch);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
+  origDatablockAccess(user: JWTUser | null) {
+    return this.origDatablockAbility.buildAbility(user);
   }
 
   instrumentEndpointAccess(user: JWTUser) {

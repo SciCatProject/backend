@@ -8,6 +8,7 @@ import { CaslAbilityFactory } from "./casl-ability.factory";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 describe("CaslAbilityFactory", () => {
@@ -20,6 +21,7 @@ describe("CaslAbilityFactory", () => {
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
       ),
     ).toBeDefined();
@@ -46,6 +48,7 @@ describe("CaslAbilityFactory", () => {
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
       );
     };

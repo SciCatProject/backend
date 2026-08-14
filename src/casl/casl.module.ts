@@ -5,6 +5,7 @@ import { JobConfigModule } from "src/config/job-config/jobconfig.module";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 @Module({
@@ -14,6 +15,7 @@ import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
     AttachmentAbility,
     DatablockAbility,
     DatasetAbility,
+    OpensearchAbility,
     OrigDatablockAbility,
   ],
   exports: [CaslAbilityFactory],
