@@ -11,6 +11,7 @@ import { DatasetAbility } from "./abilities/datasets.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -25,6 +26,7 @@ describe("CaslAbilityFactory", () => {
         new MetadataKeyAbility(configService),
         new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
+        new RuntimeConfigAbility(configService),
       ),
     ).toBeDefined();
   });
@@ -53,6 +55,7 @@ describe("CaslAbilityFactory", () => {
         new MetadataKeyAbility(configService),
         new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
+        new RuntimeConfigAbility(configService),
       );
     };
 

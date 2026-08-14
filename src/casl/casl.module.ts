@@ -8,6 +8,7 @@ import { DatasetAbility } from "./abilities/datasets.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 @Module({
   imports: [JobConfigModule, ConfigModule],
@@ -19,6 +20,7 @@ import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
     MetadataKeyAbility,
     OpensearchAbility,
     OrigDatablockAbility,
+    RuntimeConfigAbility,
   ],
   exports: [CaslAbilityFactory],
 })

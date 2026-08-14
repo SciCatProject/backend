@@ -13,9 +13,6 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
-  // MetadataKeys
-  MetadataKeyRead = "metadatakey_read",
-
   // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",
@@ -54,11 +51,18 @@ export enum Action {
 
   DatasetLogbookRead = "dataset_logbook_read",
 
+  // MetadataKeys
+  MetadataKeyRead = "metadatakey_read",
+
   // Origdatablock
   OrigdatablockCreate = "origdatablock_create",
   OrigdatablockRead = "origdatablock_read",
   OrigdatablockUpdate = "origdatablock_update",
   OrigdatablockDelete = "origdatablock_delete",
+
+  // RuntimeConfig
+  RuntimeConfigRead = "runtimeconfig_read",
+  RuntimeConfigUpdate = "runtimeconfig_update",
 
   // Proposals
   // endpoint authorization actions
@@ -190,11 +194,4 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
-
-  // -------------------------------------
-  // RuntimeConfig
-  // -------------------------------------
-  // runtimeconfig endpoint authorization
-  RuntimeConfigReadEndpoint = "runtimeconfig_read_endpoint",
-  RuntimeConfigUpdateEndpoint = "runtimeconfig_update_endpoint",
 }
