@@ -77,6 +77,8 @@ export class ProposalAbility {
       can(Action.ProposalAttachmentCreate, ProposalClass);
       can(Action.ProposalAttachmentUpdate, ProposalClass, ifOwner);
       can(Action.ProposalAttachmentDelete, ProposalClass, ifOwner);
+
+      can(Action.ProposalDatasetRead, ProposalClass);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
@@ -93,6 +95,8 @@ export class ProposalAbility {
       can(Action.ProposalAttachmentRead, ProposalClass);
       can(Action.ProposalAttachmentUpdate, ProposalClass);
       can(Action.ProposalAttachmentDelete, ProposalClass);
+
+      can(Action.ProposalDatasetRead, ProposalClass);
     }
 
     if (
