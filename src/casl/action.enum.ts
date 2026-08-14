@@ -13,7 +13,6 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
-  
   // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",

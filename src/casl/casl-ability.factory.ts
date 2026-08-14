@@ -37,8 +37,8 @@ export class CaslAbilityFactory {
   constructor(
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
-    private datablockAbility: DatablockAbility,
     private attachmentAbility: AttachmentAbility,
+    private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
     private origDatablockAbility: OrigDatablockAbility,
   ) {
