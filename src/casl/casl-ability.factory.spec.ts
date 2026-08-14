@@ -5,8 +5,10 @@ import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
+import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -15,8 +17,10 @@ describe("CaslAbilityFactory", () => {
       new CaslAbilityFactory(
         configService,
         new JobConfigService({}, {}, configService),
+        new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new OrigDatablockAbility(configService),
       ),
     ).toBeDefined();
   });
@@ -39,8 +43,10 @@ describe("CaslAbilityFactory", () => {
       return new CaslAbilityFactory(
         configService,
         { allJobConfigs: {} } as unknown as JobConfigService,
+        new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new OrigDatablockAbility(configService),
       );
     };
 

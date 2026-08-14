@@ -10,7 +10,6 @@ import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
@@ -18,7 +17,6 @@ import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
-import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
@@ -27,8 +25,10 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -38,7 +38,9 @@ export class CaslAbilityFactory {
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
     private datablockAbility: DatablockAbility,
+    private attachmentAbility: AttachmentAbility,
     private datasetAbility: DatasetAbility,
+    private origDatablockAbility: OrigDatablockAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -48,7 +50,7 @@ export class CaslAbilityFactory {
   private endpointAccessors: {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
-    attachments: this.attachmentEndpointAccess,
+    attachments: this.attachmentAccess,
     datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
     history: this.historyEndpointAccess,
@@ -57,7 +59,7 @@ export class CaslAbilityFactory {
     logbooks: this.logbookEndpointAccess,
     metadataKeys: this.metadataKeysEndpointAccess,
     opensearch: this.opensearchEndpointAccess,
-    origdatablocks: this.origDatablockEndpointAccess,
+    origdatablocks: this.origDatablockAccess,
     policies: this.policyEndpointAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
@@ -76,12 +78,20 @@ export class CaslAbilityFactory {
     return accessFunction.call(this, user);
   }
 
+  attachmentAccess(user: JWTUser | null) {
+    return this.attachmentAbility.buildAbility(user);
+  }
+
   datablockAccess(user: JWTUser | null) {
     return this.datablockAbility.buildAbility(user);
   }
 
   datasetAccess(user: JWTUser | null) {
     return this.datasetAbility.buildAbility(user);
+  }
+
+  origDatablockAccess(user: JWTUser | null) {
+    return this.origDatablockAbility.buildAbility(user);
   }
 
   opensearchEndpointAccess(user: JWTUser) {
@@ -141,67 +151,6 @@ export class CaslAbilityFactory {
         can(Action.InstrumentRead, Instrument);
         cannot(Action.InstrumentCreate, Instrument);
         cannot(Action.InstrumentUpdate, Instrument);
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  attachmentEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    /*
-     * default allow anyone to read attachments
-     */
-    can(Action.AttachmentReadEndpoint, Attachment);
-
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-         * user that belongs to any of the group listed in DELETE_GROUPS
-         */
-
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachmentPrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
-        //
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachment.includes(g),
-        ) ||
-        this.accessGroups?.attachment.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
-        //
-        can(Action.AttachmentCreateEndpoint, Attachment);
-        can(Action.AttachmentUpdateEndpoint, Attachment);
-        can(Action.AttachmentDeleteEndpoint, Attachment);
       }
     }
 
@@ -571,103 +520,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  origDatablockEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.OrigdatablockReadManyPublic, OrigDatablock);
-      can(Action.OrigdatablockReadOnePublic, OrigDatablock, {
-        isPublished: true,
-      });
-      cannot(Action.OrigdatablockCreate, OrigDatablock);
-      cannot(Action.OrigdatablockRead, OrigDatablock);
-      cannot(Action.OrigdatablockUpdate, OrigDatablock);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /**
-        /*  user that belongs to any of the groups listed in DELETE_GROUPS
-        **/
-
-        can(Action.OrigdatablockDelete, OrigDatablock);
-      } else {
-        /**
-        /*  user that does not belong to any of the groups listed in DELETE_GROUPS
-        **/
-
-        cannot(Action.OrigdatablockDelete, OrigDatablock);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-        /*  user that belongs to any of the group listed in ADMIN_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        can(Action.OrigdatablockUpdate, OrigDatablock);
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-
-        cannot(Action.OrigdatablockCreate, OrigDatablock);
-        can(Action.OrigdatablockRead, OrigDatablock);
-        cannot(Action.OrigdatablockUpdate, OrigDatablock);
-      }
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
   runtimeConfigEndpointAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -766,6 +618,7 @@ export class CaslAbilityFactory {
         can(Action.ProposalsAttachmentCreate, ProposalClass);
         can(Action.ProposalsAttachmentUpdate, ProposalClass);
         can(Action.ProposalsAttachmentDelete, ProposalClass);
+        can(Action.ProposalsDatasetRead, ProposalClass);
       } else if (
         user.currentGroups.some((g) => {
           return this.accessGroups?.proposal.includes(g);
@@ -782,7 +635,7 @@ export class CaslAbilityFactory {
         can(Action.ProposalsAttachmentCreate, ProposalClass);
         can(Action.ProposalsAttachmentUpdate, ProposalClass);
         can(Action.ProposalsAttachmentDelete, ProposalClass);
-        cannot(Action.ProposalsDatasetRead, ProposalClass);
+        can(Action.ProposalsDatasetRead, ProposalClass);
       } else if (user) {
         /**
          * authenticated users
@@ -795,7 +648,7 @@ export class CaslAbilityFactory {
         cannot(Action.ProposalsAttachmentCreate, ProposalClass);
         cannot(Action.ProposalsAttachmentUpdate, ProposalClass);
         cannot(Action.ProposalsAttachmentDelete, ProposalClass);
-        can(Action.ProposalsDatasetRead, ProposalClass);
+        cannot(Action.ProposalsDatasetRead, ProposalClass);
       }
 
       if (
@@ -1014,137 +867,6 @@ export class CaslAbilityFactory {
       can(Action.UserUpdateOwn, User, { _id: user._id });
       can(Action.UserDeleteOwn, User, { _id: user._id });
       can(Action.UserListOwn, User);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  origDatablockInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-      /*  unauthenticated users
-      **/
-
-      can(Action.OrigdatablockReadManyPublic, OrigDatablock);
-      can(Action.OrigdatablockReadOnePublic, OrigDatablock, {
-        isPublished: true,
-      });
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /**
-        /* user that belongs to any of the group listed in DELETE_GROUPS
-        **/
-
-        can(Action.OrigdatablockDeleteAny, OrigDatablock);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-        /* user that belongs to any of the group listed in ADMIN_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateAny, OrigDatablock);
-        can(Action.OrigdatablockReadAny, OrigDatablock);
-        can(Action.OrigdatablockUpdateAny, OrigDatablock);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        )
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_PRIVILEGED_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateAny, OrigDatablock);
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        ) ||
-        this.accessGroups?.createDatasetWithPid.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_WITH_PID_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        this.accessGroups?.createDataset.includes("#all")
-      ) {
-        /**
-        /*  users belonging to CREATE_DATASET_GROUPS
-        **/
-
-        can(Action.OrigdatablockCreateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-        can(Action.OrigdatablockUpdateOwner, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (user) {
-        /**
-        /*  authenticated users
-        **/
-
-        can(Action.OrigdatablockReadManyAccess, OrigDatablock);
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.OrigdatablockReadOneAccess, OrigDatablock, {
-          isPublished: true,
-        });
-      }
     }
     return build({
       detectSubjectType: (item) =>
@@ -1627,111 +1349,6 @@ export class CaslAbilityFactory {
         });
         can(Action.SampleAttachmentReadAccess, SampleClass, {
           isPublished: true,
-        });
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  attachmentInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.AttachmentReadInstance, Attachment, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        // -------------------------------------
-        // users that belong to any of the group listed in DELETE_GROUPS
-        // -------------------------------------
-
-        can(Action.AttachmentDeleteInstance, Attachment);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.AttachmentReadInstance, Attachment);
-        can(Action.AttachmentCreateInstance, Attachment);
-        can(Action.AttachmentUpdateInstance, Attachment);
-        can(Action.AttachmentDeleteInstance, Attachment);
-
-        can(Action.AccessAny, Attachment);
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachmentPrivileged.includes(g),
-        )
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_PRIVILEGED_GROUPS
-        //
-
-        can(Action.AttachmentCreateInstance, Attachment);
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
-        });
-
-        can(Action.AttachmentUpdateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentDeleteInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.attachment.includes(g),
-        ) ||
-        this.accessGroups?.attachment.includes("#all")
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ATTACHMENT_GROUPS
-        //
-
-        can(Action.AttachmentCreateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          isPublished: true,
-        });
-        can(Action.AttachmentUpdateInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentDeleteInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.AttachmentReadInstance, Attachment, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.AttachmentReadInstance, Attachment, {
-          accessGroups: { $in: user.currentGroups },
         });
       }
     }
