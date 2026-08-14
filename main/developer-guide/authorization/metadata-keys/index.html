@@ -6,28 +6,28 @@
       
       
       
-        <link rel="prev" href="../release-guidelines/">
+        <link rel="prev" href="../datasets/">
       
       
-        <link rel="next" href="../authorization/attachments/">
+        <link rel="next" href="../opensearch/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
     
     
       
-        <title>Runtime Configuration System Overview - SciCat Documentation</title>
+        <title>Metadata Keys Authorization Model - SciCat Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -46,15 +46,15 @@
       
     
     
-      <link rel="stylesheet" href="../../css/custom.css">
+      <link rel="stylesheet" href="../../../css/custom.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
-  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+  <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
             html.glightbox-open { overflow: initial; height: 100%; }
             .gslide-title { margin-top: 0px; user-select: text; }
             .gslide-desc { color: #666; user-select: text; }
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#runtime-configuration-technical-documentation" class="md-skip">
+        <a href="#metadata-keys-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -101,9 +101,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+    <a href="../../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
       
-  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Runtime Configuration System Overview
+              Metadata Keys Authorization Model
             
           </span>
         </div>
@@ -198,9 +198,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+    <a href="../../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
       
-  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
 
     </a>
     SciCat Documentation
@@ -215,7 +215,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -242,7 +242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../about/" class="md-nav__link">
+      <a href="../../../about/" class="md-nav__link">
         
   
   
@@ -318,7 +318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ajv-extensions/" class="md-nav__link">
+      <a href="../../ajv-extensions/" class="md-nav__link">
         
   
   
@@ -346,7 +346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../datafiles_metadata/" class="md-nav__link">
+      <a href="../../datafiles_metadata/" class="md-nav__link">
         
   
   
@@ -374,7 +374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../metadatakeys-module/" class="md-nav__link">
+      <a href="../../metadatakeys-module/" class="md-nav__link">
         
   
   
@@ -402,7 +402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../opensearch-guidelines/" class="md-nav__link">
+      <a href="../../opensearch-guidelines/" class="md-nav__link">
         
   
   
@@ -430,7 +430,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../release-guidelines/" class="md-nav__link">
+      <a href="../../release-guidelines/" class="md-nav__link">
         
   
   
@@ -438,6 +438,139 @@
     
   
     New Release Version Bump Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtime-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Configuration System Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authorization
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Authorization
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datablocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datablocks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets Authorization Model
   
 
     
@@ -474,7 +607,7 @@
   <span class="md-ellipsis">
     
   
-    Runtime Configuration System Overview
+    Metadata Keys Authorization Model
   
 
     
@@ -492,7 +625,7 @@
   <span class="md-ellipsis">
     
   
-    Runtime Configuration System Overview
+    Metadata Keys Authorization Model
   
 
     
@@ -518,10 +651,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Actions
       
     </span>
   </a>
@@ -529,22 +662,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#predefined-configuration-ids" class="md-nav__link">
+  <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Predefined Configuration IDs
+        Permissions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Predefined Configuration IDs">
+    <nav class="md-nav" aria-label="Permissions">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#runtime-config-api" class="md-nav__link">
+  <a href="#unauthenticated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Runtime Config API
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
       
     </span>
   </a>
@@ -557,10 +712,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#backend-synchronization-flow" class="md-nav__link">
+  <a href="#permission-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Backend Synchronization Flow
+        Permission Matrix
       
     </span>
   </a>
@@ -568,10 +723,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extensibility" class="md-nav__link">
+  <a href="#implementation-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extensibility
+        Implementation Notes
       
     </span>
   </a>
@@ -593,139 +748,8 @@
   
   
   
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7">
-        
-          
-          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Authorization
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Authorization
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../authorization/datablocks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datablocks Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../authorization/datasets/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datasets Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../authorization/metadata-keys/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Metadata Keys Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../authorization/opensearch/" class="md-nav__link">
+      <a href="../opensearch/" class="md-nav__link">
         
   
   
@@ -753,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../authorization/origdatablocks/" class="md-nav__link">
+      <a href="../origdatablocks/" class="md-nav__link">
         
   
   
@@ -836,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing/release-guidelines/" class="md-nav__link">
+      <a href="../../contributing/release-guidelines/" class="md-nav__link">
         
   
   
@@ -872,7 +896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
+      <a href="../../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
         
   
   
@@ -954,7 +978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
+      <a href="../../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
         
   
   
@@ -982,7 +1006,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../frontend-config-guide/frontend-config/" class="md-nav__link">
+      <a href="../../../frontend-config-guide/frontend-config/" class="md-nav__link">
         
   
   
@@ -1037,10 +1061,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Actions
       
     </span>
   </a>
@@ -1048,22 +1072,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#predefined-configuration-ids" class="md-nav__link">
+  <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Predefined Configuration IDs
+        Permissions
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Predefined Configuration IDs">
+    <nav class="md-nav" aria-label="Permissions">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#runtime-config-api" class="md-nav__link">
+  <a href="#unauthenticated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Runtime Config API
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
       
     </span>
   </a>
@@ -1076,10 +1122,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#backend-synchronization-flow" class="md-nav__link">
+  <a href="#permission-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Backend Synchronization Flow
+        Permission Matrix
       
     </span>
   </a>
@@ -1087,10 +1133,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extensibility" class="md-nav__link">
+  <a href="#implementation-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extensibility
+        Implementation Notes
       
     </span>
   </a>
@@ -1114,56 +1160,57 @@
 
 
 
-<h1 id="runtime-configuration-technical-documentation">Runtime Configuration: Technical Documentation<a class="headerlink" href="#runtime-configuration-technical-documentation" title="Permanent link">¶</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h2>
-<p>SciCat frontend supports runtime-editable configuration stored in the backend and fetched dynamically at application startup.</p>
-<p>Configuration is identified by a configuration ID (cid) and accessed via the runtime-config API.</p>
-<h2 id="predefined-configuration-ids">Predefined Configuration IDs<a class="headerlink" href="#predefined-configuration-ids" title="Permanent link">¶</a></h2>
-<div class="highlight"><pre><span></span><code><span class="err">CONFIG_SYNC_TO_DB_LIST=</span><span class="s2">"frontendConfig, frontendTheme"</span>
-</code></pre></div>
+<h1 id="metadata-keys-authorization-model">Metadata Keys Authorization Model<a class="headerlink" href="#metadata-keys-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for metadata keys and associated endpoints.</p>
+<h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
+<p>The following actions are defined for metadata keys:</p>
 <ul>
-<li>When provided, it is parsed as a comma-separated list of configuration IDs.</li>
-<li>When not provided, the system always includes the following defaults: - frontendConfig - frontendTheme
-  These default configuration IDs are always synchronized to ensure frontend functionality.</li>
+<li><code>MetadataKeyRead</code></li>
 </ul>
-<h3 id="runtime-config-api">Runtime Config API<a class="headerlink" href="#runtime-config-api" title="Permanent link">¶</a></h3>
-<ul>
-<li>
-<p><code>GET /api/v3/runtime-config/:id</code><br>
-  Retrieves the current runtime configuration by <code>cid</code>. Response includes: <code>cid</code>, <code>data</code>, <code>updatedBy</code></p>
-</li>
-<li>
-<p><code>PUT /api/v3/runtime-config/:id</code><br>
-  Updates the runtime configuration and persists changes to the database. This endpoint accepts only the data object in the request body and <code>updatedBy</code> is automatically set from the user name.</p>
-</li>
-</ul>
-<h2 id="backend-synchronization-flow">Backend Synchronization Flow<a class="headerlink" href="#backend-synchronization-flow" title="Permanent link">¶</a></h2>
-<p>On backend startup:</p>
-<ol>
-<li><code>CONFIG_SYNC_TO_DB_LIST</code> is read from environment variables.</li>
-<li>For each configuration ID:</li>
-<li>If no record exists in the database, a new record is created from the corresponding config file.</li>
-<li>If a record already exists, it is overwritten with values from the config file.</li>
-<li>After initialization, all changes are managed via the <code>runtime-config</code> API.</li>
-</ol>
-<h2 id="extensibility">Extensibility<a class="headerlink" href="#extensibility" title="Permanent link">¶</a></h2>
-<p>The system is designed to support additional runtime configurations in the future.</p>
-<p>For any new configuration to be editable via the UI:</p>
-<ol>
-<li>The configuration ID must be included in CONFIG_SYNC_TO_DB_LIST</li>
-<li>A corresponding JSONForms Schema &amp; UI Schema must be provided</li>
-<li>The schema files must be created in the frontend</li>
-</ol>
-<p>Without schema support, configuration values may exist in the database but will not be editable via the UI.</p>
+<p>All write actions (create/update/delete) are system-managed based on datasets and do not have API endpoints.</p>
+<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
+<p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
+<h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
+<p>An unauthenticated user may read metadata keys only if the metadata key is public.</p>
+<h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
+<p>An authenticated user may read metadata keys if the metadata key is public or if they are a member of the metadata keys's <code>ownerGroup</code> or one of the <code>accessGroups</code>.</p>
+<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted read access to all metadata keys.</p>
+<h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
+<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Unauthenticated</th>
+<th>Authenticated</th>
+<th><code>ADMIN_GROUPS</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MetadataKeyRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>any</td>
+</tr>
+</tbody>
+</table>
+<p>Legend:
+- public: metadata key's <code>isPublished</code> field must be <code>true</code>
+- owner: metadata key's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
+- access: one of the metadata key's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- any: unrestricted access</p>
+<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
+<p>The definition is implemented in the casl module under <code>/src/casl/abilities/metadata-keys.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.metadataKeyAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>MetadataKeyAbility</code> module in <code>/src/casl/abilities/metadata-keys.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for metadata keys currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
 
 
 
 
 
 
-
-  
-  
 
 
 
@@ -1207,10 +1254,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["instant"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["instant"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
       
     
   
