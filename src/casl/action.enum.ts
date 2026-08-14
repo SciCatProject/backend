@@ -13,19 +13,19 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",
   AttachmentRead = "attachment_read",
   AttachmentUpdate = "attachment_update",
   AttachmentDelete = "attachment_delete",
 
-  // Origdatablock
-  OrigdatablockCreate = "origdatablock_create",
-  OrigdatablockRead = "origdatablock_read",
-  OrigdatablockUpdate = "origdatablock_update",
-  OrigdatablockDelete = "origdatablock_delete",
+  // Datablock
+  DatablockCreate = "datablock_create",
+  DatablockRead = "datablock_read",
+  DatablockUpdate = "datablock_update",
+  DatablockDelete = "datablock_delete",
 
-  // ---------------
   // Datasets
   DatasetCreate = "dataset_create",
   DatasetRead = "dataset_read",
@@ -51,21 +51,11 @@ export enum Action {
 
   DatasetLogbookRead = "dataset_logbook_read",
 
-  // -------------
-  // Datablock
-  // endpoint authorization actions
-  DatablockCreateEndpoint = "datablock_create_endpoint",
-  DatablockReadEndpoint = "datablock_read_endpoint",
-  DatablockUpdateEndpoint = "datablock_update_endpoint",
-  DatablockDeleteEndpoint = "datablock_delete_endpoint",
-  // individual actions
-  DatablockCreateInstance = "datablock_create_instance",
-  DatablockReadInstance = "datablock_read_instance",
-  DatablockUpdateInstance = "datablock_update_instance",
-  // admin actions
-  DatablockReadAny = "datablock_read_any",
-  DatablockUpdateAny = "datablock_update_any",
-  DatablockDeleteAny = "datablock_delete_any",
+  // Origdatablock
+  OrigdatablockCreate = "origdatablock_create",
+  OrigdatablockRead = "origdatablock_read",
+  OrigdatablockUpdate = "origdatablock_update",
+  OrigdatablockDelete = "origdatablock_delete",
 
   // Proposals
   // endpoint authorization actions

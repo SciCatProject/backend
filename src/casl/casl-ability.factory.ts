@@ -10,7 +10,6 @@ import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { Instrument } from "src/instruments/schemas/instrument.schema";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
@@ -27,6 +26,7 @@ import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
 import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
+import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
@@ -38,6 +38,7 @@ export class CaslAbilityFactory {
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
     private attachmentAbility: AttachmentAbility,
+    private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
     private origDatablockAbility: OrigDatablockAbility,
   ) {
@@ -50,7 +51,7 @@ export class CaslAbilityFactory {
     [endpoint: string]: (user: JWTUser) => AppAbility;
   } = {
     attachments: this.attachmentAccess,
-    datablocks: this.datablockEndpointAccess,
+    datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
     history: this.historyEndpointAccess,
     instruments: this.instrumentEndpointAccess,
@@ -79,6 +80,10 @@ export class CaslAbilityFactory {
 
   attachmentAccess(user: JWTUser | null) {
     return this.attachmentAbility.buildAbility(user);
+  }
+
+  datablockAccess(user: JWTUser | null) {
+    return this.datablockAbility.buildAbility(user);
   }
 
   datasetAccess(user: JWTUser | null) {
@@ -515,34 +520,6 @@ export class CaslAbilityFactory {
     });
   }
 
-  datablockEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (user) {
-      can(Action.DatablockCreateEndpoint, Datablock);
-      can(Action.DatablockReadEndpoint, Datablock);
-      can(Action.DatablockUpdateEndpoint, Datablock);
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        can(Action.DatablockDeleteEndpoint, Datablock);
-      } else {
-        cannot(Action.DatablockDeleteEndpoint, Datablock);
-      }
-    } else {
-      cannot(Action.DatablockCreateEndpoint, Datablock);
-      cannot(Action.DatablockReadEndpoint, Datablock);
-      cannot(Action.DatablockUpdateEndpoint, Datablock);
-      cannot(Action.DatablockDeleteEndpoint, Datablock);
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
   runtimeConfigEndpointAccess(user: JWTUser) {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
@@ -1398,62 +1375,6 @@ export class CaslAbilityFactory {
       can(Action.AccessAny, PublishedData);
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  datablockInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (user) {
-      // Can read if user is in ownerGroup/accessGroup or if published
-      can(Action.DatablockReadInstance, Datablock, {
-        ownerGroup: { $in: user.currentGroups },
-      });
-      can(Action.DatablockReadInstance, Datablock, {
-        accessGroups: { $in: user.currentGroups },
-      });
-      can(Action.DatablockReadInstance, Datablock, { isPublished: true });
-
-      // Can update if in ownerGroup
-      can(Action.DatablockUpdateInstance, Datablock, {
-        accessGroups: { $in: user.currentGroups },
-      });
-
-      // Ingestor group is allowed to create/update
-      if (
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDataset.includes(g),
-        ) ||
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetPrivileged.includes(g),
-        ) ||
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createDatasetWithPid.includes(g),
-        )
-      ) {
-        can(Action.DatablockCreateInstance, Datablock);
-        can(Action.DatablockUpdateAny, Datablock);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        can(Action.DatablockReadAny, Datablock);
-        can(Action.DatablockUpdateAny, Datablock);
-        can(Action.DatablockDeleteAny, Datablock);
-      }
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        can(Action.DatablockCreateInstance, Datablock);
-        can(Action.DatablockReadAny, Datablock);
-        can(Action.DatablockUpdateAny, Datablock);
-      }
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
