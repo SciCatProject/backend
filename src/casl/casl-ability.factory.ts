@@ -15,7 +15,6 @@ import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
-import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
@@ -27,6 +26,7 @@ import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 
@@ -40,6 +40,7 @@ export class CaslAbilityFactory {
     private attachmentAbility: AttachmentAbility,
     private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
+    private metadataKeyAbility: MetadataKeyAbility,
     private opensearchAbility: OpensearchAbility,
     private origDatablockAbility: OrigDatablockAbility,
   ) {
@@ -58,7 +59,7 @@ export class CaslAbilityFactory {
     instruments: this.instrumentEndpointAccess,
     jobs: this.jobsEndpointAccess,
     logbooks: this.logbookEndpointAccess,
-    metadataKeys: this.metadataKeysEndpointAccess,
+    metadataKeys: this.metadataKeyAccess,
     opensearch: this.opensearchAccess,
     origdatablocks: this.origDatablockAccess,
     policies: this.policyEndpointAccess,
@@ -89,6 +90,10 @@ export class CaslAbilityFactory {
 
   datasetAccess(user: JWTUser | null) {
     return this.datasetAbility.buildAbility(user);
+  }
+
+  metadataKeyAccess(user: JWTUser | null) {
+    return this.metadataKeyAbility.buildAbility(user);
   }
 
   opensearchAccess(user: JWTUser | null) {
@@ -520,20 +525,6 @@ export class CaslAbilityFactory {
         */
       can(Action.RuntimeConfigUpdateEndpoint, RuntimeConfig);
     }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metadataKeysEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    can(Action.MetadataKeysReadEndpoint, MetadataKeyClass);
-
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -1358,42 +1349,6 @@ export class CaslAbilityFactory {
       // -------------------------------------
 
       can(Action.AccessAny, PublishedData);
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  metadataKeyInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    // -------------------------------------
-    // any user can read public attachments
-    // -------------------------------------
-    can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-      isPublished: true,
-    });
-    if (user) {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        // -------------------------------------
-        // users belonging to any of the group listed in ADMIN_GROUPS
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass);
-      } else {
-        // -------------------------------------
-        // users with no elevated permissions
-        // -------------------------------------
-
-        can(Action.MetadataKeysReadInstance, MetadataKeyClass, {
-          userGroups: { $in: user.currentGroups },
-        });
-      }
     }
 
     return build({
