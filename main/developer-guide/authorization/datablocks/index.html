@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../datablocks/">
+        <link rel="prev" href="../attachments/">
       
       
-        <link rel="next" href="../origdatablocks/">
+        <link rel="next" href="../datasets/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Datasets Authorization Model - SciCat Documentation</title>
+        <title>Datablocks Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#datasets-authorization-model" class="md-skip">
+        <a href="#datablocks-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Datasets Authorization Model
+              Datablocks Authorization Model
             
           </span>
         </div>
@@ -532,34 +532,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../datablocks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datablocks Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -579,7 +551,7 @@
   <span class="md-ellipsis">
     
   
-    Datasets Authorization Model
+    Datablocks Authorization Model
   
 
     
@@ -597,7 +569,7 @@
   <span class="md-ellipsis">
     
   
-    Datasets Authorization Model
+    Datablocks Authorization Model
   
 
     
@@ -701,17 +673,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#update_dataset_lifecycle_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UPDATE_DATASET_LIFECYCLE_GROUPS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#admin_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -764,6 +725,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1138,17 +1127,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#update_dataset_lifecycle_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        UPDATE_DATASET_LIFECYCLE_GROUPS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#admin_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1214,60 +1192,33 @@
 
 
 
-<h1 id="datasets-authorization-model">Datasets Authorization Model<a class="headerlink" href="#datasets-authorization-model" title="Permanent link">¶</a></h1>
-<p>This document describes the authorization model used for datasets and associated endpoints.</p>
+<h1 id="datablocks-authorization-model">Datablocks Authorization Model<a class="headerlink" href="#datablocks-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for datablocks and associated endpoints.</p>
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
-<p>The following actions are defined for datasets:</p>
+<p>The following actions are defined for datablocks:</p>
 <ul>
-<li><code>DatasetCreate</code></li>
-<li><code>DatasetRead</code></li>
-<li><code>DatasetUpdate</code></li>
-<li><code>DatasetDelete</code></li>
-<li><code>DatasetLifecycleUpdate</code></li>
-<li><code>DatasetAttachmentCreate</code></li>
-<li><code>DatasetAttachmentRead</code></li>
-<li><code>DatasetAttachmentUpdate</code></li>
-<li><code>DatasetAttachmentDelete</code></li>
-<li><code>DatasetOrigdatablockCreate</code></li>
-<li><code>DatasetOrigdatablockRead</code></li>
-<li><code>DatasetOrigdatablockUpdate</code></li>
-<li><code>DatasetOrigdatablockDelete</code></li>
-<li><code>DatasetDatablockCreate</code></li>
-<li><code>DatasetDatablockRead</code></li>
-<li><code>DatasetDatablockUpdate</code></li>
-<li><code>DatasetDatablockDelete</code></li>
-<li><code>DatasetLogbookRead</code></li>
+<li><code>DatablockCreate</code></li>
+<li><code>DatablockRead</code></li>
+<li><code>DatablockUpdate</code></li>
+<li><code>DatablockDelete</code></li>
 </ul>
-<p>The first four actions are the major actions used on most endpoints. <code>DatasetLifecycleUpdate</code> is used for a special update endpoint with strict control on the request content.
-The other actions are used for specific endpoints giving access to linked resources from a given dataset, and exist mostly for compatibility with API v3.</p>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
 <h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
-<p>An unauthenticated user may read datasets and associated attachments, datablocks and origdatablocks only if the dataset is public. This checks the <code>isPublished</code> field only on the dataset, linked attachments, datablocks and origdatablocks inherit the public status.</p>
-<p>Unauthenticated users do not have write access.</p>
+<p>An unauthenticated user may read datablocks only if the datablock is public.
+Unauthenticated users do not have write access.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>An authenticated user may read any datasets and associated attachments, datablocks and origdatablocks if the dataset is public or if they are a member of the dataset's <code>ownerGroup</code> or one of the <code>accessGroups</code>. Access to linked attachments, datablocks and origdatablocks is inherited from the dataset.</p>
-<p>Authenticated users do not have write access by default.</p>
+<p>An authenticated user may read datablocks if the datablock is public or if they are a member of the datablock's <code>ownerGroup</code> or one of the <code>accessGroups</code>. They are permitted to update datablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
 <h3 id="create_dataset_groups">CREATE_DATASET_GROUPS<a class="headerlink" href="#create_dataset_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are allowed to create and update datasets and linked attachments, datablocks and origdatablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>. Importantly, it is not necessary that <code>ownerGroup</code> be in <code>CREATE_DATASET_GROUPS</code>.
-Users in this category may delete attachments linked to an owned dataset, but no other resources.
-On dataset create requests, users in this category are not permitted to provide an explicit <code>pid</code>, it must be generated from the backend.</p>
-<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_GROUPS</code> in configuration.</p>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create and update datablocks for any <code>ownerGroup</code>.</p>
 <h3 id="create_dataset_with_pid_groups">CREATE_DATASET_WITH_PID_GROUPS<a class="headerlink" href="#create_dataset_with_pid_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_WITH_PID_GROUPS</code>, the permission are identical to <code>CREATE_DATASET_GROUPS</code> with one exception:
-On dataset create requests, users in this category are permitted to provide an explicit <code>pid</code> to supersede the backend's automatic generation.</p>
-<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_WITH_PID_GROUPS</code> in configuration.</p>
+<p>These groups have the same permissions as <code>CREATE_DATASET_GROUPS</code>.</p>
 <h3 id="create_dataset_privileged_groups">CREATE_DATASET_PRIVILEGED_GROUPS<a class="headerlink" href="#create_dataset_privileged_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_PRIVILEGED_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create datasets and linked attachments, datablocks and origdatablocks for any <code>ownerGroup</code>.
-They may update datasets and linked attachments, datablocks and origdatablocks only if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.
-They may delete attachments linked to an owned dataset.</p>
-<h3 id="update_dataset_lifecycle_groups">UPDATE_DATASET_LIFECYCLE_GROUPS<a class="headerlink" href="#update_dataset_lifecycle_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>UPDATE_DATASET_LIFECYCLE_GROUPS</code>, they receive unrestricted read access to all datasets, but not to linked attachments, datablocks and origdatablocks.
-They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any dataset, which is limited to only accept changes to the dataset's <code>datasetLifecycle</code> field.</p>
+<p>These groups have the same permissions as <code>CREATE_DATASET_GROUPS</code>.</p>
 <h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read and update access to all datasets and all linked attachments, datablocks and origdatablocks in the database. They also have unrestricted delete access to any attachments linked to any dataset.</p>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read, and update access to all datablocks in the database.</p>
 <h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all datasets and all linked attachments, datablocks and origdatablocks in the database.</p>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted read, update and delete access to all datablocks in the database.</p>
 <h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
 <p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
 <table>
@@ -1276,224 +1227,55 @@ They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any da
 <th>Operation</th>
 <th>Unauthenticated</th>
 <th>Authenticated</th>
-<th><code>CREATE_DATASET_GROUPS</code></th>
-<th><code>CREATE_DATASET_WITH_PID_GROUPS</code></th>
-<th><code>CREATE_DATASET_PRIVILEGED_GROUPS</code></th>
-<th><code>UPDATE_DATASET_LIFECYCLE_GROUPS</code></th>
+<th><code>CREATE_DATASET_GROUPS</code>/<code>CREATE_DATASET_WITH_PID_GROUPS</code>/<code>CREATE_DATASET_PRIVILEGED_GROUPS</code></th>
 <th><code>ADMIN_GROUPS</code></th>
 <th><code>DELETE_GROUPS</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>DatasetCreate</code></td>
+<td><code>DatablockCreate</code></td>
 <td>-</td>
 <td>-</td>
-<td>owner, no <code>pid</code></td>
-<td>owner</td>
 <td>any</td>
-<td>-</td>
 <td>any</td>
 <td>-</td>
 </tr>
 <tr>
-<td><code>DatasetRead</code></td>
+<td><code>DatablockRead</code></td>
 <td>public</td>
 <td>public/owner/access</td>
 <td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>any</td>
-<td>any</td>
-<td>public/owner/access</td>
-</tr>
-<tr>
-<td><code>DatasetUpdate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetDelete</code></td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>any</td>
-</tr>
-<tr>
-<td><code>DatasetLifecycleUpdate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetAttachmentCreate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetAttachmentRead</code></td>
-<td>public</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>any</td>
-<td>any</td>
-<td>public/owner/access</td>
-</tr>
-<tr>
-<td><code>DatasetAttachmentUpdate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetAttachmentDelete</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>-</td>
 <td>any</td>
 <td>any</td>
 </tr>
 <tr>
-<td><code>DatasetOrigdatablockCreate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetOrigdatablockRead</code></td>
-<td>public</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>any</td>
-<td>any</td>
-<td>public/owner/access</td>
-</tr>
-<tr>
-<td><code>DatasetOrigdatablockUpdate</code></td>
-<td>-</td>
+<td><code>DatablockUpdate</code></td>
 <td>-</td>
 <td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>-</td>
 <td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetOrigdatablockDelete</code></td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
+<td>any</td>
 <td>any</td>
 </tr>
 <tr>
-<td><code>DatasetDatablockCreate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetDatablockRead</code></td>
-<td>public</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>any</td>
-<td>any</td>
-<td>public/owner/access</td>
-</tr>
-<tr>
-<td><code>DatasetDatablockUpdate</code></td>
-<td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>-</td>
-<td>any</td>
-<td>-</td>
-</tr>
-<tr>
-<td><code>DatasetDatablockDelete</code></td>
-<td>-</td>
-<td>-</td>
-<td>-</td>
+<td><code>DatablockDelete</code></td>
 <td>-</td>
 <td>-</td>
 <td>-</td>
 <td>-</td>
 <td>any</td>
-</tr>
-<tr>
-<td><code>DatasetLogbookRead</code></td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>owner</td>
 </tr>
 </tbody>
 </table>
 <p>Legend:
-- public: dataset's <code>isPublished</code> field must be <code>true</code>
-- owner: dataset's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
-- access: one of the dataset's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- public: datablock's <code>isPublished</code> field must be <code>true</code>
+- owner: datablock's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
+- access: one of the datablock's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
 - any: unrestricted access</p>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<p>The definition is implemented in the casl module under <code>/src/casl/abilities/datasets.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.datasetAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
-<p>The <code>DatasetAbility</code> module in <code>/src/casl/abilities/datasets.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
-In case there are expectations of mutual exclusivity for certain special groups (not the case for datasets currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
+<p>The definition is implemented in the casl module under <code>/src/casl/datablocks/datablocks.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.datablockAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>DatablockAbility</code> module in <code>/src/casl/datablocks/datablocks.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for datablocks currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
 
 
 
