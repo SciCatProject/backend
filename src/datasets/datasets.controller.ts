@@ -152,12 +152,16 @@ export class DatasetsController {
     this.datasetCreationValidationRegex = this.configService.get<string>(
       "datasetCreationValidationRegex",
     );
-    this.datasetTypes = this.configService.get<string>("datasetTypes");
+    const customDatasetTypes =
+      this.configService.get<Record<string, string>>("customDatasetTypes");
+    this.customDatasetTypes = customDatasetTypes
+      ? Object.values(customDatasetTypes)
+      : [];
   }
   private accessGroups;
   private datasetCreationValidationEnabled;
   private datasetCreationValidationRegex;
-  private datasetTypes;
+  private customDatasetTypes;
 
   updateMergedFiltersForList(
     request: Request,
@@ -664,23 +668,20 @@ export class DatasetsController {
     const outputDatasetDto = plainToInstance(dto, inputDatasetDto);
 
     if (
-      outputDatasetDto instanceof
-      (CreateRawDatasetObsoleteDto ||
-        CreateDerivedDatasetObsoleteDto ||
-        CreateDatasetDto)
+      this.customDatasetTypes.length > 0 &&
+      outputDatasetDto instanceof CreateDatasetDto &&
+      !Object.values(DatasetType).includes(
+        outputDatasetDto.type as DatasetType,
+      ) &&
+      !this.customDatasetTypes.includes(outputDatasetDto.type)
     ) {
-      if (
-        this.datasetTypes &&
-        !Object.values(this.datasetTypes).includes(outputDatasetDto.type)
-      ) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "Invalid dataset type!",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          message: "Invalid dataset type!",
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const errors = await validate(outputDatasetDto, validateOptions);
