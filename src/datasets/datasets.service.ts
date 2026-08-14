@@ -299,7 +299,6 @@ export class DatasetsService {
     };
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
-    console.log("---whereClause---", whereClause);
     const datasets = await this.datasetModel
       .find(whereClause, null, modifiers)
       .exec();
@@ -343,8 +342,7 @@ export class DatasetsService {
 
     const osResultIds = osResult.hits;
     const datasets = await this.datasetModel
-      .find({ pid: { $in: osResultIds }, ...mongoQuery })
-      .sort(modifiers.sort)
+      .find({ pid: { $in: osResultIds }, ...mongoQuery }, null, modifiers)
       .exec();
 
     return datasets;

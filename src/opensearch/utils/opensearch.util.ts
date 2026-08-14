@@ -11,7 +11,7 @@ const flattenToTextValues = (node: unknown, out: string[], depth = 0): void => {
 
   if (typeof node === "object") {
     for (const [key, value] of Object.entries(node)) {
-      if (depth === 0) out.push(key.replace(/_/g, " "));
+      if (depth === 0) out.push(key);
       flattenToTextValues(value, out, depth + 1);
     }
     return;

@@ -286,10 +286,9 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async search(params: SearchParams): Promise<SearchResult | null> {
+  async search(params: SearchParams): Promise<SearchResult> {
     try {
       const fast = await this.runSearch(params, "fast");
-      if (!fast) return null;
       if (fast.totalCount > 0) return fast;
 
       return await this.runSearch(params, "wildcard");
@@ -304,7 +303,7 @@ export class OpensearchService implements OnModuleInit {
   private async runSearch(
     params: SearchParams,
     mode: SearchMode,
-  ): Promise<SearchResult | null> {
+  ): Promise<SearchResult> {
     const defaultSort: Sort = [{ _score: "desc" }, { _id: "asc" }];
     const {
       filter,
@@ -318,8 +317,8 @@ export class OpensearchService implements OnModuleInit {
       index,
       body: {
         from: skip,
-        size: limit,
-        track_total_hits: this.maxResultWindow + 1,
+        size: limit - skip,
+        track_total_hits: this.maxResultWindow,
         _source: false,
         query: this.searchService.buildQuery(filter, mode),
         sort: sort,
@@ -327,9 +326,6 @@ export class OpensearchService implements OnModuleInit {
     });
 
     const total = body.hits.total;
-    const isOverLimit = typeof total === "object" && total.relation === "gte";
-
-    if (isOverLimit) return null;
 
     return {
       totalCount: typeof total === "number" ? total : (total?.value ?? 0),
