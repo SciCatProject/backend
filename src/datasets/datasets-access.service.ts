@@ -31,16 +31,10 @@ export class DatasetsAccessService {
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
-        const ability =
-          this.caslAbilityFactory.origDatablockInstanceAccess(user);
-        const canViewAny = ability.can(
-          Action.OrigdatablockReadAny,
-          OrigDatablock,
-        );
-        const canView = ability.can(
-          Action.OrigdatablockReadManyAccess,
-          OrigDatablock,
-        );
+        const ability = this.caslAbilityFactory.origDatablockAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+        const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.datablocks: {

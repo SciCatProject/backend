@@ -237,6 +237,115 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
       });
   });
 
+  it("0175: should not be able to add a dataset with a type not supported in datasetTypes.json", async () => {
+    const customDatasetWithUnsupportedType = {
+      ...TestData.CustomDatasetCorrect,
+      pid: TestData.PidPrefix + "/" + uuidv4(),
+      type: "unsupportedType",
+    };
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(customDatasetWithUnsupportedType)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("message")
+          .and.equal("Invalid dataset type!");
+      });
+  });
+
+  it("0176: should be able to update a custom dataset without providing its type", async () => {
+    const createRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...TestData.CustomDatasetCorrect,
+        pid: TestData.PidPrefix + "/" + uuidv4(),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    const createdPid = createRes.body.pid;
+
+    await request(appUrl)
+      .patch(`/api/v3/Datasets/${encodeURIComponent(createdPid)}`)
+      .send({ datasetName: "Updated without type field" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("datasetName")
+          .and.equal("Updated without type field");
+      });
+
+    await request(appUrl)
+      .delete("/api/v3/Datasets/" + encodeURIComponent(createdPid))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
+  it("0177: should be able to add a raw dataset even though datasetTypes.json only lists custom types", async () => {
+    const rawDataset = {
+      ...TestData.RawCorrectMin,
+      pid: TestData.PidPrefix + "/" + uuidv4(),
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(rawDataset)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then(async (res) => {
+        res.body.should.have.property("type").and.equal("raw");
+        res.body.should.have.property("pid").and.equal(rawDataset.pid);
+
+        await request(appUrl)
+          .delete("/api/v3/Datasets/" + encodeURIComponent(res.body.pid))
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+          .expect(TestData.SuccessfulDeleteStatusCode);
+      });
+  });
+
+  it("0178: should not be able to patch a dataset's type", async () => {
+    const createRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...TestData.CustomDatasetCorrect,
+        pid: TestData.PidPrefix + "/" + uuidv4(),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    const createdPid = createRes.body.pid;
+
+    await request(appUrl)
+      .patch(`/api/v3/Datasets/${encodeURIComponent(createdPid)}`)
+      .send({ type: "custom" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message").and.match(/should not exist/);
+      });
+
+    await request(appUrl)
+      .delete("/api/v3/Datasets/" + encodeURIComponent(createdPid))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
   it("0180: should fetch several custom datasets", async () => {
     const filter = {
       where: {

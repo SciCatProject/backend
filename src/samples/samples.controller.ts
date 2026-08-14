@@ -995,6 +995,8 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<DatasetClass[] | null> {
+    await this.checkPermissionsForSample(request, id, Action.SampleRead);
+
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
 
@@ -1004,9 +1006,13 @@ export class SamplesController {
 
     if (!user) {
       fields.isPublished = true;
-    } else if (!canViewAny && canView && !fields.isPublished) {
-      fields.userGroups = fields.userGroups ?? [];
-      fields.userGroups.push(...user.currentGroups);
+    } else if (!canViewAny) {
+      if (canView && !fields.isPublished) {
+        fields.userGroups = fields.userGroups ?? [];
+        fields.userGroups.push(...user.currentGroups);
+      } else {
+        fields.isPublished = true;
+      }
     }
 
     const datasets = await this.datasetsService.fullquery({
