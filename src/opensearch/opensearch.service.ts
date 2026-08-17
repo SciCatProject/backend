@@ -366,6 +366,8 @@ export class OpensearchService implements OnModuleInit {
   }
 
   async updateInsertDocument(data: Partial<DatasetDocument>) {
+    delete data._id;
+
     try {
       await this.osClient.index({
         index: this.defaultIndex,
