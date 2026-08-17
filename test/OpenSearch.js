@@ -38,6 +38,22 @@ const randomToken1 =
 const randomToken2 =
   datasetName2Tokens[Math.floor(Math.random() * datasetName2Tokens.length)];
 
+const nestedScientificMetadata = {
+  ...TestData.DatasetWithScientificMetadata.scientificMetadata,
+  instrumentNestedQ7: {
+    detectorNestedZ4: {
+      modelNestedM6: "PilatusNestedModelZX9",
+      pixelCount: 1475,
+    },
+    cryostatNestedR8: {
+      temperature: {
+        value: 4.2,
+        unit: "NestedKelvinU5",
+      },
+    },
+  },
+};
+
 const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
 
 (isOSenabled ? describe : describe.skip)(
@@ -62,6 +78,7 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
         ...TestData.DatasetWithScientificMetadata,
         datasetName: datasetName1,
         isPublished: true,
+        scientificMetadata: nestedScientificMetadata,
       };
 
       return request(appUrl)
@@ -228,22 +245,88 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
         });
     });
 
-    it("0034: should delete dataset1", async () => {
+    it("0027: finds dataset1 by a scientific metadata value nested three levels deep", async () => {
       return request(appUrl)
-        .delete("/api/v3/datasets/" + pid1)
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-        .expect(TestData.SuccessfulDeleteStatusCode)
-        .expect("Content-Type", /json/);
+        .get("/api/v3/datasets/fullquery")
+        .query({
+          fields: JSON.stringify({ text: "PilatusNestedModelZX9" }),
+          limits: JSON.stringify({
+            skip: 0,
+            limit: 10,
+          }),
+        })
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(200)
+        .then((res) => {
+          const found = res.body.some((d) => d.datasetName === datasetName1);
+          found.should.equal(true);
+        });
     });
 
-    it("0035: should delete dataset2", async () => {
+    it("0028: finds dataset1 by a scientific metadata value nested four levels deep", async () => {
       return request(appUrl)
-        .delete("/api/v3/datasets/" + pid2)
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-        .expect(TestData.SuccessfulDeleteStatusCode)
-        .expect("Content-Type", /json/);
+        .get("/api/v3/datasets/fullquery")
+        .query({
+          fields: JSON.stringify({ text: "NestedKelvinU5" }),
+          limits: JSON.stringify({
+            skip: 0,
+            limit: 10,
+          }),
+        })
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(200)
+        .then((res) => {
+          const found = res.body.some((d) => d.datasetName === datasetName1);
+          found.should.equal(true);
+        });
+    });
+
+    it("0029: finds dataset1 by a top level scientific metadata key", async () => {
+      return request(appUrl)
+        .get("/api/v3/datasets/fullquery")
+        .query({
+          fields: JSON.stringify({ text: "instrumentNestedQ7" }),
+          limits: JSON.stringify({
+            skip: 0,
+            limit: 10,
+          }),
+        })
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(200)
+        .then((res) => {
+          const found = res.body.some((d) => d.datasetName === datasetName1);
+          found.should.equal(true);
+        });
+    });
+
+    it("0030: does not match dataset2 on dataset1 nested metadata", async () => {
+      return request(appUrl)
+        .get("/api/v3/datasets/fullquery")
+        .query({
+          fields: JSON.stringify({ text: "PilatusNestedModelZX9" }),
+          limits: JSON.stringify({
+            skip: 0,
+            limit: 10,
+          }),
+        })
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(200)
+        .then((res) => {
+          const found = res.body.some((d) => d.datasetName === datasetName2);
+          found.should.equal(false);
+        });
+    });
+
+    after(async () => {
+      await Promise.all(
+        [pid1, pid2].map((pid) =>
+          request(appUrl)
+            .delete("/api/v3/datasets/" + pid)
+            .set("Accept", "application/json")
+            .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+            .expect(TestData.SuccessfulDeleteStatusCode),
+        ),
+      );
     });
   },
 );
