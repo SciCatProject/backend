@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../logbooks/">
+        <link rel="prev" href="../policies/">
       
       
-        <link rel="next" href="../opensearch/">
+        <link rel="next" href="../runtime-config/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Metadata Keys Authorization Model - SciCat Documentation</title>
+        <title>Proposals Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#metadata-keys-authorization-model" class="md-skip">
+        <a href="#proposals-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Metadata Keys Authorization Model
+              Proposals Authorization Model
             
           </span>
         </div>
@@ -644,37 +644,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Metadata Keys Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../metadata-keys/" class="md-nav__link">
         
   
   
@@ -690,109 +663,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-      
-        <li class="md-nav__item">
-  <a href="#actions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Actions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#permissions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permissions
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Permissions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#unauthenticated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Unauthenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#authenticated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Authenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#admin_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ADMIN_GROUPS
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#permission-matrix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Permission Matrix
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#implementation-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Implementation Notes
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -886,10 +756,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../proposals/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -905,6 +802,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unauthenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposal_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PROPOSAL_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permission-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permission Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1246,10 +1268,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#proposal_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PROPOSAL_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#admin_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
         ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -1300,22 +1344,37 @@
 
 
 
-<h1 id="metadata-keys-authorization-model">Metadata Keys Authorization Model<a class="headerlink" href="#metadata-keys-authorization-model" title="Permanent link">¶</a></h1>
-<p>This document describes the authorization model used for metadata keys and associated endpoints.</p>
+<h1 id="proposals-authorization-model">Proposals Authorization Model<a class="headerlink" href="#proposals-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for proposals and associated endpoints.</p>
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
-<p>The following actions are defined for metadata keys:</p>
+<p>The following actions are defined for proposals:</p>
 <ul>
-<li><code>MetadataKeyRead</code></li>
+<li><code>AccessAny</code></li>
+<li><code>ProposalCreate</code></li>
+<li><code>ProposalRead</code></li>
+<li><code>ProposalUpdate</code></li>
+<li><code>ProposalDelete</code></li>
+<li><code>ProposalAttachmentCreate</code></li>
+<li><code>ProposalAttachmentRead</code></li>
+<li><code>ProposalAttachmentUpdate</code></li>
+<li><code>ProposalAttachmentDelete</code></li>
+<li><code>ProposalDatasetRead</code></li>
 </ul>
-<p>All write actions (create/update/delete) are system-managed based on datasets and do not have API endpoints.</p>
+<p><code>ProposalDatasetRead</code> permissions are not granted to any user at the moment (used to be granted to any authenticated user) due to a bug that allows full access to all datasets in the database.</p>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
 <h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
-<p>An unauthenticated user may read metadata keys only if the metadata key is public.</p>
+<p>An unauthenticated user may read proposals and linked attachments only if the proposal is public (the linked attachment's ownership is not considered).
+Unauthenticated users do not have write access.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>An authenticated user may read metadata keys if the metadata key is public or if they are a member of the metadata keys's <code>ownerGroup</code> or one of the <code>accessGroups</code>.</p>
+<p>An authenticated user may read proposals and linked attachments if the proposal is public or if they are a member of the proposal's <code>ownerGroup</code> or one of the <code>accessGroups</code> (the linked attachment's ownership is not considered).
+Authenticated users do not have write access by default.</p>
+<h3 id="proposal_groups">PROPOSAL_GROUPS<a class="headerlink" href="#proposal_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>PROPOSAL_GROUPS</code>, in addition to the permissions granted to authenticated users, they have unrestricted create, read and update access to all proposals. They may create linked attachments with no restrictions. They may update and delete linked attachments if the proposal's <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
 <h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted read access to all metadata keys.</p>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, in addition to the permissions granted to authenticated users, they have unrestricted create, read and update access to all proposals and linked attachments. They have unrestricted delete permissions for attachments linked to a proposal.</p>
+<h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all proposals in the database, but not for linked attachments.</p>
 <h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
 <p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
 <table>
@@ -1324,27 +1383,95 @@
 <th>Operation</th>
 <th>Unauthenticated</th>
 <th>Authenticated</th>
+<th><code>PROPOSAL_GROUPS</code></th>
 <th><code>ADMIN_GROUPS</code></th>
+<th><code>DELETE_GROUPS</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>MetadataKeyRead</code></td>
+<td><code>ProposalCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>ProposalRead</code></td>
 <td>public</td>
 <td>public/owner/access</td>
 <td>any</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>ProposalUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>ProposalDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>ProposalAttachmentCreate</code></td>
+<td>-</td>
+<td>-</td>
+<td>any</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>ProposalAttachmentRead</code></td>
+<td>public</td>
+<td>public/owner/access</td>
+<td>public/owner/access</td>
+<td>any</td>
+<td>public/owner/access</td>
+</tr>
+<tr>
+<td><code>ProposalAttachmentUpdate</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>ProposalAttachmentDelete</code></td>
+<td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>any</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>ProposalDatasetRead</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
 </tr>
 </tbody>
 </table>
 <p>Legend:
-- public: metadata key's <code>isPublished</code> field must be <code>true</code>
-- owner: metadata key's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
-- access: one of the metadata key's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- public: proposal's <code>isPublished</code> field must be <code>true</code>
+- owner: proposal's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
+- access: one of the proposal's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
 - any: unrestricted access</p>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<p>The definition is implemented in the casl module under <code>/src/casl/abilities/metadata-keys.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.metadataKeyAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
-<p>The <code>MetadataKeyAbility</code> module in <code>/src/casl/abilities/metadata-keys.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
-In case there are expectations of mutual exclusivity for certain special groups (not the case for metadata keys currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
+<p>The definition is implemented in the casl module under <code>/src/casl/abilities/proposals.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.proposalAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>ProposalAbility</code> module in <code>/src/casl/abilities/proposals.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for proposals currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
 
 
 
