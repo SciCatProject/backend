@@ -29,12 +29,12 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
-import { QueryOptions } from "mongoose";
+import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
 import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
+import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { handleAxiosRequestError } from "src/common/utils";
@@ -54,6 +54,7 @@ import {
   ICount,
   IPublishedDataFilters,
   IRegister,
+  PublishedDataStatus,
 } from "./interfaces/published-data.interface";
 import {
   IdToDoiPipe,
@@ -61,13 +62,17 @@ import {
   RegisteredPipe,
 } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
-import { PublishedData } from "./schemas/published-data.schema";
+import {
+  PublishedData,
+  PublishedDataDocument,
+} from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
 import { FastResponseInterceptor } from "./interceptors/fast-response.interceptor";
 import { DatasetsController } from "src/datasets/datasets.controller";
 import { Request } from "express";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -81,6 +86,7 @@ export class PublishedDataController {
     private readonly httpService: HttpService,
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
+    private readonly caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
   // POST /publisheddata
@@ -135,12 +141,21 @@ export class PublishedDataController {
     excludeExtraneousValues: true,
   })
   async findAll(
+    @Req() request: Request,
     @Filter(...V3_FILTER_PIPE, RegisteredFilterPipe)
     filter?: {
       filter: IPublishedDataFilters;
     },
   ): Promise<PublishedDataObsoleteDto[]> {
     const publishedDataFilters: IPublishedDataFilters = filter?.filter ?? {};
+    const user = request.user as JWTUser | undefined;
+
+    publishedDataFilters.where = this.applyReadAccessFilters(
+      user,
+      this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+      publishedDataFilters.where,
+    );
+
     const fetchedData =
       await this.publishedDataService.findAll(publishedDataFilters);
 
@@ -167,12 +182,21 @@ export class PublishedDataController {
     description: "Results with a count of the published documents",
   })
   async count(
+    @Req() request: Request,
     @Query(...V3_FILTER_PIPE, RegisteredFilterPipe)
     filter?: {
       filter: IPublishedDataFilters;
     },
   ) {
     const filters: IPublishedDataFilters = filter?.filter ?? {};
+    const user = request.user as JWTUser | undefined;
+
+    filters.where = this.applyReadAccessFilters(
+      user,
+      this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+      filters.where,
+    );
+
     const options: QueryOptions = {
       limit: filters?.limits?.limit,
       skip: filters?.limits?.skip,
@@ -272,6 +296,7 @@ export class PublishedDataController {
   })
   @Get("/:id")
   async findOne(
+    @Req() request: Request,
     @Param(new IdToDoiPipe(), RegisteredPipe)
     filter: {
       where: {
@@ -281,7 +306,15 @@ export class PublishedDataController {
     },
   ): Promise<PublishedDataObsoleteDto> {
     const idFilter = filter.where;
-    const publishedData = await this.publishedDataService.findOne(idFilter);
+    const user = request.user as JWTUser | undefined;
+
+    const publishedData = await this.publishedDataService.findOne(
+      this.applyReadAccessFilters(
+        user,
+        this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+        idFilter,
+      ),
+    );
     if (!publishedData) {
       throw new NotFoundException(
         `No PublishedData with the id '${idFilter["doi"]}' exists`,
@@ -319,18 +352,15 @@ export class PublishedDataController {
     @Body(V3_TO_V4_DTO_BODY_PIPE)
     updatePublishedDataDto: PartialUpdatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto | null> {
-    const filter = this.getAccessBasedFilters(request, id);
+    const user = request.user as JWTUser;
+    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(user);
+    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const filter = this.getMutationAccessFilters(user, ability, id);
 
     const publishedData = await this.publishedDataService.findOne(filter);
     if (!publishedData) {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
-
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
-      request.user as JWTUser,
-    );
-
-    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -352,31 +382,62 @@ export class PublishedDataController {
     }
 
     const updatedData = await this.publishedDataService.update(
-      { doi: id },
+      filter,
       updatePublishedDataDto as unknown as PublishedData,
     );
+
+    if (!updatedData) {
+      throw new NotFoundException(`Published data with id ${id} not found.`);
+    }
 
     return updatedData as unknown as PublishedDataObsoleteDto;
   }
 
-  getAccessBasedFilters(request: Request, doi: string) {
+  getMutationAccessFilters(
+    user: JWTUser,
+    ability: AppAbility,
+    doi: string,
+  ): FilterQuery<PublishedData> {
     const filter: FilterQuery<PublishedData> = {
       doi,
     };
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
-      request.user as JWTUser,
-    );
-    if (ability.cannot(Action.AccessAny, PublishedData)) {
-      filter.$or = [
-        { createdBy: (request.user as JWTUser)?.username },
-        { status: PublishedDataStatus.REGISTERED },
-        { status: PublishedDataStatus.PUBLIC },
-        { status: PublishedDataStatus.AMENDED },
-      ];
-      return filter;
+
+    if (ability.cannot(Action.accessAny, PublishedData)) {
+      filter.createdBy = user.username;
     }
 
     return filter;
+  }
+
+  // Restricts a read to everything that has been made public, plus the user's
+  // own drafts. Combined with $and so a client supplied $or is not overwritten.
+  applyReadAccessFilters(
+    user: JWTUser | undefined,
+    ability: AppAbility,
+    where: FilterQuery<PublishedDataDocument> = {},
+  ): FilterQuery<PublishedDataDocument> {
+    if (ability.can(Action.accessAny, PublishedData)) {
+      return where;
+    }
+
+    const readableConditions: FilterQuery<PublishedDataDocument>[] = [
+      { status: PublishedDataStatus.PUBLIC },
+      { status: PublishedDataStatus.REGISTERED },
+      { status: PublishedDataStatus.AMENDED },
+    ];
+
+    if (user?.username) {
+      readableConditions.push({
+        status: PublishedDataStatus.PRIVATE,
+        createdBy: user.username,
+      });
+    }
+
+    const accessFilter = { $or: readableConditions };
+
+    return Object.keys(where).length > 0
+      ? { $and: [where, accessFilter] }
+      : accessFilter;
   }
 
   // DELETE /publisheddata/:id
@@ -422,8 +483,21 @@ export class PublishedDataController {
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
   @Post("/:id/register")
-  async register(@Param("id") id: string): Promise<IRegister | null> {
-    const publishedData = await this.publishedDataService.findOne({ doi: id });
+  async register(
+    @Req() request: Request,
+    @Param("id") id: string,
+  ): Promise<IRegister | null> {
+    const user = request.user as JWTUser;
+    const filter = this.getMutationAccessFilters(
+      user,
+      this.caslAbilityFactory.publishedDataInstanceAccess(user),
+      id,
+    );
+
+    const publishedData = await this.publishedDataService.findOne(filter);
+    if (!publishedData) {
+      throw new NotFoundException(`Published data with id ${id} not found.`);
+    }
 
     const publishedDataObsolete = plainToInstance(
       PublishedDataObsoleteDto,
@@ -542,10 +616,7 @@ export class PublishedDataController {
         }
 
         try {
-          await this.publishedDataService.update(
-            { doi: publishedDataObsolete.doi },
-            data,
-          );
+          await this.publishedDataService.update(filter, data);
         } catch (error) {
           console.error(error);
         }
@@ -553,10 +624,7 @@ export class PublishedDataController {
         return res ? { doi: res.data } : null;
       } else if (!this.configService.get<string>("oaiProviderRoute")) {
         try {
-          await this.publishedDataService.update(
-            { doi: publishedDataObsolete.doi },
-            data,
-          );
+          await this.publishedDataService.update(filter, data);
         } catch (error) {
           console.error(error);
         }
@@ -587,10 +655,7 @@ export class PublishedDataController {
         }
 
         try {
-          await this.publishedDataService.update(
-            { doi: publishedDataObsolete.doi },
-            data,
-          );
+          await this.publishedDataService.update(filter, data);
         } catch (error) {
           console.error(error);
         }
@@ -631,10 +696,23 @@ export class PublishedDataController {
   })
   @Post("/:id/resync")
   async resync(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body(V3_TO_V4_DTO_BODY_PIPE)
     data: UpdatePublishedDataDto,
   ): Promise<IRegister | null> {
+    const user = request.user as JWTUser;
+    const filter = this.getMutationAccessFilters(
+      user,
+      this.caslAbilityFactory.publishedDataInstanceAccess(user),
+      id,
+    );
+
+    const publishedData = await this.publishedDataService.findOne(filter);
+    if (!publishedData) {
+      throw new NotFoundException(`Published data with id ${id} not found.`);
+    }
+
     const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
     let returnValue = null;
@@ -647,7 +725,7 @@ export class PublishedDataController {
     }
 
     try {
-      await this.publishedDataService.update({ doi: id }, data);
+      await this.publishedDataService.update(filter, data);
     } catch (error: any) {
       throw new HttpException(
         `Error occurred: ${error}`,
