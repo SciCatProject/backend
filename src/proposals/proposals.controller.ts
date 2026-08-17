@@ -855,7 +855,7 @@ export class ProposalsController {
     await this.checkPermissionsForProposal(
       request,
       proposalId,
-      Action.ProposalsRead,
+      Action.ProposalRead,
     );
 
     const user: JWTUser = request.user as JWTUser;
