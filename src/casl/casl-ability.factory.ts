@@ -13,7 +13,6 @@ import { AccessGroupsType } from "src/config/configuration";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
-import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
@@ -28,6 +27,7 @@ import { LogbookAbility } from "./abilities/logbooks.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { PolicyAbility } from "./abilities/policies.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
@@ -45,6 +45,7 @@ export class CaslAbilityFactory {
     private metadataKeyAbility: MetadataKeyAbility,
     private opensearchAbility: OpensearchAbility,
     private origDatablockAbility: OrigDatablockAbility,
+    private policyAbility: PolicyAbility,
     private runtimeConfigAbility: RuntimeConfigAbility,
   ) {
     this.accessGroups =
@@ -65,7 +66,7 @@ export class CaslAbilityFactory {
     metadataKeys: this.metadataKeyAccess,
     opensearch: this.opensearchAccess,
     origdatablocks: this.origDatablockAccess,
-    policies: this.policyEndpointAccess,
+    policies: this.policyAccess,
     proposals: this.proposalsEndpointAccess,
     publisheddata: this.publishedDataEndpointAccess,
     runtimeconfig: this.runtimeConfigAccess,
@@ -113,6 +114,10 @@ export class CaslAbilityFactory {
 
   origDatablockAccess(user: JWTUser | null) {
     return this.origDatablockAbility.buildAbility(user);
+  }
+
+  policyAccess(user: JWTUser | null) {
+    return this.policyAbility.buildAbility(user);
   }
 
   runtimeConfigAccess(user: JWTUser | null) {
@@ -456,37 +461,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  policyEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, Policy);
-    } else if (
-      user &&
-      (user.currentGroups.some((g) => this.accessGroups?.admin.includes(g)) ||
-        user.currentGroups.some((g) => this.accessGroups?.policy.includes(g)))
-    ) {
-      /*
-        / user that belongs to any of the group listed in ADMIN_GROUPS
-        */
-
-      can(Action.Update, Policy);
-      can(Action.Read, Policy);
-      can(Action.Create, Policy);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,

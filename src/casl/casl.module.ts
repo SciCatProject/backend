@@ -10,6 +10,7 @@ import { LogbookAbility } from "./abilities/logbooks.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { PolicyAbility } from "./abilities/policies.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 @Module({
@@ -24,6 +25,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     MetadataKeyAbility,
     OpensearchAbility,
     OrigDatablockAbility,
+    PolicyAbility,
     RuntimeConfigAbility,
   ],
   exports: [CaslAbilityFactory],
