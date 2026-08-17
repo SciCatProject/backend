@@ -141,7 +141,7 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
         })
         .expect(200)
         .then((res) => {
-          const found = res.body.some((d) => d.datasetName === datasetName2);
+          const found = res.body.some((d) => d.datasetName === datasetName1);
           found.should.equal(true);
         });
     });
