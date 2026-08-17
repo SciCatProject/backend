@@ -13,6 +13,12 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // Instruments
+  InstrumentCreate = "instrument_create",
+  InstrumentRead = "instrument_read",
+  InstrumentUpdate = "instrument_update",
+  InstrumentDelete = "instrument_delete",
+
   // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",
@@ -173,11 +179,6 @@ export enum Action {
   UserCreateJwt = "user_create_jwt",
   UserListAll = "user_list_all",
   UserListOwn = "user_list_own",
-  // Instrument actions
-  InstrumentRead = "instrument_read",
-  InstrumentUpdate = "instrument_update",
-  InstrumentCreate = "instrument_create",
-  InstrumentDelete = "instrument_delete",
 
   // -------------------------------------
   // History
