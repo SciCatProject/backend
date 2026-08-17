@@ -6,8 +6,13 @@ import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
 import { AttachmentAbility } from "./abilities/attachments.ability";
+import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { LogbookAbility } from "./abilities/logbooks.ability";
+import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -17,8 +22,13 @@ describe("CaslAbilityFactory", () => {
         configService,
         new JobConfigService({}, {}, configService),
         new AttachmentAbility(configService),
+        new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
+        new RuntimeConfigAbility(configService),
       ),
     ).toBeDefined();
   });
@@ -42,8 +52,13 @@ describe("CaslAbilityFactory", () => {
         configService,
         { allJobConfigs: {} } as unknown as JobConfigService,
         new AttachmentAbility(configService),
+        new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
+        new RuntimeConfigAbility(configService),
       );
     };
 
