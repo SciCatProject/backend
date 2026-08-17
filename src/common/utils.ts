@@ -1268,7 +1268,7 @@ export const opensearchIndexSettingsExample = {
       autocomplete: {
         type: "edge_ngram",
         min_gram: 2,
-        max_gram: 150,
+        max_gram: 64,
         token_chars: ["letter", "digit", "symbol", "punctuation"],
       },
     },

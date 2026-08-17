@@ -44,7 +44,9 @@ export const flattenScientificMetadata = (sm: unknown): string[] => {
 
 export const toOpensearchDocument = <T extends Record<string, unknown>>(
   doc: T,
-) => ({
-  ...doc,
-  scientificMetadataText: flattenScientificMetadata(doc.scientificMetadata),
-});
+) => {
+  return {
+    ...doc,
+    scientificMetadataText: flattenScientificMetadata(doc.scientificMetadata),
+  };
+};
