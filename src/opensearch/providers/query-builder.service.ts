@@ -48,10 +48,13 @@ export class SearchQueryService {
   }
 
   private accessFilter(f: ISearchFilter): QueryContainer | null {
+    const should: QueryContainer[] = [];
     // ReadAny — no restriction
     if (!f.userGroups?.length && !f.isPublished) return null;
 
-    const should: QueryContainer[] = [{ term: { isPublished: true } }];
+    if (f.isPublished) {
+      should.push({ term: { isPublished: f.isPublished } });
+    }
 
     if (f.userGroups?.length) {
       should.push(
