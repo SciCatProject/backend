@@ -20,6 +20,18 @@ export enum Action {
   InstrumentDelete = "instrument_delete",
 
   // ---------------
+  // Attachments
+  AttachmentCreate = "attachment_create",
+  AttachmentRead = "attachment_read",
+  AttachmentUpdate = "attachment_update",
+  AttachmentDelete = "attachment_delete",
+
+  // Datablock
+  DatablockCreate = "datablock_create",
+  DatablockRead = "datablock_read",
+  DatablockUpdate = "datablock_update",
+  DatablockDelete = "datablock_delete",
+
   // Datasets
   DatasetCreate = "dataset_create",
   DatasetRead = "dataset_read",
@@ -44,44 +56,19 @@ export enum Action {
   DatasetDatablockDelete = "dataset_datablock_delete",
 
   DatasetLogbookRead = "dataset_logbook_read",
-  //
-  // -------------
+
+  // MetadataKeys
+  MetadataKeyRead = "metadatakey_read",
+
   // Origdatablock
-  // endpoint authorization actions
   OrigdatablockCreate = "origdatablock_create",
   OrigdatablockRead = "origdatablock_read",
   OrigdatablockUpdate = "origdatablock_update",
   OrigdatablockDelete = "origdatablock_delete",
-  // individual actions
-  OrigdatablockCreateOwner = "origdatablock_create_owner",
-  OrigdatablockCreateAny = "origdatablock_create_any",
-  OrigdatablockReadManyPublic = "origdatablock_read_many_public",
-  OrigdatablockReadManyAccess = "origdatablock_read_many_access",
-  OrigdatablockReadManyOwner = "origdatablock_read_many_owner",
-  OrigdatablockReadOnePublic = "origdatablock_read_one_public",
-  OrigdatablockReadOneAccess = "origdatablock_read_one_access",
-  OrigdatablockReadOneOwner = "origdatablock_read_one_owner",
-  OrigdatablockReadAny = "origdatablock_read_any",
-  OrigdatablockUpdateOwner = "origdatablock_update_owner",
-  OrigdatablockUpdateAny = "origdatablock_update_any",
-  OrigdatablockDeleteOwner = "origdatablock_delete_owner",
-  OrigdatablockDeleteAny = "origdatablock_delete_any",
 
-  // -------------
-  // Datablock
-  // endpoint authorization actions
-  DatablockCreateEndpoint = "datablock_create_endpoint",
-  DatablockReadEndpoint = "datablock_read_endpoint",
-  DatablockUpdateEndpoint = "datablock_update_endpoint",
-  DatablockDeleteEndpoint = "datablock_delete_endpoint",
-  // individual actions
-  DatablockCreateInstance = "datablock_create_instance",
-  DatablockReadInstance = "datablock_read_instance",
-  DatablockUpdateInstance = "datablock_update_instance",
-  // admin actions
-  DatablockReadAny = "datablock_read_any",
-  DatablockUpdateAny = "datablock_update_any",
-  DatablockDeleteAny = "datablock_delete_any",
+  // RuntimeConfig
+  RuntimeConfigRead = "runtimeconfig_read",
+  RuntimeConfigUpdate = "runtimeconfig_update",
 
   // Proposals
   // endpoint authorization actions
@@ -194,21 +181,6 @@ export enum Action {
   UserListOwn = "user_list_own",
 
   // -------------------------------------
-  // Attachment
-  // -------------------------------------
-  // attachment endpoint authorization
-  AttachmentCreateEndpoint = "attachment_create_endpoint",
-  AttachmentReadEndpoint = "attachment_read_endpoint",
-  AttachmentUpdateEndpoint = "attachment_update_endpoint",
-  AttachmentDeleteEndpoint = "attachment_delete_endpoint",
-  // -------------------------------------
-  // attachment data instance authorization
-  AttachmentCreateInstance = "attachment_create_instance",
-  AttachmentReadInstance = "attachment_read_instance",
-  AttachmentUpdateInstance = "attachment_update_instance",
-  AttachmentDeleteInstance = "attachment_delete_instance",
-
-  // -------------------------------------
   // History
   // -------------------------------------
   // endpoint authorization
@@ -223,20 +195,4 @@ export enum Action {
   HistoryReadPolicy = "history_read_policy",
   HistoryReadDatablock = "history_read_datablock",
   HistoryReadAttachment = "history_read_attachment",
-
-  // -------------------------------------
-  // MetadataKeys
-  // -------------------------------------
-  // metadatakeys endpoint authorization
-  MetadataKeysReadEndpoint = "metadatakeys_read_endpoint",
-  // -------------------------------------
-  // metadatakeys data instance authorization
-  MetadataKeysReadInstance = "metadatakeys_read_instance",
-
-  // -------------------------------------
-  // RuntimeConfig
-  // -------------------------------------
-  // runtimeconfig endpoint authorization
-  RuntimeConfigReadEndpoint = "runtimeconfig_read_endpoint",
-  RuntimeConfigUpdateEndpoint = "runtimeconfig_update_endpoint",
 }
