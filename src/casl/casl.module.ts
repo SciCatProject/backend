@@ -6,6 +6,7 @@ import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
 import { InstrumentAbility } from "./abilities/instruments.ability";
+import { JobAbility } from "./abilities/jobs.ability";
 import { LogbookAbility } from "./abilities/logbooks.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
@@ -22,6 +23,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     DatablockAbility,
     DatasetAbility,
     InstrumentAbility,
+    JobAbility,
     LogbookAbility,
     MetadataKeyAbility,
     OpensearchAbility,

@@ -9,6 +9,7 @@ import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
 import { InstrumentAbility } from "./abilities/instruments.ability";
+import { JobAbility } from "./abilities/jobs.ability";
 import { LogbookAbility } from "./abilities/logbooks.ability";
 import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
@@ -28,6 +29,10 @@ describe("CaslAbilityFactory", () => {
         new DatablockAbility(configService),
         new DatasetAbility(configService),
         new InstrumentAbility(configService),
+        new JobAbility(
+          configService,
+          new JobConfigService({}, {}, configService),
+        ),
         new LogbookAbility(),
         new MetadataKeyAbility(configService),
         new OpensearchAbility(configService),
@@ -56,11 +61,13 @@ describe("CaslAbilityFactory", () => {
       } as unknown as ConfigService;
       return new CaslAbilityFactory(
         configService,
-        { allJobConfigs: {} } as unknown as JobConfigService,
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
         new InstrumentAbility(configService),
+        new JobAbility(configService, {
+          allJobConfigs: {},
+        } as unknown as JobConfigService),
         new LogbookAbility(),
         new MetadataKeyAbility(configService),
         new OpensearchAbility(configService),
