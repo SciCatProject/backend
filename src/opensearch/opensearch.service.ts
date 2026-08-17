@@ -324,7 +324,7 @@ export class OpensearchService implements OnModuleInit {
       index,
       body: {
         from: skip,
-        size: limit - skip,
+        size: Math.max(0, Math.min(limit, this.maxResultWindow - skip)),
         track_total_hits: this.maxResultWindow,
         _source: false,
         query: this.searchService.buildQuery(filter, mode),
