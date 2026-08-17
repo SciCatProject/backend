@@ -14,6 +14,7 @@ import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
+import { ProposalAbility } from "./abilities/proposals.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 describe("CaslAbilityFactory", () => {
@@ -32,6 +33,7 @@ describe("CaslAbilityFactory", () => {
         new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
         new PolicyAbility(configService),
+        new ProposalAbility(configService),
         new RuntimeConfigAbility(configService),
       ),
     ).toBeDefined();
@@ -64,6 +66,7 @@ describe("CaslAbilityFactory", () => {
         new OpensearchAbility(configService),
         new OrigDatablockAbility(configService),
         new PolicyAbility(configService),
+        new ProposalAbility(configService),
         new RuntimeConfigAbility(configService),
       );
     };

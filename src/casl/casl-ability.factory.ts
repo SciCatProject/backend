@@ -13,7 +13,6 @@ import { AccessGroupsType } from "src/config/configuration";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
 import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
-import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
@@ -28,6 +27,7 @@ import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
+import { ProposalAbility } from "./abilities/proposals.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
@@ -46,6 +46,7 @@ export class CaslAbilityFactory {
     private opensearchAbility: OpensearchAbility,
     private origDatablockAbility: OrigDatablockAbility,
     private policyAbility: PolicyAbility,
+    private proposalAbility: ProposalAbility,
     private runtimeConfigAbility: RuntimeConfigAbility,
   ) {
     this.accessGroups =
@@ -67,7 +68,7 @@ export class CaslAbilityFactory {
     opensearch: this.opensearchAccess,
     origdatablocks: this.origDatablockAccess,
     policies: this.policyAccess,
-    proposals: this.proposalsEndpointAccess,
+    proposals: this.proposalAccess,
     publisheddata: this.publishedDataEndpointAccess,
     runtimeconfig: this.runtimeConfigAccess,
     samples: this.samplesEndpointAccess,
@@ -118,6 +119,10 @@ export class CaslAbilityFactory {
 
   policyAccess(user: JWTUser | null) {
     return this.policyAbility.buildAbility(user);
+  }
+
+  proposalAccess(user: JWTUser | null) {
+    return this.proposalAbility.buildAbility(user);
   }
 
   runtimeConfigAccess(user: JWTUser | null) {
@@ -461,93 +466,6 @@ export class CaslAbilityFactory {
       }
     }
 
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  proposalsEndpointAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-       * unauthenticated users
-       */
-
-      can(Action.ProposalsRead, ProposalClass);
-      cannot(Action.ProposalsCreate, ProposalClass);
-      cannot(Action.ProposalsUpdate, ProposalClass);
-      cannot(Action.ProposalsDelete, ProposalClass);
-      can(Action.ProposalsAttachmentRead, ProposalClass);
-      cannot(Action.ProposalsAttachmentCreate, ProposalClass);
-      cannot(Action.ProposalsAttachmentUpdate, ProposalClass);
-      cannot(Action.ProposalsAttachmentDelete, ProposalClass);
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-
-        can(Action.ProposalsRead, ProposalClass);
-        can(Action.ProposalsCreate, ProposalClass);
-        can(Action.ProposalsUpdate, ProposalClass);
-        can(Action.ProposalsAttachmentRead, ProposalClass);
-        can(Action.ProposalsAttachmentCreate, ProposalClass);
-        can(Action.ProposalsAttachmentUpdate, ProposalClass);
-        can(Action.ProposalsAttachmentDelete, ProposalClass);
-        can(Action.ProposalsDatasetRead, ProposalClass);
-      } else if (
-        user.currentGroups.some((g) => {
-          return this.accessGroups?.proposal.includes(g);
-        })
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in PROPOSAL_GROUPS
-         */
-
-        can(Action.ProposalsRead, ProposalClass);
-        can(Action.ProposalsCreate, ProposalClass);
-        can(Action.ProposalsUpdate, ProposalClass);
-        can(Action.ProposalsAttachmentRead, ProposalClass);
-        can(Action.ProposalsAttachmentCreate, ProposalClass);
-        can(Action.ProposalsAttachmentUpdate, ProposalClass);
-        can(Action.ProposalsAttachmentDelete, ProposalClass);
-        can(Action.ProposalsDatasetRead, ProposalClass);
-      } else if (user) {
-        /**
-         * authenticated users
-         */
-
-        can(Action.ProposalsRead, ProposalClass);
-        cannot(Action.ProposalsCreate, ProposalClass);
-        cannot(Action.ProposalsUpdate, ProposalClass);
-        can(Action.ProposalsAttachmentRead, ProposalClass);
-        cannot(Action.ProposalsAttachmentCreate, ProposalClass);
-        cannot(Action.ProposalsAttachmentUpdate, ProposalClass);
-        cannot(Action.ProposalsAttachmentDelete, ProposalClass);
-        cannot(Action.ProposalsDatasetRead, ProposalClass);
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-
-        can(Action.ProposalsDelete, ProposalClass);
-      } else {
-        /*
-        /  user that does not belong to any of the group listed in DELETE_GROUPS
-        */
-
-        cannot(Action.ProposalsDelete, ProposalClass);
-      }
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
@@ -963,113 +881,6 @@ export class CaslAbilityFactory {
     }
 
     return { $or: meaningfulQueries };
-  }
-
-  proposalsInstanceAccess(user: JWTUser) {
-    const { can, cannot, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (!user) {
-      /**
-       * unauthenticated users
-       */
-
-      can(Action.ProposalsReadManyPublic, ProposalClass);
-      can(Action.ProposalsReadOnePublic, ProposalClass, {
-        isPublished: true,
-      });
-      can(Action.ProposalsAttachmentReadPublic, ProposalClass, {
-        isPublished: true,
-      });
-    } else {
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in ADMIN_GROUPS
-         */
-
-        can(Action.ProposalsReadAny, ProposalClass);
-        can(Action.ProposalsCreateAny, ProposalClass);
-        can(Action.ProposalsUpdateAny, ProposalClass);
-        can(Action.ProposalsAttachmentReadAny, ProposalClass);
-        can(Action.ProposalsAttachmentCreateAny, ProposalClass);
-        can(Action.ProposalsAttachmentUpdateAny, ProposalClass);
-        can(Action.ProposalsAttachmentDeleteAny, ProposalClass);
-      } else if (
-        user.currentGroups.some((g) => {
-          return this.accessGroups?.proposal.includes(g);
-        })
-      ) {
-        /**
-         * authenticated users belonging to any of the group listed in PROPOSAL_GROUPS
-         */
-
-        can(Action.ProposalsCreateAny, ProposalClass);
-        can(Action.ProposalsUpdateAny, ProposalClass);
-        can(Action.ProposalsReadAny, ProposalClass);
-        //-
-        can(Action.ProposalsAttachmentCreateAny, ProposalClass);
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          isPublished: true,
-        });
-        can(Action.ProposalsAttachmentUpdateOwner, ProposalClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsAttachmentDeleteOwner, ProposalClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-      } else if (user) {
-        /**
-         * authenticated users
-         */
-
-        can(Action.ProposalsReadManyAccess, ProposalClass);
-        can(Action.ProposalsReadOneAccess, ProposalClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsReadOneAccess, ProposalClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsReadOneAccess, ProposalClass, {
-          isPublished: true,
-        });
-        // -
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          ownerGroup: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          accessGroups: { $in: user.currentGroups },
-        });
-        can(Action.ProposalsAttachmentReadAccess, ProposalClass, {
-          isPublished: true,
-        });
-      }
-
-      if (
-        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-      ) {
-        /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-        can(Action.ProposalsDeleteAny, ProposalClass);
-      } else {
-        /*
-        / user that does not belong to any of the group listed in DELETE_GROUPS
-        */
-        cannot(Action.ProposalsDeleteAny, ProposalClass);
-      }
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
   }
 
   samplesInstanceAccess(user: JWTUser) {

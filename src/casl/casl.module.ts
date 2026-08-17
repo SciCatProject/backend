@@ -11,6 +11,7 @@ import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
 import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
+import { ProposalAbility } from "./abilities/proposals.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 @Module({
@@ -26,6 +27,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     OpensearchAbility,
     OrigDatablockAbility,
     PolicyAbility,
+    ProposalAbility,
     RuntimeConfigAbility,
   ],
   exports: [CaslAbilityFactory],
