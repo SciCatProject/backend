@@ -36,6 +36,13 @@ export interface SearchParams {
   sort?: Record<string, "asc" | "desc">[];
 }
 
+type OsSearchResponseBody = {
+  hits: {
+    total?: number | { value: number };
+    hits: { _id: string }[];
+  };
+};
+
 export interface SearchResult {
   totalCount: number;
   hits: string[];
@@ -313,7 +320,7 @@ export class OpensearchService implements OnModuleInit {
       sort = defaultSort,
     } = params;
 
-    const { body } = await this.osClient.search({
+    const { body } = (await this.osClient.search({
       index,
       body: {
         from: skip,
@@ -323,7 +330,7 @@ export class OpensearchService implements OnModuleInit {
         query: this.searchService.buildQuery(filter, mode),
         sort: sort,
       },
-    });
+    })) as unknown as { body: OsSearchResponseBody };
 
     const total = body.hits.total;
 
