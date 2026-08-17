@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
+import { PublishedDataStatus } from "src/published-data/interfaces/published-data.interface";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
@@ -347,24 +348,53 @@ export class CaslAbilityFactory {
   }
 
   publishedDataEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
+    const { can, cannot, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );
-    if (user) {
-      can(Action.Read, PublishedData);
-      can(Action.Update, PublishedData);
+
+    // All users (Unauthenticated or authenticated) can read publicly accessible records
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.PUBLIC,
+    });
+
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.REGISTERED,
+    });
+
+    can(Action.Read, PublishedData, {
+      status: PublishedDataStatus.AMENDED,
+    });
+
+    if (!user) {
+      cannot(Action.Create, PublishedData);
+      cannot(Action.Update, PublishedData);
+      cannot(Action.Delete, PublishedData);
+    } else {
+      // Authenticated users
+      // Additional Read access: private records where user is owner
+      can(Action.Read, PublishedData, {
+        status: PublishedDataStatus.PRIVATE,
+        ownerGroup: { $in: user.currentGroups },
+      });
+
+      // Create access: all authenticated users can create
       can(Action.Create, PublishedData);
+
+      // Update access: owner of the record OR legacy records (no ownerGroup)
+      can(Action.Update, PublishedData, {
+        ownerGroup: { $in: user.currentGroups },
+      });
+
+      // Delete access: only delete group members
+      if (
+        user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
+      ) {
+        can(Action.Delete, PublishedData);
+      } else {
+        cannot(Action.Delete, PublishedData);
+      }
     }
 
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, PublishedData);
-    }
     return build({
       detectSubjectType: (item) =>
         item.constructor as ExtractSubjectType<Subjects>,
