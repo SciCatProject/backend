@@ -28,6 +28,7 @@ import { Readable } from "stream";
 import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { Sort } from "@opensearch-project/opensearch/api/_types/_common.js";
 import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl.js";
+import { toOpensearchDocument } from "./utils/opensearch.util";
 
 export interface SearchParams {
   filter: ISearchFilter;
@@ -372,7 +373,7 @@ export class OpensearchService implements OnModuleInit {
       await this.osClient.index({
         index: this.defaultIndex,
         id: data.pid,
-        body: data,
+        body: toOpensearchDocument(data),
         refresh: this.refresh,
       });
 

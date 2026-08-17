@@ -1,7 +1,11 @@
 const CHUNK = 20_000;
 const OVERLAP = 200;
 
-const flattenToTextValues = (node: unknown, out: string[], depth = 0): void => {
+const flattenToTextValues = (
+  node: unknown,
+  out: Set<string>,
+  depth = 0,
+): void => {
   if (node == null || typeof node === "boolean") return;
 
   if (Array.isArray(node)) {
@@ -11,14 +15,14 @@ const flattenToTextValues = (node: unknown, out: string[], depth = 0): void => {
 
   if (typeof node === "object") {
     for (const [key, value] of Object.entries(node)) {
-      if (depth === 0) out.push(key);
+      out.add(key);
       flattenToTextValues(value, out, depth + 1);
     }
     return;
   }
 
   const s = String(node);
-  if (s.length) out.push(s);
+  if (s.length) out.add(s);
 };
 
 const chunkWithOverlap = (text: string): string[] => {
@@ -32,9 +36,15 @@ const chunkWithOverlap = (text: string): string[] => {
 };
 
 export const flattenScientificMetadata = (sm: unknown): string[] => {
-  const out: string[] = [];
+  const out = new Set<string>();
   flattenToTextValues(sm, out);
-  const text = out.join(" ");
 
-  return chunkWithOverlap(text);
+  return chunkWithOverlap([...out].join(" "));
 };
+
+export const toOpensearchDocument = <T extends Record<string, unknown>>(
+  doc: T,
+) => ({
+  ...doc,
+  scientificMetadataText: flattenScientificMetadata(doc.scientificMetadata),
+});

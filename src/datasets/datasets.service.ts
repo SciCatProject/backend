@@ -72,7 +72,7 @@ import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opens
 import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
-import { flattenScientificMetadata } from "src/opensearch/utils/opensearch.util";
+import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -667,12 +667,7 @@ export class DatasetsService {
         await this.opensearchService.performBulkOperation<DatasetClass>(
           cursor,
           index,
-          (doc) => ({
-            ...doc,
-            scientificMetadataText: flattenScientificMetadata(
-              doc.scientificMetadata,
-            ),
-          }),
+          (doc) => toOpensearchDocument(doc),
           (count) =>
             Logger.log(`Indexed ${count} datasets...`, "OpensearchSync"),
         );
