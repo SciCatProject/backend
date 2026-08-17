@@ -33,7 +33,7 @@ export interface SearchParams {
   index?: string;
   limit?: number;
   skip?: number;
-  sort?: Record<string, "asc" | "desc">[];
+  sort?: Sort;
 }
 
 type OsSearchResponseBody = {
