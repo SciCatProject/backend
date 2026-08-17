@@ -39,7 +39,7 @@ export const dynamicDefaults = new Map([
 
 ### Asynchronous functions
 
-If you need to execute asynchronous code, you should declare your function `async` (only supported for dynamicDefaults).
+If you need to execute asynchronous code, you should declare your function `async`.
 It should return a synchronous function as ajv will not resolve any `Promise` returned by custom code.
 
 Asynchronous functions have access to additional context via the `ctx` argument:
