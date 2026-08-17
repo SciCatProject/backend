@@ -7,7 +7,7 @@ export type SearchMode = "fast" | "wildcard";
 
 @Injectable()
 export class SearchQueryService {
-  buildQuery(filter: ISearchFilter, mode: SearchMode) {
+  buildQuery(filter: ISearchFilter, mode: SearchMode): QueryContainer {
     const finalQuery = {
       bool: {
         must: [this.textQuery(filter.text, mode)],

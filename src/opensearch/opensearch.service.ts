@@ -27,6 +27,7 @@ import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_com
 import { Readable } from "stream";
 import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { Sort } from "@opensearch-project/opensearch/api/_types/_common.js";
+import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl.js";
 
 export interface SearchParams {
   filter: ISearchFilter;
@@ -36,6 +37,11 @@ export interface SearchParams {
   sort?: Sort;
 }
 
+export interface SearchResult {
+  totalCount: number;
+  hits: string[];
+}
+
 type OsSearchResponseBody = {
   hits: {
     total?: number | { value: number };
@@ -43,9 +49,16 @@ type OsSearchResponseBody = {
   };
 };
 
-export interface SearchResult {
-  totalCount: number;
-  hits: string[];
+interface BuiltSearchRequest {
+  index: string;
+  body: {
+    from: number;
+    size: number;
+    track_total_hits: number;
+    _source: false;
+    query: QueryContainer;
+    sort: Sort;
+  };
 }
 
 @Injectable()
@@ -311,6 +324,25 @@ export class OpensearchService implements OnModuleInit {
     params: SearchParams,
     mode: SearchMode,
   ): Promise<SearchResult> {
+    const { index, body } = this.buildSearchRequest(params, mode);
+
+    const { body: res } = (await this.osClient.search({
+      index,
+      body,
+    })) as unknown as { body: OsSearchResponseBody };
+
+    const total = res.hits.total;
+
+    return {
+      totalCount: typeof total === "number" ? total : (total?.value ?? 0),
+      hits: res.hits.hits.map((h) => h._id),
+    };
+  }
+
+  private buildSearchRequest(
+    params: SearchParams,
+    mode: SearchMode,
+  ): BuiltSearchRequest {
     const defaultSort: Sort = [{ _score: "desc" }, { _id: "asc" }];
     const {
       filter,
@@ -320,7 +352,7 @@ export class OpensearchService implements OnModuleInit {
       sort = defaultSort,
     } = params;
 
-    const { body } = (await this.osClient.search({
+    return {
       index,
       body: {
         from: skip,
@@ -330,13 +362,6 @@ export class OpensearchService implements OnModuleInit {
         query: this.searchService.buildQuery(filter, mode),
         sort: sort,
       },
-    })) as unknown as { body: OsSearchResponseBody };
-
-    const total = body.hits.total;
-
-    return {
-      totalCount: typeof total === "number" ? total : (total?.value ?? 0),
-      hits: body.hits.hits.map((h) => h._id),
     };
   }
 
@@ -433,13 +458,20 @@ export class OpensearchService implements OnModuleInit {
       },
     });
 
+    this.logBulkFailures(reasons, dropped);
+
+    return stats;
+  }
+
+  private logBulkFailures(
+    reasons: Map<string, number>,
+    dropped: string[],
+  ): void {
     for (const [reason, count] of [...reasons].sort((a, b) => b[1] - a[1])) {
       Logger.error(
         `${count} × ${reason}, failed ids: ${dropped.slice(0, 10)}...`,
         "OpensearchService",
       );
     }
-
-    return stats;
   }
 }
