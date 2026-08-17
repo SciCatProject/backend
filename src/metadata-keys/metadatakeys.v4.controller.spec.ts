@@ -15,7 +15,7 @@ jest.mock("@casl/mongoose", () => ({
 }));
 
 class CaslAbilityFactoryMock {
-  metadataKeyInstanceAccess = jest.fn();
+  metadataKeyAccess = jest.fn();
 }
 
 class MetadataKeysServiceMock {
@@ -65,7 +65,7 @@ describe("MetadataKeysV4Controller", () => {
     const parsedFilter = JSON.parse(filterString);
 
     const abilities = {};
-    caslAbilityFactory.metadataKeyInstanceAccess.mockReturnValue(abilities);
+    caslAbilityFactory.metadataKeyAccess.mockReturnValue(abilities);
 
     const accessFilter = { isPublished: true };
 
@@ -81,13 +81,11 @@ describe("MetadataKeysV4Controller", () => {
 
     const result = await controller.findAll(request, filterString);
 
-    expect(caslAbilityFactory.metadataKeyInstanceAccess).toHaveBeenCalledWith(
-      user,
-    );
+    expect(caslAbilityFactory.metadataKeyAccess).toHaveBeenCalledWith(user);
 
     expect(accessibleBy).toHaveBeenCalledWith(
       abilities,
-      Action.MetadataKeysReadInstance,
+      Action.MetadataKeyRead,
     );
     expect(ofType).toHaveBeenCalledWith(MetadataKeyClass);
 
@@ -103,7 +101,7 @@ describe("MetadataKeysV4Controller", () => {
     const request = { user: { username: "u1" } } as unknown as Request;
 
     const abilities = {};
-    caslAbilityFactory.metadataKeyInstanceAccess.mockReturnValue(abilities);
+    caslAbilityFactory.metadataKeyAccess.mockReturnValue(abilities);
 
     const accessFilter = { isPublished: true };
     const accessibleByReturn = {
