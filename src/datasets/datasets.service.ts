@@ -148,8 +148,7 @@ export class DatasetsService {
 
   private extractRelationsAndScopes(
     datasetLookupFields:
-      | (DatasetLookupKeysEnum | IDatasetRelation)[]
-      | undefined,
+      (DatasetLookupKeysEnum | IDatasetRelation)[] | undefined,
   ) {
     const scopes = {} as Record<DatasetLookupKeysEnum, IDatasetScopes>;
     const fieldsList: DatasetLookupKeysEnum[] = [];
@@ -508,8 +507,7 @@ export class DatasetsService {
   async findByIdAndUpdate(
     id: string,
     updateDatasetDto:
-      | PartialUpdateDatasetDto
-      | PartialUpdateDatasetWithHistoryDto,
+      PartialUpdateDatasetDto | PartialUpdateDatasetWithHistoryDto,
     unmodifiedSince?: Date,
   ): Promise<DatasetDocument | null> {
     const username = (this.request.user as JWTUser).username;
