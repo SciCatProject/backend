@@ -389,7 +389,7 @@ export class PublishedDataController {
 
       const xml = formRegistrationXML(publishedDataObsolete);
 
-      const mergePatchRequest = const mergePatchRequest = {
+      const mergePatchRequest = {
         ...request,
         headers: {
           ...request.headers,
