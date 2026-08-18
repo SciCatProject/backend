@@ -71,6 +71,7 @@ import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { DatasetsController } from "src/datasets/datasets.controller";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -81,6 +82,7 @@ export class PublishedDataController {
     private readonly attachmentsService: AttachmentsService,
     private readonly configService: ConfigService,
     private readonly datasetsService: DatasetsService,
+    private readonly datasetsController: DatasetsController,
     private readonly httpService: HttpService,
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
@@ -223,11 +225,14 @@ export class PublishedDataController {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string) {
+  async formPopulate(@Req() request: Request, @Query("pid") pid: string) {
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid },
-    })) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid,
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
