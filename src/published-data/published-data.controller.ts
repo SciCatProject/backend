@@ -67,6 +67,8 @@ import { PublishedData } from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
+import { DatasetsController } from "src/datasets/datasets.controller";
+import { Request } from "express";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -202,11 +204,14 @@ export class PublishedDataController {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string) {
+  async formPopulate(@Req() request: Request, @Query("pid") pid: string) {
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid },
-    })) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid,
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
