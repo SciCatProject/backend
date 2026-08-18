@@ -30,12 +30,10 @@ import {
 } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { Request } from "express";
-import { cloneDeep } from "lodash";
-import { FilterQuery, QueryOptions } from "mongoose";
+import { QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "src/casl/action.enum";
 import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
@@ -58,7 +56,6 @@ import {
   ICount,
   IPublishedDataFilters,
   IRegister,
-  PublishedDataStatus,
 } from "./interfaces/published-data.interface";
 import {
   IdToDoiPipe,
@@ -387,9 +384,14 @@ export class PublishedDataController {
 
       const xml = formRegistrationXML(publishedDataObsolete);
 
-      const mergePatchRequest = cloneDeep(request);
-      mergePatchRequest.headers["content-type"] =
-        "application/merge-patch+json";
+      const mergePatchRequest = const mergePatchRequest = {
+        ...request,
+        headers: {
+          ...request.headers,
+          "content-type": "application/merge-patch+json",
+        },
+      };
+
       await Promise.all(
         publishedDataObsolete.pidArray.map(async (pid) => {
           await this.datasetsController.findByIdAndUpdate(
