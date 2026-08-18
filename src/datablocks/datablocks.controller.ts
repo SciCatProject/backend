@@ -33,7 +33,6 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
 import { PartialUpdateDatablockDto } from "./dto/update-datablock.dto";
@@ -102,7 +101,10 @@ export class DatablocksController {
     }
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
-    if (!ability.can(Action.DatasetDatablockCreate, dataset)) {
+    if (
+      !ability.can(Action.DatasetDatablockCreate, dataset) &&
+      !ability.can(Action.AccessAny, dataset)
+    ) {
       throw new ForbiddenException("Unauthorized access");
     }
 
