@@ -13,6 +13,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   SerializeOptions,
   UseGuards,
   UseInterceptors,
@@ -64,6 +65,8 @@ import { PublishedData } from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
+import { DatasetsController } from "src/datasets/datasets.controller";
+import { Request } from "express";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -74,6 +77,7 @@ export class PublishedDataController {
     private readonly attachmentsService: AttachmentsService,
     private readonly configService: ConfigService,
     private readonly datasetsService: DatasetsService,
+    private readonly datasetsController: DatasetsController,
     private readonly httpService: HttpService,
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
@@ -199,11 +203,12 @@ export class PublishedDataController {
   })
   async formPopulate(@Req() request: Request, @Query("pid") pid: string) {
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsController.checkPermissionsForDatasetExtended(
-      request,
-      pid,
-      Action.DatasetRead,
-    )) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid,
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {

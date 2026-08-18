@@ -245,11 +245,12 @@ export class PublishedDataV4Controller {
   ) {
     pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsController.checkPermissionsForDatasetExtended(
-      request,
-      pid[0],
-      Action.DatasetRead,
-    )) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid[0],
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
