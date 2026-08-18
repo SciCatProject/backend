@@ -7,7 +7,7 @@ import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataController } from "./published-data.controller";
 import { PublishedDataService } from "./published-data.service";
-import { DatasetsController } from "src/datasets/datasets.controller";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 
 class AttachmentsServiceMock {}
 
