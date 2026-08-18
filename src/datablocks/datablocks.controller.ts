@@ -67,8 +67,8 @@ export class DatablocksController {
     datasetInstance._id = "";
     datasetInstance.pid = dataset?.pid || "";
     datasetInstance.accessGroups = dataset?.accessGroups || [];
-    datasetInstance.ownerGroup = dataset?.ownerGroup;
-    datasetInstance.sharedWith = dataset?.sharedWith;
+    datasetInstance.ownerGroup = dataset?.ownerGroup || "";
+    datasetInstance.sharedWith = dataset?.sharedWith || [];
     datasetInstance.isPublished = dataset?.isPublished || false;
 
     return datasetInstance;
