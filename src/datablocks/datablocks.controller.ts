@@ -32,6 +32,7 @@ import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
+import { DatasetClass } from "src/datasets//schemas/dataset.schema";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
@@ -57,6 +58,20 @@ export class DatablocksController {
     instance.ownerGroup = datablock?.ownerGroup || "";
 
     return instance;
+  }
+
+  private generateDatasetInstanceForPermissions(
+    dataset: DatasetClass | null,
+  ): DatasetClass {
+    const datasetInstance = new DatasetClass();
+    datasetInstance._id = "";
+    datasetInstance.pid = dataset.pid || "";
+    datasetInstance.accessGroups = dataset.accessGroups || [];
+    datasetInstance.ownerGroup = dataset.ownerGroup;
+    datasetInstance.sharedWith = dataset.sharedWith;
+    datasetInstance.isPublished = dataset.isPublished || false;
+
+    return datasetInstance;
   }
 
   private checkPermission(
@@ -101,9 +116,10 @@ export class DatablocksController {
     }
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
+    const datasetInstance = generateDatasetInstanceForPermissions(dataset);
     if (
-      !ability.can(Action.DatasetDatablockCreate, dataset) &&
-      !ability.can(Action.AccessAny, dataset)
+      !ability.can(Action.DatasetDatablockCreate, datasetInstance) &&
+      !ability.can(Action.AccessAny, datasetInstance)
     ) {
       throw new ForbiddenException("Unauthorized access");
     }
