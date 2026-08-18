@@ -78,7 +78,7 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
 
   it("0011: formpopulate should return default values for metadata", async () => {
     return request(appUrl)
-      .get(`/api/v4/PublishedData/formpopulate?pid=${encodeURIComponent(pid)}`)
+      .get(`/api/v4/PublishedData/formpopulate?pid=${pid}`)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryValidStatusCode)
