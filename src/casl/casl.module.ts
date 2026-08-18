@@ -5,6 +5,7 @@ import { JobConfigModule } from "src/config/job-config/jobconfig.module";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { HistoryAbility } from "./abilities/history.ability";
 import { InstrumentAbility } from "./abilities/instruments.ability";
 import { JobAbility } from "./abilities/jobs.ability";
 import { LogbookAbility } from "./abilities/logbooks.ability";
@@ -22,6 +23,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     AttachmentAbility,
     DatablockAbility,
     DatasetAbility,
+    HistoryAbility,
     InstrumentAbility,
     JobAbility,
     LogbookAbility,
