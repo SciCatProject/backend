@@ -33,11 +33,11 @@ describe("PublishedDataController", () => {
         ConfigService,
         { provide: AttachmentsService, useClass: AttachmentsServiceMock },
         { provide: DatasetsService, useClass: DatasetsServiceMock },
+        { provide: DatasetsController, useClass: DatasetsControllerMock },
         { provide: HttpService, useClass: HttpServiceMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
-        { provide: DatasetsController, useClass: DatasetsControllerMock },
       ],
     }).compile();
 
