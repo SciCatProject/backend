@@ -43,13 +43,6 @@ export interface SearchResult {
   hits: string[];
 }
 
-type OsSearchResponseBody = {
-  hits: {
-    total?: number | { value: number };
-    hits: { _id: string }[];
-  };
-};
-
 interface BuiltSearchRequest {
   index: string;
   body: {
@@ -327,10 +320,10 @@ export class OpensearchService implements OnModuleInit {
   ): Promise<SearchResult> {
     const { index, body } = this.buildSearchRequest(params, mode);
 
-    const { body: res } = (await this.osClient.search({
+    const { body: res } = await this.osClient.search({
       index,
       body,
-    })) as unknown as { body: OsSearchResponseBody };
+    });
 
     const total = res.hits.total;
 
