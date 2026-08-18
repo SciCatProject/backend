@@ -21,7 +21,7 @@ class PublishedDataServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
-class DatasetsControllerMock {}
+class DatasetsV4ControllerMock {}
 
 describe("PublishedDataController", () => {
   let controller: PublishedDataController;
@@ -33,7 +33,7 @@ describe("PublishedDataController", () => {
         ConfigService,
         { provide: AttachmentsService, useClass: AttachmentsServiceMock },
         { provide: DatasetsService, useClass: DatasetsServiceMock },
-        { provide: DatasetsController, useClass: DatasetsControllerMock },
+        { provide: DatasetsV4Controller, useClass: DatasetsV4ControllerMock },
         { provide: HttpService, useClass: HttpServiceMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },
