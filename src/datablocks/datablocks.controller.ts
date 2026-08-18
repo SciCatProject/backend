@@ -116,7 +116,7 @@ export class DatablocksController {
     }
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
-    const datasetInstance = generateDatasetInstanceForPermissions(dataset);
+    const datasetInstance = this.generateDatasetInstanceForPermissions(dataset);
     if (
       !ability.can(Action.DatasetDatablockCreate, datasetInstance) &&
       !ability.can(Action.AccessAny, datasetInstance)
