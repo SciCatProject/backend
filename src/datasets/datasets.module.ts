@@ -97,12 +97,22 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
     ]),
     HttpModule,
   ],
-  exports: [DatasetsService, DatasetsAccessService, DatasetsV4Controller],
+  exports: [
+    DatasetsService,
+    DatasetsAccessService,
+    DatasetsV4Controller,
+    DatasetsController,
+  ],
   controllers: [
     DatasetsPublicV4Controller,
     DatasetsController,
     DatasetsV4Controller,
   ],
-  providers: [DatasetsService, DatasetsAccessService, DatasetsV4Controller],
+  providers: [
+    DatasetsService,
+    DatasetsAccessService,
+    DatasetsV4Controller,
+    DatasetsController,
+  ],
 })
 export class DatasetsModule {}
