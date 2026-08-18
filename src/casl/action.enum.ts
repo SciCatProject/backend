@@ -13,6 +13,12 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
+  // Jobs
+  JobCreate = "jobs_create",
+  JobRead = "jobs_read",
+  JobUpdate = "job_update",
+  JobDelete = "job_delete",
+
   // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",
@@ -51,6 +57,12 @@ export enum Action {
 
   DatasetLogbookRead = "dataset_logbook_read",
 
+  // Instruments
+  InstrumentCreate = "instrument_create",
+  InstrumentRead = "instrument_read",
+  InstrumentUpdate = "instrument_update",
+  InstrumentDelete = "instrument_delete",
+
   // MetadataKeys
   MetadataKeyRead = "metadatakey_read",
 
@@ -60,46 +72,22 @@ export enum Action {
   OrigdatablockUpdate = "origdatablock_update",
   OrigdatablockDelete = "origdatablock_delete",
 
+  // Proposals
+  ProposalCreate = "proposal_create",
+  ProposalRead = "proposal_read",
+  ProposalUpdate = "proposal_update",
+  ProposalDelete = "proposal_delete",
+
+  ProposalAttachmentCreate = "proposal_attachment_create",
+  ProposalAttachmentRead = "proposal_attachment_read",
+  ProposalAttachmentUpdate = "proposal_attachment_update",
+  ProposalAttachmentDelete = "proposal_attachment_delete",
+
+  ProposalDatasetRead = "proposal_dataset_read",
+
   // RuntimeConfig
   RuntimeConfigRead = "runtimeconfig_read",
   RuntimeConfigUpdate = "runtimeconfig_update",
-
-  // Proposals
-  // endpoint authorization actions
-  ProposalsCreate = "proposals_create",
-  ProposalsRead = "proposals_read",
-  ProposalsUpdate = "proposals_update",
-  ProposalsDelete = "proposals_delete",
-  ProposalsAttachmentCreate = "proposals_attachment_create",
-  ProposalsAttachmentRead = "proposals_attachment_read",
-  ProposalsAttachmentUpdate = "proposals_attachment_update",
-  ProposalsAttachmentDelete = "proposals_attachment_delete",
-  ProposalsDatasetRead = "proposals_dataset_read",
-
-  // individual actions
-  ProposalsCreateOwner = "proposals_create_owner",
-  ProposalsCreateAny = "proposals_create_any",
-  ProposalsReadManyPublic = "proposals_read_many_public",
-  ProposalsReadManyAccess = "proposals_read_many_access",
-  ProposalsReadManyOwner = "proposals_read_many_owner",
-  ProposalsReadOnePublic = "proposals_read_one_public",
-  ProposalsReadOneAccess = "proposals_read_one_access",
-  ProposalsReadOneOwner = "proposals_read_one_owner",
-  ProposalsReadAny = "proposals_read_any",
-  ProposalsUpdateOwner = "proposals_update_owner",
-  ProposalsUpdateAny = "proposals_update_any",
-  ProposalsDeleteOwner = "proposals_delete_owner",
-  ProposalsDeleteAny = "proposals_delete_any",
-  ProposalsAttachmentCreateOwner = "proposals_attachment_create_owner",
-  ProposalsAttachmentCreateAny = "proposals_attachment_create_any",
-  ProposalsAttachmentReadPublic = "proposals_attachment_read_public",
-  ProposalsAttachmentReadAccess = "proposals_attachment_read_access",
-  ProposalsAttachmentReadOwner = "proposals_attachment_read_owner",
-  ProposalsAttachmentReadAny = "proposals_attachment_read_any",
-  ProposalsAttachmentUpdateOwner = "proposals_attachment_update_owner",
-  ProposalsAttachmentUpdateAny = "proposals_attachment_update_any",
-  ProposalsAttachmentDeleteOwner = "proposals_attachment_delete_owner",
-  ProposalsAttachmentDeleteAny = "proposals_attachment_delete_any",
 
   // -------------------------------------
   // Samples
@@ -141,25 +129,6 @@ export enum Action {
   SampleAttachmentDeleteOwner = "sample_attachment_delete_owner",
   SampleAttachmentDeleteAny = "sample_attachment_delete_any",
 
-  // --------------
-  // Jobs
-  // --------------
-  // endpoint authorization
-  JobCreate = "jobs_create",
-  JobRead = "jobs_read",
-  JobUpdate = "job_update",
-  JobDelete = "job_delete",
-  // data instance authorization
-  JobCreateConfiguration = "job_create_configuration",
-  JobCreateOwner = "job_create_owner",
-  JobCreateAny = "job_create_any",
-  JobReadAccess = "job_read_access",
-  JobReadAny = "job_read_any",
-  JobUpdateConfiguration = "job_update_configuration",
-  JobUpdateOwner = "job_update_owner",
-  JobUpdateAny = "job_update_any",
-  //JobDeleteAny = "job_delete_any",
-
   // -------------
   // Users actions
   UserReadOwn = "user_read_own",
@@ -173,11 +142,6 @@ export enum Action {
   UserCreateJwt = "user_create_jwt",
   UserListAll = "user_list_all",
   UserListOwn = "user_list_own",
-  // Instrument actions
-  InstrumentRead = "instrument_read",
-  InstrumentUpdate = "instrument_update",
-  InstrumentCreate = "instrument_create",
-  InstrumentDelete = "instrument_delete",
 
   // -------------------------------------
   // History
