@@ -602,10 +602,7 @@ export class SamplesController {
     @Query("filter") queryFilters?: string,
   ): Promise<SampleWithAttachmentsAndDatasets | null> {
     const jsonFilters: IFilters<SampleDocument, ISampleFields> =
-      this.updateFiltersForList(
-        request,
-        queryFilters ? JSON.parse(queryFilters) : {},
-      );
+      this.updateFiltersForList(request, JSON.parse(queryFilters ?? "{}"));
     const whereFilters = jsonFilters.where ?? {};
 
     const sample = (
