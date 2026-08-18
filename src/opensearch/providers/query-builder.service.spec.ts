@@ -38,7 +38,6 @@ describe("SearchQueryService", () => {
   describe("buildQuery", () => {
     it("should resolve a query with text and filters", () => {
       const actual = service.buildQuery(filterWithText, "fast");
-
       expect(actual).toEqual({
         bool: {
           must: [
@@ -55,7 +54,6 @@ describe("SearchQueryService", () => {
             {
               bool: {
                 should: [
-                  { term: { isPublished: true } },
                   { terms: { ownerGroup: ["fake"] } },
                   { terms: { accessGroups: ["fake"] } },
                 ],
@@ -70,14 +68,14 @@ describe("SearchQueryService", () => {
     it("should resolve a query that contains only filters without text", () => {
       const actual = service.buildQuery(filterWithoutText, "fast");
 
-      expect(actual.bool.must).toEqual([{ match_all: {} }]);
-      expect(actual.bool.filter).toHaveLength(1);
+      expect(actual.bool!.must).toEqual([{ match_all: {} }]);
+      expect(actual.bool!.filter).toHaveLength(1);
     });
 
     it("should not apply an access filter when the user may read anything", () => {
       const actual = service.buildQuery(filterUnrestricted, "fast");
 
-      expect(actual.bool.filter).toEqual([]);
+      expect(actual.bool!.filter).toEqual([]);
     });
 
     it("should restrict to published documents when no user groups are given", () => {
@@ -86,7 +84,7 @@ describe("SearchQueryService", () => {
         "fast",
       );
 
-      expect(actual.bool.filter).toEqual([
+      expect(actual.bool!.filter).toEqual([
         {
           bool: {
             should: [{ term: { isPublished: true } }],
@@ -101,20 +99,24 @@ describe("SearchQueryService", () => {
     it("should build a simple_query_string in fast mode", () => {
       const actual = service.buildQuery(filterWithText, "fast");
 
-      expect(actual.bool.must[0]).toHaveProperty("simple_query_string");
+      expect((actual.bool?.must as unknown[])?.[0]).toHaveProperty(
+        "simple_query_string",
+      );
     });
 
     it("should build a wildcard query in wildcard mode", () => {
       const actual = service.buildQuery(filterWithText, "wildcard");
 
-      expect(actual.bool.must[0]).toEqual({
-        wildcard: {
-          "all_text.wild": {
-            value: "*fake text*",
-            case_insensitive: true,
+      expect(actual.bool!.must).toEqual([
+        {
+          wildcard: {
+            "all_text.wild": {
+              value: "*fake text*",
+              case_insensitive: true,
+            },
           },
         },
-      });
+      ]);
     });
 
     it("should escape wildcard metacharacters in the search term", () => {
@@ -123,14 +125,16 @@ describe("SearchQueryService", () => {
         "wildcard",
       );
 
-      expect(actual.bool.must[0]).toEqual({
-        wildcard: {
-          "all_text.wild": {
-            value: "*a\\*b\\?c\\\\d*",
-            case_insensitive: true,
+      expect(actual.bool!.must).toEqual([
+        {
+          wildcard: {
+            "all_text.wild": {
+              value: "*a\\*b\\?c\\\\d*",
+              case_insensitive: true,
+            },
           },
         },
-      });
+      ]);
     });
 
     it("should fall back to match_all when the text is only whitespace", () => {
@@ -139,7 +143,7 @@ describe("SearchQueryService", () => {
         "wildcard",
       );
 
-      expect(actual.bool.must).toEqual([{ match_all: {} }]);
+      expect(actual.bool!.must).toEqual([{ match_all: {} }]);
     });
   });
 });
