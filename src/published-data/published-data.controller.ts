@@ -67,8 +67,6 @@ import { PublishedData } from "./schemas/published-data.schema";
 import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
-import { DatasetsController } from "src/datasets/datasets.controller";
-import { Request } from "express";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -395,7 +393,7 @@ export class PublishedDataController {
           ...request.headers,
           "content-type": "application/merge-patch+json",
         },
-      };
+      } as Request;
 
       await Promise.all(
         publishedDataObsolete.pidArray.map(async (pid) => {
