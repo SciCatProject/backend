@@ -93,6 +93,31 @@ export class DatablocksController {
     return canDoAction;
   }
 
+  private async checkDatasetPermission(
+    request: Request,
+    pid: string,
+    action: Action,
+  ): Promise<DatasetClass> {
+    const dataset = await this.datasetsService.findOne({ where: { pid } });
+
+    if (!dataset) {
+      throw new NotFoundException(`dataset: ${pid} not found`);
+    }
+
+    const user: JWTUser = request.user as JWTUser;
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const datasetInstance = this.generateDatasetInstanceForPermissions(dataset);
+
+    if (
+      !ability.can(action, datasetInstance) &&
+      !ability.can(Action.AccessAny, datasetInstance)
+    ) {
+      throw new ForbiddenException("Unauthorized access");
+    }
+
+    return dataset;
+  }
+
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
     ability.can(Action.DatablockCreate, Datablock),
@@ -102,27 +127,11 @@ export class DatablocksController {
     @Req() req: Request,
     @Body() createDatablockDto: CreateDatablockDto,
   ): Promise<Datablock> {
-    const user: JWTUser = req.user as JWTUser;
-    const dataset = await this.datasetsService.findOne({
-      where: {
-        pid: createDatablockDto.datasetId,
-      },
-    });
-
-    if (!dataset) {
-      throw new NotFoundException(
-        `dataset: ${createDatablockDto.datasetId} not found`,
-      );
-    }
-
-    const ability = this.caslAbilityFactory.datasetAccess(user);
-    const datasetInstance = this.generateDatasetInstanceForPermissions(dataset);
-    if (
-      !ability.can(Action.DatasetDatablockCreate, datasetInstance) &&
-      !ability.can(Action.AccessAny, datasetInstance)
-    ) {
-      throw new ForbiddenException("Unauthorized access");
-    }
+    const dataset = await this.checkDatasetPermission(
+      req,
+      createDatablockDto.datasetId,
+      Action.DatasetDatablockCreate,
+    );
 
     const datablock = {
       ...createDatablockDto,
@@ -278,17 +287,23 @@ export class DatablocksController {
     @Req() request: Request,
     @Body() updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock | null> {
+    const datablockInstance = await this.datablocksService.findOne({
+      where: { _id: id },
+    });
+
+    if (!datablockInstance) {
+      throw new NotFoundException();
+    }
+
+    this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
+
+    await this.checkDatasetPermission(
+      request,
+      datablockInstance.datasetId,
+      Action.DatasetDatablockUpdate,
+    );
+
     try {
-      const datablockInstance = await this.datablocksService.findOne({
-        where: { _id: id },
-      });
-
-      if (!datablockInstance) {
-        throw new NotFoundException();
-      }
-
-      this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
-
       return await this.datablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
         { _id: id },
         updateDatablockDto,
