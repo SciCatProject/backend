@@ -1340,6 +1340,13 @@ export function decodeMetadataKeyStrings(keys: string[]): string[] {
   return keys.map((key) => decodeURIComponentExtended(key));
 }
 
+export function filterNullFromArray<T>(
+  value: (T | null | undefined)[] | undefined,
+): T[] {
+  if (!value) return [];
+  return value.filter((item): item is T => item !== null && item !== undefined);
+}
+
 export function parseDate(dateString?: string): Date | undefined {
   if (!dateString) return undefined;
   const parsedDate = new Date(dateString);
