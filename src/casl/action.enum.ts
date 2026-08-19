@@ -13,12 +13,6 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
-  // Jobs
-  JobCreate = "jobs_create",
-  JobRead = "jobs_read",
-  JobUpdate = "job_update",
-  JobDelete = "job_delete",
-
   // ---------------
   // Attachments
   AttachmentCreate = "attachment_create",
@@ -57,11 +51,20 @@ export enum Action {
 
   DatasetLogbookRead = "dataset_logbook_read",
 
+  // History
+  HistoryRead = "history_read",
+
   // Instruments
   InstrumentCreate = "instrument_create",
   InstrumentRead = "instrument_read",
   InstrumentUpdate = "instrument_update",
   InstrumentDelete = "instrument_delete",
+
+  // Jobs
+  JobCreate = "jobs_create",
+  JobRead = "jobs_read",
+  JobUpdate = "job_update",
+  JobDelete = "job_delete",
 
   // MetadataKeys
   MetadataKeyRead = "metadatakey_read",
@@ -142,20 +145,4 @@ export enum Action {
   UserCreateJwt = "user_create_jwt",
   UserListAll = "user_list_all",
   UserListOwn = "user_list_own",
-
-  // -------------------------------------
-  // History
-  // -------------------------------------
-  // endpoint authorization
-  HistoryReadEndpoint = "history_read_endpoint", // General history endpoint access
-
-  // instance authorization by collection
-  HistoryReadDataset = "history_read_dataset",
-  HistoryReadProposal = "history_read_proposal",
-  HistoryReadSample = "history_read_sample",
-  HistoryReadInstrument = "history_read_instrument",
-  HistoryReadPublishedData = "history_read_published_data",
-  HistoryReadPolicy = "history_read_policy",
-  HistoryReadDatablock = "history_read_datablock",
-  HistoryReadAttachment = "history_read_attachment",
 }

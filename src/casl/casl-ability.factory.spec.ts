@@ -8,6 +8,7 @@ import { CaslAbilityFactory } from "./casl-ability.factory";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { HistoryAbility } from "./abilities/history.ability";
 import { InstrumentAbility } from "./abilities/instruments.ability";
 import { JobAbility } from "./abilities/jobs.ability";
 import { LogbookAbility } from "./abilities/logbooks.ability";
@@ -28,6 +29,7 @@ describe("CaslAbilityFactory", () => {
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new HistoryAbility(configService),
         new InstrumentAbility(configService),
         new JobAbility(
           configService,
@@ -64,6 +66,7 @@ describe("CaslAbilityFactory", () => {
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
+        new HistoryAbility(configService),
         new InstrumentAbility(configService),
         new JobAbility(configService, {
           allJobConfigs: {},

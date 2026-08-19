@@ -16,6 +16,7 @@ import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
+import { HistoryAbility } from "./abilities/history.ability";
 import { InstrumentAbility } from "./abilities/instruments.ability";
 import { JobAbility } from "./abilities/jobs.ability";
 import { LogbookAbility } from "./abilities/logbooks.ability";
@@ -35,6 +36,7 @@ export class CaslAbilityFactory {
     private attachmentAbility: AttachmentAbility,
     private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
+    private historyAbility: HistoryAbility,
     private instrumentAbility: InstrumentAbility,
     private jobAbility: JobAbility,
     private logbookAbility: LogbookAbility,
@@ -56,7 +58,7 @@ export class CaslAbilityFactory {
     attachments: this.attachmentAccess,
     datablocks: this.datablockAccess,
     datasets: this.datasetAccess,
-    history: this.historyEndpointAccess,
+    history: this.historyAccess,
     instruments: this.instrumentAccess,
     jobs: this.jobAccess,
     logbooks: this.logbookAccess,
@@ -93,6 +95,10 @@ export class CaslAbilityFactory {
     return this.datasetAbility.buildAbility(user);
   }
 
+  historyAccess(user: JWTUser | null) {
+    return this.historyAbility.buildAbility(user);
+  }
+
   instrumentAccess(user: JWTUser | null) {
     return this.instrumentAbility.buildAbility(user);
   }
@@ -127,223 +133,6 @@ export class CaslAbilityFactory {
 
   runtimeConfigAccess(user: JWTUser | null) {
     return this.runtimeConfigAbility.buildAbility(user);
-  }
-
-  /**
-   * Controls user access to the history endpoints based on role-based permissions.
-   *
-   * This method implements the authorization logic for accessing history records across
-   * different collections (e.g., Dataset, Proposal, Sample). It follows a hierarchical
-   * permission structure where:
-   *
-   * 1. Unauthenticated users have no access to any history
-   * 2. Administrators have unrestricted access to all history records
-   * 3. Regular users have access only to history for collections relevant to their role
-   *
-   * The third parameter in the permission definitions is particularly important:
-   * - For admin users: "ALL" indicates access to all collections
-   * - For specialized users: Collection name (e.g., "Dataset", "Proposal", "Sample")
-   *   restricts access to only that specific collection
-   *
-   * When a history request is made, the controller should verify the user has
-   * permission to access the requested collection by checking:
-   * `ability.can(Action.HistoryRead, "GenericHistory", collectionName)`
-   *
-   * @param user - The authenticated user object from the JWT token
-   * @returns An AppAbility object that can be used to check history access permissions
-   *
-   * @example
-   * // In a controller:
-   * const ability = this.caslFactory.historyEndpointAccess(request.user);
-   * if (!ability.can(Action.HistoryRead, "GenericHistory", "Dataset")) {
-   *   throw new ForbiddenException("No access to Dataset history");
-   * }
-   *
-   * @security This method is critical for enforcing access control to potentially
-   * sensitive history data. Any changes should be carefully tested to ensure proper
-   * access restrictions are maintained.
-   */
-  historyEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (user) {
-      // -------------------------------------
-      // Authenticated users
-      // -------------------------------------
-      if (user.currentGroups && Array.isArray(user.currentGroups)) {
-        // Admin users get full endpoint access
-        if (
-          user.currentGroups.some(
-            (g) =>
-              this.accessGroups?.admin && this.accessGroups.admin.includes(g),
-          )
-        ) {
-          can(Action.HistoryReadEndpoint, "GenericHistory");
-        }
-
-        // Users with access to any specific history type get endpoint access
-        if (
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyDataset.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyProposal.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historySample.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyInstrument.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyPublishedData.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyPolicies.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyDatablocks.includes(g),
-          ) ||
-          user.currentGroups.some((g) =>
-            this.accessGroups?.historyAttachments.includes(g),
-          )
-        ) {
-          can(Action.HistoryReadEndpoint, "GenericHistory");
-        }
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  /**
-   * Controls access to specific history instances
-   * This checks if a user can access history for specific entity instances
-   *
-   * @param user - The authenticated user object from the JWT token
-   * @returns An AppAbility object that can be used to check history access permissions
-   *
-   * @example
-   * // In a controller:
-   * const ability = this.caslFactory.historyInstanceAccess(request.user);
-   * if (!ability.can(Action.HistoryRead, "GenericHistory", instanceId)) {
-   *   throw new ForbiddenException("No access to instance history");
-   * }
-   *
-   * @security This method is critical for enforcing access control to potentially
-   * sensitive history data. Any changes should be carefully tested to ensure proper
-   * access restrictions are maintained.
-   */
-  historyInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (user) {
-      // -------------------------------------
-      // Authenticated users
-      // -------------------------------------
-      if (user && user.currentGroups && Array.isArray(user.currentGroups)) {
-        // -----------------------------------
-        // Valid user groups
-        // -----------------------------------
-        if (
-          // ---------------------------------
-          // Grant full access to admin users
-          // ---------------------------------
-          user.currentGroups.some(
-            (g) =>
-              this.accessGroups?.admin && this.accessGroups.admin.includes(g),
-          )
-        ) {
-          can(Action.HistoryReadDataset, "GenericHistory");
-          can(Action.HistoryReadProposal, "GenericHistory");
-          can(Action.HistoryReadSample, "GenericHistory");
-          can(Action.HistoryReadInstrument, "GenericHistory");
-          can(Action.HistoryReadPublishedData, "GenericHistory");
-          can(Action.HistoryReadPolicy, "GenericHistory");
-          can(Action.HistoryReadDatablock, "GenericHistory");
-          can(Action.HistoryReadAttachment, "GenericHistory");
-        } else {
-          // ---------------------------------
-          // Grant access based on user groups
-          // ---------------------------------
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyDataset.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadDataset, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyProposal.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadProposal, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historySample.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadSample, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyInstrument.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadInstrument, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyPublishedData.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadPublishedData, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyPolicies.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadPolicy, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyDatablocks.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadDatablock, "GenericHistory");
-          }
-
-          if (
-            user.currentGroups.some((g) =>
-              this.accessGroups?.historyAttachments.includes(g),
-            )
-          ) {
-            can(Action.HistoryReadAttachment, "GenericHistory");
-          }
-        }
-      }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
   }
 
   publishedDataEndpointAccess(user: JWTUser) {
