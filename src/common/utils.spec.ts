@@ -1,5 +1,5 @@
 // Currently only covers converToSI
-import { convertToSI, parseDate } from "./utils";
+import { convertToSI, parseDate, parseOrderLimits } from "./utils";
 
 describe("convertToSI", () => {
   it("should convert a known unit to SI successfully", () => {
@@ -63,5 +63,24 @@ describe("parseDate", () => {
   it("should return undefined for undefined input", () => {
     const result = parseDate(undefined);
     expect(result).toBeUndefined();
+  });
+
+  describe("parseOrderLimits", () => {
+    it("should parse a single sort field", () => {
+      const result = parseOrderLimits({
+        limit: 10,
+        order: "creationTime:desc",
+      });
+      expect(result.sort).toEqual({ creationTime: "desc" });
+      expect(result).not.toHaveProperty("order");
+    });
+
+    it("should parse multiple sort fields for stable pagination", () => {
+      const result = parseOrderLimits({
+        limit: 10,
+        order: "creationTime:desc,pid:asc",
+      });
+      expect(result.sort).toEqual({ creationTime: "desc", pid: "asc" });
+    });
   });
 });
