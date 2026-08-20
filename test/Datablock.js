@@ -4,6 +4,7 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
+  accessTokenUser1 = null,
 
   datasetId = null,
   ownerGroup = null,
@@ -23,6 +24,11 @@ describe("Datablocks", () => {
     accessTokenArchiveManager = await utils.getToken(appUrl, {
       username: "archiveManager",
       password: TestData.Accounts["archiveManager"]["password"],
+    });
+
+    accessTokenUser1 = await utils.getToken(appUrl, {
+      username: "user1",
+      password: TestData.Accounts["user1"]["password"],
     });
   });
 
@@ -88,6 +94,23 @@ describe("Datablocks", () => {
       })
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.should.have.property("error");
+      });
+  });
+
+  it("0035: fails to add a datablock when user does not own the target dataset", async () => {
+    return request(appUrl)
+      .post(`/api/v3/datablocks`)
+      .send({
+        ...TestData.DataBlockCorrect,
+        archiveId: "New archive Id",
+        datasetId,
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
       .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
@@ -249,6 +272,19 @@ describe("Datablocks", () => {
             updatedDataFileList.length +
               TestData.DataBlockCorrect.dataFileList.length,
           );
+      });
+  });
+
+  it("0068: fails to update datablock when user does not own the associated dataset", async () => {
+    return request(appUrl)
+      .patch(`/api/v3/datablocks/${encodeURIComponent(datablockId2)}`)
+      .send({ size: 42 })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.should.have.property("error");
       });
   });
 
