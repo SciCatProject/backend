@@ -103,7 +103,7 @@ export class AuthService {
     const logoutResult = await this.additionalLogoutTasks(req, logoutURL);
 
     if (expressSessionSecret) {
-      req.logout(async (err) => {
+      req.logout((err) => {
         if (err) {
           // we should provide a message
           Logger.error("Logout error: ", err);
