@@ -6,10 +6,10 @@
       
       
       
-        <link rel="prev" href="../../runtime-config/">
+        <link rel="prev" href="../proposals/">
       
       
-        <link rel="next" href="../datablocks/">
+        <link rel="next" href="../runtime-config/">
       
       
         
@@ -20,7 +20,7 @@
     
     
       
-        <title>Authorization - SciCat Documentation</title>
+        <title>PublishedData Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#attachments-authorization-model" class="md-skip">
+        <a href="#publisheddata-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Authorization
+              PublishedData Authorization Model
             
           </span>
         </div>
@@ -840,10 +840,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../publisheddata/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PublishedData Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -859,6 +886,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#record-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Record states
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Permissions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unauthenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unauthenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#authenticated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authenticated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DELETE_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin_groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADMIN_GROUPS
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permission-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permission Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporary-ownership-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporary ownership model
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1166,6 +1329,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#record-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Record states
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#permissions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1200,21 +1374,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#attachment_groups" class="md-nav__link">
+  <a href="#delete_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ATTACHMENT_GROUPS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#attachment_privileged_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ATTACHMENT_PRIVILEGED_GROUPS
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -1226,17 +1389,6 @@
     <span class="md-ellipsis">
       
         ADMIN_GROUPS
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#delete_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        DELETE_GROUPS
       
     </span>
   </a>
@@ -1270,6 +1422,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#temporary-ownership-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporary ownership model
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1287,96 +1450,109 @@
 
 
 
-<h1 id="attachments-authorization-model">Attachments Authorization Model<a class="headerlink" href="#attachments-authorization-model" title="Permanent link">¶</a></h1>
-<p>This document describes the authorization model used for attachments and associated endpoints.</p>
+<h1 id="publisheddata-authorization-model">PublishedData Authorization Model<a class="headerlink" href="#publisheddata-authorization-model" title="Permanent link">¶</a></h1>
+<p>This document describes the authorization model used for published data and associated endpoints, for both the v4 endpoints (<code>/api/v4/publisheddata</code>) and the deprecated v3 endpoints (<code>/api/v3/publisheddata</code>).</p>
+<blockquote>
+<p><strong>Note:</strong> The ownership model described here is a temporary deviation from the SciCat authorization pattern. See <a href="#temporary-ownership-model">Temporary ownership model</a> below.</p>
+</blockquote>
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
-<p>The following actions are defined for attachments:</p>
+<p>The following actions are defined for published data:</p>
 <ul>
-<li><code>AttachmentCreate</code></li>
-<li><code>AttachmentRead</code></li>
-<li><code>AttachmentUpdate</code></li>
-<li><code>AttachmentDelete</code></li>
+<li><code>Create</code></li>
+<li><code>Read</code></li>
+<li><code>Update</code></li>
+<li><code>Delete</code></li>
+<li><code>AccessAny</code></li>
 </ul>
+<p><code>Create</code>, <code>Read</code>, <code>Update</code> and <code>Delete</code> are used for endpoint authorization, i.e. whether a user may call an endpoint at all. <code>AccessAny</code> is used for instance authorization, i.e. whether a user may act on records they do not own.</p>
+<h2 id="record-states">Record states<a class="headerlink" href="#record-states" title="Permanent link">¶</a></h2>
+<p>Every published data record carries a <code>status</code> field, which takes one of the following values, and which participates in authorization:</p>
+<ul>
+<li><code>private</code>: a draft, visible only to its creator (and admins)</li>
+<li><code>public</code>: made public, but not yet registered with a DOI registrar</li>
+<li><code>registered</code>: registered with a DOI registrar</li>
+<li><code>amended</code>: registered and subsequently amended</li>
+</ul>
+<p>Records in state <code>public</code>, <code>registered</code> or <code>amended</code> are readable by everyone. Only records in state <code>private</code> may be modified or deleted by their creator.</p>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
 <h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
-<p>An unauthenticated user may read attachments only if the attachment is public.
-Unauthenticated users do not have write access.</p>
+<p>An unauthenticated user may read published data records that are in state <code>public</code>, <code>registered</code> or <code>amended</code>. Listing and counting endpoints are filtered accordingly, and a request for a <code>private</code> record is answered with <code>404 Not Found</code>.</p>
+<p>Unauthenticated users have no write access.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>An authenticated user may read attachments if the attachment is public or if they are a member of the attachment's <code>ownerGroup</code> or one of the <code>accessGroups</code>.</p>
-<p>Authenticated users do not have write access by default.</p>
-<h3 id="attachment_groups">ATTACHMENT_GROUPS<a class="headerlink" href="#attachment_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ATTACHMENT_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create, update and delete attachments if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>. Importantly, it is not necessary that <code>ownerGroup</code> be in <code>ATTACHMENT_GROUPS</code>.</p>
-<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>ATTACHMENT_GROUPS</code> in configuration.</p>
-<h3 id="attachment_privileged_groups">ATTACHMENT_PRIVILEGED_GROUPS<a class="headerlink" href="#attachment_privileged_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ATTACHMENT_PRIVILEGED_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create attachments for any <code>ownerGroup</code>.
-They may update and delete attachments if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
-<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read, update and delete access to all attachments.</p>
+<p>In addition to the permissions granted to unauthenticated users, an authenticated user may read the <code>private</code> records for which their username matches the record's <code>createdBy</code>.</p>
+<p>An authenticated user may create published data records. They may update, register, resync and delete only records for which their username matches <code>createdBy</code> <strong>and</strong> whose status is <code>private</code>. Attempting to modify a record owned by another user is answered with <code>404 Not Found</code>; attempting to modify an own record that is no longer <code>private</code> is answered with <code>400 Bad Request</code>.</p>
 <h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all attachments in the database.</p>
+<p>If a user is a member of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they are permitted to call the delete endpoint.</p>
+<p>On the v4 endpoint, the instance-level restrictions above still apply, i.e. a non-admin may delete only their own <code>private</code> records. The deprecated v3 delete endpoint performs no instance-level check at all: any member of <code>DELETE_GROUPS</code> may delete any record in any state.</p>
+<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
+<p>If a user is a member of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they are granted <code>AccessAny</code> and therefore have unrestricted read access to all published data records, regardless of status or creator, and may update, register, resync and delete records created by any user.</p>
+<p>Admins are still subject to the lifecycle guard: records in state <code>registered</code> or <code>amended</code> cannot be updated or deleted, since they have already been handed over to a DOI registrar.</p>
 <h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
-<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
 <table>
 <thead>
 <tr>
 <th>Operation</th>
 <th>Unauthenticated</th>
 <th>Authenticated</th>
-<th><code>ATTACHMENT_GROUPS</code></th>
-<th><code>ATTACHMENT_PRIVILEGED_GROUPS</code></th>
-<th><code>ADMIN_GROUPS</code></th>
 <th><code>DELETE_GROUPS</code></th>
+<th><code>ADMIN_GROUPS</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>AttachmentCreate</code></td>
+<td><code>Create</code></td>
 <td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>any</td>
 <td>any</td>
 <td>-</td>
+<td>any</td>
 </tr>
 <tr>
-<td><code>AttachmentRead</code></td>
-<td>public</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
-<td>public/owner/access</td>
+<td><code>Read</code></td>
+<td>published</td>
+<td>published + own</td>
+<td>published + own</td>
 <td>any</td>
-<td>public/owner/access</td>
 </tr>
 <tr>
-<td><code>AttachmentUpdate</code></td>
+<td><code>Update</code></td>
 <td>-</td>
-<td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>-</td>
+<td>own private</td>
+<td>own private</td>
+<td>any not registered/amended</td>
 </tr>
 <tr>
-<td><code>AttachmentDelete</code></td>
+<td><code>Delete</code></td>
 <td>-</td>
 <td>-</td>
-<td>owner</td>
-<td>owner</td>
-<td>any</td>
-<td>any</td>
+<td>own private (v4) / any (v3)</td>
+<td>any not registered/amended</td>
 </tr>
 </tbody>
 </table>
 <p>Legend:
-- public: attachment's <code>isPublished</code> field must be <code>true</code>
-- owner: attachment's <code>ownerGroup</code> must match one of the user's <code>currentGroups</code>
-- access: one of the attachment's <code>accessGroups</code> must match one of the user's <code>currentGroups</code>
+- published: record <code>status</code> must be <code>public</code>, <code>registered</code> or <code>amended</code>
+- own: record <code>createdBy</code> must match the user's username
+- own private: record <code>createdBy</code> must match the user's username and <code>status</code> must be <code>private</code>
 - any: unrestricted access</p>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<p>The definition is implemented in the casl module under <code>/src/casl/abilities/attachments.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.attachmentAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
-<p>The <code>AttachmentAbility</code> module in <code>/src/casl/abilities/attachments.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
-In case there are expectations of mutual exclusivity for certain special groups (not the case for attachments currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
+<p>Endpoint authorization is defined in <code>CaslAbilityFactory.publishedDataEndpointAccess</code> and applied through the <code>PoliciesGuard</code> and <code>@CheckPolicies</code> decorators on the controllers.</p>
+<p>Instance authorization is defined in <code>CaslAbilityFactory.publishedDataInstanceAccess</code>, which grants <code>AccessAny</code> to members of <code>ADMIN_GROUPS</code> only. Both controllers use this single ability to decide whether to narrow the Mongo query:</p>
+<ul>
+<li>Read endpoints (<code>GET /</code>, <code>GET /count</code>, <code>GET /:id</code>) add an <code>$or</code> filter that matches published records plus the caller's own <code>private</code> records. The filter is combined with the client supplied <code>where</code> rather than replacing it.</li>
+<li>Mutating endpoints (<code>PATCH /:id</code>, <code>POST /:id/register</code>, <code>POST /:id/resync</code>, and <code>DELETE /:id</code> on v4) build a filter on <code>doi</code> plus <code>createdBy</code> for non-admins, so a record belonging to somebody else is simply not found, and the same filter is reused for the write itself.</li>
+<li>The lifecycle guard on <code>status</code> is applied after the record has been fetched, and is what distinguishes a <code>400 Bad Request</code> (found, but not modifiable in its current state) from a <code>404 Not Found</code> (not visible to the caller).</li>
+</ul>
+<p>Since a record's only ownership information is <code>createdBy</code>, there is no group-based rule to express here, and no <code>ownerGroup</code>/<code>accessGroups</code> conditions appear in the ability.</p>
+<h2 id="temporary-ownership-model">Temporary ownership model<a class="headerlink" href="#temporary-ownership-model" title="Permanent link">¶</a></h2>
+<p>Unlike datasets, samples, proposals and most other SciCat entities, the <code>PublishedData</code> schema does not extend <code>OwnableClass</code>: it has no <code>ownerGroup</code> and no <code>accessGroups</code> fields. The only ownership hint available is <code>createdBy</code>.</p>
+<p>The <code>createdBy</code>-based rules described above were introduced as a hot fix for a security issue: on the v3 endpoints, any authenticated user could read any other user's <code>private</code> published data and could <code>PATCH</code> it, since those endpoints performed authentication but no further authorization (see <a href="https://github.com/SciCatProject/backend/pull/2886">PR #2886</a>).</p>
+<p>This is understood to be a temporary measure and knowingly deviates from the supported, group-based SciCat pattern. In particular:</p>
+<ul>
+<li>Only the exact creator of a record can act on it, whereas elsewhere in SciCat any member of the record's <code>ownerGroup</code> could.</li>
+<li>The "four eyes" workflow, in which a colleague reviews a <code>private</code> published data record before it is registered, is not possible through these endpoints.</li>
+</ul>
+<p>The intended long-term solution is to make <code>PublishedData</code> extend <code>OwnableClass</code> and to migrate existing records so that <code>ownerGroup</code> and <code>accessGroups</code> are populated, after which the rules above should be replaced by the standard group-based checks. This is tracked in <a href="https://github.com/SciCatProject/backend/issues/2900">issue #2900</a>. The current model will be supported until that redesign is implemented.</p>
 
 
 
