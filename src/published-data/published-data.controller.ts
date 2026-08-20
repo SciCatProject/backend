@@ -39,6 +39,7 @@ import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataDto } from "./dto/create-published-data.dto";
@@ -71,7 +72,6 @@ import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { DatasetsController } from "src/datasets/datasets.controller";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -82,7 +82,7 @@ export class PublishedDataController {
     private readonly attachmentsService: AttachmentsService,
     private readonly configService: ConfigService,
     private readonly datasetsService: DatasetsService,
-    private readonly datasetsController: DatasetsController,
+    private readonly datasetsController: DatasetsV4Controller,
     private readonly httpService: HttpService,
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
@@ -510,12 +510,24 @@ export class PublishedDataController {
 
       const xml = formRegistrationXML(publishedDataObsolete);
 
+      const mergePatchRequest = {
+        ...request,
+        headers: {
+          ...request.headers,
+          "content-type": "application/merge-patch+json",
+        },
+      } as Request;
+
       await Promise.all(
         publishedDataObsolete.pidArray.map(async (pid) => {
-          await this.datasetsService.findByIdAndUpdate(pid, {
-            isPublished: true,
-            datasetlifecycle: { publishedOn: data.registeredTime },
-          });
+          await this.datasetsController.findByIdAndUpdate(
+            mergePatchRequest,
+            pid,
+            {
+              isPublished: true,
+              datasetlifecycle: { publishedOn: data.registeredTime },
+            },
+          );
         }),
       );
       const fullDoi = publishedDataObsolete.doi;
