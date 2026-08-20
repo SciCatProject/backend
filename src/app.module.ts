@@ -34,7 +34,6 @@ import { JobConfigModule } from "./config/job-config/jobconfig.module";
 import { CoreJobActionCreators } from "./config/job-config/actions/corejobactioncreators.module";
 import { HttpModule, HttpService } from "@nestjs/axios";
 import { MSGraphMailTransport } from "./common/graph-mail";
-import { TransportType } from "@nestjs-modules/mailer/dist/interfaces/mailer-options.interface";
 import { MetricsModule } from "./metrics/metrics.module";
 import {
   GenericHistory,
@@ -46,6 +45,7 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
 import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
 import { OidcClientModule } from "./common/openid-client/openid-client.module";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { TransportType } from "node_modules/@nestjs-modules/mailer/dist/interfaces/mailer-options.interface";
 
 @Module({
   imports: [

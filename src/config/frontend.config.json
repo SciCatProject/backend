@@ -4,6 +4,7 @@
     "authenticatedUser": "PROPOSALS"
   },
   "statusBannerMessage": "",
+  "addScientificMetadataKeysAsColumn": true,
   "statusBannerCode": "INFO",
   "autoApplyFilters": false,
   "accessTokenPrefix": "Bearer ",
@@ -353,13 +354,6 @@
         "enabled": false
       },
       {
-        "name": "creationTime",
-        "type": "date",
-        "enabled": true,
-        "width": 200,
-        "format": "yyyy-mm-dd HH:MM"
-      },
-      {
         "name": "keywords",
         "type": "list",
         "enabled": false,
@@ -474,19 +468,12 @@
         "enabled": false
       },
       {
-        "name": "startTime",
+        "name": "creationTime",
         "type": "date",
         "width": 200,
         "enabled": false,
         "format": "yyyy-mm-dd HH:MM",
         "sort": "desc"
-      },
-      {
-        "name": "endTime",
-        "type": "date",
-        "width": 200,
-        "enabled": false,
-        "format": "yyyy-mm-dd HH:MM"
       },
       {
         "name": "creationLocation",

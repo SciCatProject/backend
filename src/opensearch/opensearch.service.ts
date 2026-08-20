@@ -7,7 +7,10 @@ import {
 } from "@nestjs/common";
 import { Client } from "@opensearch-project/opensearch";
 
-import { SearchQueryService } from "./providers/query-builder.service";
+import {
+  SearchMode,
+  SearchQueryService,
+} from "./providers/query-builder.service";
 
 import {
   DatasetClass,
@@ -16,11 +19,41 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { sleep } from "src/common/utils";
 
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
 import { ISearchFilter } from "./interfaces/os-common.type";
 import { CreateIndexDto } from "./dto/create-index.dto";
 import { UpdateIndexDto } from "./dto/update-index.dto";
-import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
+import { Readable } from "stream";
+import { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
+import { Sort } from "@opensearch-project/opensearch/api/_types/_common.js";
+import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl.js";
+import { toOpensearchDocument } from "./utils/opensearch.util";
+
+export interface SearchParams {
+  filter: ISearchFilter;
+  index?: string;
+  limit?: number;
+  skip?: number;
+  sort?: Sort;
+}
+
+export interface SearchResult {
+  totalCount: number;
+  hits: string[];
+}
+
+interface BuiltSearchRequest {
+  index: string;
+  body: {
+    from: number;
+    size: number;
+    track_total_hits: number;
+    _source: false;
+    query: QueryContainer;
+    sort: Sort;
+  };
+}
 
 @Injectable()
 export class OpensearchService implements OnModuleInit {
@@ -33,6 +66,7 @@ export class OpensearchService implements OnModuleInit {
     settings: IndexSettings;
     mappings: TypeMapping;
   } | null;
+  private maxResultWindow: number;
 
   public defaultIndex: string;
 
@@ -56,7 +90,9 @@ export class OpensearchService implements OnModuleInit {
         settings: IndexSettings;
         mappings: TypeMapping;
       }>("opensearchConfig") || null;
-
+    this.maxResultWindow = Number(
+      this.osConfigs?.settings?.index?.max_result_window || 10000,
+    );
     if (!this.host || !this.username || !this.password || !this.defaultIndex) {
       Logger.warn(
         `Missing Opensearch configuration for host: ${this.host}, username: ${this.username}, 
@@ -149,7 +185,7 @@ export class OpensearchService implements OnModuleInit {
       return true;
     }
     Logger.error(
-      `Opensearch is enabled but index ${index} is empty`,
+      `Opensearch is enabled but index ${index} is empty, please sync the data from MongoDB to Opensearch using the /sync-database endpoint`,
       "Opensearch",
     );
 
@@ -264,55 +300,73 @@ export class OpensearchService implements OnModuleInit {
     }
   }
 
-  async search(
-    filter: ISearchFilter,
-    index = this.defaultIndex,
-    limit = 1000,
-    skip = 0,
-  ): Promise<{ totalCount: number; data: (string | undefined)[] }> {
+  async search(params: SearchParams): Promise<SearchResult> {
     try {
-      const searchQuery = this.searchService.buildSearchQuery(filter);
-      const searchOptions = {
-        track_scores: true,
-        sort: [{ _score: { order: "desc" } }] as unknown as Record<
-          string,
-          unknown
-        >[],
-        query: searchQuery.query,
-        from: skip,
-        size: limit,
-        min_score: 0.1,
-        track_total_hits: true,
-        _source: [""],
-      };
+      const fast = await this.runSearch(params, "fast");
+      if (fast.totalCount > 0) return fast;
 
-      const { body } = await this.osClient.search({
-        index,
-        body: searchOptions,
-      });
-
-      const totalCount = body.hits.hits.length || 0;
-
-      const data = body.hits.hits.map((item) => item._id || "");
-
-      return {
-        totalCount,
-        data,
-      };
+      return await this.runSearch(params, "wildcard");
     } catch (error) {
       throw new HttpException(
-        `SearchService || search query issue || -> search ${error}`,
+        `search failed -> OpensearchService ${error}`,
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
+  private async runSearch(
+    params: SearchParams,
+    mode: SearchMode,
+  ): Promise<SearchResult> {
+    const { index, body } = this.buildSearchRequest(params, mode);
+
+    const { body: res } = await this.osClient.search({
+      index,
+      body,
+    });
+
+    const total = res.hits.total;
+
+    return {
+      totalCount: typeof total === "number" ? total : (total?.value ?? 0),
+      hits: res.hits.hits.map((h) => h._id),
+    };
+  }
+
+  private buildSearchRequest(
+    params: SearchParams,
+    mode: SearchMode,
+  ): BuiltSearchRequest {
+    const defaultSort: Sort = [{ _score: "desc" }, { _id: "asc" }];
+    const {
+      filter,
+      index = this.defaultIndex,
+      limit = this.maxResultWindow,
+      skip = 0,
+      sort = defaultSort,
+    } = params;
+
+    return {
+      index,
+      body: {
+        from: skip,
+        size: Math.max(0, Math.min(limit, this.maxResultWindow - skip)),
+        track_total_hits: this.maxResultWindow,
+        _source: false,
+        query: this.searchService.buildQuery(filter, mode),
+        sort: sort,
+      },
+    };
+  }
+
   async updateInsertDocument(data: Partial<DatasetDocument>) {
+    delete data._id;
+
     try {
       await this.osClient.index({
         index: this.defaultIndex,
         id: data.pid,
-        body: data,
+        body: toOpensearchDocument(data),
         refresh: this.refresh,
       });
 
@@ -358,29 +412,62 @@ export class OpensearchService implements OnModuleInit {
   // *** NOTE: below are helper methods ***
 
   async performBulkOperation<T extends { _id: unknown }>(
-    collection: T[],
+    datasource: T[] | Readable | AsyncIterator<T>,
     index: string,
-  ) {
-    const result = await this.osClient.helpers.bulk({
+    transform: (doc: Omit<T, "_id">) => Record<string, unknown> = (d) => d,
+    onProgress?: (count: number) => void,
+  ): Promise<BulkStats> {
+    const dropped: string[] = [];
+    const reasons = new Map<string, number>();
+    let processed = 0;
+
+    const stats = await this.osClient.helpers.bulk({
+      datasource,
+      flushBytes: 5_000_000,
+      concurrency: 5,
       retries: 5,
       wait: 10000,
-      datasource: collection,
+
       onDocument(doc: T) {
         const { _id: mongoId, ...body } = doc;
+
+        processed++;
+        if (onProgress && processed % 10_000 === 0) onProgress(processed);
         return [
-          {
-            index: {
-              _index: index,
-              _id: mongoId,
-            },
-          },
-          body,
+          { index: { _index: index, _id: String(mongoId) } },
+          transform(body as Omit<T, "_id">),
         ];
       },
+
       onDrop(doc) {
-        console.debug(`${doc.document._id}`, doc.error?.reason);
+        const id =
+          (doc.operation as { index?: { _id?: string } } | undefined)?.index
+            ?._id ?? "unknown";
+
+        const reason = (doc.error?.reason ?? doc.error?.type ?? "unknown")
+          .replace(/ in document with id '[^']*'/, "")
+          .replace(/\. Preview of field's value: '.*'$/, "");
+
+        reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
+
+        dropped.push(id);
       },
     });
-    return result;
+
+    this.logBulkFailures(reasons, dropped);
+
+    return stats;
+  }
+
+  private logBulkFailures(
+    reasons: Map<string, number>,
+    dropped: string[],
+  ): void {
+    for (const [reason, count] of [...reasons].sort((a, b) => b[1] - a[1])) {
+      Logger.error(
+        `${count} × ${reason}, failed ids: ${dropped.slice(0, 10)}...`,
+        "OpensearchService",
+      );
+    }
   }
 }
