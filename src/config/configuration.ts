@@ -6,9 +6,6 @@ import localconfiguration from "./localconfiguration";
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret && process.env.NODE_ENV === "production") {
-    throw new Error("JWT_SECRET is required in production");
-  }
   const accessGroupsStaticValues =
     process.env.ACCESS_GROUPS_STATIC_VALUES || "";
   const adminGroups = process.env.ADMIN_GROUPS || "";

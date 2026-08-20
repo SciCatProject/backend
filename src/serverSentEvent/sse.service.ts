@@ -62,7 +62,6 @@ export class SseService {
 
     for (const { user, subject } of this.clients.values()) {
       if (this.canUserAccess(user, event.message)) {
-        console.log(this.canUserAccess(user, event.message));
         subject.next(message);
       }
     }
