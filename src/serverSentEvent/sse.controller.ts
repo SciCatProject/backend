@@ -5,6 +5,7 @@ import {
   UseGuards,
   Req,
   Get,
+  Post,
 } from "@nestjs/common";
 import { Observable } from "rxjs";
 
@@ -23,12 +24,16 @@ import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SseService } from "./sse.service";
+import { AuthService } from "src/auth/auth.service";
 
 @ApiTags("events")
 @Controller("events")
 @ApiBearerAuth()
 export class SseController {
-  constructor(private readonly sseService: SseService) {}
+  constructor(
+    private readonly sseService: SseService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Sse("stream")
   @UseGuards(PoliciesGuard)
@@ -63,5 +68,16 @@ export class SseController {
   })
   connections() {
     return this.sseService.getAllConnections();
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("datasets", (ability: AppAbility) =>
+    ability.can(Action.DatasetRead, DatasetClass),
+  )
+  @Post("ticket")
+  async createTicket(@Req() request: Request): Promise<{ ticket: string }> {
+    return {
+      ticket: this.authService.createSseTicket(request.user as JWTUser),
+    };
   }
 }
