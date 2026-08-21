@@ -15,6 +15,7 @@ import { CaslModule } from "src/casl/casl.module";
 import { SessionMiddleware } from "./middlewares/session.middleware";
 import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { TokenRefreshService } from "src/auth/services/token-refresh.service";
 
 const OidcStrategyFactory = {
   provide: "OidcStrategy",
@@ -59,6 +60,7 @@ const OidcStrategyFactory = {
     LocalStrategy,
     OidcStrategyFactory,
     accessGroupServiceFactory,
+    TokenRefreshService,
   ],
   controllers: [AuthController],
   exports: [AuthService, JwtModule, PassportModule],
