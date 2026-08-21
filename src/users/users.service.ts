@@ -267,7 +267,7 @@ export class UsersService implements OnModuleInit {
     if (userIdentity) {
       const userProfile = userIdentity.profile;
       return {
-        _id: userProfile.id,
+        _id: userIdentity.userId,
         username: userProfile.username,
         email: userProfile.email,
         currentGroups: userProfile.accessGroups,
@@ -376,15 +376,15 @@ export class UsersService implements OnModuleInit {
 
   async createUserJWT(
     accessToken: JWTUser | undefined,
+    expiresIn?: string,
   ): Promise<CreateUserJWT | null> {
     const expiresInOption =
-      this.configService.get<string>("jwt.expiresIn") || "1h";
+      expiresIn || this.configService.get<string>("jwt.expiresIn") || "1h";
 
     if (!accessToken) {
-      const groups = ["public"];
       const payload = {
         username: "anonymous",
-        groups,
+        currentGroups: ["public"],
       };
       const jwtString = this.jwtService.sign(payload, {
         expiresIn: expiresInOption,
@@ -392,11 +392,7 @@ export class UsersService implements OnModuleInit {
       return { jwt: jwtString };
     }
 
-    const payload = {
-      username: accessToken._id,
-      groups: accessToken.currentGroups,
-    };
-    const jwtString = this.jwtService.sign(payload, {
+    const jwtString = this.jwtService.sign(accessToken, {
       expiresIn: expiresInOption,
     } as JwtSignOptions);
     return { jwt: jwtString };
