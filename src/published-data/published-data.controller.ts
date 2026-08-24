@@ -150,7 +150,7 @@ export class PublishedDataController {
 
     publishedDataFilters.where = this.applyReadAccessFilters(
       user,
-      this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+      this.caslAbilityFactory.publishedDataAccess(user as JWTUser),
       publishedDataFilters.where,
     );
 
@@ -191,7 +191,7 @@ export class PublishedDataController {
 
     filters.where = this.applyReadAccessFilters(
       user,
-      this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+      this.caslAbilityFactory.publishedDataAccess(user as JWTUser),
       filters.where,
     );
 
@@ -308,7 +308,7 @@ export class PublishedDataController {
     const publishedData = await this.publishedDataService.findOne(
       this.applyReadAccessFilters(
         user,
-        this.caslAbilityFactory.publishedDataInstanceAccess(user as JWTUser),
+        this.caslAbilityFactory.publishedDataAccess(user as JWTUser),
         idFilter,
       ),
     );
@@ -349,7 +349,7 @@ export class PublishedDataController {
     updatePublishedDataDto: PartialUpdatePublishedDataDto,
   ): Promise<PublishedDataObsoleteDto | null> {
     const user = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(user);
+    const ability = this.caslAbilityFactory.publishedDataAccess(user);
     const canAccessAny = ability.can(Action.AccessAny, PublishedData);
     const filter = this.getMutationAccessFilters(user, ability, id);
 
@@ -485,7 +485,7 @@ export class PublishedDataController {
     const user = request.user as JWTUser;
     const filter = this.getMutationAccessFilters(
       user,
-      this.caslAbilityFactory.publishedDataInstanceAccess(user),
+      this.caslAbilityFactory.publishedDataAccess(user),
       id,
     );
 
@@ -711,7 +711,7 @@ export class PublishedDataController {
     const user = request.user as JWTUser;
     const filter = this.getMutationAccessFilters(
       user,
-      this.caslAbilityFactory.publishedDataInstanceAccess(user),
+      this.caslAbilityFactory.publishedDataAccess(user),
       id,
     );
 

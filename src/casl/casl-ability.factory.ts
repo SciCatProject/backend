@@ -8,7 +8,6 @@ import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
 import { User } from "src/users/schemas/user.schema";
 import { Action } from "./action.enum";
@@ -25,6 +24,7 @@ import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
+import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
@@ -45,6 +45,7 @@ export class CaslAbilityFactory {
     private origDatablockAbility: OrigDatablockAbility,
     private policyAbility: PolicyAbility,
     private proposalAbility: ProposalAbility,
+    private publishedDataAbility: PublishedDataAbility,
     private runtimeConfigAbility: RuntimeConfigAbility,
   ) {
     this.accessGroups =
@@ -67,7 +68,7 @@ export class CaslAbilityFactory {
     origdatablocks: this.origDatablockAccess,
     policies: this.policyAccess,
     proposals: this.proposalAccess,
-    publisheddata: this.publishedDataEndpointAccess,
+    publisheddata: this.publishedDataAccess,
     runtimeconfig: this.runtimeConfigAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
@@ -131,33 +132,12 @@ export class CaslAbilityFactory {
     return this.proposalAbility.buildAbility(user);
   }
 
-  runtimeConfigAccess(user: JWTUser | null) {
-    return this.runtimeConfigAbility.buildAbility(user);
+  publishedDataAccess(user: JWTUser | null) {
+    return this.publishedDataAbility.buildAbility(user);
   }
 
-  publishedDataEndpointAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-    if (user) {
-      can(Action.Read, PublishedData);
-      can(Action.Update, PublishedData);
-      can(Action.Create, PublishedData);
-    }
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.delete.includes(g))
-    ) {
-      /*
-        / user that belongs to any of the group listed in DELETE_GROUPS
-        */
-      can(Action.Delete, PublishedData);
-    }
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
+  runtimeConfigAccess(user: JWTUser | null) {
+    return this.runtimeConfigAbility.buildAbility(user);
   }
 
   samplesEndpointAccess(user: JWTUser) {
@@ -496,28 +476,6 @@ export class CaslAbilityFactory {
           isPublished: true,
         });
       }
-    }
-
-    return build({
-      detectSubjectType: (item) =>
-        item.constructor as ExtractSubjectType<Subjects>,
-    });
-  }
-
-  publishedDataInstanceAccess(user: JWTUser) {
-    const { can, build } = new AbilityBuilder(
-      createMongoAbility<PossibleAbilities, Conditions>,
-    );
-
-    if (
-      user &&
-      user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))
-    ) {
-      // -------------------------------------
-      // users belonging to any of the group listed in ADMIN_GROUPS
-      // -------------------------------------
-
-      can(Action.AccessAny, PublishedData);
     }
 
     return build({
