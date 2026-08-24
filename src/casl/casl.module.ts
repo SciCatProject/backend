@@ -16,6 +16,7 @@ import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
 import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { UserAbility } from "./abilities/users.ability";
 
 @Module({
   imports: [JobConfigModule, ConfigModule],
@@ -35,6 +36,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     ProposalAbility,
     PublishedDataAbility,
     RuntimeConfigAbility,
+    UserAbility,
   ],
   exports: [CaslAbilityFactory],
 })

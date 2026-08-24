@@ -19,6 +19,7 @@ import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
 import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { UserAbility } from "./abilities/users.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
@@ -44,6 +45,7 @@ describe("CaslAbilityFactory", () => {
         new ProposalAbility(configService),
         new PublishedDataAbility(configService),
         new RuntimeConfigAbility(configService),
+        new UserAbility(configService),
       ),
     ).toBeDefined();
   });
@@ -81,6 +83,7 @@ describe("CaslAbilityFactory", () => {
         new ProposalAbility(configService),
         new PublishedDataAbility(configService),
         new RuntimeConfigAbility(configService),
+        new UserAbility(configService),
       );
     };
 
