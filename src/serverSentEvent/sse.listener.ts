@@ -96,7 +96,9 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
     this.sseService.emit({
       entity: registryEntry.entity,
       action,
-      message: plainToInstance(registryEntry.dto, rawDoc),
+      message: plainToInstance(registryEntry.dto, rawDoc, {
+        excludeExtraneousValues: true,
+      }),
     });
   }
   private async onStreamError(error: unknown): Promise<void> {
