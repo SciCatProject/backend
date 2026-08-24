@@ -20,7 +20,7 @@
     
     
       
-        <title>PublishedData Authorization Model - SciCat Documentation</title>
+        <title>Published Data Authorization Model - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#publisheddata-authorization-model" class="md-skip">
+        <a href="#published-data-authorization-model" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PublishedData Authorization Model
+              Published Data Authorization Model
             
           </span>
         </div>
@@ -859,7 +859,7 @@
   <span class="md-ellipsis">
     
   
-    PublishedData Authorization Model
+    Published Data Authorization Model
   
 
     
@@ -877,7 +877,7 @@
   <span class="md-ellipsis">
     
   
-    PublishedData Authorization Model
+    Published Data Authorization Model
   
 
     
@@ -959,10 +959,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#delete_groups" class="md-nav__link">
+  <a href="#admin_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DELETE_GROUPS
+        ADMIN_GROUPS
       
     </span>
   </a>
@@ -970,10 +970,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#admin_groups" class="md-nav__link">
+  <a href="#delete_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADMIN_GROUPS
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -993,6 +993,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Permission Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-v3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API v3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API v4
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1374,10 +1402,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#delete_groups" class="md-nav__link">
+  <a href="#admin_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DELETE_GROUPS
+        ADMIN_GROUPS
       
     </span>
   </a>
@@ -1385,10 +1413,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#admin_groups" class="md-nav__link">
+  <a href="#delete_groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ADMIN_GROUPS
+        DELETE_GROUPS
       
     </span>
   </a>
@@ -1408,6 +1436,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Permission Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-v3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API v3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-v4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API v4
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1450,7 +1506,7 @@
 
 
 
-<h1 id="publisheddata-authorization-model">PublishedData Authorization Model<a class="headerlink" href="#publisheddata-authorization-model" title="Permanent link">¶</a></h1>
+<h1 id="published-data-authorization-model">Published Data Authorization Model<a class="headerlink" href="#published-data-authorization-model" title="Permanent link">¶</a></h1>
 <p>This document describes the authorization model used for published data and associated endpoints, for both the v4 endpoints (<code>/api/v4/publisheddata</code>) and the deprecated v3 endpoints (<code>/api/v3/publisheddata</code>).</p>
 <blockquote>
 <p><strong>Note:</strong> The ownership model described here is a temporary deviation from the SciCat authorization pattern. See <a href="#temporary-ownership-model">Temporary ownership model</a> below.</p>
@@ -1458,17 +1514,16 @@
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
 <p>The following actions are defined for published data:</p>
 <ul>
+<li><code>AccessAny</code></li>
 <li><code>Create</code></li>
 <li><code>Read</code></li>
 <li><code>Update</code></li>
 <li><code>Delete</code></li>
-<li><code>AccessAny</code></li>
 </ul>
-<p><code>Create</code>, <code>Read</code>, <code>Update</code> and <code>Delete</code> are used for endpoint authorization, i.e. whether a user may call an endpoint at all. <code>AccessAny</code> is used for instance authorization, i.e. whether a user may act on records they do not own.</p>
 <h2 id="record-states">Record states<a class="headerlink" href="#record-states" title="Permanent link">¶</a></h2>
 <p>Every published data record carries a <code>status</code> field, which takes one of the following values, and which participates in authorization:</p>
 <ul>
-<li><code>private</code>: a draft, visible only to its creator (and admins)</li>
+<li><code>private</code>: a draft, visible only to its creator and admins</li>
 <li><code>public</code>: made public, but not yet registered with a DOI registrar</li>
 <li><code>registered</code>: registered with a DOI registrar</li>
 <li><code>amended</code>: registered and subsequently amended</li>
@@ -1477,26 +1532,27 @@
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
 <h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
-<p>An unauthenticated user may read published data records that are in state <code>public</code>, <code>registered</code> or <code>amended</code>. Listing and counting endpoints are filtered accordingly, and a request for a <code>private</code> record is answered with <code>404 Not Found</code>.</p>
-<p>Unauthenticated users have no write access.</p>
+<p>Unauthenticated users do not have casl permissions to interact with published data records. However, all read endpoints are unguarded with the <code>@AllowAny</code> decorator, effectively giving unauthenticated users conditional read access.
+Read access is limited to published data records with status <code>PUBLIC</code>, <code>REGISTERED</code> or <code>AMENDED</code> for unauthenticated users.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>In addition to the permissions granted to unauthenticated users, an authenticated user may read the <code>private</code> records for which their username matches the record's <code>createdBy</code>.</p>
-<p>An authenticated user may create published data records. They may update, register, resync and delete only records for which their username matches <code>createdBy</code> <strong>and</strong> whose status is <code>private</code>. Attempting to modify a record owned by another user is answered with <code>404 Not Found</code>; attempting to modify an own record that is no longer <code>private</code> is answered with <code>400 Bad Request</code>.</p>
-<h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
-<p>If a user is a member of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they are permitted to call the delete endpoint.</p>
-<p>On the v4 endpoint, the instance-level restrictions above still apply, i.e. a non-admin may delete only their own <code>private</code> records. The deprecated v3 delete endpoint performs no instance-level check at all: any member of <code>DELETE_GROUPS</code> may delete any record in any state.</p>
+<p>An authenticated user has unrestricted create, and conditional read and update casl permissions for any published data record.
+Read access is limited to published data records with status <code>PUBLIC</code>, <code>REGISTERED</code> or <code>AMENDED</code> and records with status <code>PRIVATE</code> if the user is listed under the record's <code>createdBy</code> field.
+Update access is limited to <code>PRIVATE</code> records with the user listed under the record's <code>createdBy</code> field.</p>
 <h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
-<p>If a user is a member of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they are granted <code>AccessAny</code> and therefore have unrestricted read access to all published data records, regardless of status or creator, and may update, register, resync and delete records created by any user.</p>
-<p>Admins are still subject to the lifecycle guard: records in state <code>registered</code> or <code>amended</code> cannot be updated or deleted, since they have already been handed over to a DOI registrar.</p>
+<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create and read casl permissions, and conditional and update permissions. They are only allowed to update records with <code>PRIVATE</code> or <code>PUBLIC</code> status, regardless of ownership. Records in <code>REGISTERED</code> or <code>AMENDED</code> status cannot be updated by anyone.</p>
+<h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all published data records in the database. For the API v4 endpoint, records in <code>REGISTERED</code> or <code>AMENDED</code> status cannot be deleted by anyone.</p>
 <h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
+<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
+<h3 id="api-v3">API v3<a class="headerlink" href="#api-v3" title="Permanent link">¶</a></h3>
 <table>
 <thead>
 <tr>
 <th>Operation</th>
 <th>Unauthenticated</th>
 <th>Authenticated</th>
-<th><code>DELETE_GROUPS</code></th>
 <th><code>ADMIN_GROUPS</code></th>
+<th><code>DELETE_GROUPS</code></th>
 </tr>
 </thead>
 <tbody>
@@ -1504,45 +1560,86 @@
 <td><code>Create</code></td>
 <td>-</td>
 <td>any</td>
-<td>-</td>
+<td>any</td>
 <td>any</td>
 </tr>
 <tr>
 <td><code>Read</code></td>
-<td>published</td>
-<td>published + own</td>
-<td>published + own</td>
+<td>public</td>
+<td>public/owner</td>
 <td>any</td>
+<td>public/owner</td>
 </tr>
 <tr>
 <td><code>Update</code></td>
 <td>-</td>
-<td>own private</td>
-<td>own private</td>
-<td>any not registered/amended</td>
+<td>owner</td>
+<td>unregistered</td>
+<td>owner</td>
 </tr>
 <tr>
 <td><code>Delete</code></td>
 <td>-</td>
 <td>-</td>
-<td>own private (v4) / any (v3)</td>
-<td>any not registered/amended</td>
+<td>-</td>
+<td>any</td>
+</tr>
+</tbody>
+</table>
+<h3 id="api-v4">API v4<a class="headerlink" href="#api-v4" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Unauthenticated</th>
+<th>Authenticated</th>
+<th><code>ADMIN_GROUPS</code></th>
+<th><code>DELETE_GROUPS</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Create</code></td>
+<td>-</td>
+<td>any</td>
+<td>any</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>Read</code></td>
+<td>public</td>
+<td>public/owner</td>
+<td>any</td>
+<td>public/owner</td>
+</tr>
+<tr>
+<td><code>Update</code></td>
+<td>-</td>
+<td>owner</td>
+<td>unregistered</td>
+<td>owner</td>
+</tr>
+<tr>
+<td><code>Delete</code></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>unregistered</td>
 </tr>
 </tbody>
 </table>
 <p>Legend:
-- published: record <code>status</code> must be <code>public</code>, <code>registered</code> or <code>amended</code>
-- own: record <code>createdBy</code> must match the user's username
-- own private: record <code>createdBy</code> must match the user's username and <code>status</code> must be <code>private</code>
+- owner: publishedData's <code>status</code> field must be <code>PRIVATE</code> and the <code>createdBy</code> field must match the user's username
+- unregistered: publishedData's <code>status</code> field must one of <code>PRIVATE</code>, <code>PUBLIC</code>
+- public: publishedData's <code>status</code> field must be one of <code>PUBLIC</code>, <code>REGISTERED</code>, <code>AMENDED</code>
 - any: unrestricted access</p>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<p>Endpoint authorization is defined in <code>CaslAbilityFactory.publishedDataEndpointAccess</code> and applied through the <code>PoliciesGuard</code> and <code>@CheckPolicies</code> decorators on the controllers.</p>
-<p>Instance authorization is defined in <code>CaslAbilityFactory.publishedDataInstanceAccess</code>, which grants <code>AccessAny</code> to members of <code>ADMIN_GROUPS</code> only. Both controllers use this single ability to decide whether to narrow the Mongo query:</p>
-<ul>
-<li>Read endpoints (<code>GET /</code>, <code>GET /count</code>, <code>GET /:id</code>) add an <code>$or</code> filter that matches published records plus the caller's own <code>private</code> records. The filter is combined with the client supplied <code>where</code> rather than replacing it.</li>
-<li>Mutating endpoints (<code>PATCH /:id</code>, <code>POST /:id/register</code>, <code>POST /:id/resync</code>, and <code>DELETE /:id</code> on v4) build a filter on <code>doi</code> plus <code>createdBy</code> for non-admins, so a record belonging to somebody else is simply not found, and the same filter is reused for the write itself.</li>
-<li>The lifecycle guard on <code>status</code> is applied after the record has been fetched, and is what distinguishes a <code>400 Bad Request</code> (found, but not modifiable in its current state) from a <code>404 Not Found</code> (not visible to the caller).</li>
-</ul>
+<p>The definition is implemented in the casl module under <code>/src/casl/abilities/published-data.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.publishedDataAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
+<p>The <code>PublishedDataAbility</code> module in <code>/src/casl/abilities/published-data.ability.ts</code> is written in such a way that permissions are cumulative. In case multiple rules apply, casl will chain them in a logical or, ultimately giving precedence to the broadest applicable rule. The special permission groups are sorted roughly in ascending order of privilege level.
+In case there are expectations of mutual exclusivity for certain special groups (not the case for published data currently), additional rules using the <code>cannot</code> ability expression can be added after all <code>can</code> rules have been defined. For an example, see the jobs subsystem authorization docs.</p>
+<p>Read endpoints (<code>GET /</code>, <code>GET /count</code>, <code>GET /:id</code>) add an <code>$or</code> filter that matches published records plus the caller's own <code>private</code> records. The filter is combined with the client supplied <code>where</code> rather than replacing it.
+Mutating endpoints (<code>PATCH /:id</code>, <code>POST /:id/register</code>, <code>POST /:id/resync</code>, and <code>DELETE /:id</code> on v4) build a filter on <code>doi</code> plus <code>createdBy</code> for non-admins, so a record belonging to somebody else is simply not found, and the same filter is reused for the write itself.
+The lifecycle guard on <code>status</code> is applied after the record has been fetched, and is what distinguishes a <code>400 Bad Request</code> (found, but not modifiable in its current state) from a <code>404 Not Found</code> (not visible to the caller).</p>
 <p>Since a record's only ownership information is <code>createdBy</code>, there is no group-based rule to express here, and no <code>ownerGroup</code>/<code>accessGroups</code> conditions appear in the ability.</p>
 <h2 id="temporary-ownership-model">Temporary ownership model<a class="headerlink" href="#temporary-ownership-model" title="Permanent link">¶</a></h2>
 <p>Unlike datasets, samples, proposals and most other SciCat entities, the <code>PublishedData</code> schema does not extend <code>OwnableClass</code>: it has no <code>ownerGroup</code> and no <code>accessGroups</code> fields. The only ownership hint available is <code>createdBy</code>.</p>
