@@ -42,7 +42,7 @@ export class SseController {
   @ApiOperation({
     summary: "Subscribe to server-sent events.",
     description:
-      "Opens a text/event-stream connection pushing events for documents the authenticated user is allowed to read. Authenticate with a ticket from POST /events/ticket.",
+      "Opens a event-stream connection pushing events for documents the authenticated user is allowed to read. Authenticate with a ticket from POST /events/ticket.",
   })
   @ApiQuery({
     name: "ticket",
