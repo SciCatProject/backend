@@ -143,7 +143,7 @@ export class PublishedDataV4Controller {
       publishedDataFilters.limits = publishedDataLimits;
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
@@ -189,7 +189,7 @@ export class PublishedDataV4Controller {
   ) {
     const jsonFilters: IPublishedDataFilters = filter?.filter ?? {};
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
@@ -239,12 +239,18 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string[] | string) {
+  async formPopulate(
+    @Req() request: Request,
+    @Query("pid") pid: string[] | string,
+  ) {
     pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid: pid[0] },
-    })) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid[0],
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
@@ -287,7 +293,7 @@ export class PublishedDataV4Controller {
     const filter: FilterQuery<PublishedData> = {
       doi,
     };
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
     if (ability.cannot(Action.AccessAny, PublishedData)) {
@@ -365,7 +371,7 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
@@ -464,7 +470,7 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<PublishedData | null> {
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
@@ -513,7 +519,7 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
@@ -679,7 +685,7 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
