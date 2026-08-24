@@ -92,6 +92,9 @@ export enum Action {
   RuntimeConfigRead = "runtimeconfig_read",
   RuntimeConfigUpdate = "runtimeconfig_update",
 
+  // Server-Sent Events
+  SseRead = "sse_read",
+
   // -------------------------------------
   // Samples
   // -------------------------------------

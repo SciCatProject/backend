@@ -26,6 +26,7 @@ import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { SseAbility } from "./abilities/sse.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
@@ -46,6 +47,7 @@ export class CaslAbilityFactory {
     private policyAbility: PolicyAbility,
     private proposalAbility: ProposalAbility,
     private runtimeConfigAbility: RuntimeConfigAbility,
+    private sseAbility: SseAbility,
   ) {
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
@@ -71,6 +73,7 @@ export class CaslAbilityFactory {
     runtimeconfig: this.runtimeConfigAccess,
     samples: this.samplesEndpointAccess,
     users: this.userEndpointAccess,
+    sse: this.sseAccess,
   };
 
   endpointAccess(endpoint: string, user: JWTUser) {
@@ -133,6 +136,10 @@ export class CaslAbilityFactory {
 
   runtimeConfigAccess(user: JWTUser | null) {
     return this.runtimeConfigAbility.buildAbility(user);
+  }
+
+  sseAccess(user: JWTUser | null) {
+    return this.sseAbility.buildAbility(user);
   }
 
   publishedDataEndpointAccess(user: JWTUser) {

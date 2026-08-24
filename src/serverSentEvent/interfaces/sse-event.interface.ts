@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { MessageEvent } from "@nestjs/common";
 
+export class SseClass {}
 export interface SseClient {
   user: JWTUser;
   subject: Subject<MessageEvent>;

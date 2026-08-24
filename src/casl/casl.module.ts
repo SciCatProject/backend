@@ -15,6 +15,7 @@ import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { SseAbility } from "./abilities/sse.ability";
 
 @Module({
   imports: [JobConfigModule, ConfigModule],
@@ -33,6 +34,7 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
     PolicyAbility,
     ProposalAbility,
     RuntimeConfigAbility,
+    SseAbility,
   ],
   exports: [CaslAbilityFactory],
 })

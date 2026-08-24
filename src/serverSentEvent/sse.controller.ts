@@ -20,11 +20,10 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { Action } from "src/casl/action.enum";
 import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { SseService } from "./sse.service";
 import { AuthService } from "src/auth/auth.service";
+import { SseClass } from "./interfaces/sse-event.interface";
 
 @ApiTags("events")
 @Controller("events")
@@ -37,19 +36,19 @@ export class SseController {
 
   @Sse("stream")
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+  @CheckPolicies("sse", (ability: AppAbility) =>
+    ability.can(Action.SseRead, SseClass),
   )
   @ApiOperation({
     summary: "Subscribe to server-sent events.",
     description:
-      "Opens a text/event-stream connection pushing events for documents the authenticated user is allowed to read.",
+      "Opens a text/event-stream connection pushing events for documents the authenticated user is allowed to read. Authenticate with a ticket from POST /events/ticket.",
   })
   @ApiQuery({
-    name: "token",
+    name: "ticket",
     required: false,
     description:
-      "JWT access token. Alternative to the Authorization header for EventSource clients that cannot set request headers.",
+      "Short-lived ticket from POST /events/ticket. Expires after 60 seconds and is only accepted on this route.",
   })
   stream(@Req() request: Request): Observable<MessageEvent> {
     const user = request.user as JWTUser;
@@ -58,10 +57,8 @@ export class SseController {
 
   @Get("connections")
   @UseGuards(PoliciesGuard)
-  @CheckPolicies(
-    "runtimeconfig",
-    (ability: AppAbility) =>
-      ability.can(Action.RuntimeConfigUpdate, RuntimeConfig), //TODO: define a correct policy for monitoring connections
+  @CheckPolicies("sse", (ability: AppAbility) =>
+    ability.can(Action.AccessAny, SseClass),
   )
   @ApiOperation({
     summary: "List active SSE connections on this instance.",
@@ -71,8 +68,8 @@ export class SseController {
   }
 
   @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+  @CheckPolicies("sse", (ability: AppAbility) =>
+    ability.can(Action.SseRead, SseClass),
   )
   @Post("ticket")
   async createTicket(@Req() request: Request): Promise<{ ticket: string }> {
