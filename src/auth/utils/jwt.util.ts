@@ -11,11 +11,9 @@ export const fromSseTicket = (req: Request): string | null => {
 
 export const requireJwtSecret = (configService: ConfigService): string => {
   const secret = configService.get<string>("jwt.secret");
-  if (secret) return secret;
 
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("jwt.secret must be configured in production");
+  if (!secret) {
+    throw new Error("JWT_SECRET is not defined in the environment variables.");
   }
-  console.warn("jwt.secret is not set, falling back to an insecure default");
-  return "defaultSecret";
+  return secret;
 };
