@@ -96,10 +96,8 @@ export class AuthService {
   }
 
   createSseTicket(user: JWTUser): string {
-    return this.jwtService.sign(
-      { ...user, purpose: "sse" },
-      { expiresIn: "60s" },
-    );
+    const expiresIn = this.configService.get<number>("sseTicketExpiresIn");
+    return this.jwtService.sign({ ...user, purpose: "sse" }, { expiresIn });
   }
 
   async logout(req: Request) {
