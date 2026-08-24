@@ -458,6 +458,7 @@ const configuration = () => {
     ajvCustomDefinitions: ajvCustomDefinitions,
     opensearchConfig: jsonConfigMap.opensearchConfig,
     datafilesMetadataSchema: jsonConfigMap.datafilesMetadataSchema,
+    sseTicketExpiresIn: parseInt(process.env.SSE_TICKET_EXPIRES_IN || "60", 10),
   };
   return merge(config, localconfiguration);
 };
