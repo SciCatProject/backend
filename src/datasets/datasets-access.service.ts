@@ -22,25 +22,17 @@ export class DatasetsAccessService {
   getRelationViewAccess(field: DatasetLookupKeysEnum, user: JWTUser) {
     switch (field) {
       case DatasetLookupKeysEnum.proposals: {
-        const ability = this.caslAbilityFactory.proposalsInstanceAccess(user);
-        const canViewAny = ability.can(Action.ProposalsReadAny, ProposalClass);
-        const canView = ability.can(
-          Action.ProposalsReadManyAccess,
-          ProposalClass,
-        );
+        const ability = this.caslAbilityFactory.proposalAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, ProposalClass);
+        const canView = ability.can(Action.ProposalRead, ProposalClass);
+
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
-        const ability =
-          this.caslAbilityFactory.origDatablockInstanceAccess(user);
-        const canViewAny = ability.can(
-          Action.OrigdatablockReadAny,
-          OrigDatablock,
-        );
-        const canView = ability.can(
-          Action.OrigdatablockReadManyAccess,
-          OrigDatablock,
-        );
+        const ability = this.caslAbilityFactory.origDatablockAccess(user);
+        const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+        const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.datablocks: {
@@ -57,7 +49,7 @@ export class DatasetsAccessService {
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.instruments: {
-        const ability = this.caslAbilityFactory.instrumentEndpointAccess(user);
+        const ability = this.caslAbilityFactory.instrumentAccess(user);
         const canViewAny = ability.can(Action.InstrumentRead, Instrument);
         return {
           canViewAny,

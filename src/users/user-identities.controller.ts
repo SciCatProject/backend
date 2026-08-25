@@ -40,11 +40,8 @@ export class UserIdentitiesController {
   ) {}
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserReadOwn, User) ||
-      ability.can(Action.UserReadAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
   )
   @Get("/findOne")
   @ApiQuery({
@@ -83,12 +80,11 @@ export class UserIdentitiesController {
     }
 
     const authenticatedUser: JWTUser = request.user as JWTUser;
-    const ability =
-      await this.caslAbilityFactory.userEndpointAccess(authenticatedUser);
+    const ability = this.caslAbilityFactory.userAccess(authenticatedUser);
 
     if (
-      !ability.can(Action.UserReadAny, User) &&
-      ability.can(Action.UserReadOwn, User)
+      !ability.can(Action.AccessAny, User) &&
+      ability.can(Action.UserRead, User)
     ) {
       // this user can only see his/her user identity
       filter = { userId: authenticatedUser._id, ...filter };
@@ -106,8 +102,8 @@ export class UserIdentitiesController {
     user._id = identity.userId;
     user.id = identity.userId;
     if (
-      !ability.can(Action.UserReadOwn, user) &&
-      !ability.can(Action.UserReadAny, User)
+      !ability.can(Action.UserRead, user) &&
+      !ability.can(Action.AccessAny, User)
     ) {
       throw new ForbiddenException("Access Forbidden or Unauthorized");
     }
@@ -117,7 +113,7 @@ export class UserIdentitiesController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserReadAny, User),
+    ability.can(Action.AccessAny, User),
   )
   @Get("/isValidEmail")
   @ApiOperation({
