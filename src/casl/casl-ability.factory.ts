@@ -1,15 +1,9 @@
-import {
-  AbilityBuilder,
-  ExtractSubjectType,
-  MongoAbility,
-  createMongoAbility,
-} from "@casl/ability";
+import { MongoAbility } from "@casl/ability";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
-import { Action } from "./action.enum";
-import { Subjects, PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
