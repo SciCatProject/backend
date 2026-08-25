@@ -94,6 +94,13 @@ export enum Action {
 
   // Server-Sent Events
   SseRead = "sse_read",
+  
+  // Users
+  UserCreate = "user_create",
+  UserRead = "user_read",
+  UserUpdate = "user_update",
+  UserDelete = "user_delete",
+  UserCreateJwt = "user_create_jwt",
 
   // -------------------------------------
   // Samples
@@ -134,18 +141,4 @@ export enum Action {
   SampleAttachmentUpdateAny = "sample_attachment_update_any",
   SampleAttachmentDeleteOwner = "sample_attachment_delete_owner",
   SampleAttachmentDeleteAny = "sample_attachment_delete_any",
-
-  // -------------
-  // Users actions
-  UserReadOwn = "user_read_own",
-  UserReadAny = "user_read_any",
-  UserCreateOwn = "user_create_own",
-  UserCreateAny = "user_create_any",
-  UserUpdateOwn = "user_update_own",
-  UserUpdateAny = "user_update_any",
-  UserDeleteOwn = "user_delete_own",
-  UserDeleteAny = "user_delete_any",
-  UserCreateJwt = "user_create_jwt",
-  UserListAll = "user_list_all",
-  UserListOwn = "user_list_own",
 }

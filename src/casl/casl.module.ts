@@ -14,8 +14,10 @@ import { OpensearchAbility } from "./abilities/opensearch.ability";
 import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
 import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
+import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 import { SseAbility } from "./abilities/sse.ability";
+import { UserAbility } from "./abilities/users.ability";
 
 @Module({
   imports: [JobConfigModule, ConfigModule],
@@ -33,8 +35,10 @@ import { SseAbility } from "./abilities/sse.ability";
     OrigDatablockAbility,
     PolicyAbility,
     ProposalAbility,
+    PublishedDataAbility,
     RuntimeConfigAbility,
     SseAbility,
+    UserAbility,
   ],
   exports: [CaslAbilityFactory],
 })
