@@ -4,7 +4,6 @@
     "authenticatedUser": "PROPOSALS"
   },
   "statusBannerMessage": "",
-  "addScientificMetadataKeysAsColumn": true,
   "statusBannerCode": "INFO",
   "autoApplyFilters": false,
   "accessTokenPrefix": "Bearer ",
