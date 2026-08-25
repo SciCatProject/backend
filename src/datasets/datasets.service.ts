@@ -321,7 +321,6 @@ export class DatasetsService {
     const osResult = await this.opensearchService.search({
       filter: { text, userGroups, isPublished },
       index: this.osDefaultIndex,
-      skip: modifiers.skip,
     });
 
     if (!osResult) {

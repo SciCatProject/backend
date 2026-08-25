@@ -337,20 +337,14 @@ export class OpensearchService implements OnModuleInit {
     params: SearchParams,
     mode: SearchMode,
   ): BuiltSearchRequest {
-    const defaultSort: Sort = [{ _score: "desc" }, { _id: "asc" }];
-    const {
-      filter,
-      index = this.defaultIndex,
-      limit = this.maxResultWindow,
-      skip = 0,
-      sort = defaultSort,
-    } = params;
+    const defaultSort: Sort = [{ _score: "desc" }];
+    const { filter, index = this.defaultIndex, sort = defaultSort } = params;
 
     return {
       index,
       body: {
-        from: skip,
-        size: Math.max(0, Math.min(limit, this.maxResultWindow - skip)),
+        from: 0,
+        size: this.maxResultWindow,
         track_total_hits: this.maxResultWindow,
         _source: false,
         query: this.searchService.buildQuery(filter, mode),
