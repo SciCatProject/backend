@@ -8,17 +8,23 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   mongodb:
-    image: "mongo:latest"
-    ports:
-      - "27017:27017"
+    image: mongo:latest
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    environment:
+      MONGO_RS_HOST: "localhost:27017"
     volumes:
       - "mongodb_data:/data/db"
+    ports:
+      - "27017:27017"
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh mongodb:27017/test --quiet
+      test: >
+        mongosh --quiet --eval "
+           try { if (rs.status().ok !== 1) quit(1) }
+          catch { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '$$MONGO_RS_HOST' }] }) }
+        "
       interval: 10s
-      timeout: 10s
-      retries: 5
       start_period: 40s
+      retries: 5
   scichat-loopback:
     image: dacat/scichat-loopback:e2e
     command:

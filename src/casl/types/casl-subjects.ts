@@ -18,6 +18,7 @@ import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
 import { GenericHistory } from "src/common/schemas/generic-history.schema";
+import { SseClass } from "src/serverSentEvent/interfaces/sse-event.interface";
 
 export type Subjects =
   | string
@@ -40,6 +41,7 @@ export type Subjects =
       | typeof User
       | typeof UserIdentity
       | typeof UserSettings
+      | typeof SseClass
     >
   | "all";
 
