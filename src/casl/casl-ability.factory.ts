@@ -19,6 +19,7 @@ import { ProposalAbility } from "./abilities/proposals.ability";
 import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 import { SampleAbility } from "./abilities/samples.ability";
+import { SseAbility } from "./abilities/sse.ability";
 import { UserAbility } from "./abilities/users.ability";
 
 export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
@@ -42,6 +43,7 @@ export class CaslAbilityFactory {
     private publishedDataAbility: PublishedDataAbility,
     private runtimeConfigAbility: RuntimeConfigAbility,
     private sampleAbility: SampleAbility,
+    private sseAbility: SseAbility,
     private userAbility: UserAbility,
   ) {
     this.accessGroups =
@@ -67,6 +69,7 @@ export class CaslAbilityFactory {
     publisheddata: this.publishedDataAccess,
     runtimeconfig: this.runtimeConfigAccess,
     samples: this.sampleAccess,
+    sse: this.sseAccess,
     users: this.userAccess,
   };
 
@@ -138,6 +141,10 @@ export class CaslAbilityFactory {
 
   sampleAccess(user: JWTUser | null) {
     return this.sampleAbility.buildAbility(user);
+  }
+
+  sseAccess(user: JWTUser | null) {
+    return this.sseAbility.buildAbility(user);
   }
 
   userAccess(user: JWTUser | null) {

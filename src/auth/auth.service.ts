@@ -19,6 +19,7 @@ import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
 import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { JWTUser } from "./interfaces/jwt-user.interface";
 
 @Injectable()
 export class AuthService {
@@ -92,6 +93,11 @@ export class AuthService {
       userId: user._id,
       user: user as ReturnedUserDto,
     };
+  }
+
+  createSseTicket(user: JWTUser): string {
+    const expiresIn = this.configService.get<number>("sseTicketExpiresIn");
+    return this.jwtService.sign({ ...user, purpose: "sse" }, { expiresIn });
   }
 
   async logout(req: Request) {

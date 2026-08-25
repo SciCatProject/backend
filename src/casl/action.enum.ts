@@ -103,6 +103,9 @@ export enum Action {
   SampleAttachmentUpdate = "sample_attachment_update",
   SampleAttachmentDelete = "sample_attachment_delete",
 
+  // Server-Sent Events
+  SseRead = "sse_read",
+
   // Users
   UserCreate = "user_create",
   UserRead = "user_read",

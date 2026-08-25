@@ -17,6 +17,7 @@ import { ProposalAbility } from "./abilities/proposals.ability";
 import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 import { SampleAbility } from "./abilities/samples.ability";
+import { SseAbility } from "./abilities/sse.ability";
 import { UserAbility } from "./abilities/users.ability";
 
 @Module({
@@ -38,6 +39,7 @@ import { UserAbility } from "./abilities/users.ability";
     PublishedDataAbility,
     RuntimeConfigAbility,
     SampleAbility,
+    SseAbility,
     UserAbility,
   ],
   exports: [CaslAbilityFactory],
