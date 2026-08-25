@@ -6,6 +6,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   NotFoundException,
@@ -49,7 +50,6 @@ import {
   PartialUpdatePublishedDataDto,
   UpdatePublishedDataDto,
 } from "./dto/update-published-data.dto";
-import { UpdatePublishedDataV4Dto } from "./dto/update-published-data.v4.dto";
 import {
   FormPopulateData,
   ICount,
@@ -477,6 +477,7 @@ export class PublishedDataController {
     description:
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
+  @HttpCode(HttpStatus.OK)
   @Post("/:id/register")
   async register(
     @Req() request: Request,
@@ -535,7 +536,6 @@ export class PublishedDataController {
         "registerMetadataUri",
       );
       const registerDoiUri = this.configService.get<string>("registerDoiUriV3");
-      const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
       let doiProviderCredentials = {
         username: "removed",
@@ -575,25 +575,13 @@ export class PublishedDataController {
         auth: doiProviderCredentials,
       };
 
-      const syncOAIPublication = {
-        method: "POST",
-        body: publishedData,
-        json: true,
-        uri: OAIServerUri,
-        headers: {
-          "content-type": "application/json;charset=UTF-8",
-        },
-        auth: doiProviderCredentials,
-      };
-
-      if (this.configService.get<string>("site") !== "PSI") {
+      if (registerMetadataUri && registerDoiUri) {
         console.log("posting to datacite");
         console.log(registerDataciteMetadataOptions);
         console.log(registerDataciteDoiOptions);
 
-        let res;
         try {
-          res = await firstValueFrom(
+          await firstValueFrom(
             this.httpService.request({
               ...registerDataciteMetadataOptions,
               method: "PUT",
@@ -621,54 +609,11 @@ export class PublishedDataController {
             err.response?.status || HttpStatus.FAILED_DEPENDENCY,
           );
         }
-
-        try {
-          await this.publishedDataService.update(filter, data);
-        } catch (error) {
-          console.error(error);
-        }
-
-        return res ? { doi: res.data } : null;
-      } else if (!this.configService.get<string>("oaiProviderRoute")) {
-        try {
-          await this.publishedDataService.update(filter, data);
-        } catch (error) {
-          console.error(error);
-        }
-
-        console.warn(
-          "results not pushed to oaiProvider as oaiProviderRoute route is not specified in the env variables",
-        );
-
-        throw new HttpException(
-          "results not pushed to oaiProvider as oaiProviderRoute route is not specified in the env variables",
-          HttpStatus.OK,
-        );
-      } else {
-        let res;
-        try {
-          res = await firstValueFrom(
-            this.httpService.request({
-              ...syncOAIPublication,
-              method: "POST",
-            }),
-          );
-        } catch (err: any) {
-          handleAxiosRequestError(err, "PublishedDataController.register");
-          throw new HttpException(
-            `Error occurred: ${err}`,
-            err.response?.status || HttpStatus.FAILED_DEPENDENCY,
-          );
-        }
-
-        try {
-          await this.publishedDataService.update(filter, data);
-        } catch (error) {
-          console.error(error);
-        }
-
-        return res ? { doi: res.data } : null;
       }
+
+      const res = await this.publishedDataService.update(filter, data);
+
+      return res;
     }
 
     throw new NotFoundException();
@@ -720,17 +665,6 @@ export class PublishedDataController {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
-
-    let returnValue = null;
-    if (OAIServerUri) {
-      returnValue = await this.publishedDataService.resyncOAIPublication(
-        id,
-        data as unknown as UpdatePublishedDataV4Dto,
-        OAIServerUri,
-      );
-    }
-
     try {
       await this.publishedDataService.update(filter, data);
     } catch (error: any) {
@@ -740,7 +674,7 @@ export class PublishedDataController {
       );
     }
 
-    return returnValue;
+    return { doi: publishedData.doi };
   }
 }
 
