@@ -94,7 +94,7 @@ export enum Action {
 
   // Server-Sent Events
   SseRead = "sse_read",
-  
+
   // Users
   UserCreate = "user_create",
   UserRead = "user_read",

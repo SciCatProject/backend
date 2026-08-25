@@ -147,7 +147,7 @@ export class CaslAbilityFactory {
   sseAccess(user: JWTUser | null) {
     return this.sseAbility.buildAbility(user);
   }
-  
+
   userAccess(user: JWTUser | null) {
     return this.userAbility.buildAbility(user);
   }
