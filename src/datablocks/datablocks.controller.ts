@@ -32,6 +32,7 @@ import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
+import { DatasetClass } from "src/datasets//schemas/dataset.schema";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatablocksService } from "./datablocks.service";
 import { CreateDatablockDto } from "./dto/create-datablock.dto";
@@ -59,6 +60,20 @@ export class DatablocksController {
     return instance;
   }
 
+  private generateDatasetInstanceForPermissions(
+    dataset: DatasetClass | null,
+  ): DatasetClass {
+    const datasetInstance = new DatasetClass();
+    datasetInstance._id = "";
+    datasetInstance.pid = dataset?.pid || "";
+    datasetInstance.accessGroups = dataset?.accessGroups || [];
+    datasetInstance.ownerGroup = dataset?.ownerGroup || "";
+    datasetInstance.sharedWith = dataset?.sharedWith || [];
+    datasetInstance.isPublished = dataset?.isPublished || false;
+
+    return datasetInstance;
+  }
+
   private checkPermission(
     request: Request,
     datablock: Datablock | CreateDatablockDto,
@@ -78,6 +93,31 @@ export class DatablocksController {
     return canDoAction;
   }
 
+  private async checkDatasetPermission(
+    request: Request,
+    pid: string,
+    action: Action,
+  ): Promise<DatasetClass> {
+    const dataset = await this.datasetsService.findOne({ where: { pid } });
+
+    if (!dataset) {
+      throw new NotFoundException(`dataset: ${pid} not found`);
+    }
+
+    const user: JWTUser = request.user as JWTUser;
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const datasetInstance = this.generateDatasetInstanceForPermissions(dataset);
+
+    if (
+      !ability.can(action, datasetInstance) &&
+      !ability.can(Action.AccessAny, datasetInstance)
+    ) {
+      throw new ForbiddenException("Unauthorized access");
+    }
+
+    return dataset;
+  }
+
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
     ability.can(Action.DatablockCreate, Datablock),
@@ -87,20 +127,21 @@ export class DatablocksController {
     @Req() req: Request,
     @Body() createDatablockDto: CreateDatablockDto,
   ): Promise<Datablock> {
-    this.checkPermission(req, createDatablockDto, Action.DatablockCreate);
+    const dataset = await this.checkDatasetPermission(
+      req,
+      createDatablockDto.datasetId,
+      Action.DatasetDatablockCreate,
+    );
+
+    const datablock = {
+      ...createDatablockDto,
+      ownerGroup: dataset.ownerGroup,
+      accessGroups: dataset.accessGroups,
+    };
+
+    this.checkPermission(req, datablock, Action.DatablockCreate);
 
     try {
-      const dataset = await this.datasetsService.findOne({
-        where: {
-          pid: createDatablockDto.datasetId,
-        },
-      });
-      const datablock = {
-        ...createDatablockDto,
-        ownerGroup: createDatablockDto.ownerGroup || dataset?.ownerGroup || "",
-        accessGroups:
-          createDatablockDto.accessGroups || dataset?.accessGroups || [],
-      };
       return await this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
         datablock,
       );
@@ -246,17 +287,23 @@ export class DatablocksController {
     @Req() request: Request,
     @Body() updateDatablockDto: PartialUpdateDatablockDto,
   ): Promise<Datablock | null> {
+    const datablockInstance = await this.datablocksService.findOne({
+      where: { _id: id },
+    });
+
+    if (!datablockInstance) {
+      throw new NotFoundException();
+    }
+
+    this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
+
+    await this.checkDatasetPermission(
+      request,
+      datablockInstance.datasetId,
+      Action.DatasetDatablockUpdate,
+    );
+
     try {
-      const datablockInstance = await this.datablocksService.findOne({
-        where: { _id: id },
-      });
-
-      if (!datablockInstance) {
-        throw new NotFoundException();
-      }
-
-      this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
-
       return await this.datablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
         { _id: id },
         updateDatablockDto,

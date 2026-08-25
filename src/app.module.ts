@@ -45,7 +45,8 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
 import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
 import { OidcClientModule } from "./common/openid-client/openid-client.module";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { TransportType } from "node_modules/@nestjs-modules/mailer/dist/interfaces/mailer-options.interface";
+import { SseModule } from "./serverSentEvent/sse.module";
+import type { MailerOptions } from "@nestjs-modules/mailer";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { TransportType } from "node_modules/@nestjs-modules/mailer/dist/interfac
       cache: true,
     }),
     AuthModule,
+    SseModule,
     OidcClientModule,
     CaslModule,
     AttachmentsModule,
@@ -88,7 +90,7 @@ import { TransportType } from "node_modules/@nestjs-modules/mailer/dist/interfac
         configService: ConfigService,
         httpService: HttpService,
       ) => {
-        let transport: TransportType;
+        let transport: MailerOptions["transport"];
         const transportType = configService
           .get<string>("email.type")
           ?.toLowerCase();
