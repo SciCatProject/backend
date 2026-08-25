@@ -6,28 +6,28 @@
       
       
       
-        <link rel="prev" href="../metadata-keys/">
+        <link rel="prev" href="../runtime-config/">
       
       
-        <link rel="next" href="../origdatablocks/">
+        <link rel="next" href="../authorization/attachments/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
     
     
       
-        <title>OPensearch Authorization Model - SciCat Documentation</title>
+        <title>Server-Sent Events (SSE) - SciCat Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -46,15 +46,15 @@
       
     
     
-      <link rel="stylesheet" href="../../../css/custom.css">
+      <link rel="stylesheet" href="../../css/custom.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
-  <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
             html.glightbox-open { overflow: initial; height: 100%; }
             .gslide-title { margin-top: 0px; user-select: text; }
             .gslide-desc { color: #666; user-select: text; }
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#opensearch-authorization-model" class="md-skip">
+        <a href="#server-sent-events-sse" class="md-skip">
           Skip to content
         </a>
       
@@ -101,9 +101,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+    <a href="../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
       
-  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              OPensearch Authorization Model
+              Server-Sent Events (SSE)
             
           </span>
         </div>
@@ -198,9 +198,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+    <a href="../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
       
-  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+  <img src="../../assets/SciCat-logo-icon.png" alt="logo">
 
     </a>
     SciCat Documentation
@@ -215,7 +215,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -242,7 +242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../about/" class="md-nav__link">
+      <a href="../../about/" class="md-nav__link">
         
   
   
@@ -318,7 +318,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ajv-extensions/" class="md-nav__link">
+      <a href="../ajv-extensions/" class="md-nav__link">
         
   
   
@@ -346,7 +346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../datafiles_metadata/" class="md-nav__link">
+      <a href="../datafiles_metadata/" class="md-nav__link">
         
   
   
@@ -374,7 +374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../metadatakeys-module/" class="md-nav__link">
+      <a href="../metadatakeys-module/" class="md-nav__link">
         
   
   
@@ -402,7 +402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../opensearch-guidelines/" class="md-nav__link">
+      <a href="../opensearch-guidelines/" class="md-nav__link">
         
   
   
@@ -430,7 +430,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../release-guidelines/" class="md-nav__link">
+      <a href="../release-guidelines/" class="md-nav__link">
         
   
   
@@ -458,7 +458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../runtime-config/" class="md-nav__link">
+      <a href="../runtime-config/" class="md-nav__link">
         
   
   
@@ -466,279 +466,6 @@
     
   
     Runtime Configuration System Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../sse-module/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Server-Sent Events (SSE)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" checked="">
-        
-          
-          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Authorization
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Authorization
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datablocks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datablocks Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datasets/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Datasets Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../history/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    History Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../instruments/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Instruments Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../jobs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Jobs Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../logbooks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Logbooks Authorization Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../metadata-keys/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Metadata Keys Authorization Model
   
 
     
@@ -775,7 +502,7 @@
   <span class="md-ellipsis">
     
   
-    OPensearch Authorization Model
+    Server-Sent Events (SSE)
   
 
     
@@ -793,7 +520,7 @@
   <span class="md-ellipsis">
     
   
-    OPensearch Authorization Model
+    Server-Sent Events (SSE)
   
 
     
@@ -819,10 +546,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#actions" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Actions
+        How it works
       
     </span>
   </a>
@@ -830,44 +557,55 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#permissions" class="md-nav__link">
+  <a href="#requirements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permissions
+        Requirements
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Permissions">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authorization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoints">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#unauthenticated" class="md-nav__link">
+  <a href="#event-format" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unauthenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#authenticated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Authenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#admin_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ADMIN_GROUPS
+        Event format
       
     </span>
   </a>
@@ -880,10 +618,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#permission-matrix" class="md-nav__link">
+  <a href="#what-is-watched" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permission Matrix
+        What is watched
       
     </span>
   </a>
@@ -891,10 +629,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-notes" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Implementation Notes
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits-and-operational-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits and operational behaviour
       
     </span>
   </a>
@@ -916,8 +665,279 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authorization
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Authorization
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../origdatablocks/" class="md-nav__link">
+      <a href="../authorization/datablocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datablocks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/instruments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instruments Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jobs Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/logbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logbooks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/metadata-keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metadata Keys Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/opensearch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OPensearch Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authorization/origdatablocks/" class="md-nav__link">
         
   
   
@@ -945,7 +965,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../policies/" class="md-nav__link">
+      <a href="../authorization/policies/" class="md-nav__link">
         
   
   
@@ -973,7 +993,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../proposals/" class="md-nav__link">
+      <a href="../authorization/proposals/" class="md-nav__link">
         
   
   
@@ -1001,7 +1021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../published-data/" class="md-nav__link">
+      <a href="../authorization/published-data/" class="md-nav__link">
         
   
   
@@ -1029,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../runtime-config/" class="md-nav__link">
+      <a href="../authorization/runtime-config/" class="md-nav__link">
         
   
   
@@ -1057,7 +1077,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sse/" class="md-nav__link">
+      <a href="../authorization/sse/" class="md-nav__link">
         
   
   
@@ -1085,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../users/" class="md-nav__link">
+      <a href="../authorization/users/" class="md-nav__link">
         
   
   
@@ -1168,7 +1188,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributing/release-guidelines/" class="md-nav__link">
+      <a href="../contributing/release-guidelines/" class="md-nav__link">
         
   
   
@@ -1204,7 +1224,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
+      <a href="../migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
         
   
   
@@ -1286,7 +1306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
+      <a href="../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
         
   
   
@@ -1314,7 +1334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../frontend-config-guide/frontend-config/" class="md-nav__link">
+      <a href="../../frontend-config-guide/frontend-config/" class="md-nav__link">
         
   
   
@@ -1369,10 +1389,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#actions" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Actions
+        How it works
       
     </span>
   </a>
@@ -1380,44 +1400,55 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#permissions" class="md-nav__link">
+  <a href="#requirements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permissions
+        Requirements
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Permissions">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authorization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoints">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#unauthenticated" class="md-nav__link">
+  <a href="#event-format" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unauthenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#authenticated" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Authenticated
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#admin_groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ADMIN_GROUPS
+        Event format
       
     </span>
   </a>
@@ -1430,10 +1461,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#permission-matrix" class="md-nav__link">
+  <a href="#what-is-watched" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Permission Matrix
+        What is watched
       
     </span>
   </a>
@@ -1441,10 +1472,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementation-notes" class="md-nav__link">
+  <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Implementation Notes
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits-and-operational-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits and operational behaviour
       
     </span>
   </a>
@@ -1468,46 +1510,180 @@
 
 
 
-<h1 id="opensearch-authorization-model">OPensearch Authorization Model<a class="headerlink" href="#opensearch-authorization-model" title="Permanent link">¶</a></h1>
-<p>This document describes the authorization model used for opensearch and associated endpoints.</p>
-<h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
-<p>The following actions are defined for opensearch:</p>
+<h1 id="server-sent-events-sse">Server-Sent Events (SSE)<a class="headerlink" href="#server-sent-events-sse" title="Permanent link">¶</a></h1>
+<p>The backend can push document changes to connected clients over a
+<code>text/event-stream</code> connection, so a frontend can react to new datasets without
+polling.</p>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>MongoDB change stream
+        │
+   SseListener      watches the oplog, maps a raw document to a DTO
+        │
+   SseService       holds one RxJS Subject per open connection,
+        │           filters each event per user
+   SseController    exposes the stream over HTTP
+        │
+     client
+</code></pre></div>
+<p>Events originate in MongoDB rather than in application code. That is deliberate:
+a change stream sees every write regardless of which code path produced it, so a
+dataset created through a background job or a migration is broadcast the same way
+as one created through the API. The alternative, emitting from service methods,
+would silently miss any write that bypassed them.</p>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">¶</a></h2>
+<p>SSE depends on MongoDB change streams, which only exist on a replica set. On
+startup <code>SseListener</code> probes the connection and, if it finds a standalone
+<code>mongod</code>, logs a message and leaves SSE disabled. The rest of the API is
+unaffected.</p>
+<p>While disabled, the SSE endpoints return <code>503 Service Unavailable</code> rather than
+failing silently, so a misconfigured deployment is visible instead of merely
+quiet.</p>
+<p>To convert a standalone container to a single-node replica set:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">mongodb</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mongo:latest</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">"--replSet"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"rs0"</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">"--bind_ip_all"</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>then initiate it once:</p>
+<div class="highlight"><pre><span></span><code>mongosh<span class="w"> </span>--eval<span class="w"> </span><span class="s1">'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'</span>
+</code></pre></div>
+<p>Existing data in the volume is preserved.</p>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">¶</a></h2>
+<p><code>EventSource</code>, the browser API for consuming SSE, cannot set request headers, so
+a bearer token cannot be sent the usual way. The stream therefore uses a
+short-lived ticket passed as a query parameter.</p>
+<div class="highlight"><pre><span></span><code>POST /api/v3/events/ticket     Authorization: Bearer &lt;session token&gt;
+  → { "ticket": "&lt;jwt&gt;" }
+
+GET  /api/v3/events/stream?ticket=&lt;jwt&gt;
+</code></pre></div>
+<p>The ticket is a JWT signed with the same secret as a session token, but carrying
+<code>purpose: "sse"</code>. <code>JwtStrategy</code> enforces that claim in both directions: a ticket
+is rejected on any route other than the stream, and the stream rejects anything
+that is not a ticket. Scoping matters here because a credential in a URL ends up
+in access logs, proxy logs, and browser history, so it must be useless anywhere
+else.</p>
+<p>Tickets are single-purpose but not single-use. Within their lifetime the same
+ticket can open more than one connection, which is why the default lifetime is
+short.</p>
+<p>Because tickets expire quickly, a dropped stream cannot simply be reopened at the
+same URL. Clients must mint a new ticket for each reconnect. The browser's
+built-in <code>EventSource</code> reconnect replays the original URL and will fail, so
+clients should call <code>close()</code> on error and restart the flow from the ticket
+request.</p>
+<h2 id="authorization">Authorization<a class="headerlink" href="#authorization" title="Permanent link">¶</a></h2>
+<p>Two independent checks apply.</p>
+<p><strong>At connection time</strong>, CASL decides who may open a stream at all. Any
+authenticated user has <code>sse_read</code>; members of <code>ADMIN_GROUPS</code> additionally get
+<code>access_any</code>, which gates the connections endpoint.</p>
+<p><strong>Per event</strong>, <code>SseService</code> filters every message against every connected user
+before sending it. A user receives a document only if one of these holds:</p>
 <ul>
-<li><code>Manage</code></li>
+<li>the document's <code>ownerGroup</code> is one of the user's groups</li>
+<li>the document's <code>accessGroups</code> intersect the user's groups</li>
+<li>the user belongs to an admin group</li>
 </ul>
-<p>All opensearch endpoints are admin-only, therefore this one action is used to cover all permissions.</p>
-<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
-<p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
-<h3 id="unauthenticated">Unauthenticated<a class="headerlink" href="#unauthenticated" title="Permanent link">¶</a></h3>
-<p>Unauthenticated users do not have access to opensearch endpoints.</p>
-<h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>Authenticated users do not have access to opensearch endpoints.</p>
-<h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted access to all opensearch endpoints.</p>
-<h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
-<p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
+<p>Filtering happens on emit rather than on subscribe because a user's visibility is
+a property of each document, not of the connection. Two users on the same stream
+see different subsets of the same event flow.</p>
+<h2 id="endpoints">Endpoints<a class="headerlink" href="#endpoints" title="Permanent link">¶</a></h2>
 <table>
 <thead>
 <tr>
-<th>Operation</th>
-<th>Unauthenticated</th>
-<th>Authenticated</th>
-<th><code>ADMIN_GROUPS</code></th>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>Manage</code></td>
-<td>-</td>
-<td>-</td>
-<td>any</td>
+<td><code>POST</code></td>
+<td><code>/api/v3/events/ticket</code></td>
+<td>Bearer token</td>
+<td>Mints a short-lived stream ticket.</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/v3/events/stream</code></td>
+<td>Ticket, query param</td>
+<td>Opens the event stream.</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/v3/events/connections</code></td>
+<td>Bearer token, admin</td>
+<td>Reports open connections on this instance.</td>
 </tr>
 </tbody>
 </table>
-<p>Legend:
-- any: unrestricted access</p>
-<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
-<p>The definition is implemented in the casl module under <code>/src/casl/abilities/opensearch.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.opensearchAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization. In the case of opensearch, there is only endpoint checks at this time.</p>
+<h3 id="event-format">Event format<a class="headerlink" href="#event-format" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Dataset.created"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"pid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20.500.12269/..."</span><span class="p">,</span><span class="w"> </span><span class="nt">"datasetName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>type</code> is <code>&lt;entity&gt;.&lt;action&gt;</code>. The payload is the document serialized through its
+output DTO, not the raw MongoDB document, so clients see the same shape the REST
+API returns.</p>
+<h2 id="what-is-watched">What is watched<a class="headerlink" href="#what-is-watched" title="Permanent link">¶</a></h2>
+<p>A registry in <code>sse.listener.ts</code> maps collections to entities and DTOs. Today it
+holds one entry:</p>
+<table>
+<thead>
+<tr>
+<th>Collection</th>
+<th>Entity</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dataset</code></td>
+<td><code>Dataset</code></td>
+<td><code>created</code></td>
+</tr>
+</tbody>
+</table>
+<p>Only <code>insert</code> operations are mapped. The <code>SseAction</code> type reserves <code>updated</code> and
+<code>deleted</code> for later, but no change stream operation maps to them yet, so those
+events are never emitted.</p>
+<p>Adding a collection means adding a registry entry with its DTO. The change stream
+pipeline is built from the registry keys, so no other change is needed.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SSE_TICKET_EXPIRES_IN</code></td>
+<td>number</td>
+<td><code>60</code></td>
+<td>Ticket lifetime in seconds.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="limits-and-operational-behaviour">Limits and operational behaviour<a class="headerlink" href="#limits-and-operational-behaviour" title="Permanent link">¶</a></h2>
+<p><strong>Connections per user.</strong> Five per user per instance. A sixth request returns
+<code>403 Forbidden</code>. The cap is per instance, so behind a load balancer the effective
+total is five times the number of replicas.</p>
+<p><strong>Reconnect on change stream failure.</strong> If the change stream errors, the listener
+retries up to five times with exponential backoff starting at two seconds. After
+that it stops and logs an error, and SSE stays down until the process restarts.
+Worth alerting on, since nothing recovers automatically past that point.</p>
+<p><strong>Multi-instance deployments.</strong> Connections are held in an in-memory <code>Map</code>, so
+each instance knows only its own clients. Every instance runs its own change
+stream and broadcasts to its own connections, so clients receive events wherever
+they land. The consequence is that <code>/events/connections</code> reports one instance's
+view rather than a cluster-wide total.</p>
+<p><strong>Shutdown.</strong> On module destroy the change stream is closed and every client
+Subject is completed, so connections end cleanly rather than being dropped.</p>
 
 
 
@@ -1557,10 +1733,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["instant"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["instant"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
       
     
   
