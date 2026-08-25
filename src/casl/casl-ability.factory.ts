@@ -1,8 +1,6 @@
 import { MongoAbility } from "@casl/ability";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { AccessGroupsType } from "src/config/configuration";
 import { PossibleAbilities, Conditions } from "./types/casl-subjects";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
@@ -27,7 +25,6 @@ export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 @Injectable()
 export class CaslAbilityFactory {
   constructor(
-    private configService: ConfigService,
     private attachmentAbility: AttachmentAbility,
     private datablockAbility: DatablockAbility,
     private datasetAbility: DatasetAbility,
@@ -45,11 +42,7 @@ export class CaslAbilityFactory {
     private sampleAbility: SampleAbility,
     private sseAbility: SseAbility,
     private userAbility: UserAbility,
-  ) {
-    this.accessGroups =
-      this.configService.get<AccessGroupsType>("accessGroups");
-  }
-  private accessGroups;
+  ) {}
 
   private endpointAccessors: {
     [endpoint: string]: (user: JWTUser) => AppAbility;
