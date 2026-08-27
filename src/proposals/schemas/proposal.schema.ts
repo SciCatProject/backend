@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ApiHideProperty, ApiProperty, getSchemaPath } from "@nestjs/swagger";
+import { ApiHideProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
 
 import { OwnableClass } from "src/common/schemas/ownable.schema";
@@ -24,12 +24,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Globally unique identifier of a proposal, eg. PID-prefix/internal-proposal-number. PID prefix is auto prepended.
    */
-  @ApiProperty({
-    type: String,
-    required: true,
-    description:
-      "Persistent Identifier for the proposal. It is suggested to use UUID.",
-  })
   @Prop({
     type: String,
     unique: true,
@@ -46,11 +40,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Email of principal investigator.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Email of the Principal Investigator of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -61,11 +50,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * First name of principal investigator.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "First name of the Principal Investigator of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -75,11 +59,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Last name of principal investigator.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Last name of the Principal Investigator of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -89,11 +68,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Email of main proposer.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Email of the proposer of the proposal.",
-  })
   @Prop({
     type: String,
     required: true,
@@ -103,11 +77,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * First name of main proposer.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "First name of the proposer of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -117,11 +86,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Last name of main proposer.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Last name of the proposer of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -131,11 +95,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * The title of the proposal.
    */
-  @ApiProperty({
-    type: String,
-    required: true,
-    description: "Title of the proposal.",
-  })
   @Prop({
     type: String,
     required: true,
@@ -145,11 +104,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * The proposal abstract.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Abstract of the proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -159,12 +113,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * The date when the data collection starts.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description:
-      "ISO Timestamp when the proposal is planned to or has actually started.",
-  })
   @Prop({
     type: Date,
     required: false,
@@ -172,14 +120,8 @@ export class ProposalClass extends OwnableClass {
   startTime?: Date;
 
   /**
-   * The date when data collection finishes.
+   * ISO Timestamp when the proposal is planned to or has actually ended.
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description:
-      "ISO Timestamp when the proposal is planned to or has actually ended.",
-  })
   @Prop({
     type: Date,
     required: false,
@@ -187,16 +129,8 @@ export class ProposalClass extends OwnableClass {
   endTime?: Date;
 
   /**
-   * Embedded information used inside proposals to define which type of experiment has to be pursued, where (at which instrument) and when.
+   * List of measurement periods/visit scheduled for the proposal
    */
-  @ApiProperty({
-    type: "array",
-    items: { $ref: getSchemaPath(MeasurementPeriodClass) },
-    required: false,
-    default: [],
-    description:
-      "List of measurement periods/visit scheduled for the proposal.",
-  })
   @Prop({
     type: [MeasurementPeriodSchema],
     required: false,
@@ -207,12 +141,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * JSON object containing the proposal metadata.
    */
-  @ApiProperty({
-    type: Object,
-    required: false,
-    default: {},
-    description: "JSON object containing the proposal metadata.",
-  })
   @Prop({
     type: Object,
     required: false,
@@ -223,11 +151,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Parent proposal id
    */
-  @ApiProperty({
-    type: String,
-    required: false,
-    description: "Id of the parent proposal.",
-  })
   @Prop({
     type: String,
     required: false,
@@ -239,11 +162,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * Characterize type of proposal, use some of the configured values
    */
-  @ApiProperty({
-    type: String,
-    required: true,
-    description: "Type of the proposal.",
-  })
   @Prop({
     type: String,
     default: DEFAULT_PROPOSAL_TYPE,
@@ -253,13 +171,6 @@ export class ProposalClass extends OwnableClass {
   /**
    * List of instrument IDs associated with the proposal.
    */
-  @ApiProperty({
-    type: [String],
-    required: false,
-    default: [],
-    description:
-      "Ids of the instruments that this proposal is associated with or scheduled on.",
-  })
   @Prop({
     type: [String],
     default: [],
@@ -268,14 +179,8 @@ export class ProposalClass extends OwnableClass {
   instrumentIds?: string[];
 
   /**
-   * Number of datasets associated with the proposal.
+   * Number of Datasets associated or acquired under this proposal.
    */
-  @ApiProperty({
-    type: Number,
-    required: false,
-    description:
-      "Number of Datasets associated or acquired under this proposal.",
-  })
   @Prop({
     type: Number,
     default: 0,
@@ -283,12 +188,9 @@ export class ProposalClass extends OwnableClass {
   })
   numberOfDatasets?: number;
 
-  @ApiProperty({
-    type: [String],
-    required: false,
-    description:
-      "Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
-  })
+  /*
+   * Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.
+   */
   @Prop({
     type: [String],
     required: false,
