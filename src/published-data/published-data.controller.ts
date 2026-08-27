@@ -612,8 +612,7 @@ export class PublishedDataController {
       }
 
       const res = await this.publishedDataService.update(filter, data);
-
-      return res;
+      return res ? { doi: res.doi } : null;
     }
 
     throw new NotFoundException();

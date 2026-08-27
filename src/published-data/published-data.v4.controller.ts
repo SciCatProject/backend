@@ -710,9 +710,8 @@ export class PublishedDataV4Controller {
       }
     }
 
-    await this.publishedDataService.update({ doi: id }, data);
-
-    return { doi: publishedData.doi };
+    const res = await this.publishedDataService.update({ doi: id }, data);
+    return res ? { doi: res.doi } : null;
   }
 
   doiRegistrationJSON(publishedData: PublishedData): object {
