@@ -27,6 +27,11 @@ jobs:
       auth: "#datasetOwner"
     update:
       auth: "#jobOwnerUser"
+  - jobType: pi_access
+    create:
+      auth: "#datasetPi"
+    update:
+      auth: "admin"
   - jobType: user_access
     create:
       auth: user5.1
