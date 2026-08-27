@@ -27,6 +27,13 @@ export class Policy extends OwnableClass {
 
   @ApiProperty({
     description:
+      "Emails of users authorized to request deletion (e.g. Principal Investigator or Data Steward job actions) of datasets owned by this ownerGroup. Not populated automatically - must be set explicitly.",
+  })
+  @Prop({ type: [String] })
+  dataDeleteEmails: string[];
+
+  @ApiProperty({
+    description:
       "Defines the level of redundancy in storage to minimize loss of data. Allowed values are low, medium, high. Low could e.g. mean one tape copy only, medium could mean two tape copies and high two geo-redundant tape copies",
   })
   @Prop({ type: String, default: "low" })

@@ -9,7 +9,13 @@ import {
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
+import {
+  FilterQuery,
+  Model,
+  PipelineStage,
+  ProjectionType,
+  QueryOptions,
+} from "mongoose";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import {
   createFullfacetPipeline,
@@ -197,10 +203,12 @@ export class ProposalsService {
     filter: IFilters<ProposalDocument, IProposalFields>,
   ): Promise<ProposalClass[]> {
     const whereFilter: FilterQuery<ProposalDocument> = filter.where ?? {};
+    const fieldsProjection = (filter.fields ??
+      {}) as ProjectionType<ProposalDocument>;
     const { limit, skip, sort } = parseLimitFilters(filter.limits);
 
     return this.proposalModel
-      .find(whereFilter)
+      .find(whereFilter, fieldsProjection)
       .limit(limit)
       .skip(skip)
       .sort(sort)

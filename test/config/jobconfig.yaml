@@ -27,6 +27,11 @@ jobs:
       auth: "#datasetOwner"
     update:
       auth: "#jobOwnerUser"
+  - jobType: dataset_delete_access
+    create:
+      auth: "#datasetPolicyDelete"
+    update:
+      auth: "admin"
   - jobType: user_access
     create:
       auth: user5.1

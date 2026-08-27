@@ -229,6 +229,29 @@ export class DatasetsService {
     return datasets;
   }
 
+  async findDeleteAuthorizedDatasetPids(
+    datasetPids: string[],
+    email: string,
+  ): Promise<string[]> {
+    const pipeline: PipelineStage[] = [
+      { $match: { pid: { $in: datasetPids } } },
+      {
+        $lookup: {
+          from: "Policy",
+          localField: "ownerGroup",
+          foreignField: "ownerGroup",
+          as: "linkedPolicy",
+        },
+      },
+      { $match: { "linkedPolicy.dataDeleteEmails": email } },
+      { $project: { _id: 0, pid: 1 } },
+    ];
+    const results = await this.datasetModel
+      .aggregate<{ pid: string }>(pipeline)
+      .exec();
+    return results.map((result) => result.pid);
+  }
+
   async findAllComplete(
     filter: IDatasetFilters<DatasetDocument, IDatasetFields>,
     applyDefaults = true,

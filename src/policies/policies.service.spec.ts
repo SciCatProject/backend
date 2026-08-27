@@ -13,6 +13,7 @@ class UsersServiceMock {}
 const mockPolicy: Policy = {
   _id: "testId",
   manager: ["test@email.com"],
+  dataDeleteEmails: [],
   tapeRedundancy: "low",
   autoArchive: true,
   autoArchiveDelay: 7,

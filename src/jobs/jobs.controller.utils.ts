@@ -422,6 +422,10 @@ export class JobsControllerUtils {
         pid: { $in: datasetList.map((x) => x.pid) },
       },
     };
+    if (jobConfiguration.create.auth === CreateJobAuth.DatasetPolicyDelete) {
+      await this.checkDatasetDeleteAccess(datasetList, user);
+      return;
+    }
     const isPrivilegedUser = this.isPrivilegedUser(user);
     const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
@@ -453,6 +457,32 @@ export class JobsControllerUtils {
     const numberOfDatasetsWithAccess =
       await this.datasetsService.count(datasetsWhere);
     if (numberOfDatasetsWithAccess.count < datasetList.length)
+      throw new ForbiddenException(
+        "User does not have access to all datasets, cannot create job.",
+      );
+  }
+
+  /**
+   * Check that the user is listed in dataDeleteEmails on the Policy for
+   * every dataset's ownerGroup in `datasetList`. See
+   * DatasetsService.findDeleteAuthorizedDatasetPids.
+   */
+  private async checkDatasetDeleteAccess(
+    datasetList: DatasetListDto[],
+    user: JWTUser,
+  ) {
+    if (!user) throw new UnauthorizedException("User not authenticated");
+    if (!user.email)
+      throw new ForbiddenException(
+        "User has no email registered, cannot verify dataset delete authorization.",
+      );
+    const uniqueDatasetIds = [...new Set(datasetList.map((x) => x.pid))];
+    const eligibleDatasetIds =
+      await this.datasetsService.findDeleteAuthorizedDatasetPids(
+        uniqueDatasetIds,
+        user.email,
+      );
+    if (eligibleDatasetIds.length < uniqueDatasetIds.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
       );

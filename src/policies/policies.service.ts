@@ -249,6 +249,7 @@ export class PoliciesService implements OnModuleInit {
         : defaultManager
           ? defaultManager
           : [""],
+      dataDeleteEmails: [],
       tapeRedundancy: tapeRedundancy ? tapeRedundancy : "low",
       autoArchive: false,
       autoArchiveDelay: 7,

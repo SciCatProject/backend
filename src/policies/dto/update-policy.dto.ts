@@ -13,6 +13,10 @@ export class UpdatePolicyDto extends OwnableDto {
   @IsOptional()
   readonly manager: string[];
 
+  @IsArray()
+  @IsOptional()
+  readonly dataDeleteEmails: string[];
+
   @IsString()
   @IsOptional()
   readonly tapeRedundancy: string;
