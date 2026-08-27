@@ -76,7 +76,7 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
             } else {
               const regexLiteral = /(?<=AV\=)(.*?)(?=\,)/g;
               av = (regexLiteral.exec(this.classification ?? "") || ["low"])[0];
-              policyService.addDefaultPolicy(
+              await policyService.addDefaultPolicy(
                 this.ownerGroup,
                 this.accessGroups,
                 this.ownerEmail ?? "",
