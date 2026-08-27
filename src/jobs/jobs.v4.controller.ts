@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  HttpCode,
   HttpStatus,
   HttpException,
   Req,
@@ -44,6 +45,11 @@ import {
 import { JobsControllerUtils } from "./jobs.controller.utils";
 import { PartialOutputJobDto } from "./dto/output-job-v4.dto";
 import { ALLOWED_JOB_KEYS, ALLOWED_JOB_FILTER_KEYS } from "./types/job-lookup";
+import {
+  CheckJobCreateAccessDto,
+  CheckJobCreateAccessResponseDto,
+} from "./dto/check-job-create-access.dto";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 
 @ApiBearerAuth()
 @ApiTags("jobs v4")
@@ -86,6 +92,44 @@ export class JobsV4Controller {
     @Body() createJobDto: CreateJobDto,
   ): Promise<JobClass | null> {
     return this.jobsControllerUtils.createJob(request, createJobDto);
+  }
+
+  /**
+   * Check dataset eligibility for job creation v4
+   */
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("jobs", (ability: AppAbility) =>
+    ability.can(Action.JobCreate, JobClass),
+  )
+  @Post("check-create-access")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      "It returns, for a job type, which of the given dataset pids the current user is currently authorized to include when creating that job.",
+    description:
+      "Intended for frontends deciding whether to show a job-creation action for a given selection of datasets. It never fails because a user lacks access - it simply narrows the input list down; an empty result means none of the given datasets are eligible.",
+  })
+  @ApiBody({
+    description: "Job type and dataset pids to check eligibility for",
+    required: true,
+    type: CheckJobCreateAccessDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CheckJobCreateAccessResponseDto,
+    description: "The subset of dataset pids the user is eligible for",
+  })
+  async checkCreateAccess(
+    @Req() request: Request,
+    @Body() checkJobCreateAccessDto: CheckJobCreateAccessDto,
+  ): Promise<CheckJobCreateAccessResponseDto> {
+    const eligibleDatasetIds =
+      await this.jobsControllerUtils.getEligibleDatasetIdsForJobCreate(
+        checkJobCreateAccessDto.type,
+        checkJobCreateAccessDto.datasetIds,
+        request.user as JWTUser,
+      );
+    return { eligibleDatasetIds };
   }
 
   /**

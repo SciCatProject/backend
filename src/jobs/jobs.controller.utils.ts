@@ -420,22 +420,49 @@ export class JobsControllerUtils {
       throw new UnprocessableEntityException(
         "Dataset ids list was not provided in jobParams",
       );
-    const datasetsWhere: { where: Condition<DatasetClass> } = {
-      where: {
-        pid: { $in: datasetList.map((x) => x.pid) },
-      },
-    };
     if (
       jobConfiguration.create.auth ===
       CreateJobAuth.DatasetPrincipalInvestigator
     ) {
       await this.checkPrincipalInvestigatorAccess(
-        datasetsWhere,
+        { where: { pid: { $in: datasetList.map((x) => x.pid) } } },
         datasetList,
         user,
       );
       return;
     }
+    const datasetsWhere = this.buildDatasetAccessFilter(
+      jobConfiguration,
+      jobCreateDto,
+      datasetList,
+      user,
+      jobUser,
+    );
+    const numberOfDatasetsWithAccess =
+      await this.datasetsService.count(datasetsWhere);
+    if (numberOfDatasetsWithAccess.count < datasetList.length)
+      throw new ForbiddenException(
+        "User does not have access to all datasets, cannot create job.",
+      );
+  }
+
+  /**
+   * Build the Mongo filter that narrows `datasetList` down to the datasets
+   * the user has access to, for the #datasetPublic/#datasetAccess/#datasetOwner
+   * job creation auth strategies.
+   */
+  private buildDatasetAccessFilter(
+    jobConfiguration: JobConfig,
+    jobCreateDto: { ownerGroup?: string },
+    datasetList: DatasetListDto[],
+    user: JWTUser,
+    jobUser: JWTUser | null,
+  ): { where: Condition<DatasetClass> } {
+    const datasetsWhere: { where: Condition<DatasetClass> } = {
+      where: {
+        pid: { $in: datasetList.map((x) => x.pid) },
+      },
+    };
     const isPrivilegedUser = this.isPrivilegedUser(user);
     const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
@@ -464,12 +491,7 @@ export class JobsControllerUtils {
     } else {
       datasetsWhere.where.isPublished = true;
     }
-    const numberOfDatasetsWithAccess =
-      await this.datasetsService.count(datasetsWhere);
-    if (numberOfDatasetsWithAccess.count < datasetList.length)
-      throw new ForbiddenException(
-        "User does not have access to all datasets, cannot create job.",
-      );
+    return datasetsWhere;
   }
 
   /**
@@ -488,12 +510,27 @@ export class JobsControllerUtils {
       );
     const datasets = await this.datasetsService.findAll({
       ...datasetsWhere,
-      fields: { proposalIds: 1 },
+      fields: { pid: 1, proposalIds: 1 },
     });
     if (datasets.length < datasetList.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
       );
+    const eligibleDatasets = await this.filterDatasetsByPi(datasets, user);
+    if (eligibleDatasets.length < datasets.length)
+      throw new ForbiddenException(
+        "User is not the Principal Investigator for all datasets, cannot create job.",
+      );
+  }
+
+  /**
+   * Narrow a list of already-fetched datasets down to the ones for which
+   * `user` is the Principal Investigator (pi_email on a linked Proposal).
+   */
+  private async filterDatasetsByPi<
+    T extends { pid: string; proposalIds?: string[] },
+  >(datasets: T[], user: JWTUser | null): Promise<T[]> {
+    if (!user?.email || datasets.length === 0) return [];
     const proposalIds = [
       ...new Set(datasets.flatMap((dataset) => dataset.proposalIds ?? [])),
     ];
@@ -512,15 +549,93 @@ export class JobsControllerUtils {
         .filter((proposal) => proposal.pi_email === user.email)
         .map((proposal) => proposal.proposalId),
     );
-    const isPiForAllDatasets = datasets.every((dataset) =>
+    return datasets.filter((dataset) =>
       (dataset.proposalIds ?? []).some((proposalId) =>
         piProposalIds.has(proposalId),
       ),
     );
-    if (!isPiForAllDatasets)
-      throw new ForbiddenException(
-        "User is not the Principal Investigator for all datasets, cannot create job.",
+  }
+
+  /**
+   * For a given job type and set of dataset pids, return the subset of pids
+   * the requesting user is currently authorized to include when creating a
+   * job of that type. Intended for frontend "should I show this action"
+   * checks — it never throws, it just narrows the list down (an empty
+   * result means the user is not eligible for any of them).
+   */
+  async getEligibleDatasetIdsForJobCreate(
+    type: string,
+    datasetIds: string[],
+    user: JWTUser | null,
+  ): Promise<string[]> {
+    if (datasetIds.length === 0) return [];
+    const jobConfiguration = this.getJobTypeConfiguration(type);
+
+    const jobInstance = new JobClass();
+    jobInstance.type = type;
+    const ability = this.caslAbilityFactory.jobAccess(user);
+    if (!ability.can(Action.JobCreate, jobInstance)) return [];
+
+    const baseWhere: { where: Condition<DatasetClass> } = {
+      where: { pid: { $in: datasetIds } },
+    };
+
+    if (this.isAdminUser(user)) {
+      const datasets = await this.datasetsService.findAll({
+        ...baseWhere,
+        fields: { pid: 1 },
+      });
+      return datasets.map((dataset) => dataset.pid);
+    }
+
+    const auth = jobConfiguration.create.auth;
+    if (!(auth && Object.values(this.jobDatasetAuthorization).includes(auth))) {
+      // job type isn't scoped by dataset content (#all, #authenticated,
+      // #jobAdmin, or a literal username/group) - the ability check above
+      // already answered whether the user can create this job type at all.
+      const datasets = await this.datasetsService.findAll({
+        ...baseWhere,
+        fields: { pid: 1 },
+      });
+      return datasets.map((dataset) => dataset.pid);
+    }
+
+    if (auth === CreateJobAuth.DatasetPrincipalInvestigator) {
+      if (!user?.email) return [];
+      const datasets = await this.datasetsService.findAll({
+        ...baseWhere,
+        fields: { pid: 1, proposalIds: 1 },
+      });
+      const eligibleDatasets = await this.filterDatasetsByPi(datasets, user);
+      return eligibleDatasets.map((dataset) => dataset.pid);
+    }
+
+    try {
+      const datasetList: DatasetListDto[] = datasetIds.map((pid) => ({
+        pid,
+        files: [],
+      }));
+      const datasetsWhere = this.buildDatasetAccessFilter(
+        jobConfiguration,
+        {},
+        datasetList,
+        user as JWTUser,
+        user,
       );
+      const datasets = await this.datasetsService.findAll({
+        ...datasetsWhere,
+        fields: { pid: 1 },
+      });
+      return datasets.map((dataset) => dataset.pid);
+    } catch (err) {
+      if (
+        err instanceof UnauthorizedException ||
+        err instanceof ForbiddenException
+      ) {
+        return [];
+      }
+      throw err;
+    }
   }
 
   /**
