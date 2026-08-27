@@ -19,6 +19,8 @@ import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { ProposalsService } from "src/proposals/proposals.service";
+import { IProposalFields } from "src/proposals/interfaces/proposal-filters.interface";
 import { JobsConfigSchema } from "./types/jobs-config-schema.enum";
 import { OrigDatablocksService } from "src/origdatablocks/origdatablocks.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -57,6 +59,7 @@ export class JobsControllerUtils {
   constructor(
     private readonly jobsService: JobsService,
     private readonly datasetsService: DatasetsService,
+    private readonly proposalsService: ProposalsService,
     private readonly origDatablocksService: OrigDatablocksService,
     private caslAbilityFactory: CaslAbilityFactory,
     private readonly usersService: UsersService,
@@ -422,6 +425,17 @@ export class JobsControllerUtils {
         pid: { $in: datasetList.map((x) => x.pid) },
       },
     };
+    if (
+      jobConfiguration.create.auth ===
+      CreateJobAuth.DatasetPrincipalInvestigator
+    ) {
+      await this.checkPrincipalInvestigatorAccess(
+        datasetsWhere,
+        datasetList,
+        user,
+      );
+      return;
+    }
     const isPrivilegedUser = this.isPrivilegedUser(user);
     const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
@@ -455,6 +469,57 @@ export class JobsControllerUtils {
     if (numberOfDatasetsWithAccess.count < datasetList.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
+      );
+  }
+
+  /**
+   * Check that the user is the Principal Investigator (pi_email on the
+   * linked Proposal) of every dataset in `datasetList`.
+   */
+  private async checkPrincipalInvestigatorAccess(
+    datasetsWhere: { where: Condition<DatasetClass> },
+    datasetList: DatasetListDto[],
+    user: JWTUser,
+  ) {
+    if (!user) throw new UnauthorizedException("User not authenticated");
+    if (!user.email)
+      throw new ForbiddenException(
+        "User has no email registered, cannot verify Principal Investigator authorization.",
+      );
+    const datasets = await this.datasetsService.findAll({
+      ...datasetsWhere,
+      fields: { proposalIds: 1 },
+    });
+    if (datasets.length < datasetList.length)
+      throw new ForbiddenException(
+        "User does not have access to all datasets, cannot create job.",
+      );
+    const proposalIds = [
+      ...new Set(datasets.flatMap((dataset) => dataset.proposalIds ?? [])),
+    ];
+    const proposals =
+      proposalIds.length > 0
+        ? await this.proposalsService.findAll({
+            where: { proposalId: { $in: proposalIds } },
+            fields: {
+              proposalId: 1,
+              pi_email: 1,
+            } as unknown as IProposalFields,
+          })
+        : [];
+    const piProposalIds = new Set(
+      proposals
+        .filter((proposal) => proposal.pi_email === user.email)
+        .map((proposal) => proposal.proposalId),
+    );
+    const isPiForAllDatasets = datasets.every((dataset) =>
+      (dataset.proposalIds ?? []).some((proposalId) =>
+        piProposalIds.has(proposalId),
+      ),
+    );
+    if (!isPiForAllDatasets)
+      throw new ForbiddenException(
+        "User is not the Principal Investigator for all datasets, cannot create job.",
       );
   }
 

@@ -6,6 +6,7 @@ import { JobsControllerUtils } from "./jobs.controller.utils";
 import { MongooseModule } from "@nestjs/mongoose";
 import { JobClass, JobSchema } from "./schemas/job.schema";
 import { DatasetsModule } from "src/datasets/datasets.module";
+import { ProposalsModule } from "src/proposals/proposals.module";
 import { PoliciesModule } from "src/policies/policies.module";
 import { OrigDatablocksModule } from "src/origdatablocks/origdatablocks.module";
 import { UsersModule } from "src/users/users.module";
@@ -22,6 +23,7 @@ import { ConfigModule } from "@nestjs/config";
     CommonModule,
     CoreJobActionCreators,
     DatasetsModule,
+    ProposalsModule,
     UsersModule,
     CaslModule,
     MongooseModule.forFeatureAsync([

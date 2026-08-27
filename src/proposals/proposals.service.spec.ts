@@ -6,6 +6,7 @@ import { ProposalsService } from "./proposals.service";
 import { ProposalClass } from "./schemas/proposal.schema";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { ProposalLookupKeysEnum } from "./types/proposal-lookup";
+import { IProposalFields } from "./interfaces/proposal-filters.interface";
 
 class MetadataKeysServiceMock {
   insertManyFromSource = jest.fn().mockResolvedValue([]);
@@ -83,8 +84,20 @@ describe("ProposalsService", () => {
         limits: { limit: 5, skip: 0 },
       });
 
-      expect(model.find).toHaveBeenCalledWith({ proposalId: "ABCDEF" });
+      expect(model.find).toHaveBeenCalledWith({ proposalId: "ABCDEF" }, {});
       expect(result).toEqual([mockProposal]);
+    });
+
+    it("should pass filter.fields through to find() as the projection", async () => {
+      await service.findAll({
+        where: { proposalId: "ABCDEF" },
+        fields: { proposalId: 1, pi_email: 1 } as unknown as IProposalFields,
+      });
+
+      expect(model.find).toHaveBeenCalledWith(
+        { proposalId: "ABCDEF" },
+        { proposalId: 1, pi_email: 1 },
+      );
     });
 
     it("should apply default limits when not provided", async () => {
