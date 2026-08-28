@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "node20",
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
