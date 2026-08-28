@@ -6,7 +6,6 @@
 import * as hb from "handlebars";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobParams } from "src/jobs/types/job-types.enum";
-// @ts-expect-error mathjs is ESM-only; Node 22+ supports require() of ESM at runtime
 import { FormatOptions, unit } from "mathjs";
 import { HelperOptions } from "handlebars";
 import { parseBoolean } from "./utils";

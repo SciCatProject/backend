@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { inspect } from "util";
 import { DateTime } from "luxon";
-// @ts-expect-error mathjs is ESM-only; Node 22+ supports require() of ESM at runtime
 import { format, unit, Unit, createUnit, MathJSON } from "mathjs";
 import { Expression, FilterQuery, Model, PipelineStage } from "mongoose";
 import {
