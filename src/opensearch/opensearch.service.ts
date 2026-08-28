@@ -16,11 +16,11 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { sleep } from "src/common/utils";
 
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
 import { ISearchFilter } from "./interfaces/os-common.type";
 import { CreateIndexDto } from "./dto/create-index.dto";
 import { UpdateIndexDto } from "./dto/update-index.dto";
-import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping";
+import type { TypeMapping } from "@opensearch-project/opensearch/api/_types/_common.mapping.js";
 
 @Injectable()
 export class OpensearchService implements OnModuleInit {
