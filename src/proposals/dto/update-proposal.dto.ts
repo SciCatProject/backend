@@ -89,7 +89,7 @@ export class UpdateProposalDto extends OwnableDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => MeasurementPeriodClass)
-  readonly measurementPeriodList?: MeasurementPeriodClass[] = [];
+  readonly MeasurementPeriodList?: MeasurementPeriodClass[] = [];
 
   /**
    * JSON object containing the proposal metadata.
