@@ -76,7 +76,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public findAll tests", () => {
-    it("0100: should list public proposals without auth", async () => {
+    it("3100:0100: should list public proposals without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .expect(TestData.SuccessfulGetStatusCode)
@@ -86,7 +86,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0101: should list public proposals with filter", async () => {
+    it("3100:0101: should list public proposals with filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({
@@ -103,7 +103,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0102: should list public proposals with pagination", async () => {
+    it("3100:0102: should list public proposals with pagination", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({
@@ -122,7 +122,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public count tests", () => {
-    it("0200: should count public proposals without auth", async () => {
+    it("3100:0200: should count public proposals without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/count")
         .expect(TestData.SuccessfulGetStatusCode)
@@ -134,7 +134,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0201: should count public proposals with filter", async () => {
+    it("3100:0201: should count public proposals with filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/count")
         .query({
@@ -152,7 +152,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public fullfacet tests", () => {
-    it("0300: should get fullfacet for public proposals without auth", async () => {
+    it("3100:0300: should get fullfacet for public proposals without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/fullfacet")
         .query({
@@ -168,7 +168,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0301: should get fullfacet with fields filter", async () => {
+    it("3100:0301: should get fullfacet with fields filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/fullfacet")
         .query({
@@ -186,7 +186,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public findOne tests", () => {
-    it("0400: should find first public proposal matching filter without auth", async () => {
+    it("3100:0400: should find first public proposal matching filter without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/findOne")
         .query({
@@ -201,7 +201,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0401: should find first public proposal with include without auth", async () => {
+    it("3100:0401: should find first public proposal with include without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/findOne")
         .query({
@@ -219,7 +219,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public findById tests", () => {
-    it("0500: should get public proposal by proposalId without auth", async () => {
+    it("3100:0500: should get public proposal by proposalId without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/" + encodeURIComponent(proposalIdPublished1))
         .expect(TestData.SuccessfulGetStatusCode)
@@ -230,7 +230,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0501: should get public proposal with include without auth", async () => {
+    it("3100:0501: should get public proposal with include without auth", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/" + encodeURIComponent(proposalIdPublished2) + "?include=samples")
         .expect(TestData.SuccessfulGetStatusCode)
@@ -241,7 +241,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0502: should not find unpublished proposal via public endpoint", async () => {
+    it("3100:0502: should not find unpublished proposal via public endpoint", async () => {
       // First create an unpublished proposal
       const unpublishedProposal = {
         proposalId: `unpublished-proposal-v4-${uuidv4()}`,
@@ -264,7 +264,7 @@ describe("3100: Proposals v4 public tests", () => {
         .expect(TestData.NotFoundStatusCode);
     });
 
-    it("0503: should not find non-existent public proposal", async () => {
+    it("3100:0503: should not find non-existent public proposal", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public/nonexistent-public-proposal")
         .expect(TestData.NotFoundStatusCode);
@@ -272,7 +272,7 @@ describe("3100: Proposals v4 public tests", () => {
   });
 
   describe("Proposals v4 public edge cases", () => {
-    it("0600: should handle filter with text search", async () => {
+    it("3100:0600: should handle filter with text search", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({
@@ -288,7 +288,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0601: should handle filter with type", async () => {
+    it("3100:0601: should handle filter with type", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({
@@ -303,7 +303,7 @@ describe("3100: Proposals v4 public tests", () => {
         });
     });
 
-    it("0602: should handle filter with keywords", async () => {
+    it("3100:0602: should handle filter with keywords", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({

@@ -112,7 +112,7 @@ describe("3000: Proposals v4 tests", () => {
   }
 
   describe("Proposals v4 validation tests", () => {
-    it("0100: should not be able to validate proposal if not logged in", async () => {
+    it("3000:0100: should not be able to validate proposal if not logged in", async () => {
       return request(appUrl)
         .post("/api/v4/proposals/isValid")
         .send(ProposalCorrectMinV4)
@@ -120,7 +120,7 @@ describe("3000: Proposals v4 tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0101: check if minimal proposal is valid", async () => {
+    it("3000:0101: check if minimal proposal is valid", async () => {
       return request(appUrl)
         .post("/api/v4/proposals/isValid")
         .send(ProposalCorrectMinV4)
@@ -132,7 +132,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0102: check if complete proposal is valid", async () => {
+    it("3000:0102: check if complete proposal is valid", async () => {
       return request(appUrl)
         .post("/api/v4/proposals/isValid")
         .send(ProposalCorrectCompleteV4)
@@ -146,7 +146,7 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 create tests", () => {
-    it("0200: should not be able to create proposal if not logged in", async () => {
+    it("3000:0200: should not be able to create proposal if not logged in", async () => {
       return request(appUrl)
         .post("/api/v4/proposals")
         .send(ProposalCorrectMinV4)
@@ -154,7 +154,7 @@ describe("3000: Proposals v4 tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0201: should create minimal proposal", async () => {
+    it("3000:0201: should create minimal proposal", async () => {
       const uniqueProposalId = `${ProposalCorrectMinV4.proposalId}-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
 
@@ -176,7 +176,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0202: should not create proposal with duplicate proposalId", async () => {
+    it("3000:0202: should not create proposal with duplicate proposalId", async () => {
       return request(appUrl)
         .post("/api/v4/proposals")
         .send(ProposalCorrectMinV4)
@@ -184,7 +184,7 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.ConflictStatusCode);
     });
 
-    it("0203: should create complete proposal", async () => {
+    it("3000:0203: should create complete proposal", async () => {
       const uniqueProposalId = `${ProposalCorrectCompleteV4.proposalId}-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectCompleteV4, proposalId: uniqueProposalId };
 
@@ -207,13 +207,13 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 findAll tests", () => {
-    it("0300: should not be able to list proposals if not logged in", async () => {
+    it("3000:0300: should not be able to list proposals if not logged in", async () => {
       return request(appUrl)
         .get("/api/v4/proposals")
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0301: should list all proposals for proposaladmin", async () => {
+    it("3000:0301: should list all proposals for proposaladmin", async () => {
       return request(appUrl)
         .get("/api/v4/proposals")
         .auth(accessTokenProposalAdmin, { type: "bearer" })
@@ -224,7 +224,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0302: should list proposals with filter", async () => {
+    it("3000:0302: should list proposals with filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals")
         .query({
@@ -242,7 +242,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0303: should list proposals with pagination", async () => {
+    it("3000:0303: should list proposals with pagination", async () => {
       return request(appUrl)
         .get("/api/v4/proposals")
         .query({
@@ -262,7 +262,7 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 findOne tests", () => {
-    it("0400: should not be able to findOne proposal if not logged in", async () => {
+    it("3000:0400: should not be able to findOne proposal if not logged in", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/findOne")
         .query({
@@ -273,7 +273,7 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0401: should find first proposal matching filter", async () => {
+    it("3000:0401: should find first proposal matching filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/findOne")
         .query({
@@ -289,7 +289,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0402: should find first proposal with include", async () => {
+    it("3000:0402: should find first proposal with include", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/findOne")
         .query({
@@ -308,13 +308,13 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 count tests", () => {
-    it("0500: should not be able to count proposals if not logged in", async () => {
+    it("3000:0500: should not be able to count proposals if not logged in", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/count")
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0501: should count all proposals", async () => {
+    it("3000:0501: should count all proposals", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/count")
         .auth(accessTokenProposalAdmin, { type: "bearer" })
@@ -326,7 +326,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0502: should count proposals with filter", async () => {
+    it("3000:0502: should count proposals with filter", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/count")
         .query({
@@ -345,13 +345,13 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 fullfacet tests", () => {
-    it("0600: should not be able to get fullfacet if not logged in", async () => {
+    it("3000:0600: should not be able to get fullfacet if not logged in", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/fullfacet")
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0601: should get fullfacet for proposals", async () => {
+    it("3000:0601: should get fullfacet for proposals", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/fullfacet")
         .query({
@@ -370,13 +370,13 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 findById tests", () => {
-    it("0700: should not be able to get proposal by id if not logged in", async () => {
+    it("3000:0700: should not be able to get proposal by id if not logged in", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0701: should get proposal by proposalId", async () => {
+    it("3000:0701: should get proposal by proposalId", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .auth(accessTokenProposalAdmin, { type: "bearer" })
@@ -387,7 +387,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0702: should get proposal with include", async () => {
+    it("3000:0702: should get proposal with include", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(proposalId2) + "?include=samples")
         .auth(accessTokenProposalAdmin, { type: "bearer" })
@@ -398,7 +398,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0703: should not find non-existent proposal", async () => {
+    it("3000:0703: should not find non-existent proposal", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/nonexistent-proposal")
         .auth(accessTokenProposalAdmin, { type: "bearer" })
@@ -407,14 +407,14 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 update tests", () => {
-    it("0800: should not be able to update proposal if not logged in", async () => {
+    it("3000:0800: should not be able to update proposal if not logged in", async () => {
       return request(appUrl)
         .patch("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .send({ title: "Updated title" })
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0801: should partially update proposal", async () => {
+    it("3000:0801: should partially update proposal", async () => {
       return request(appUrl)
         .patch("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .send({ title: "Updated title v4" })
@@ -427,7 +427,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0802: should replace proposal with PUT", async () => {
+    it("3000:0802: should replace proposal with PUT", async () => {
       const updatedProposal = {
         ...ProposalCorrectMinV4,
         proposalId: proposalId1,
@@ -448,7 +448,7 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 delete tests", () => {
-    it("0900: should not be able to delete proposal if not logged in", async () => {
+    it("3000:0900: should not be able to delete proposal if not logged in", async () => {
       const uniqueProposalId = `20170269-v4-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
 
@@ -465,7 +465,7 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("0901: should delete proposal", async () => {
+    it("3000:0901: should delete proposal", async () => {
       const uniqueProposalId = `20170270-v4-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
 
@@ -487,7 +487,7 @@ describe("3000: Proposals v4 tests", () => {
         });
     });
 
-    it("0902: should not find deleted proposal", async () => {
+    it("3000:0902: should not find deleted proposal", async () => {
       const uniqueProposalId = `20170271-v4-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
 
@@ -513,7 +513,7 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 create published proposal for public tests", () => {
-    it("1000: should create published proposal for public endpoint tests", async () => {
+    it("3000:1000: should create published proposal for public endpoint tests", async () => {
       const uniqueProposalId = `${ProposalCorrectPublishedV4.proposalId}-${uuidv4()}`;
       const proposalToCreate = { ...ProposalCorrectPublishedV4, proposalId: uniqueProposalId };
 
