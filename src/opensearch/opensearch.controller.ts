@@ -5,7 +5,6 @@ import {
   Post,
   Get,
   Query,
-  UseInterceptors,
   UseGuards,
   Body,
 } from "@nestjs/common";
@@ -22,7 +21,6 @@ import { AppAbility } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { SubDatasetsPublicInterceptor } from "src/datasets/interceptors/datasets-public.interceptor";
 import { CreateIndexDto } from "./dto/create-index.dto";
 
 import { UpdateIndexDto } from "./dto/update-index.dto";
@@ -85,51 +83,6 @@ export class OpensearchController {
     // NOTE: for now, we will only sync datasets to opensearch,
     // but this can be easily extended to other data in the future if needed
     return await this.datasetService.syncDatasetsToOpensearch(esIndex);
-  }
-
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
-  )
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(SubDatasetsPublicInterceptor)
-  @ApiQuery({
-    name: "textQuery",
-    description: "Partial search text for datasetName and description fields",
-    type: String,
-  })
-  @ApiQuery({
-    name: "index",
-    description: "The index name to search",
-    default: "dataset",
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: "limit",
-    description: "The maximum number of results to return",
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: "skip",
-    description: "The number of results to skip",
-    required: false,
-    type: Number,
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      "Successfully retrieved search results in _ids from Opensearch.",
-  })
-  @Post("/search")
-  async fetchOSResults(
-    @Query("index") index: string,
-    @Query("limit") limit: number,
-    @Query("skip") skip: number,
-    @Query("textQuery") text: string,
-  ) {
-    return this.opensearchService.search({ text }, index, limit, skip);
   }
 
   @UseGuards(PoliciesGuard)
