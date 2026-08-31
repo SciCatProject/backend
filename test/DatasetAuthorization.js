@@ -190,7 +190,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
   });
 
   it("0073: list of public datasets with pid filter should return 1", async () => {
-    const filter = { where: { pid: datasetPid1 } }
+    const filter = { where: { pid: datasetPid1 } };
     return request(appUrl)
       .get("/api/v3/Datasets")
       .set("Accept", "application/json")
@@ -204,7 +204,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
   });
 
   it("0075: list of public datasets with pid filter should return 0", async () => {
-    const filter = { where: { pid: 'nonExistingPid' } }
+    const filter = { where: { pid: "nonExistingPid" } };
     return request(appUrl)
       .get("/api/v3/Datasets")
       .set("Accept", "application/json")

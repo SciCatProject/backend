@@ -163,7 +163,7 @@ export class UpdateDatasetDto extends OwnableDto {
     required: false,
     isArray: true,
     description:
-      "Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
+      "Array of metadata entries associated with this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
   })
   @IsOptional()
   @IsString({
