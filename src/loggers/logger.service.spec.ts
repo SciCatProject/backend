@@ -1,6 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { ScicatLogger } from "./logger.service";
+import { LOGGER_PROVIDERS } from "./loggingProviders";
+import DefaultLogger from "./loggingProviders/defaultLogger";
+import GrayLogger from "./loggingProviders/grayLogger";
 
 class MockDefaultLogger {
   getLogger = jest.fn();
@@ -47,13 +50,18 @@ describe("LoggerService", () => {
     expect(service).toBeDefined();
   });
 
-  it("should call DefaultLogger", async () => {
-    await service.onModuleInit();
+  it("should create DefaultLogger without config", () => {
+    const logger = LOGGER_PROVIDERS.DefaultLogger();
+    expect(logger).toBeInstanceOf(DefaultLogger);
+  });
 
-    const MockedDefaultLogger = jest.requireMock(
-      "./loggingProviders/defaultLogger",
-    ).default;
+  it("should create GrayLogger with valid config", () => {
+    const config = { server: "localhost", port: 12201 };
+    const logger = LOGGER_PROVIDERS.GrayLogger(config);
+    expect(logger).toBeInstanceOf(GrayLogger);
+  });
 
-    expect(MockedDefaultLogger).toHaveBeenCalledTimes(1);
+  it("should throw for GrayLogger without required config", () => {
+    expect(() => LOGGER_PROVIDERS.GrayLogger({})).toThrow();
   });
 });
