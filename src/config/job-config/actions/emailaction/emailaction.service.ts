@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import {
   JobActionCreator,
   JobActionOptions,
@@ -10,7 +11,10 @@ import { MailService } from "src/common/mail.service";
 
 @Injectable()
 export class EmailJobActionCreator implements JobActionCreator<JobDto> {
-  constructor(private mailService: MailService) {}
+  constructor(
+    private mailService: MailService,
+    private moduleRef: ModuleRef,
+  ) {}
 
   public create<Options extends JobActionOptions>(options: Options) {
     if (!isEmailJobActionOptions(options)) {
@@ -18,6 +22,6 @@ export class EmailJobActionCreator implements JobActionCreator<JobDto> {
         `Invalid options for email action: ${JSON.stringify(options)}`,
       );
     }
-    return new EmailJobAction(this.mailService, options);
+    return new EmailJobAction(this.mailService, this.moduleRef, options);
   }
 }

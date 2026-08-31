@@ -32,6 +32,17 @@ jobs:
       auth: "#datasetPolicyDelete"
     update:
       auth: "admin"
+  - jobType: policy_email_test
+    create:
+      auth: "#all"
+    update:
+      auth: "#all"
+      actions:
+        - actionType: email
+          toPolicyManagers: true
+          ignoreErrors: true
+          subject: "Job {{job.id}} update"
+          bodyTemplateFile: src/common/email-templates/test-minimal-template.spec.html
   - jobType: user_access
     create:
       auth: user5.1

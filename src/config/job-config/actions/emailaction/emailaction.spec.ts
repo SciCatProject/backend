@@ -9,10 +9,15 @@
  *
  */
 import { EmailJobAction } from "./emailaction";
-import { EmailJobActionOptions } from "./emailaction.interface";
+import {
+  EmailJobActionOptions,
+  isEmailJobActionOptions,
+} from "./emailaction.interface";
 import { JobClass } from "../../../../jobs/schemas/job.schema";
 import { MailService } from "src/common/mail.service";
 import { MailerService } from "@nestjs-modules/mailer";
+import { ModuleRef } from "@nestjs/core";
+import { PoliciesService } from "src/policies/policies.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateJobDto } from "src/jobs/dto/create-job.dto";
 import { registerHelpers } from "../../handlebar-utils";
@@ -26,6 +31,11 @@ const snapshotDir = (...parts: string[]) =>
   path.join(__dirname, "__snapshots__", parts.join("_") + ".snap.html");
 // initialize helpers, since app.module.ts is not loaded in this test
 registerHelpers();
+
+// unused by tests that configure a static "to" template
+const unusedModuleRef = {
+  resolve: jest.fn(),
+} as unknown as ModuleRef;
 
 const mockDataset: DatasetClass = {
   _id: "testId/12345",
@@ -144,6 +154,44 @@ function jobToCreateDto(job: JobClass): CreateJobDto {
   };
 }
 
+describe("isEmailJobActionOptions", () => {
+  const base = {
+    actionType: "email",
+    subject: "Job {{job.id}}",
+    bodyTemplateFile: "some-template.html",
+  };
+
+  it("accepts a config with only 'to'", () => {
+    expect(
+      isEmailJobActionOptions({ ...base, to: "recipient@example.com" }),
+    ).toBe(true);
+  });
+
+  it("accepts a config with only 'toPolicyManagers'", () => {
+    expect(isEmailJobActionOptions({ ...base, toPolicyManagers: true })).toBe(
+      true,
+    );
+  });
+
+  it("rejects a config with neither 'to' nor 'toPolicyManagers'", () => {
+    expect(isEmailJobActionOptions({ ...base })).toBe(false);
+  });
+
+  it("rejects a config with an empty 'to' and no 'toPolicyManagers'", () => {
+    expect(isEmailJobActionOptions({ ...base, to: "" })).toBe(false);
+  });
+
+  it("accepts a config with both 'to' and 'toPolicyManagers' (appended)", () => {
+    expect(
+      isEmailJobActionOptions({
+        ...base,
+        to: "recipient@example.com",
+        toPolicyManagers: true,
+      }),
+    ).toBe(true);
+  });
+});
+
 describe("EmailJobAction", () => {
   const config: EmailJobActionOptions = {
     actionType: "email",
@@ -158,7 +206,7 @@ describe("EmailJobAction", () => {
     sendMail: jest.fn(),
   } as unknown as MailService;
 
-  const action = new EmailJobAction(mailService, config);
+  const action = new EmailJobAction(mailService, unusedModuleRef, config);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -211,7 +259,7 @@ describe("EmailJobAction", () => {
       new Error("Email sending failed"),
     );
 
-    const actionIgnore = new EmailJobAction(mailService, {
+    const actionIgnore = new EmailJobAction(mailService, unusedModuleRef, {
       ...config,
       ignoreErrors: true,
     });
@@ -245,7 +293,7 @@ describe("EmailJobAction with default sender", () => {
     sendMail: jest.fn(),
   } as unknown as MailerService;
 
-  const action = new EmailJobAction(mailService, config);
+  const action = new EmailJobAction(mailService, unusedModuleRef, config);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -301,7 +349,7 @@ describe("Email Template", () => {
       bodyTemplateFile:
         "src/common/email-templates/job-template-simplified.html",
     };
-    const action = new EmailJobAction(mailService, config);
+    const action = new EmailJobAction(mailService, unusedModuleRef, config);
 
     const context = {
       request: jobToCreateDto(mockJob),
@@ -354,7 +402,7 @@ describe("Email Template", () => {
         subject: "Job {{ job.id }}",
         bodyTemplateFile: "src/common/email-templates/job-template.html",
       };
-      const action = new EmailJobAction(mailService, config);
+      const action = new EmailJobAction(mailService, unusedModuleRef, config);
 
       const job: JobClass = {
         ...mockJob,
@@ -408,4 +456,194 @@ describe("Email Template", () => {
       );
     },
   );
+});
+
+describe("EmailJobAction with toPolicyManagers", () => {
+  const config: EmailJobActionOptions = {
+    actionType: "email",
+    toPolicyManagers: true,
+    subject: "Job {{job.id}}",
+    bodyTemplateFile:
+      "src/common/email-templates/test-minimal-template.spec.html",
+  };
+
+  const mailService = {
+    sendMail: jest.fn(),
+  } as unknown as MailService;
+
+  const policiesService = {
+    findOne: jest.fn(),
+  } as unknown as PoliciesService;
+
+  const moduleRef = {
+    resolve: jest.fn().mockResolvedValue(policiesService),
+  } as unknown as ModuleRef;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (moduleRef.resolve as jest.Mock).mockResolvedValue(policiesService);
+  });
+
+  it("should send to the ownerGroup's policy managers", async () => {
+    (policiesService.findOne as jest.Mock).mockResolvedValue({
+      ownerGroup: "group1",
+      manager: ["manager1@example.com", "manager2@example.com"],
+    });
+
+    const action = new EmailJobAction(mailService, moduleRef, config);
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [
+        { ...mockDataset, ownerGroup: "group1" },
+        { ...mockDataset, ownerGroup: "group1" },
+      ],
+    };
+    await action.perform(context);
+
+    expect(policiesService.findOne).toHaveBeenCalledWith({
+      ownerGroup: "group1",
+    });
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "manager1@example.com,manager2@example.com",
+      }),
+    );
+  });
+
+  it("should throw when datasets span more than one ownerGroup", async () => {
+    const action = new EmailJobAction(mailService, moduleRef, config);
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [
+        { ...mockDataset, ownerGroup: "group1" },
+        { ...mockDataset, ownerGroup: "group2" },
+      ],
+    };
+
+    await expect(action.perform(context)).rejects.toThrow(/single ownerGroup/);
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("should ignore the multiple-ownerGroup error when ignoreErrors is set", async () => {
+    const action = new EmailJobAction(mailService, moduleRef, {
+      ...config,
+      ignoreErrors: true,
+    });
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [
+        { ...mockDataset, ownerGroup: "group1" },
+        { ...mockDataset, ownerGroup: "group2" },
+      ],
+    };
+
+    await expect(action.perform(context)).resolves.toBeUndefined();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("should skip sending when the ownerGroup has no policy managers configured", async () => {
+    (policiesService.findOne as jest.Mock).mockResolvedValue(null);
+
+    const action = new EmailJobAction(mailService, moduleRef, config);
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [{ ...mockDataset, ownerGroup: "group1" }],
+    };
+
+    await expect(action.perform(context)).resolves.toBeUndefined();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("should not query policies or send mail when there are no datasets", async () => {
+    const action = new EmailJobAction(mailService, moduleRef, config);
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = { request: job, job, env: {}, datasets: [] };
+
+    await action.perform(context);
+
+    expect(policiesService.findOne).not.toHaveBeenCalled();
+    expect(mailService.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("should append policy managers to a static 'to' when both are configured", async () => {
+    (policiesService.findOne as jest.Mock).mockResolvedValue({
+      ownerGroup: "group1",
+      manager: ["manager1@example.com"],
+    });
+
+    const action = new EmailJobAction(mailService, moduleRef, {
+      ...config,
+      to: "requester@example.com",
+    });
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [{ ...mockDataset, ownerGroup: "group1" }],
+    };
+    await action.perform(context);
+
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "requester@example.com,manager1@example.com",
+      }),
+    );
+  });
+
+  it("should still send to the static 'to' when the ownerGroup has no policy managers configured", async () => {
+    (policiesService.findOne as jest.Mock).mockResolvedValue(null);
+
+    const action = new EmailJobAction(mailService, moduleRef, {
+      ...config,
+      to: "requester@example.com",
+    });
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [{ ...mockDataset, ownerGroup: "group1" }],
+    };
+    await action.perform(context);
+
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "requester@example.com" }),
+    );
+  });
+
+  it("should still send to the static 'to' when policy manager resolution fails and ignoreErrors is set", async () => {
+    const action = new EmailJobAction(mailService, moduleRef, {
+      ...config,
+      to: "requester@example.com",
+      ignoreErrors: true,
+    });
+    const job = { id: "12345", type: "testemail" } as JobClass;
+    const context = {
+      request: job,
+      job,
+      env: {},
+      datasets: [
+        { ...mockDataset, ownerGroup: "group1" },
+        { ...mockDataset, ownerGroup: "group2" },
+      ],
+    };
+    await action.perform(context);
+
+    expect(mailService.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "requester@example.com" }),
+    );
+  });
 });
