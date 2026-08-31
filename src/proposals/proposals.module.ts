@@ -1,6 +1,8 @@
 import { BadRequestException, forwardRef, Module } from "@nestjs/common";
 import { ProposalsService } from "./proposals.service";
 import { ProposalsController } from "./proposals.controller";
+import { ProposalsV4Controller } from "./proposals.v4.controller";
+import { ProposalsPublicV4Controller } from "./proposals-public.v4.controller";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ProposalClass, ProposalSchema } from "./schemas/proposal.schema";
 import { CaslModule } from "src/casl/casl.module";
@@ -59,8 +61,12 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
       },
     ]),
   ],
-  exports: [ProposalsService],
-  controllers: [ProposalsController],
-  providers: [ProposalsService],
+  exports: [ProposalsService, ProposalsV4Controller],
+  controllers: [
+    ProposalsPublicV4Controller,
+    ProposalsController,
+    ProposalsV4Controller,
+  ],
+  providers: [ProposalsService, ProposalsV4Controller],
 })
 export class ProposalsModule {}
