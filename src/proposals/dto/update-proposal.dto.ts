@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from "class-validator";
 import { OwnableDto } from "../../common/dto/ownable.dto";
-import { MeasurementPeriodClass } from "../schemas/measurement-period.schema";
+import { CreateMeasurementPeriodDto } from "./create-measurement-period.dto";
 
 @ApiTags("proposals")
 export class UpdateProposalDto extends OwnableDto {
@@ -88,8 +88,8 @@ export class UpdateProposalDto extends OwnableDto {
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => MeasurementPeriodClass)
-  readonly MeasurementPeriodList?: MeasurementPeriodClass[] = [];
+  @Type(() => CreateMeasurementPeriodDto)
+  readonly MeasurementPeriodList?: CreateMeasurementPeriodDto[] = [];
 
   /**
    * JSON object containing the proposal metadata.
