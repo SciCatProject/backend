@@ -62,6 +62,7 @@ import {
   DATASET_LOOKUP_FIELDS,
   DatasetLookupKeysEnum,
 } from "./types/dataset-lookup";
+import { DatasetType } from "./types/dataset-type.enum";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
@@ -74,6 +75,9 @@ import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opens
 import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
+
+const MAX_PROPOSALS_PER_OWNER_GROUP = 100;
+
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -172,6 +176,65 @@ export class DatasetsService {
     return { scopes, relations };
   }
 
+  private async resolveMissingProposalIds(
+    type: string,
+    ownerGroup: string,
+    proposalIds?: string[],
+  ): Promise<string[] | undefined> {
+    if (type !== DatasetType.Raw || (proposalIds?.length ?? 0) > 0)
+      return undefined;
+
+    const matchingProposals = await this.proposalService.findAll({
+      where: { ownerGroup },
+    });
+
+    if (matchingProposals.length === 0) {
+      return undefined;
+    }
+
+    if (matchingProposals.length > MAX_PROPOSALS_PER_OWNER_GROUP) {
+      Logger.warn(
+        `Skipping proposalIds auto-fill for ownerGroup "${ownerGroup}": ` +
+          `${matchingProposals.length} matching proposals exceed the ${MAX_PROPOSALS_PER_OWNER_GROUP} cap.`,
+        DatasetsService.name,
+      );
+      return undefined;
+    }
+
+    return matchingProposals.map((proposal) => proposal.proposalId);
+  }
+
+  private async backfillProposalIds<T extends DatasetDocument>(
+    id: string,
+    dataset: T,
+  ): Promise<T> {
+    const proposalIds = await this.resolveMissingProposalIds(
+      dataset.type,
+      dataset.ownerGroup,
+      dataset.proposalIds,
+    );
+    if (!proposalIds) {
+      return dataset;
+    }
+
+    const datasetWithProposalIds = await this.datasetModel
+      .findOneAndUpdate(
+        {
+          pid: id,
+          type: DatasetType.Raw,
+          $or: [
+            { proposalIds: { $exists: false } },
+            { proposalIds: { $size: 0 } },
+          ],
+        },
+        { $set: { proposalIds } },
+        { new: true },
+      )
+      .exec();
+
+    return (datasetWithProposalIds as T | null) ?? dataset;
+  }
+
   async create(createDatasetDto: CreateDatasetDto): Promise<DatasetDocument> {
     const username = (this.request.user as JWTUser).username;
     // Add version to the datasets based on the apiVersion extracted from the route path or use default one
@@ -179,6 +242,15 @@ export class DatasetsService {
       createDatasetDto,
       this.request.route.path || this.configService.get("versions.api"),
     );
+
+    const proposalIds = await this.resolveMissingProposalIds(
+      createDatasetDto.type,
+      createDatasetDto.ownerGroup,
+      createDatasetDto.proposalIds,
+    );
+    if (proposalIds)
+      (createDatasetDto as { proposalIds?: string[] }).proposalIds =
+        proposalIds;
 
     const createdDataset = new this.datasetModel(
       // insert created and updated fields
@@ -522,7 +594,7 @@ export class DatasetsService {
     // https://stackoverflow.com/questions/57324321/mongoose-overwriting-data-in-mongodb-with-default-values-in-subdocuments
     let queryFilter: FilterQuery<DatasetDocument> = { pid: id };
     queryFilter = withOCCFilter(queryFilter, unmodifiedSince);
-    const patchedDataset = await this.datasetModel
+    let patchedDataset = await this.datasetModel
       .findOneAndUpdate(
         queryFilter,
         addUpdatedByField(
@@ -541,6 +613,11 @@ export class DatasetsService {
       throw new PreconditionFailedException(
         `Dataset #${id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
       );
+    }
+
+    // Auto-fill proposalIds only when this patch didn't touch the field itself.
+    if (!("proposalIds" in updateDatasetDto)) {
+      patchedDataset = await this.backfillProposalIds(id, patchedDataset);
     }
 
     if (this.opensearchService) {

@@ -532,6 +532,115 @@ describe("1900: RawDataset: Raw Datasets", () => {
       });
   });
 
+  it("0141: auto-fills proposalId of a new raw dataset from a proposal sharing its ownerGroup", async () => {
+    const autofillOwnerGroup = faker.string.alphanumeric(10);
+    const newProposal = {
+      ...TestData.ProposalCorrectComplete,
+      proposalId: faker.string.numeric(8),
+      ownerGroup: autofillOwnerGroup,
+    };
+
+    const proposalRes = await request(appUrl)
+      .post("/api/v3/Proposals")
+      .send(newProposal)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessProposalToken}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+
+    const autofillProposalId = proposalRes.body["proposalId"];
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { proposalId, ...rawDatasetWithoutProposal } = TestData.RawCorrect;
+    const datasetRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...rawDatasetWithoutProposal,
+        ownerGroup: autofillOwnerGroup,
+        sourceFolder: "/data/autofill-on-create/",
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+
+    datasetRes.body.should.have
+      .property("proposalId")
+      .and.be.equal(autofillProposalId);
+
+    await request(appUrl)
+      .delete("/api/v3/datasets/" + encodeURIComponent(datasetRes.body["pid"]))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+
+    await request(appUrl)
+      .delete("/api/v3/Proposals/" + encodeURIComponent(autofillProposalId))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
+  it("0142: backfills proposalId on patch once a proposal sharing the dataset's ownerGroup is created afterwards", async () => {
+    const autofillOwnerGroup = faker.string.alphanumeric(10);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { proposalId, ...rawDatasetWithoutProposal } = TestData.RawCorrect;
+    const datasetRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...rawDatasetWithoutProposal,
+        ownerGroup: autofillOwnerGroup,
+        sourceFolder: "/data/autofill-on-patch/",
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+
+    // no proposal shares this ownerGroup yet, so nothing to link
+    datasetRes.body.should.not.have.property("proposalId");
+
+    const newProposal = {
+      ...TestData.ProposalCorrectComplete,
+      proposalId: faker.string.numeric(8),
+      ownerGroup: autofillOwnerGroup,
+    };
+    const proposalRes = await request(appUrl)
+      .post("/api/v3/Proposals")
+      .send(newProposal)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessProposalToken}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+
+    const autofillProposalId = proposalRes.body["proposalId"];
+
+    const patchRes = await request(appUrl)
+      .patch("/api/v3/datasets/" + encodeURIComponent(datasetRes.body["pid"]))
+      .send(TestData.PatchComment)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/);
+
+    patchRes.body.should.have
+      .property("proposalId")
+      .and.be.equal(autofillProposalId);
+
+    await request(appUrl)
+      .delete("/api/v3/datasets/" + encodeURIComponent(datasetRes.body["pid"]))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+
+    await request(appUrl)
+      .delete("/api/v3/Proposals/" + encodeURIComponent(autofillProposalId))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
   it("0150: should fail to update comment of the dataset", async () => {
     return request(appUrl)
       .patch("/api/v3/datasets/" + pid)

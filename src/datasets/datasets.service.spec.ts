@@ -31,6 +31,7 @@ class MetadataKeysServiceMock {
 
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
+  findAll = jest.fn().mockResolvedValue([]);
 }
 
 const mockDataset: DatasetClass = {
@@ -114,6 +115,7 @@ mockDatasetModel.collection = { name: "Dataset" };
 describe("DatasetsService", () => {
   let service: DatasetsService;
   let model: Model<DatasetClass>;
+  let proposalsService: ProposalsServiceMock;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -140,6 +142,7 @@ describe("DatasetsService", () => {
 
     service = await module.resolve<DatasetsService>(DatasetsService);
     model = module.get<Model<DatasetClass>>(getModelToken("DatasetClass"));
+    proposalsService = module.get<ProposalsServiceMock>(ProposalsService);
   });
 
   it("should be defined", () => {
@@ -182,6 +185,80 @@ describe("DatasetsService", () => {
     ).toBe("Already Encoded");
   });
 
+  it("should populate proposalIds from matching proposals' ownerGroup for a raw dataset with no proposalIds set", async () => {
+    const dtoData = { ...mockDataset, type: "raw", proposalIds: [] };
+    const dto = plainToInstance(CreateDatasetDto, dtoData);
+
+    (service as unknown as { request: Request }).request = {
+      user: { username: "tester" },
+      route: { path: "/datasets" },
+    } as unknown as Request;
+
+    proposalsService.findAll.mockResolvedValueOnce([
+      { proposalId: "20210101.1" },
+      { proposalId: "20210101.2" },
+    ]);
+
+    const result = await service.create(dto);
+
+    expect(proposalsService.findAll).toHaveBeenCalledWith({
+      where: { ownerGroup: mockDataset.ownerGroup },
+    });
+    expect(result.proposalIds).toEqual(["20210101.1", "20210101.2"]);
+  });
+
+  it("should skip proposalIds auto-fill when ownerGroup matches too many proposals", async () => {
+    const dtoData = { ...mockDataset, type: "raw", proposalIds: [] };
+    const dto = plainToInstance(CreateDatasetDto, dtoData);
+
+    (service as unknown as { request: Request }).request = {
+      user: { username: "tester" },
+      route: { path: "/datasets" },
+    } as unknown as Request;
+
+    const tooManyProposals = Array.from({ length: 101 }, (_, i) => ({
+      proposalId: `20210101.${i}`,
+    }));
+    proposalsService.findAll.mockResolvedValueOnce(tooManyProposals);
+
+    const result = await service.create(dto);
+
+    expect(proposalsService.findAll).toHaveBeenCalledWith({
+      where: { ownerGroup: mockDataset.ownerGroup },
+    });
+    expect(result.proposalIds).toEqual([]);
+  });
+
+  it("should not look up proposals for a raw dataset that already has proposalIds set", async () => {
+    const dtoData = { ...mockDataset, type: "raw" };
+    const dto = plainToInstance(CreateDatasetDto, dtoData);
+
+    (service as unknown as { request: Request }).request = {
+      user: { username: "tester" },
+      route: { path: "/datasets" },
+    } as unknown as Request;
+
+    const result = await service.create(dto);
+
+    expect(proposalsService.findAll).not.toHaveBeenCalled();
+    expect(result.proposalIds).toEqual(mockDataset.proposalIds);
+  });
+
+  it("should not look up proposals for a derived dataset", async () => {
+    const dtoData = { ...mockDataset, type: "derived", proposalIds: [] };
+    const dto = plainToInstance(CreateDatasetDto, dtoData);
+
+    (service as unknown as { request: Request }).request = {
+      user: { username: "tester" },
+      route: { path: "/datasets" },
+    } as unknown as Request;
+
+    const result = await service.create(dto);
+
+    expect(proposalsService.findAll).not.toHaveBeenCalled();
+    expect(result.proposalIds).toEqual([]);
+  });
+
   it("should throw NotFoundException if no document is found", async () => {
     const updateDto = { datasetName: "Updated Name" };
     model.findOne = jest
@@ -204,6 +281,111 @@ describe("DatasetsService", () => {
     await expect(
       service.findByIdAndUpdate("testId", updateDto, unmodifiedSince),
     ).rejects.toThrow(PreconditionFailedException);
+  });
+
+  it("should backfill proposalIds on patch when a raw dataset still has none", async () => {
+    const existing = { ...mockDataset, type: "raw", proposalIds: [] };
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(existing) });
+
+    const patchedNoProposals = {
+      ...existing,
+      toObject: jest.fn().mockReturnValue(existing),
+    };
+    const patchedWithProposals = {
+      ...existing,
+      proposalIds: ["20260101.1"],
+      toObject: jest
+        .fn()
+        .mockReturnValue({ ...existing, proposalIds: ["20260101.1"] }),
+    };
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(patchedNoProposals),
+      })
+      .mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(patchedWithProposals),
+      });
+
+    proposalsService.findAll.mockResolvedValueOnce([
+      { proposalId: "20260101.1" },
+    ]);
+
+    const result = await service.findByIdAndUpdate("testId", {
+      datasetName: "Updated",
+    });
+
+    expect(proposalsService.findAll).toHaveBeenCalledWith({
+      where: { ownerGroup: existing.ownerGroup },
+    });
+    // the proposalIds backfill is a second, atomically-guarded update, not
+    // merged into the caller's own patch
+    expect(model.findOneAndUpdate).toHaveBeenCalledTimes(2);
+    expect(model.findOneAndUpdate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        pid: "testId",
+        type: "raw",
+        $or: [
+          { proposalIds: { $exists: false } },
+          { proposalIds: { $size: 0 } },
+        ],
+      }),
+      { $set: { proposalIds: ["20260101.1"] } },
+      expect.anything(),
+    );
+    expect(result?.proposalIds).toEqual(["20260101.1"]);
+  });
+
+  it("should not clobber a concurrently-set proposalIds when the guarded backfill no longer matches", async () => {
+    const existing = { ...mockDataset, type: "raw", proposalIds: [] };
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(existing) });
+
+    const patchedNoProposals = {
+      ...existing,
+      toObject: jest.fn().mockReturnValue(existing),
+    };
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue(patchedNoProposals),
+      })
+      // a concurrent write already set proposalIds, so the guarded filter
+      // no longer matches and the conditional update returns null
+      .mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
+
+    proposalsService.findAll.mockResolvedValueOnce([
+      { proposalId: "20260101.1" },
+    ]);
+
+    const result = await service.findByIdAndUpdate("testId", {
+      datasetName: "Updated",
+    });
+
+    expect(model.findOneAndUpdate).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(existing);
+  });
+
+  it("should not look up proposals on patch when the dataset already has proposalIds", async () => {
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockDataset) });
+
+    const patched = {
+      ...mockDataset,
+      toObject: jest.fn().mockReturnValue(mockDataset),
+    };
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(patched) });
+
+    await service.findByIdAndUpdate("testId", { datasetName: "Updated" });
+
+    expect(proposalsService.findAll).not.toHaveBeenCalled();
   });
 
   describe("updateDatasetSizeAndFiles", () => {
