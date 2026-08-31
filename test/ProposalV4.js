@@ -5,12 +5,12 @@ const { v4: uuidv4 } = require("uuid");
 const assert = require("node:assert");
 
 let accessTokenAdminIngestor = null,
-  accessTokenProposalAdmin = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
   proposalId1 = null,
   proposalId2 = null,
-  proposalId3 = null;
+  proposalId3 = null,
+  proposal1 = null;
 
 const ProposalCorrectMinV4 = {
   proposalId: "20170266-v4",
@@ -63,11 +63,6 @@ describe("3000: Proposals v4 tests", () => {
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
       password: TestData.Accounts["adminIngestor"]["password"],
-    });
-
-    accessTokenProposalAdmin = await utils.getToken(appUrl, {
-      username: "proposaladmin",
-      password: TestData.Accounts["proposaladmin"]["password"],
     });
 
     accessTokenUser1 = await utils.getToken(appUrl, {
@@ -124,7 +119,7 @@ describe("3000: Proposals v4 tests", () => {
       return request(appUrl)
         .post("/api/v4/proposals/isValid")
         .send(ProposalCorrectMinV4)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -136,7 +131,7 @@ describe("3000: Proposals v4 tests", () => {
       return request(appUrl)
         .post("/api/v4/proposals/isValid")
         .send(ProposalCorrectCompleteV4)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -156,18 +151,23 @@ describe("3000: Proposals v4 tests", () => {
 
     it("3000:0201: should create minimal proposal", async () => {
       const uniqueProposalId = `${ProposalCorrectMinV4.proposalId}-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
+      proposal1 = {
+        ...ProposalCorrectMinV4,
+        proposalId: uniqueProposalId,
+      };
 
       return request(appUrl)
         .post("/api/v4/proposals")
-        .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .send(proposal1)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
-          res.body.should.have.property("title").and.equal(proposalToCreate.title);
-          res.body.should.have.property("email").and.equal(proposalToCreate.email);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(proposal1.proposalId);
+          res.body.should.have.property("title").and.equal(proposal1.title);
+          res.body.should.have.property("email").and.equal(proposal1.email);
           res.body.should.have.property("createdBy");
           res.body.should.have.property("updatedBy");
           res.body.should.have.property("createdAt");
@@ -179,28 +179,43 @@ describe("3000: Proposals v4 tests", () => {
     it("3000:0202: should not create proposal with duplicate proposalId", async () => {
       return request(appUrl)
         .post("/api/v4/proposals")
-        .send(ProposalCorrectMinV4)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .send(proposal1)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.ConflictStatusCode);
     });
 
     it("3000:0203: should create complete proposal", async () => {
       const uniqueProposalId = `${ProposalCorrectCompleteV4.proposalId}-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectCompleteV4, proposalId: uniqueProposalId };
+      const proposalToCreate = {
+        ...ProposalCorrectCompleteV4,
+        proposalId: uniqueProposalId,
+      };
 
       return request(appUrl)
         .post("/api/v4/proposals")
         .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
-          res.body.should.have.property("title").and.equal(proposalToCreate.title);
-          res.body.should.have.property("abstract").and.equal(proposalToCreate.abstract);
-          res.body.should.have.property("pi_email").and.equal(proposalToCreate.pi_email);
-          res.body.should.have.property("keywords").and.deep.equal(proposalToCreate.keywords);
-          res.body.should.have.property("MeasurementPeriodList").and.have.lengthOf(1);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(uniqueProposalId);
+          res.body.should.have
+            .property("title")
+            .and.equal(proposalToCreate.title);
+          res.body.should.have
+            .property("abstract")
+            .and.equal(proposalToCreate.abstract);
+          res.body.should.have
+            .property("pi_email")
+            .and.equal(proposalToCreate.pi_email);
+          res.body.should.have
+            .property("keywords")
+            .and.deep.equal(proposalToCreate.keywords);
+          res.body.should.have
+            .property("MeasurementPeriodList")
+            .and.have.lengthOf(1);
           proposalId2 = res.body.proposalId;
         });
     });
@@ -216,7 +231,7 @@ describe("3000: Proposals v4 tests", () => {
     it("3000:0301: should list all proposals for proposaladmin", async () => {
       return request(appUrl)
         .get("/api/v4/proposals")
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -232,7 +247,7 @@ describe("3000: Proposals v4 tests", () => {
             where: { proposalId: proposalId1 },
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -251,7 +266,7 @@ describe("3000: Proposals v4 tests", () => {
             limits: { limit: 1, skip: 0 },
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -281,7 +296,7 @@ describe("3000: Proposals v4 tests", () => {
             where: { proposalId: proposalId1 },
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -298,7 +313,7 @@ describe("3000: Proposals v4 tests", () => {
             include: ["samples"],
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -317,7 +332,7 @@ describe("3000: Proposals v4 tests", () => {
     it("3000:0501: should count all proposals", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/count")
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -334,7 +349,7 @@ describe("3000: Proposals v4 tests", () => {
             where: { ownerGroup: "proposalingestor" },
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -360,7 +375,7 @@ describe("3000: Proposals v4 tests", () => {
             fields: {},
           }),
         })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -379,7 +394,7 @@ describe("3000: Proposals v4 tests", () => {
     it("3000:0701: should get proposal by proposalId", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(proposalId1))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -389,8 +404,12 @@ describe("3000: Proposals v4 tests", () => {
 
     it("3000:0702: should get proposal with include", async () => {
       return request(appUrl)
-        .get("/api/v4/proposals/" + encodeURIComponent(proposalId2) + "?include=samples")
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .get(
+          "/api/v4/proposals/" +
+            encodeURIComponent(proposalId2) +
+            "?include=samples",
+        )
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -401,7 +420,7 @@ describe("3000: Proposals v4 tests", () => {
     it("3000:0703: should not find non-existent proposal", async () => {
       return request(appUrl)
         .get("/api/v4/proposals/nonexistent-proposal")
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode);
     });
   });
@@ -418,7 +437,7 @@ describe("3000: Proposals v4 tests", () => {
       return request(appUrl)
         .patch("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .send({ title: "Updated title v4" })
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -437,7 +456,7 @@ describe("3000: Proposals v4 tests", () => {
       return request(appUrl)
         .put("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .send(updatedProposal)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPostStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -450,13 +469,16 @@ describe("3000: Proposals v4 tests", () => {
   describe("Proposals v4 delete tests", () => {
     it("3000:0900: should not be able to delete proposal if not logged in", async () => {
       const uniqueProposalId = `20170269-v4-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
+      const proposalToCreate = {
+        ...ProposalCorrectMinV4,
+        proposalId: uniqueProposalId,
+      };
 
       // First create a proposal
       await request(appUrl)
         .post("/api/v4/proposals")
         .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
 
       // Then try to delete without auth
@@ -467,47 +489,55 @@ describe("3000: Proposals v4 tests", () => {
 
     it("3000:0901: should delete proposal", async () => {
       const uniqueProposalId = `20170270-v4-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
+      const proposalToCreate = {
+        ...ProposalCorrectMinV4,
+        proposalId: uniqueProposalId,
+      };
 
       // First create a proposal
       await request(appUrl)
         .post("/api/v4/proposals")
         .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
 
       // Then delete it
       return request(appUrl)
         .delete("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(uniqueProposalId);
         });
     });
 
     it("3000:0902: should not find deleted proposal", async () => {
       const uniqueProposalId = `20170271-v4-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectMinV4, proposalId: uniqueProposalId };
+      const proposalToCreate = {
+        ...ProposalCorrectMinV4,
+        proposalId: uniqueProposalId,
+      };
 
       // First create a proposal
       await request(appUrl)
         .post("/api/v4/proposals")
         .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
 
       // Then delete it
       await request(appUrl)
         .delete("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode);
 
       // Try to get it - should not be found
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode);
     });
   });
@@ -515,16 +545,21 @@ describe("3000: Proposals v4 tests", () => {
   describe("Proposals v4 create published proposal for public tests", () => {
     it("3000:1000: should create published proposal for public endpoint tests", async () => {
       const uniqueProposalId = `${ProposalCorrectPublishedV4.proposalId}-${uuidv4()}`;
-      const proposalToCreate = { ...ProposalCorrectPublishedV4, proposalId: uniqueProposalId };
+      const proposalToCreate = {
+        ...ProposalCorrectPublishedV4,
+        proposalId: uniqueProposalId,
+      };
 
       return request(appUrl)
         .post("/api/v4/proposals")
         .send(proposalToCreate)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(uniqueProposalId);
           res.body.should.have.property("isPublished").and.equal(true);
           proposalId3 = res.body.proposalId;
         });

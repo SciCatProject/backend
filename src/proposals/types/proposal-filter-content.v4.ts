@@ -4,14 +4,20 @@ import {
 } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 
 export function getSwaggerProposalFilterContent(
-  filtersToInclude: Record<"limits" | "fields" | "where" | "include", boolean> = {
+  filtersToInclude: Record<
+    "limits" | "fields" | "where" | "include",
+    boolean
+  > = {
     where: true,
     include: true,
     fields: true,
     limits: true,
   },
 ): ContentObject | undefined {
-  const FILTERS: Record<"limits" | "fields" | "where" | "include", SchemaObject> = {
+  const FILTERS: Record<
+    "limits" | "fields" | "where" | "include",
+    SchemaObject
+  > = {
     where: {
       type: "object",
       example: {
@@ -90,7 +96,8 @@ export function getSwaggerProposalFilterContent(
     const key = filtersKey as keyof typeof FILTERS;
 
     if (filtersToInclude[key] && FILTERS[key]) {
-      const schema = filterContent["application/json"].schema as SchemaObject & {
+      const schema = filterContent["application/json"]
+        .schema as SchemaObject & {
         properties?: Record<string, SchemaObject>;
       };
       schema.properties = schema.properties || {};

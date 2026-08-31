@@ -198,7 +198,8 @@ export class ProposalsV4Controller {
   })
   @ApiOperation({
     summary: "It creates a new proposal.",
-    description: "It creates a new proposal and returns it completed with systems fields.",
+    description:
+      "It creates a new proposal and returns it completed with systems fields.",
   })
   @ApiBody({
     description: "Input fields for the proposal to be created",
@@ -208,7 +209,8 @@ export class ProposalsV4Controller {
   @ApiResponse({
     status: HttpStatus.CREATED,
     type: OutputProposalV4Dto,
-    description: "Create a new proposal and return its representation in SciCat",
+    description:
+      "Create a new proposal and return its representation in SciCat",
   })
   async create(
     @Req() request: Request,
@@ -222,6 +224,7 @@ export class ProposalsV4Controller {
 
     try {
       const createdProposal = await this.proposalsService.createV4(proposalDto);
+      console.log(createdProposal);
       return createdProposal;
     } catch (error) {
       if ((error as MongoError).code === 11000) {
@@ -245,7 +248,8 @@ export class ProposalsV4Controller {
   @Post("/isValid")
   @ApiOperation({
     summary: "It validates the proposal provided as input.",
-    description: "It validates the proposal provided as input, and returns true if the information is a valid proposal",
+    description:
+      "It validates the proposal provided as input, and returns true if the information is a valid proposal",
   })
   @ApiBody({
     description: "Input fields for the proposal that needs to be validated",
@@ -255,7 +259,8 @@ export class ProposalsV4Controller {
   @ApiResponse({
     status: HttpStatus.OK,
     type: IsValidResponse,
-    description: "Check if the proposal provided pass validation. It return true if the validation is passed",
+    description:
+      "Check if the proposal provided pass validation. It return true if the validation is passed",
   })
   async isValid(
     @Req() request: Request,
@@ -291,7 +296,8 @@ export class ProposalsV4Controller {
   })
   @ApiOperation({
     summary: "It returns a list of proposals.",
-    description: "It returns a list of proposals. The list returned can be modified by providing a filter.",
+    description:
+      "It returns a list of proposals. The list returned can be modified by providing a filter.",
   })
   @ApiQuery({
     name: "filter",
@@ -324,7 +330,8 @@ export class ProposalsV4Controller {
       parsedFilter,
     );
 
-    const proposals = await this.proposalsService.findAllCompleteV4(mergedFilters);
+    const proposals =
+      await this.proposalsService.findAllCompleteV4(mergedFilters);
     return proposals;
   }
 
@@ -336,7 +343,8 @@ export class ProposalsV4Controller {
   @Get("/fullfacet")
   @ApiQuery({
     name: "filters",
-    description: "Defines list of field names, for which facet counts should be calculated",
+    description:
+      "Defines list of field names, for which facet counts should be calculated",
     required: false,
     type: FullFacetFilters,
     example: '{"facets": ["type","ownerGroup","keywords"], fields: {}}',
@@ -381,7 +389,8 @@ export class ProposalsV4Controller {
   @Get("/findOne")
   @ApiOperation({
     summary: "It returns the first proposal found.",
-    description: "It returns the first proposal of the ones that matches the filter provided.",
+    description:
+      "It returns the first proposal of the ones that matches the filter provided.",
   })
   @ApiQuery({
     name: "filter",
@@ -430,11 +439,13 @@ export class ProposalsV4Controller {
   @Get("/count")
   @ApiOperation({
     summary: "It returns the number of proposals.",
-    description: "It returns a number of proposals matching the where filter if provided.",
+    description:
+      "It returns a number of proposals matching the where filter if provided.",
   })
   @ApiQuery({
     name: "filter",
-    description: "Database filters to apply when retrieving count for proposals",
+    description:
+      "Database filters to apply when retrieving count for proposals",
     required: false,
     type: String,
     content: getSwaggerProposalFilterContent({
@@ -447,7 +458,8 @@ export class ProposalsV4Controller {
   @ApiResponse({
     status: HttpStatus.OK,
     type: CountApiResponse,
-    description: "Return the number of proposals in the following format: { count: integer }",
+    description:
+      "Return the number of proposals in the following format: { count: integer }",
   })
   async count(
     @Req() request: Request,
@@ -558,14 +570,16 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   })
   @ApiConsumes("application/json", "application/merge-patch+json")
   @ApiBody({
-    description: "Fields that needs to be updated in the proposal. Only the fields that needs to be updated have to be passed in.",
+    description:
+      "Fields that needs to be updated in the proposal. Only the fields that needs to be updated have to be passed in.",
     required: true,
     type: PartialUpdateProposalV4Dto,
   })
   @ApiResponse({
     status: HttpStatus.OK,
     type: OutputProposalV4Dto,
-    description: "Update an existing proposal and return its representation in SciCat",
+    description:
+      "Update an existing proposal and return its representation in SciCat",
   })
   async findByIdAndUpdate(
     @Req() request: Request,
@@ -623,14 +637,16 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     type: String,
   })
   @ApiBody({
-    description: "Proposal object that needs to be updated. The whole proposal object with updated fields have to be passed in.",
+    description:
+      "Proposal object that needs to be updated. The whole proposal object with updated fields have to be passed in.",
     required: true,
     type: UpdateProposalV4Dto,
   })
   @ApiResponse({
     status: HttpStatus.OK,
     type: OutputProposalV4Dto,
-    description: "Update an existing proposal and return its representation in SciCat",
+    description:
+      "Update an existing proposal and return its representation in SciCat",
   })
   async findByIdAndReplace(
     @Req() request: Request,
@@ -663,7 +679,8 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   @Delete("/:proposalId")
   @ApiOperation({
     summary: "It deletes the proposal.",
-    description: "It delete the proposal specified through the proposalId specified.",
+    description:
+      "It delete the proposal specified through the proposalId specified.",
   })
   @ApiParam({
     name: "proposalId",

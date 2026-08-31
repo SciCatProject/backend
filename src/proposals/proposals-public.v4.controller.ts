@@ -46,7 +46,9 @@ import {
 export class ProposalsPublicV4Controller {
   constructor(private proposalsService: ProposalsService) {}
 
-  addPublicFilter(filter: IProposalFiltersV4<ProposalDocument, IProposalFieldsV4>) {
+  addPublicFilter(
+    filter: IProposalFiltersV4<ProposalDocument, IProposalFieldsV4>,
+  ) {
     if (!filter.where) {
       filter.where = {};
     }
@@ -63,11 +65,13 @@ export class ProposalsPublicV4Controller {
   })
   @ApiOperation({
     summary: "It returns a list of public proposals.",
-    description: "It returns a list of public proposals. The list returned can be modified by providing a filter.",
+    description:
+      "It returns a list of public proposals. The list returned can be modified by providing a filter.",
   })
   @ApiQuery({
     name: "filter",
-    description: "Database filters to apply when retrieving the public proposals",
+    description:
+      "Database filters to apply when retrieving the public proposals",
     required: false,
     type: String,
     content: getSwaggerProposalFilterContent(),
@@ -91,7 +95,8 @@ export class ProposalsPublicV4Controller {
   ) {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
     this.addPublicFilter(parsedFilter);
-    const proposals = await this.proposalsService.findAllCompleteV4(parsedFilter);
+    const proposals =
+      await this.proposalsService.findAllCompleteV4(parsedFilter);
     return proposals;
   }
 
@@ -100,7 +105,8 @@ export class ProposalsPublicV4Controller {
   @Get("/fullfacet")
   @ApiQuery({
     name: "filters",
-    description: "Defines list of field names, for which facet counts should be calculated",
+    description:
+      "Defines list of field names, for which facet counts should be calculated",
     required: false,
     type: FullFacetFilters,
     example: '{"facets": ["type","ownerGroup","keywords"], fields: {}}',
@@ -130,11 +136,13 @@ export class ProposalsPublicV4Controller {
   @Get("/count")
   @ApiOperation({
     summary: "It returns the number of public proposals.",
-    description: "It returns a number of public proposals matching the where filter if provided.",
+    description:
+      "It returns a number of public proposals matching the where filter if provided.",
   })
   @ApiQuery({
     name: "filter",
-    description: "Database filters to apply when retrieving count for public proposals",
+    description:
+      "Database filters to apply when retrieving count for public proposals",
     required: false,
     type: String,
     content: getSwaggerProposalFilterContent({
@@ -147,7 +155,8 @@ export class ProposalsPublicV4Controller {
   @ApiResponse({
     status: HttpStatus.OK,
     type: CountApiResponse,
-    description: "Return the number of public proposals in the following format: { count: integer }",
+    description:
+      "Return the number of public proposals in the following format: { count: integer }",
   })
   async countPublic(
     @Query(
@@ -175,7 +184,8 @@ export class ProposalsPublicV4Controller {
   @Get("/findOne")
   @ApiOperation({
     summary: "It returns the first public proposal found.",
-    description: "It returns the first public proposal of the ones that matches the filter provided.",
+    description:
+      "It returns the first public proposal of the ones that matches the filter provided.",
   })
   @ApiQuery({
     name: "filter",

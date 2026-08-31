@@ -534,7 +534,9 @@ export class ProposalsService {
     return updatedProposal;
   }
 
-  async createV4(createProposalDto: CreateProposalV4Dto): Promise<ProposalClass> {
+  async createV4(
+    createProposalDto: CreateProposalV4Dto,
+  ): Promise<ProposalDocument> {
     const username = (this.request.user as JWTUser).username;
     if (createProposalDto.MeasurementPeriodList) {
       for (const i in createProposalDto.MeasurementPeriodList) {
@@ -556,7 +558,7 @@ export class ProposalsService {
         savedProposal,
       ),
     );
-    return savedProposal;
+    return savedProposal.toObject();
   }
 
   async findOneAndUpdateV4(

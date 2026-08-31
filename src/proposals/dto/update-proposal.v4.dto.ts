@@ -85,4 +85,6 @@ export class UpdateProposalV4Dto extends OwnableDto {
   readonly isPublished?: boolean;
 }
 
-export class PartialUpdateProposalV4Dto extends PartialType(UpdateProposalV4Dto) {}
+export class PartialUpdateProposalV4Dto extends PartialType(
+  UpdateProposalV4Dto,
+) {}

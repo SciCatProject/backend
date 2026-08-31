@@ -14,7 +14,8 @@ export class OutputProposalV4Dto extends CreateProposalV4Dto {
   @ApiProperty({
     type: String,
     required: true,
-    description: "Indicate the user who created this record. This property is added and maintained by the system.",
+    description:
+      "Indicate the user who created this record. This property is added and maintained by the system.",
   })
   @IsString()
   createdBy: string;
@@ -22,7 +23,8 @@ export class OutputProposalV4Dto extends CreateProposalV4Dto {
   @ApiProperty({
     type: String,
     required: true,
-    description: "Indicate the user who updated this record last. This property is added and maintained by the system.",
+    description:
+      "Indicate the user who updated this record last. This property is added and maintained by the system.",
   })
   @IsString()
   updatedBy: string;
@@ -30,7 +32,8 @@ export class OutputProposalV4Dto extends CreateProposalV4Dto {
   @ApiProperty({
     type: Date,
     required: true,
-    description: "Date and time when this record was created. This field is managed by mongoose.",
+    description:
+      "Date and time when this record was created. This field is managed by mongoose.",
   })
   @IsDateString()
   createdAt: Date;
@@ -38,7 +41,8 @@ export class OutputProposalV4Dto extends CreateProposalV4Dto {
   @ApiProperty({
     type: Date,
     required: true,
-    description: "Date and time when this record was updated last. This field is managed by mongoose.",
+    description:
+      "Date and time when this record was updated last. This field is managed by mongoose.",
   })
   @IsDateString()
   updatedAt: Date;
@@ -46,11 +50,14 @@ export class OutputProposalV4Dto extends CreateProposalV4Dto {
   @ApiProperty({
     type: String,
     required: false,
-    description: "Version of the API used when the proposal was created or last updated.",
+    description:
+      "Version of the API used when the proposal was created or last updated.",
   })
   @IsString()
   @IsOptional()
   version?: string;
 }
 
-export class PartialOutputProposalV4Dto extends PartialType(OutputProposalV4Dto) {}
+export class PartialOutputProposalV4Dto extends PartialType(
+  OutputProposalV4Dto,
+) {}
