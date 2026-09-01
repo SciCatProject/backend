@@ -32,6 +32,7 @@ class MetadataKeysServiceMock {
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
   findAll = jest.fn().mockResolvedValue([]);
+  count = jest.fn().mockResolvedValue({ count: 0 });
 }
 
 const mockDataset: DatasetClass = {
@@ -194,6 +195,7 @@ describe("DatasetsService", () => {
       route: { path: "/datasets" },
     } as unknown as Request;
 
+    proposalsService.count.mockResolvedValueOnce({ count: 2 });
     proposalsService.findAll.mockResolvedValueOnce([
       { proposalId: "20210101.1" },
       { proposalId: "20210101.2" },
@@ -201,13 +203,17 @@ describe("DatasetsService", () => {
 
     const result = await service.create(dto);
 
+    expect(proposalsService.count).toHaveBeenCalledWith({
+      where: { ownerGroup: mockDataset.ownerGroup },
+    });
     expect(proposalsService.findAll).toHaveBeenCalledWith({
       where: { ownerGroup: mockDataset.ownerGroup },
+      limits: { limit: 100 },
     });
     expect(result.proposalIds).toEqual(["20210101.1", "20210101.2"]);
   });
 
-  it("should skip proposalIds auto-fill when ownerGroup matches too many proposals", async () => {
+  it("should truncate proposalIds auto-fill when ownerGroup matches too many proposals", async () => {
     const dtoData = { ...mockDataset, type: "raw", proposalIds: [] };
     const dto = plainToInstance(CreateDatasetDto, dtoData);
 
@@ -216,17 +222,19 @@ describe("DatasetsService", () => {
       route: { path: "/datasets" },
     } as unknown as Request;
 
-    const tooManyProposals = Array.from({ length: 101 }, (_, i) => ({
+    const cappedProposals = Array.from({ length: 100 }, (_, i) => ({
       proposalId: `20210101.${i}`,
     }));
-    proposalsService.findAll.mockResolvedValueOnce(tooManyProposals);
+    proposalsService.count.mockResolvedValueOnce({ count: 101 });
+    proposalsService.findAll.mockResolvedValueOnce(cappedProposals);
 
     const result = await service.create(dto);
 
     expect(proposalsService.findAll).toHaveBeenCalledWith({
       where: { ownerGroup: mockDataset.ownerGroup },
+      limits: { limit: 100 },
     });
-    expect(result.proposalIds).toEqual([]);
+    expect(result.proposalIds).toHaveLength(100);
   });
 
   it("should not look up proposals for a raw dataset that already has proposalIds set", async () => {
@@ -309,6 +317,7 @@ describe("DatasetsService", () => {
         exec: jest.fn().mockResolvedValue(patchedWithProposals),
       });
 
+    proposalsService.count.mockResolvedValueOnce({ count: 1 });
     proposalsService.findAll.mockResolvedValueOnce([
       { proposalId: "20260101.1" },
     ]);
@@ -319,6 +328,7 @@ describe("DatasetsService", () => {
 
     expect(proposalsService.findAll).toHaveBeenCalledWith({
       where: { ownerGroup: existing.ownerGroup },
+      limits: { limit: 100 },
     });
     // the proposalIds backfill is a second, atomically-guarded update, not
     // merged into the caller's own patch
@@ -337,6 +347,9 @@ describe("DatasetsService", () => {
       expect.anything(),
     );
     expect(result?.proposalIds).toEqual(["20260101.1"]);
+    expect(proposalsService.incrementNumberOfDatasets).toHaveBeenCalledWith([
+      "20260101.1",
+    ]);
   });
 
   it("should not clobber a concurrently-set proposalIds when the guarded backfill no longer matches", async () => {
@@ -358,6 +371,7 @@ describe("DatasetsService", () => {
       // no longer matches and the conditional update returns null
       .mockReturnValueOnce({ exec: jest.fn().mockResolvedValue(null) });
 
+    proposalsService.count.mockResolvedValueOnce({ count: 1 });
     proposalsService.findAll.mockResolvedValueOnce([
       { proposalId: "20260101.1" },
     ]);
@@ -368,6 +382,7 @@ describe("DatasetsService", () => {
 
     expect(model.findOneAndUpdate).toHaveBeenCalledTimes(2);
     expect(result).toEqual(existing);
+    expect(proposalsService.incrementNumberOfDatasets).not.toHaveBeenCalled();
   });
 
   it("should not look up proposals on patch when the dataset already has proposalIds", async () => {

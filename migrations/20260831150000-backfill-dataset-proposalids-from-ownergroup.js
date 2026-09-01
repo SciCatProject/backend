@@ -6,80 +6,106 @@
  * more than one proposal.
  *
  * A broad/shared ownerGroup could otherwise match an unreasonable number of
- * unrelated proposals, so groups matching more than
- * MAX_PROPOSALS_PER_OWNER_GROUP proposals are skipped and logged instead of
- * writing a huge proposalIds array.
+ * unrelated proposals, so a dataset whose ownerGroup matches more than
+ * MAX_PROPOSALS_PER_OWNER_GROUP proposals only gets linked to the first
+ * MAX_PROPOSALS_PER_OWNER_GROUP of them, and the truncation is logged,
+ * instead of writing an unbounded proposalIds array.
  */
 
 const MAX_PROPOSALS_PER_OWNER_GROUP = 100;
+const CHUNK_SIZE = 1000;
+
+function warnTruncatedProposals(warnedOwnerGroups, ownerGroup, proposalCount) {
+  if (warnedOwnerGroups.has(ownerGroup)) return;
+
+  warnedOwnerGroups.add(ownerGroup);
+  console.warn(
+    `ownerGroup "${ownerGroup}" matches ${proposalCount} proposals; ` +
+      `only linking the first ${MAX_PROPOSALS_PER_OWNER_GROUP}.`,
+  );
+}
+
+// Returns the Proposal docs matching ownerGroup (capped at
+// MAX_PROPOSALS_PER_OWNER_GROUP), or null if there are none.
+async function getMatchingProposals(db, ownerGroup, warnedOwnerGroups) {
+  const proposalCount = await db
+    .collection("Proposal")
+    .countDocuments({ ownerGroup });
+
+  if (proposalCount === 0) return null;
+
+  if (proposalCount > MAX_PROPOSALS_PER_OWNER_GROUP) {
+    warnTruncatedProposals(warnedOwnerGroups, ownerGroup, proposalCount);
+  }
+
+  return db
+    .collection("Proposal")
+    .find({ ownerGroup }, { projection: { proposalId: 1 } })
+    .limit(MAX_PROPOSALS_PER_OWNER_GROUP)
+    .toArray();
+}
+
+// Pulls the proposalIds out of the matched proposals and, in the same pass,
+// tallies how many datasets each one is about to be linked to in this chunk.
+function extractProposalIdsAndTally(proposals, proposalIncrements) {
+  const proposalIds = [];
+  for (const proposal of proposals) {
+    proposalIds.push(proposal.proposalId);
+    proposalIncrements.set(
+      proposal.proposalId,
+      (proposalIncrements.get(proposal.proposalId) || 0) + 1,
+    );
+  }
+  return proposalIds;
+}
+
+function buildProposalIdsUpdateOp(datasetId, proposalIds) {
+  return {
+    updateOne: {
+      filter: {
+        _id: datasetId,
+        $or: [
+          { proposalIds: { $exists: false } },
+          { proposalIds: { $size: 0 } },
+        ],
+      },
+      update: { $set: { proposalIds } },
+    },
+  };
+}
+
+async function flushChunk(db, datasetOps, proposalIncrements) {
+  if (datasetOps.length === 0) return { modifiedCount: 0, unModifiedCount: 0 };
+
+  const bulkWriteResult = await db
+    .collection("Dataset")
+    .bulkWrite(datasetOps, { ordered: false });
+
+  if (proposalIncrements.size > 0) {
+    await db.collection("Proposal").bulkWrite(
+      [...proposalIncrements.entries()].map(([proposalId, count]) => ({
+        updateOne: {
+          filter: { proposalId },
+          update: { $inc: { numberOfDatasets: count } },
+        },
+      })),
+      { ordered: false },
+    );
+  }
+
+  return {
+    modifiedCount: bulkWriteResult.modifiedCount,
+    unModifiedCount: datasetOps.length - bulkWriteResult.modifiedCount,
+  };
+}
 
 module.exports = {
   async up(db) {
-    const BATCH_SIZE = 10000;
     let modifiedCount = 0;
     let unModifiedCount = 0;
-    let batch = [];
+    let datasetOps = [];
+    let proposalIncrements = new Map();
     const warnedOwnerGroups = new Set();
-
-    const flushBatch = async () => {
-      if (batch.length === 0) return;
-
-      const ownerGroups = [
-        ...new Set(batch.map((dataset) => dataset.ownerGroup)),
-      ];
-      const proposalIdsByOwnerGroup = new Map();
-      const tooManyOwnerGroups = new Set();
-      for await (const proposal of db
-        .collection("Proposal")
-        .find(
-          { ownerGroup: { $in: ownerGroups } },
-          { projection: { ownerGroup: 1, proposalId: 1 } },
-        )) {
-        if (!proposal.ownerGroup || !proposal.proposalId) continue;
-        if (tooManyOwnerGroups.has(proposal.ownerGroup)) continue;
-
-        const existing = proposalIdsByOwnerGroup.get(proposal.ownerGroup) || [];
-        existing.push(proposal.proposalId);
-
-        if (existing.length > MAX_PROPOSALS_PER_OWNER_GROUP) {
-          proposalIdsByOwnerGroup.delete(proposal.ownerGroup);
-          tooManyOwnerGroups.add(proposal.ownerGroup);
-          if (!warnedOwnerGroups.has(proposal.ownerGroup)) {
-            warnedOwnerGroups.add(proposal.ownerGroup);
-            console.warn(
-              `Skipping proposalIds backfill for ownerGroup "${proposal.ownerGroup}": ` +
-                `more than ${MAX_PROPOSALS_PER_OWNER_GROUP} matching proposals.`,
-            );
-          }
-          continue;
-        }
-
-        proposalIdsByOwnerGroup.set(proposal.ownerGroup, existing);
-      }
-
-      const bulkOps = [];
-      for (const dataset of batch) {
-        const proposalIds = proposalIdsByOwnerGroup.get(dataset.ownerGroup);
-        if (!proposalIds || proposalIds.length === 0) continue;
-
-        bulkOps.push({
-          updateOne: {
-            filter: { _id: dataset._id },
-            update: { $set: { proposalIds } },
-          },
-        });
-      }
-
-      if (bulkOps.length > 0) {
-        const bulkWriteResult = await db
-          .collection("Dataset")
-          .bulkWrite(bulkOps, { ordered: false });
-        modifiedCount += bulkWriteResult.modifiedCount;
-        unModifiedCount += bulkOps.length - bulkWriteResult.modifiedCount;
-      }
-
-      batch = [];
-    };
 
     for await (const dataset of db.collection("Dataset").find(
       {
@@ -91,10 +117,25 @@ module.exports = {
       },
       { projection: { ownerGroup: 1 } },
     )) {
-      batch.push(dataset);
+      const proposals = await getMatchingProposals(
+        db,
+        dataset.ownerGroup,
+        warnedOwnerGroups,
+      );
+      if (!proposals) continue;
 
-      if (batch.length === BATCH_SIZE) {
-        await flushBatch();
+      const proposalIds = extractProposalIdsAndTally(
+        proposals,
+        proposalIncrements,
+      );
+      datasetOps.push(buildProposalIdsUpdateOp(dataset._id, proposalIds));
+
+      if (datasetOps.length === CHUNK_SIZE) {
+        const result = await flushChunk(db, datasetOps, proposalIncrements);
+        modifiedCount += result.modifiedCount;
+        unModifiedCount += result.unModifiedCount;
+        datasetOps = [];
+        proposalIncrements = new Map();
         console.log(
           "migrating, count, unModifiedCount: ",
           modifiedCount,
@@ -102,7 +143,10 @@ module.exports = {
         );
       }
     }
-    await flushBatch();
+
+    const finalResult = await flushChunk(db, datasetOps, proposalIncrements);
+    modifiedCount += finalResult.modifiedCount;
+    unModifiedCount += finalResult.unModifiedCount;
 
     console.log(
       "FINISHED: count, unModifiedCount: ",

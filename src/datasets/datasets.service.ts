@@ -184,22 +184,26 @@ export class DatasetsService {
     if (type !== DatasetType.Raw || (proposalIds?.length ?? 0) > 0)
       return undefined;
 
-    const matchingProposals = await this.proposalService.findAll({
+    const { count: matchingProposalsCount } = await this.proposalService.count({
       where: { ownerGroup },
     });
 
-    if (matchingProposals.length === 0) {
+    if (matchingProposalsCount === 0) {
       return undefined;
     }
 
-    if (matchingProposals.length > MAX_PROPOSALS_PER_OWNER_GROUP) {
+    if (matchingProposalsCount > MAX_PROPOSALS_PER_OWNER_GROUP) {
       Logger.warn(
-        `Skipping proposalIds auto-fill for ownerGroup "${ownerGroup}": ` +
-          `${matchingProposals.length} matching proposals exceed the ${MAX_PROPOSALS_PER_OWNER_GROUP} cap.`,
+        `ownerGroup "${ownerGroup}" matches ${matchingProposalsCount} proposals; ` +
+          `only linking the first ${MAX_PROPOSALS_PER_OWNER_GROUP}.`,
         DatasetsService.name,
       );
-      return undefined;
     }
+
+    const matchingProposals = await this.proposalService.findAll({
+      where: { ownerGroup },
+      limits: { limit: MAX_PROPOSALS_PER_OWNER_GROUP },
+    });
 
     return matchingProposals.map((proposal) => proposal.proposalId);
   }
@@ -232,7 +236,13 @@ export class DatasetsService {
       )
       .exec();
 
-    return (datasetWithProposalIds as T | null) ?? dataset;
+    if (!datasetWithProposalIds) {
+      return dataset;
+    }
+
+    await this.proposalService.incrementNumberOfDatasets(proposalIds);
+
+    return datasetWithProposalIds as T;
   }
 
   async create(createDatasetDto: CreateDatasetDto): Promise<DatasetDocument> {
