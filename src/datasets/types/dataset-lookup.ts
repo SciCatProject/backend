@@ -70,7 +70,7 @@ export const DATASET_LOOKUP_FIELDS: Record<
             $expr: {
               $anyElementTrue: {
                 $map: {
-                  input: "$relationships",
+                  input: { $ifNull: ["$relationships", []] },
                   as: "relationship",
                   in: {
                     $and: [
