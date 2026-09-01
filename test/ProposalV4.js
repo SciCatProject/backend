@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const assert = require("node:assert");
 
 let accessTokenAdminIngestor = null,
+  accessTokenArchiveManager = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
   proposalId1 = null,
@@ -12,49 +13,9 @@ let accessTokenAdminIngestor = null,
   proposalId3 = null,
   proposal1 = null;
 
-const ProposalCorrectMinV4 = {
-  proposalId: "20170266-v4",
-  email: "proposer@uni.edu",
-  title: "A minimal test proposal v4",
-  ownerGroup: "proposalingestor",
-  accessGroups: [],
-};
+const ProposalCorrectMinV4 = TestData.ProposalCorrectMinV4;
 
-const ProposalCorrectCompleteV4 = {
-  proposalId: "20170267-v4",
-  email: "proposer@uni.edu",
-  firstname: "Test",
-  lastname: "User",
-  pi_email: "pi@uni.edu",
-  pi_firstname: "Principal",
-  pi_lastname: "Investigator",
-  title: "A complete test proposal v4",
-  abstract: "Abstract of test proposal v4",
-  ownerGroup: "proposalingestor",
-  accessGroups: ["proposalgroup1"],
-  type: "Default Proposal",
-  keywords: ["keyword1", "keyword2"],
-  instrumentIds: ["instrument1", "instrument2"],
-  isPublished: false,
-  MeasurementPeriodList: [
-    {
-      instrument: "ESS3-1",
-      start: "2017-07-24T13:56:30.000Z",
-      end: "2017-07-25T13:56:30.000Z",
-      comment: "Some comment",
-    },
-  ],
-  metadata: { customField: "customValue" },
-};
-
-const ProposalCorrectPublishedV4 = {
-  proposalId: "20170268-v4",
-  email: "proposer@uni.edu",
-  title: "A published test proposal v4",
-  ownerGroup: "proposalingestor",
-  accessGroups: [],
-  isPublished: true,
-};
+const ProposalCorrectCompleteV4 = TestData.ProposalCorrectCompleteV4;
 
 describe("3000: Proposals v4 tests", () => {
   before(async () => {
@@ -74,37 +35,17 @@ describe("3000: Proposals v4 tests", () => {
       username: "user2",
       password: TestData.Accounts["user2"]["password"],
     });
+
+    accessTokenArchiveManager = await utils.getToken(appUrl, {
+      username: "archiveManager",
+      password: TestData.Accounts["archiveManager"]["password"],
+    });
   });
 
   after(async () => {
     // Clean up created proposals
-    if (proposalId1) {
-      await request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId1))
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.SuccessfulDeleteStatusCode);
-    }
-    if (proposalId2) {
-      await request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId2))
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.SuccessfulDeleteStatusCode);
-    }
-    if (proposalId3) {
-      await request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId3))
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.SuccessfulDeleteStatusCode);
-    }
-    db.collection("Proposal").deleteMany({ proposalId: /-v4$/ });
+    db.collection("Proposal").deleteMany({});
   });
-
-  async function deleteProposal(proposalId, token) {
-    return request(appUrl)
-      .delete("/api/v4/proposals/" + encodeURIComponent(proposalId))
-      .auth(token, { type: "bearer" })
-      .expect(TestData.SuccessfulDeleteStatusCode);
-  }
 
   describe("Proposals v4 validation tests", () => {
     it("3000:0100: should not be able to validate proposal if not logged in", async () => {
@@ -426,31 +367,42 @@ describe("3000: Proposals v4 tests", () => {
   });
 
   describe("Proposals v4 update tests", () => {
-    it("3000:0800: should not be able to update proposal if not logged in", async () => {
+    it("3000:0800: should not be able to patch proposal if not logged in", async () => {
       return request(appUrl)
         .patch("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .send({ title: "Updated title" })
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("3000:0801: should partially update proposal", async () => {
+    it("3000:0801: should patch proposal", async () => {
+      const newTitle = "Patch updated title v4";
       return request(appUrl)
         .patch("/api/v4/proposals/" + encodeURIComponent(proposalId1))
-        .send({ title: "Updated title v4" })
+        .send({ title: newTitle })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have.property("proposalId").and.equal(proposalId1);
-          res.body.should.have.property("title").and.equal("Updated title v4");
+          res.body.should.have.property("title").and.equal(newTitle);
         });
     });
 
-    it("3000:0802: should replace proposal with PUT", async () => {
-      const updatedProposal = {
+    it("3000:0802: should not be able to put proposal if not logged in", async () => {
+      const { proposalId, ...updatedProposal } = {
         ...ProposalCorrectMinV4,
-        proposalId: proposalId1,
-        title: "Replaced title v4",
+        title: "Put update title v4",
+      };
+
+      return request(appUrl)
+        .put("/api/v4/proposals/" + encodeURIComponent(proposalId1))
+        .send(updatedProposal)
+        .expect(TestData.AccessForbiddenStatusCode);
+    });
+    it("3000:0803: should replace proposal with PUT", async () => {
+      const { proposalId, ...updatedProposal } = {
+        ...ProposalCorrectMinV4,
+        title: "Put update title v4",
       };
 
       return request(appUrl)
@@ -461,108 +413,65 @@ describe("3000: Proposals v4 tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have.property("proposalId").and.equal(proposalId1);
-          res.body.should.have.property("title").and.equal("Replaced title v4");
+          res.body.should.have
+            .property("title")
+            .and.equal(updatedProposal.title);
         });
     });
   });
 
   describe("Proposals v4 delete tests", () => {
     it("3000:0900: should not be able to delete proposal if not logged in", async () => {
-      const uniqueProposalId = `20170269-v4-${uuidv4()}`;
-      const proposalToCreate = {
-        ...ProposalCorrectMinV4,
-        proposalId: uniqueProposalId,
-      };
-
-      // First create a proposal
-      await request(appUrl)
-        .post("/api/v4/proposals")
-        .send(proposalToCreate)
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryCreatedStatusCode);
-
       // Then try to delete without auth
       return request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
+        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .expect(TestData.AccessForbiddenStatusCode);
     });
 
-    it("3000:0901: should delete proposal", async () => {
-      const uniqueProposalId = `20170270-v4-${uuidv4()}`;
-      const proposalToCreate = {
-        ...ProposalCorrectMinV4,
-        proposalId: uniqueProposalId,
-      };
-
-      // First create a proposal
-      await request(appUrl)
-        .post("/api/v4/proposals")
-        .send(proposalToCreate)
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryCreatedStatusCode);
-
-      // Then delete it
+    it("3000:0901: should not be able to delete proposal without delete permissions", async () => {
+      // delete proposal as adminIngestor, which does not have correct permissions
       return request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
+        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode);
+    });
+
+    it("3000:0902: should be able to delete proposal 1 with delete permissions", async () => {
+      return request(appUrl)
+        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId1))
+        .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have
-            .property("proposalId")
-            .and.equal(uniqueProposalId);
+          res.body.should.have.property("proposalId").and.equal(proposalId1);
         });
     });
 
-    it("3000:0902: should not find deleted proposal", async () => {
-      const uniqueProposalId = `20170271-v4-${uuidv4()}`;
-      const proposalToCreate = {
-        ...ProposalCorrectMinV4,
-        proposalId: uniqueProposalId,
-      };
+    it("3000:0903: should be able to delete proposal 2 with delete permissions", async () => {
+      return request(appUrl)
+        .delete("/api/v4/proposals/" + encodeURIComponent(proposalId2))
+        .auth(accessTokenArchiveManager, { type: "bearer" })
+        .expect(TestData.SuccessfulDeleteStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("proposalId").and.equal(proposalId2);
+        });
+    });
 
-      // First create a proposal
-      await request(appUrl)
-        .post("/api/v4/proposals")
-        .send(proposalToCreate)
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryCreatedStatusCode);
-
-      // Then delete it
-      await request(appUrl)
-        .delete("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.SuccessfulDeleteStatusCode);
-
+    it("3000:0904: should not find proposal 1", async () => {
       // Try to get it - should not be found
       return request(appUrl)
-        .get("/api/v4/proposals/" + encodeURIComponent(uniqueProposalId))
+        .get("/api/v4/proposals/" + encodeURIComponent(proposalId1))
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode);
     });
-  });
 
-  describe("Proposals v4 create published proposal for public tests", () => {
-    it("3000:1000: should create published proposal for public endpoint tests", async () => {
-      const uniqueProposalId = `${ProposalCorrectPublishedV4.proposalId}-${uuidv4()}`;
-      const proposalToCreate = {
-        ...ProposalCorrectPublishedV4,
-        proposalId: uniqueProposalId,
-      };
-
+    it("3000:0905: should not find proposal 2", async () => {
+      // Try to get it - should not be found
       return request(appUrl)
-        .post("/api/v4/proposals")
-        .send(proposalToCreate)
+        .get("/api/v4/proposals/" + encodeURIComponent(proposalId2))
         .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryCreatedStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          res.body.should.have
-            .property("proposalId")
-            .and.equal(uniqueProposalId);
-          res.body.should.have.property("isPublished").and.equal(true);
-          proposalId3 = res.body.proposalId;
-        });
+        .expect(TestData.NotFoundStatusCode);
     });
   });
 });

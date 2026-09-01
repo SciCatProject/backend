@@ -51,6 +51,7 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateMeasurementPeriodDto } from "./dto/create-measurement-period.dto";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
@@ -271,7 +272,10 @@ export class ProposalsService {
   async findOne(
     filter: FilterQuery<ProposalDocument>,
   ): Promise<ProposalClass | null> {
-    return this.proposalModel.findOne(filter).exec();
+    const whereFilter: FilterQuery<ProposalDocument> = filter.where ?? {};
+    const fieldsProjection: FilterQuery<ProposalDocument> = filter.fields ?? {};
+
+    return this.proposalModel.findOne(whereFilter, fieldsProjection).exec();
   }
 
   async findOneAndUpdate(
@@ -490,7 +494,7 @@ export class ProposalsService {
     return await this.proposalModel.aggregate(pipeline).exec();
   }
 
-  async findOneAndReplace(
+  async findOneAndReplaceV4(
     filter: FilterQuery<ProposalDocument>,
     updateProposalDto: UpdateProposalV4Dto,
   ): Promise<ProposalClass | null> {
@@ -503,10 +507,17 @@ export class ProposalsService {
       );
     }
 
+    const updatedProposalInput = {
+      ...updateProposalDto,
+      proposalId: existingProposal.proposalId,
+      createdBy: existingProposal.createdBy,
+      createdAt: existingProposal.createdAt,
+    };
+
     const updatedProposal = await this.proposalModel
       .findOneAndReplace(
         filter,
-        addUpdatedByField(updateProposalDto, username),
+        addUpdatedByField(updatedProposalInput, username),
         {
           new: true,
           runValidators: true,
@@ -520,23 +531,23 @@ export class ProposalsService {
       );
     }
 
-    await this.metadataKeysService.replaceManyFromSource(
-      createMetadataKeysInstance(
-        this.proposalModel.collection.name,
-        existingProposal,
-      ),
-      createMetadataKeysInstance(
-        this.proposalModel.collection.name,
-        updatedProposal,
-      ),
-    );
+    // await this.metadataKeysService.replaceManyFromSource(
+    //   createMetadataKeysInstance(
+    //     this.proposalModel.collection.name,
+    //     existingProposal,
+    //   ),
+    //   createMetadataKeysInstance(
+    //     this.proposalModel.collection.name,
+    //     updatedProposal,
+    //   ),
+    // );
 
-    return updatedProposal;
+    return updatedProposal.toObject();
   }
 
   async createV4(
     createProposalDto: CreateProposalV4Dto,
-  ): Promise<ProposalDocument> {
+  ): Promise<ProposalClass> {
     const username = (this.request.user as JWTUser).username;
     if (createProposalDto.MeasurementPeriodList) {
       for (const i in createProposalDto.MeasurementPeriodList) {
@@ -614,6 +625,6 @@ export class ProposalsService {
       ),
     );
 
-    return updatedProposal;
+    return updatedProposal.toObject();
   }
 }

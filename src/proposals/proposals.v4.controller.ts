@@ -360,15 +360,18 @@ export class ProposalsV4Controller {
     @Query() filters: { fields?: string; facets?: string },
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
+
+    if (!user) {
+      throw new ForbiddenException("Unauthorized access");
+    }
+
     const fields: IProposalFieldsV4 = JSON.parse(filters.fields ?? "{}");
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
     const canView = ability.can(Action.ProposalRead, ProposalClass);
 
-    if (!user) {
-      fields.isPublished = true;
-    } else if (!canViewAny && canView && !fields.isPublished) {
+    if (!canViewAny && canView && !fields.isPublished) {
       fields.userGroups = fields.userGroups ?? [];
       fields.userGroups.push(...user.currentGroups);
     }
@@ -587,7 +590,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Body() updateProposalDto: PartialUpdateProposalV4Dto,
   ): Promise<OutputProposalV4Dto | null> {
     const foundProposal = await this.proposalsService.findOne({
-      proposalId,
+      where: { proposalId: proposalId },
     });
 
     if (!foundProposal) throw new NotFoundException("Proposal not found");
@@ -654,8 +657,10 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Body() updateProposalDto: UpdateProposalV4Dto,
   ): Promise<OutputProposalV4Dto | null> {
     const foundProposal = await this.proposalsService.findOne({
-      proposalId,
+      where: { proposalId: proposalId },
     });
+
+    if (!foundProposal) throw new NotFoundException("Proposal not found");
 
     await this.checkPermissionsForProposalExtended(
       request,
@@ -663,7 +668,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       Action.ProposalUpdate,
     );
 
-    const outputProposalDto = await this.proposalsService.findOneAndReplace(
+    const outputProposalDto = await this.proposalsService.findOneAndReplaceV4(
       { proposalId },
       updateProposalDto,
     );
