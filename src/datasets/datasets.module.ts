@@ -72,7 +72,9 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
             });
             let av: string;
             if (policy) {
-              av = policy.tapeRedundancy || "low";
+              av =
+                (policy.jobPolicies?.archive as { tapeRedundancy?: string })
+                  ?.tapeRedundancy || "low";
             } else {
               const regexLiteral = /(?<=AV\=)(.*?)(?=\,)/g;
               av = (regexLiteral.exec(this.classification ?? "") || ["low"])[0];

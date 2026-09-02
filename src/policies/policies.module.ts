@@ -10,12 +10,13 @@ import {
   GenericHistorySchema,
 } from "../common/schemas/generic-history.schema";
 import { PoliciesController } from "./policies.controller";
+import { PoliciesV4Controller } from "./policies.v4.controller";
 import { PoliciesService } from "./policies.service";
 import { Policy, PolicySchema } from "./schemas/policy.schema";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
 
 @Module({
-  controllers: [PoliciesController],
+  controllers: [PoliciesController, PoliciesV4Controller],
   imports: [
     AuthModule,
     CaslModule,
