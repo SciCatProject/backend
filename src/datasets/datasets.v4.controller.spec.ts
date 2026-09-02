@@ -98,17 +98,12 @@ describe("DatasetsController (manual instantiate)", () => {
     const req = {
       headers: {
         "content-type": "application/json",
-        "if-unmodified-since": "2026-01-01T00:00:00Z", // Header is *after* updatedAt -> allowed
+        "if-unmodified-since": "2026-01-01T00:00:00.000Z", // Header is *after* updatedAt -> allowed
       },
       user: mockUser,
     } as unknown as Request;
 
-    const result = await controller.findByIdAndUpdate(
-      req,
-      pid,
-      updateDto,
-      new Date("2026-01-01T00:00:00Z"),
-    );
+    const result = await controller.findByIdAndUpdate(req, pid, updateDto);
 
     expect(result).toBeDefined();
     expect(result.pid).toBe(pid);
@@ -120,7 +115,7 @@ describe("DatasetsController (manual instantiate)", () => {
       expect.objectContaining({
         scientificMetadata: { temperature: { value: 300, unit: "K" } },
       }),
-      new Date("2026-01-01T00:00:00Z"),
+      new Date("2026-01-01T00:00:00.000Z"),
     );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });
@@ -171,7 +166,7 @@ describe("DatasetsController (manual instantiate)", () => {
     const req = {
       headers: {
         "content-type": "application/json",
-        "if-unmodified-since": "2024-12-31T12:00:00Z", // Header is *before* updatedAt -> should fail with PRECONDITION_FAILED (412)
+        "if-unmodified-since": "2024-12-31T12:00:00.000Z", // Header is *before* updatedAt -> should fail with PRECONDITION_FAILED (412)
       },
       user: mockUser,
     } as unknown as Request;
@@ -180,12 +175,7 @@ describe("DatasetsController (manual instantiate)", () => {
         "Resource has been modified on server since the date provided in header.",
       );
     });
-    const promise = controller.findByIdAndUpdate(
-      req,
-      pid,
-      updateDto,
-      new Date("2024-12-31T12:00:00Z"),
-    );
+    const promise = controller.findByIdAndUpdate(req, pid, updateDto);
 
     await expect(promise).rejects.toThrow(
       "Resource has been modified on server",
@@ -197,7 +187,7 @@ describe("DatasetsController (manual instantiate)", () => {
       expect.objectContaining({
         scientificMetadata: { temperature: { value: 310, unit: "K" } },
       }),
-      new Date("2024-12-31T12:00:00Z"),
+      new Date("2024-12-31T12:00:00.000Z"),
     );
     expect(checkSpy).toHaveBeenCalledTimes(1);
   });

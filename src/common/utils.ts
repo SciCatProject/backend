@@ -1346,6 +1346,40 @@ export function parseDate(dateString?: string): Date | undefined {
   return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
 }
 
+// RFC 7231 HTTP-date (the standard form of the if-unmodified-since header)
+// never has fractional seconds - only an explicit decimal point, as in
+// ISO-8601's optional ".SSS", signals that the client actually knows the
+// resource's timestamp down to the millisecond.
+const HAS_SUBSECOND_PRECISION = /\.\d+/;
+
+/**
+ * Parses the `if-unmodified-since` header for OCC preconditions (see
+ * `withOCCFilter`). A standard HTTP-date has only second precision, while
+ * `updatedAt` is stored with millisecond precision - comparing a
+ * second-precision value exactly against a finer-grained `updatedAt` would
+ * reject an unmodified document whenever its stored timestamp lands later in
+ * that same second. So a header with no explicit fractional-seconds
+ * component is treated as covering its whole second, by widening it to that
+ * second's last millisecond, rather than compared exactly.
+ *
+ * Precision is read from the raw header string, not the parsed Date: a
+ * client that genuinely means the exact millisecond :00.000
+ * (`date.getMilliseconds() === 0`) is indistinguishable from a truncated
+ * HTTP-date once parsed, so guessing from the parsed value would widen (and
+ * so weaken) that exact-match case too.
+ */
+export function parseIfUnmodifiedSince(
+  rawValue: string | undefined,
+): Date | undefined {
+  const parsed = parseDate(rawValue);
+  if (!parsed || !rawValue) {
+    return parsed;
+  }
+  return HAS_SUBSECOND_PRECISION.test(rawValue)
+    ? parsed
+    : new Date(parsed.getTime() + 999);
+}
+
 export function createMetadataKeysInstance(
   sourceType: string,
   doc: {

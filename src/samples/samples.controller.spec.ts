@@ -50,7 +50,7 @@ describe("SamplesController", () => {
   describe("update", () => {
     const sampleId = "sample123";
     const updateDto: PartialUpdateSampleDto = { description: "Updated Sample" };
-    const mockRequest = {} as Request;
+    const mockRequest = { headers: {} } as unknown as Request;
 
     it("should update sample when header is missing", async () => {
       const sample = {
@@ -106,13 +106,11 @@ describe("SamplesController", () => {
           "Resource has been modified on the server since the date provided in header.",
         );
       });
+      const requestWithPrecondition = {
+        headers: { "if-unmodified-since": "2022-01-01T00:00:00.000Z" },
+      } as unknown as Request;
       await expect(
-        controller.update(
-          mockRequest,
-          sampleId,
-          updateDto,
-          new Date("2022-01-01"),
-        ),
+        controller.update(requestWithPrecondition, sampleId, updateDto),
       ).rejects.toThrow(HttpException);
     });
 

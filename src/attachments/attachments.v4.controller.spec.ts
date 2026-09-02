@@ -108,12 +108,13 @@ describe("AttachmentsController - findOneAndUpdate", () => {
   it("should throw PRECONDITION_FAILED if attachments service throws it", async () => {
     const dto = { caption: "Should Fail" };
 
+    const unmodifiedSince = new Date("2000-01-01T00:00:00.000Z");
     const req = {
       headers: {
         "content-type": "application/json",
+        "if-unmodified-since": unmodifiedSince.toISOString(),
       },
     } as Partial<Request> as Request;
-    const unmodifiedSince = new Date("2000-01-01T00:00:00Z");
 
     jest.spyOn(service, "findOneAndUpdate").mockImplementation(() => {
       throw new PreconditionFailedException(
@@ -121,9 +122,7 @@ describe("AttachmentsController - findOneAndUpdate", () => {
       );
     });
 
-    await expect(
-      controller.findOneAndUpdate(req, "123", dto, unmodifiedSince),
-    ).rejects.toThrow(
+    await expect(controller.findOneAndUpdate(req, "123", dto)).rejects.toThrow(
       new HttpException(
         "Resource has been modified on server",
         HttpStatus.PRECONDITION_FAILED,

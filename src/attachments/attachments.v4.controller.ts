@@ -58,7 +58,7 @@ import {
   ALLOWED_ATTACHMENT_FILTER_KEYS,
 } from "./types/attachment-lookup";
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
-import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
+import { parseIfUnmodifiedSince } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiExtraModels(AttachmentRelationshipClass)
@@ -373,7 +373,6 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Req() request: Request,
     @Param("aid") aid: string,
     @Body() updateAttachmentDto: PartialUpdateAttachmentV4Dto,
-    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OutputAttachmentV4Dto | null> {
     const foundAttachment = await this.checkPermissionsForAttachment(
       request,
@@ -385,6 +384,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
 
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
       updateAttachmentDtoForservice,

@@ -62,8 +62,8 @@ import {
   proposalFullFacetExampleFields,
   proposalsFullQueryDescriptionFields,
   proposalsFullQueryExampleFields,
+  parseIfUnmodifiedSince,
 } from "src/common/utils";
-import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import { FindByIdAccessResponse } from "src/samples/samples.controller";
@@ -603,7 +603,6 @@ export class ProposalsController {
     @Req() request: Request,
     @Param("pid") proposalId: string,
     @Body() updateProposalDto: PartialUpdateProposalDto,
-    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<ProposalClass | null> {
     await this.checkPermissionsForProposal(
       request,
@@ -611,6 +610,9 @@ export class ProposalsController {
       Action.ProposalUpdate,
     );
 
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     return this.proposalsService.findOneAndUpdate(
       { proposalId: proposalId },
       updateProposalDto,

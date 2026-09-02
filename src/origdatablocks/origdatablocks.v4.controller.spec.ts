@@ -80,23 +80,18 @@ describe("OrigDatablocksV4Controller", () => {
         new PreconditionFailedException("Resource has been modified on server"),
       );
 
+      const unmodifiedSince = new Date(Date.now() - 10000);
       const mockRequest = {
         user: { id: "user123" },
-        headers: {},
+        headers: { "if-unmodified-since": unmodifiedSince.toISOString() },
       } as unknown as Request;
-      const unmodifiedSince = new Date(Date.now() - 10000);
 
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablockWrite")
         .mockResolvedValue(updatedDatablock);
 
       await expect(
-        controller.findByIdAndUpdate(
-          mockRequest,
-          "db123",
-          mockUpdateDto,
-          unmodifiedSince,
-        ),
+        controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
       ).rejects.toThrow(PreconditionFailedException);
       expect(
         origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,

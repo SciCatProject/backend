@@ -62,8 +62,8 @@ import {
   fullQueryExampleLimits,
   samplesFullQueryDescriptionFields,
   samplesFullQueryExampleFields,
+  parseIfUnmodifiedSince,
 } from "src/common/utils";
-import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
@@ -740,10 +740,12 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
     @Body() updateSampleDto: PartialUpdateSampleDto,
-    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OutputSampleDto | null> {
     await this.checkPermissionsForSample(request, id, Action.SampleUpdate);
 
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     const updatedSample = await this.samplesService.findOneAndUpdate(
       { sampleId: id },
       updateSampleDto,

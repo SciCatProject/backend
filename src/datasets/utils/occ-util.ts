@@ -4,6 +4,11 @@ import { QueryableClass } from "src/common/schemas/queryable.schema";
 
 /** OCC = Optimistic Concurrency Control. Returns a new filter with added OCC constraint (updatedAt < unmodifiedSince),
  * if unmodifiedSince is provided. Returns the original filter unchanged otherwise.
+ *
+ * unmodifiedSince is expected to already be at the right precision for an
+ * exact comparison - see the IfUnmodifiedSince decorator, which widens a
+ * second-precision HTTP-date header to cover its whole second before it
+ * ever reaches this function.
  */
 export function withOCCFilter<T extends QueryableClass>(
   filterQuery: FilterQuery<T>,

@@ -9,21 +9,23 @@ import {
 
 describe("OCC Util", () => {
   const filterQuery: FilterQuery<QueryableClass> = { createdBy: "abc" };
-  const unmodifiedSince = new Date("2026-01-01");
+  const unmodifiedSince = new Date("2026-01-01T00:00:00.123Z");
 
-  it("adds unmodifiedSince if supplied", () => {
-    const result = withOCCFilter(filterQuery, unmodifiedSince);
-    expect(result).not.toBe(filterQuery);
-    expect(result).toEqual({
-      createdBy: "abc",
-      updatedAt: { $lte: unmodifiedSince },
+  describe("withOCCFilter", () => {
+    it("adds unmodifiedSince if supplied", () => {
+      const result = withOCCFilter(filterQuery, unmodifiedSince);
+      expect(result).not.toBe(filterQuery);
+      expect(result).toEqual({
+        createdBy: "abc",
+        updatedAt: { $lte: unmodifiedSince },
+      });
     });
-  });
 
-  it("returns original filter unchanged if no unmodifiedSince provided", () => {
-    const result = withOCCFilter(filterQuery, undefined);
-    expect(result).toBe(filterQuery);
-    expect(result).toEqual(filterQuery);
+    it("returns original filter unchanged if no unmodifiedSince provided", () => {
+      const result = withOCCFilter(filterQuery, undefined);
+      expect(result).toBe(filterQuery);
+      expect(result).toEqual(filterQuery);
+    });
   });
 
   describe("nextOCCTimestamp", () => {

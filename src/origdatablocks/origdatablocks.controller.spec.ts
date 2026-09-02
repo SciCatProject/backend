@@ -6,6 +6,7 @@ import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { ConfigModule } from "@nestjs/config";
 import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { Request } from "express";
+import { parseIfUnmodifiedSince } from "src/common/utils";
 
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
@@ -100,15 +101,10 @@ describe("OrigDatablocksController", () => {
         updatedDatablock,
       );
 
-      const unmodifiedSince = new Date(
+      const unmodifiedSince = parseIfUnmodifiedSince(
         mockRequest.headers["if-unmodified-since"] as string,
       );
-      const result = await controller.update(
-        mockRequest,
-        "123",
-        mockDto,
-        unmodifiedSince,
-      );
+      const result = await controller.update(mockRequest, "123", mockDto);
 
       expect(result).toEqual(updatedDatablock);
       expect(

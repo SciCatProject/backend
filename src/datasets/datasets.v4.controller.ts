@@ -44,8 +44,11 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { UTCTimeInterceptor } from "src/common/interceptors/utc-time.interceptor";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
-import { IsRecord, IsValueUnitObject } from "../common/utils";
-import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
+import {
+  IsRecord,
+  IsValueUnitObject,
+  parseIfUnmodifiedSince,
+} from "../common/utils";
 import { DatasetsService } from "./datasets.service";
 import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.interceptor";
 import {
@@ -729,8 +732,10 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Param("pid") pid: string,
     @Body()
     updateDatasetDto: PartialUpdateDatasetDto,
-    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OutputDatasetDto | null> {
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     const foundDataset = await this.datasetsService.findOne({
       where: { pid },
     });
