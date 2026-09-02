@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
   OnModuleInit,
+  PreconditionFailedException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -18,6 +19,7 @@ import { UsersService } from "src/users/users.service";
 import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { addCreatedByFields, parseLimitFilters } from "src/common/utils";
 import { REQUEST } from "@nestjs/core";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable()
 export class PoliciesService implements OnModuleInit {
@@ -153,21 +155,38 @@ export class PoliciesService implements OnModuleInit {
   async update(
     filter: FilterQuery<PolicyDocument>,
     updatePolicyDto: Partial<Policy>,
+    unmodifiedSince?: Date,
+    isMergePatch = false,
   ): Promise<Policy | null> {
     const username = (this.request.user as JWTUser).username;
-    const setFields = {
-      ...this.flattenToDotPaths(updatePolicyDto),
-      updatedBy: username,
-      updatedAt: new Date(),
-    };
-
-    return this.policyModel
+    const flattened = this.flattenToDotPaths(updatePolicyDto);
+    // application/json: a null value means "do not change this field".
+    // application/merge-patch+json: a null value means "reset this field to null".
+    const setFields = Object.fromEntries(
+      Object.entries(flattened).filter(
+        ([, value]) => isMergePatch || value !== null,
+      ),
+    );
+    setFields.updatedBy = username;
+    const queryFilter = withOCCFilter(filter, unmodifiedSince);
+    const updated = await this.policyModel
       .findOneAndUpdate(
-        filter,
+        queryFilter,
         { $set: setFields },
         { new: true, runValidators: true },
       )
       .exec();
+
+    if (!updated && unmodifiedSince) {
+      const stillExists = await this.policyModel.findOne(filter).exec();
+      if (stillExists) {
+        throw new PreconditionFailedException(
+          `Policy has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
+        );
+      }
+    }
+
+    return updated;
   }
 
   async remove(filter: FilterQuery<PolicyDocument>): Promise<unknown> {

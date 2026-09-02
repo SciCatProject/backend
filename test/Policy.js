@@ -1,6 +1,7 @@
 "use strict";
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
+const assert = require("node:assert");
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
@@ -300,5 +301,76 @@ describe("1302: Policy: v3 order/skip/limit tests", () => {
         res.body[0].should.have.property("ownerGroup");
         res.body[0].should.not.have.property("manager");
       });
+  });
+});
+
+describe("1303: Policy: v3 optimistic concurrency control tests", () => {
+  before(async () => {
+    accessTokenAdminIngestor = await utils.getToken(appUrl, {
+      username: "adminIngestor",
+      password: TestData.Accounts["adminIngestor"]["password"],
+    });
+  });
+
+  it("0010: should fail one request with HTTP 412 when two requests try to update the same policy", async () => {
+    const res = await request(appUrl)
+      .post("/api/v3/Policies")
+      .send({ ...testdataset, ownerGroup: "v3-occ-test" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+    const id = encodeURIComponent(res.body.id);
+
+    const [res1, res2] = await Promise.all([
+      request(appUrl)
+        .patch("/api/v3/Policies/" + id)
+        .send({ ownerGroup: "v3-occ-test-1" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+      request(appUrl)
+        .patch("/api/v3/Policies/" + id)
+        .send({ ownerGroup: "v3-occ-test-2" })
+        .set("if-unmodified-since", res.body.updatedAt)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+    ]);
+    assert(
+      [res1.statusCode, res2.statusCode].includes(
+        TestData.SuccessfulPatchStatusCode,
+      ),
+      "Neither PATCH request succeeded",
+    );
+    if (res1.status === TestData.SuccessfulPatchStatusCode) {
+      assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+    } else {
+      assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+    }
+
+    await request(appUrl)
+      .delete("/api/v3/Policies/" + id)
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` });
+  });
+
+  it("0020: should return 412 when patching with a stale if-unmodified-since date", async () => {
+    const res = await request(appUrl)
+      .post("/api/v3/Policies")
+      .send({ ...testdataset, ownerGroup: "v3-occ-test-stale" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+    const id = encodeURIComponent(res.body.id);
+    const staleDate = new Date(
+      new Date(res.body.updatedAt).getTime() - 1000,
+    ).toISOString();
+
+    await request(appUrl)
+      .patch("/api/v3/Policies/" + id)
+      .send({ ownerGroup: "v3-occ-test-stale-updated" })
+      .set("if-unmodified-since", staleDate)
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.PreconditionFailedStatusCode);
+
+    await request(appUrl)
+      .delete("/api/v3/Policies/" + id)
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` });
   });
 });
