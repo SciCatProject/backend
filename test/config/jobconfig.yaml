@@ -27,6 +27,11 @@ jobs:
       auth: "#datasetOwner"
     update:
       auth: "#jobOwnerUser"
+  - jobType: policy_list_access
+    create:
+      auth: "#datasetPolicyList"
+    update:
+      auth: "admin"
   - jobType: user_access
     create:
       auth: user5.1
