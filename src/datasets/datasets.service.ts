@@ -229,6 +229,36 @@ export class DatasetsService {
     return datasets;
   }
 
+  async countPolicyAuthorizedDatasets(
+    datasetPids: string[],
+    jobType: string,
+    userIdentities: string[],
+  ): Promise<number> {
+    const pipeline: PipelineStage[] = [
+      { $match: { pid: { $in: datasetPids } } },
+      {
+        $lookup: {
+          from: "Policy",
+          localField: "ownerGroup",
+          foreignField: "ownerGroup",
+          as: "linkedPolicy",
+        },
+      },
+      {
+        $match: {
+          [`linkedPolicy.jobPolicies.${jobType}.allowedList`]: {
+            $in: userIdentities,
+          },
+        },
+      },
+      { $count: "count" },
+    ];
+    const [result] = await this.datasetModel
+      .aggregate<{ count: number }>(pipeline)
+      .exec();
+    return result?.count ?? 0;
+  }
+
   async findAllComplete(
     filter: IDatasetFilters<DatasetDocument, IDatasetFields>,
     applyDefaults = true,
