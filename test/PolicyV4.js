@@ -1,6 +1,7 @@
 "use strict";
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
+const assert = require("node:assert");
 
 let accessTokenAdminIngestor = null,
   accessTokenUser1 = null;
@@ -237,6 +238,71 @@ describe("1310: Policy v4 tests", () => {
         .set("Accept", "application/json")
         .set({ Authorization: `Bearer ${accessTokenUser1}` })
         .expect(TestData.CreationForbiddenStatusCode);
+    });
+  });
+
+  describe("Optimistic concurrency control tests", () => {
+    let policyId = null;
+
+    after(async () => {
+      if (policyId) {
+        await request(appUrl)
+          .delete("/api/v3/Policies/" + encodeURIComponent(policyId))
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` });
+      }
+    });
+
+    it("0300: should fail one request with HTTP 412 when two requests try to update the same policy", async () => {
+      const res = await request(appUrl)
+        .post("/api/v4/policies")
+        .send({ ownerGroup: "v4-policy-test-occ", manager: ["adminIngestor"] })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+      policyId = res.body._id;
+      const id = encodeURIComponent(policyId);
+
+      const [res1, res2] = await Promise.all([
+        request(appUrl)
+          .patch(`/api/v4/policies/${id}`)
+          .send({ manager: ["updated1"] })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+        request(appUrl)
+          .patch(`/api/v4/policies/${id}`)
+          .send({ manager: ["updated2"] })
+          .set("if-unmodified-since", res.body.updatedAt)
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` }),
+      ]);
+      assert(
+        [res1.statusCode, res2.statusCode].includes(
+          TestData.SuccessfulPatchStatusCode,
+        ),
+        "Neither PATCH request succeeded",
+      );
+      if (res1.status === TestData.SuccessfulPatchStatusCode) {
+        assert(res2.statusCode == TestData.PreconditionFailedStatusCode);
+      } else {
+        assert(res1.statusCode == TestData.PreconditionFailedStatusCode);
+      }
+    });
+
+    it("0310: should return 412 when patching with a stale if-unmodified-since date", async () => {
+      const res = await request(appUrl)
+        .get(`/api/v4/policies/${encodeURIComponent(policyId)}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode);
+      const staleDate = new Date(
+        new Date(res.body.updatedAt).getTime() - 1000,
+      ).toISOString();
+
+      return request(appUrl)
+        .patch(`/api/v4/policies/${encodeURIComponent(policyId)}`)
+        .send({ manager: ["updated3"] })
+        .set("if-unmodified-since", staleDate)
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.PreconditionFailedStatusCode);
     });
   });
 });

@@ -23,6 +23,7 @@ import { SerializeAsV3 } from "src/common/decorators/serialize-as-v3.decorator";
 import { LEGACY_NOTIFICATION_PIPE } from "./pipes/legacy-notification.pipe";
 import { V3_FILTER_PIPE, V3_WHERE_PIPE } from "./pipes/filter.pipe";
 import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { parseDate } from "src/common/utils";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
@@ -139,13 +140,16 @@ export class PoliciesController {
   @SerializeAsV3(PolicyObsoleteDto)
   @Patch(":id")
   async update(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body(LEGACY_NOTIFICATION_PIPE)
     updatePolicyDto: PartialUpdatePolicyDto,
   ): Promise<Policy | null> {
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.policiesService.update(
       { _id: id },
       updatePolicyDto as unknown as Partial<Policy>,
+      unmodifiedSince,
     );
   }
 
