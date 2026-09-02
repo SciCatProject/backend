@@ -194,4 +194,6 @@ export const handlebarsHelpers: hb.HelperDeclareSpec = {
   base64enc: base64enc,
   base64dec: atob,
   formatUnit: formatUnit,
+  subString: (str: string | null | undefined, start: number, end?: number) =>
+    (str ?? "").substring(start, end),
 };
