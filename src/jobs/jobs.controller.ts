@@ -12,7 +12,6 @@ import {
   HttpStatus,
   HttpException,
   Req,
-  SerializeOptions,
   ClassSerializerInterceptor,
 } from "@nestjs/common";
 import { Request } from "express";
@@ -27,6 +26,7 @@ import { AppAbility } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
 import { JobClass } from "./schemas/job.schema";
 import { OutputJobV3Dto } from "./dto/output-job-v3.dto";
+import { SerializeAsV3 } from "src/common/decorators/serialize-as-v3.decorator";
 import {
   ApiBearerAuth,
   ApiBody,
@@ -93,7 +93,7 @@ export class JobsController {
     type: OutputJobV3Dto,
     description: "Created job",
   })
-  @SerializeOptions({ type: OutputJobV3Dto, excludeExtraneousValues: true })
+  @SerializeAsV3(OutputJobV3Dto)
   async create(
     @Req() request: Request,
     @Body() createJobDto: CreateJobDto,
@@ -130,7 +130,7 @@ export class JobsController {
     type: OutputJobV3Dto,
     description: "Updated job",
   })
-  @SerializeOptions({ type: OutputJobV3Dto, excludeExtraneousValues: true })
+  @SerializeAsV3(OutputJobV3Dto)
   async update(
     @Req() request: Request,
     @Param("id") id: string,
@@ -180,7 +180,7 @@ export class JobsController {
     type: [OutputJobV3Dto],
     description: "Return jobs requested.",
   })
-  @SerializeOptions({ type: OutputJobV3Dto, excludeExtraneousValues: true })
+  @SerializeAsV3(OutputJobV3Dto)
   async fullQuery(
     @Req() request: Request,
     @Query("fields", ...V3_WHERE_TO_V4_PIPE) fields?: string,
@@ -400,7 +400,7 @@ export class JobsController {
     type: OutputJobV3Dto,
     description: "Found job",
   })
-  @SerializeOptions({ type: OutputJobV3Dto, excludeExtraneousValues: true })
+  @SerializeAsV3(OutputJobV3Dto)
   async findOne(
     @Req() request: Request,
     @Param("id") id: string,
@@ -442,7 +442,7 @@ export class JobsController {
     type: [OutputJobV3Dto],
     description: "Found jobs",
   })
-  @SerializeOptions({ type: OutputJobV3Dto, excludeExtraneousValues: true })
+  @SerializeAsV3(OutputJobV3Dto)
   async findAll(
     @Req() request: Request,
 

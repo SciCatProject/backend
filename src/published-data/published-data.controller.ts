@@ -14,10 +14,10 @@ import {
   Post,
   Query,
   Req,
-  SerializeOptions,
   UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
+import { SerializeAsV3 } from "src/common/decorators/serialize-as-v3.decorator";
 import { ConfigService } from "@nestjs/config";
 import {
   ApiBearerAuth,
@@ -99,10 +99,7 @@ export class PublishedDataController {
     description:
       "This endpoint is deprecated and v4 endpoints should be used in the future",
   })
-  @SerializeOptions({
-    type: PublishedDataObsoleteDto,
-    excludeExtraneousValues: true,
-  })
+  @SerializeAsV3(PublishedDataObsoleteDto)
   @Post()
   async create(
     @Body(V3_TO_V4_DTO_BODY_PIPE)
@@ -134,10 +131,7 @@ export class PublishedDataController {
     isArray: true,
     description: "Results with a published documents array",
   })
-  @SerializeOptions({
-    type: PublishedDataObsoleteDto,
-    excludeExtraneousValues: true,
-  })
+  @SerializeAsV3(PublishedDataObsoleteDto)
   async findAll(
     @Req() request: Request,
     @Filter(...V3_FILTER_PIPE, RegisteredFilterPipe)
@@ -288,10 +282,7 @@ export class PublishedDataController {
     description: "PublishedData not found",
   })
   @Get("/:id")
-  @SerializeOptions({
-    type: PublishedDataObsoleteDto,
-    excludeExtraneousValues: true,
-  })
+  @SerializeAsV3(PublishedDataObsoleteDto)
   async findOne(
     @Req() request: Request,
     @Param(new IdToDoiPipe(), RegisteredPipe)
@@ -337,10 +328,7 @@ export class PublishedDataController {
     isArray: false,
     description: "Return updated published data",
   })
-  @SerializeOptions({
-    type: PublishedDataObsoleteDto,
-    excludeExtraneousValues: true,
-  })
+  @SerializeAsV3(PublishedDataObsoleteDto)
   @Patch("/:id")
   async update(
     @Req() request: Request,
@@ -452,10 +440,7 @@ export class PublishedDataController {
     isArray: false,
     description: "Return removed published data",
   })
-  @SerializeOptions({
-    type: PublishedDataObsoleteDto,
-    excludeExtraneousValues: true,
-  })
+  @SerializeAsV3(PublishedDataObsoleteDto)
   @Delete("/:id")
   async remove(@Param("id") id: string): Promise<PublishedDataObsoleteDto> {
     const removedData = await this.publishedDataService.remove({ doi: id });

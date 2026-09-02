@@ -1,9 +1,12 @@
 const policyV3toV4FieldMap =
   require("../dist/policies/dto/policy.obsolete.dto").policyV3toV4FieldMap;
+const { toApiToDBMap } = require("../dist/common/utils/deep-mapper.util");
 
-const FIELD_MAPPINGS = Object.entries(policyV3toV4FieldMap).map(
-  ([legacy, target]) => ({ legacy, target }),
-);
+const { apiToDBMap } = toApiToDBMap(policyV3toV4FieldMap);
+const FIELD_MAPPINGS = Object.entries(apiToDBMap).map(([legacy, target]) => ({
+  legacy,
+  target,
+}));
 
 
 module.exports = {
