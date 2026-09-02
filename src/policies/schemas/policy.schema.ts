@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
-import { Document } from "mongoose";
+import { Document, Schema as MongooseSchema } from "mongoose";
 import { OwnableClass } from "src/common/schemas/ownable.schema";
 import { v4 as uuidv4 } from "uuid";
+import { JobPolicy } from "./job-policy.schema";
 
 export type PolicyDocument = Policy & Document;
 
@@ -26,60 +27,16 @@ export class Policy extends OwnableClass {
   manager: string[];
 
   @ApiProperty({
+    type: JobPolicy,
+    required: false,
     description:
-      "Defines the level of redundancy in storage to minimize loss of data. Allowed values are low, medium, high. Low could e.g. mean one tape copy only, medium could mean two tape copies and high two geo-redundant tape copies",
+      "Per-job-type policy settings for this ownerGroup (e.g. notification recipients), keyed by job type.",
   })
-  @Prop({ type: String, default: "low" })
-  tapeRedundancy: string;
-
-  @ApiProperty({
-    description:
-      "Flag to indicate that a dataset should be automatically archived after ingest. If false then archive delay is ignored",
+  @Prop({
+    type: MongooseSchema.Types.Mixed,
+    required: false,
   })
-  @Prop({ type: Boolean, default: true })
-  autoArchive: boolean;
-
-  @ApiProperty({
-    description:
-      "Number of days after dataset creation that (remaining) datasets are archived automatically",
-  })
-  @Prop({ type: Number, default: 7 })
-  autoArchiveDelay: number;
-
-  @ApiProperty({
-    description:
-      "Flag is true when an email notification should be sent to archiveEmailsToBeNotified upon an archive job creation",
-  })
-  @Prop({ type: Boolean, default: false })
-  archiveEmailNotification: boolean;
-
-  @ApiProperty({
-    description:
-      "Array of additional email addresses that should be notified up an archive job creation",
-  })
-  @Prop({ type: [String] })
-  archiveEmailsToBeNotified: string[];
-
-  @ApiProperty({
-    description:
-      "Flag is true when an email notification should be sent to retrieveEmailsToBeNotified upon a retrieval job creation",
-  })
-  @Prop({ type: Boolean, default: false })
-  retrieveEmailNotification: boolean;
-
-  @ApiProperty({
-    description:
-      "Array of additional email addresses that should be notified up a retrieval job creation",
-  })
-  @Prop({ type: [String] })
-  retrieveEmailsToBeNotified: string[];
-
-  @ApiProperty({
-    description:
-      "Number of years after dataset creation before the dataset becomes public",
-  })
-  @Prop({ type: Number, default: 3 })
-  embargoPeriod: number;
+  jobPolicies?: Record<string, JobPolicy>;
 }
 
 export const PolicySchema = SchemaFactory.createForClass(Policy);
