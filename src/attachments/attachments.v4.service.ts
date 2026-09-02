@@ -3,7 +3,6 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  PreconditionFailedException,
   Scope,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
@@ -20,7 +19,7 @@ import {
 import { CreateAttachmentV4Dto } from "./dto/create-attachment.v4.dto";
 import { PartialUpdateAttachmentV4Dto } from "./dto/update-attachment.v4.dto";
 import { Attachment, AttachmentDocument } from "./schemas/attachment.schema";
-import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { findOneAndUpdateWithOCC } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AttachmentsV4Service {
@@ -93,35 +92,15 @@ export class AttachmentsV4Service {
       return null;
     }
 
-    const filterQuery = withOCCFilter(filter, unmodifiedSince);
-
-    const result = await this.attachmentModel
-      .findOneAndUpdate(
-        filterQuery,
-        {
-          $set: {
-            ...updateAttachmentDto,
-            updatedBy: username,
-            updatedAt: new Date(),
-          },
-        },
-        { new: true, runValidators: true },
-      )
-      .exec();
-
-    if (!result) {
-      if (!unmodifiedSince) {
-        Logger.warn(
-          `Attachment not found for filter: ${JSON.stringify(filter)}`,
-        );
-        return null;
-      }
-      throw new PreconditionFailedException(
-        `Attachment #${filter._id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
-      );
-    }
-
-    return result;
+    return findOneAndUpdateWithOCC(
+      this.attachmentModel,
+      filter,
+      { ...updateAttachmentDto, updatedBy: username },
+      unmodifiedSince,
+      `Attachment not found for filter: ${JSON.stringify(filter)}`,
+      `Attachment #${filter._id} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
+      { runValidators: true },
+    );
   }
 
   async findOneAndReplace(

@@ -11,7 +11,6 @@ import {
   UseInterceptors,
   InternalServerErrorException,
   ConflictException,
-  Headers,
   NotFoundException,
   PreconditionFailedException,
 } from "@nestjs/common";
@@ -33,9 +32,10 @@ import { Action } from "src/casl/action.enum";
 import { Instrument, InstrumentDocument } from "./schemas/instrument.schema";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { IFilters } from "src/common/interfaces/common.interface";
-import { filterDescription, filterExample, parseDate } from "src/common/utils";
+import { filterDescription, filterExample } from "src/common/utils";
 import { CountApiResponse } from "src/common/types";
 import { FilterPipe } from "src/common/pipes/filter.pipe";
+import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 
 @ApiBearerAuth()
 @ApiTags("instruments")
@@ -159,9 +159,8 @@ export class InstrumentsController {
   async update(
     @Param("id") id: string,
     @Body() updateInstrumentDto: PartialUpdateInstrumentDto,
-    @Headers() headers: Record<string, string>,
+    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<Instrument | null> {
-    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
     try {
       const updatedInstrument = await this.instrumentsService.findOneAndUpdate(
         { _id: id },

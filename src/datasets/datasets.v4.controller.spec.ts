@@ -103,7 +103,12 @@ describe("DatasetsController (manual instantiate)", () => {
       user: mockUser,
     } as unknown as Request;
 
-    const result = await controller.findByIdAndUpdate(req, pid, updateDto);
+    const result = await controller.findByIdAndUpdate(
+      req,
+      pid,
+      updateDto,
+      new Date("2026-01-01T00:00:00Z"),
+    );
 
     expect(result).toBeDefined();
     expect(result.pid).toBe(pid);
@@ -175,7 +180,12 @@ describe("DatasetsController (manual instantiate)", () => {
         "Resource has been modified on server since the date provided in header.",
       );
     });
-    const promise = controller.findByIdAndUpdate(req, pid, updateDto);
+    const promise = controller.findByIdAndUpdate(
+      req,
+      pid,
+      updateDto,
+      new Date("2024-12-31T12:00:00Z"),
+    );
 
     await expect(promise).rejects.toThrow(
       "Resource has been modified on server",

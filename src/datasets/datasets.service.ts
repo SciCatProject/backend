@@ -5,7 +5,6 @@ import {
   Logger,
   NotFoundException,
   Optional,
-  PreconditionFailedException,
   Scope,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -71,7 +70,7 @@ import type { BulkStats } from "@opensearch-project/opensearch/lib/Helpers.js";
 import { DatasetOpenSearchDto } from "src/opensearch/dto/dataset-opensearch.dto";
 import { plainToInstance } from "class-transformer";
 import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opensearch.utils";
-import { withOCCFilter } from "./utils/occ-util";
+import { findOneAndUpdateWithOCC } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 @Injectable({ scope: Scope.REQUEST })
@@ -520,28 +519,17 @@ export class DatasetsService {
 
     // NOTE: When doing findByIdAndUpdate in mongoose it does reset the subdocuments to default values if no value is provided
     // https://stackoverflow.com/questions/57324321/mongoose-overwriting-data-in-mongodb-with-default-values-in-subdocuments
-    let queryFilter: FilterQuery<DatasetDocument> = { pid: id };
-    queryFilter = withOCCFilter(queryFilter, unmodifiedSince);
-    const patchedDataset = await this.datasetModel
-      .findOneAndUpdate(
-        queryFilter,
-        addUpdatedByField(
-          updateDatasetDto as UpdateQuery<DatasetDocument>,
-          username,
-        ),
-        { new: true },
-      )
-      .exec();
-
-    // check if we were able to find the dataset (matching the precondition, if supplied) and update it
-    if (!patchedDataset) {
-      if (!unmodifiedSince) {
-        throw new NotFoundException(`Dataset #${id} failed to update.`);
-      }
-      throw new PreconditionFailedException(
-        `Dataset #${id} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
-      );
-    }
+    const patchedDataset = await findOneAndUpdateWithOCC(
+      this.datasetModel,
+      { pid: id },
+      addUpdatedByField(
+        updateDatasetDto as UpdateQuery<DatasetDocument>,
+        username,
+      ),
+      unmodifiedSince,
+      `Dataset #${id} failed to update.`,
+      `Dataset #${id} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
+    );
 
     if (this.opensearchService) {
       await this.opensearchService.updateInsertDocument(

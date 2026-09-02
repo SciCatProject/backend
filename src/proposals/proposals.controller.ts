@@ -15,7 +15,6 @@ import {
   ForbiddenException,
   ConflictException,
   NotFoundException,
-  Headers,
 } from "@nestjs/common";
 import { Request } from "express";
 import { ProposalsService } from "./proposals.service";
@@ -60,11 +59,11 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
-  parseDate,
   proposalFullFacetExampleFields,
   proposalsFullQueryDescriptionFields,
   proposalsFullQueryExampleFields,
 } from "src/common/utils";
+import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import { FindByIdAccessResponse } from "src/samples/samples.controller";
@@ -603,8 +602,8 @@ export class ProposalsController {
   async update(
     @Req() request: Request,
     @Param("pid") proposalId: string,
-    @Headers() headers: Record<string, string>,
     @Body() updateProposalDto: PartialUpdateProposalDto,
+    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<ProposalClass | null> {
     await this.checkPermissionsForProposal(
       request,
@@ -612,7 +611,6 @@ export class ProposalsController {
       Action.ProposalUpdate,
     );
 
-    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
     return this.proposalsService.findOneAndUpdate(
       { proposalId: proposalId },
       updateProposalDto,

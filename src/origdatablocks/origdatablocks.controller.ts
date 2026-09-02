@@ -41,7 +41,8 @@ import { IOrigDatablockFields } from "./interfaces/origdatablocks.interface";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { filterDescription, filterExample, parseDate } from "src/common/utils";
+import { filterDescription, filterExample } from "src/common/utils";
+import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateRawDatasetObsoleteDto } from "src/datasets/dto/create-raw-dataset-obsolete.dto";
@@ -521,13 +522,13 @@ export class OrigDatablocksController {
     @Req() request: Request,
     @Param("id") id: string,
     @Body() updateOrigDatablockDto: PartialUpdateOrigDatablockDto,
+    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     await this.checkPermissionsForOrigDatablock(
       request,
       id,
       Action.OrigdatablockUpdate,
     );
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
       { _id: id },
       updateOrigDatablockDto,

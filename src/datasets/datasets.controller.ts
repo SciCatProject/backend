@@ -66,8 +66,8 @@ import {
   filterDescription,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
-  parseDate,
 } from "src/common/utils";
+import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 import { AccessGroupsType } from "src/config/configuration";
 import { DatablocksService } from "src/datablocks/datablocks.service";
 import { CreateDatablockDto } from "src/datablocks/dto/create-datablock.dto";
@@ -1209,6 +1209,7 @@ export class DatasetsController {
       | PartialUpdateRawDatasetObsoleteDto
       | PartialUpdateDerivedDatasetObsoleteDto
       | PartialUpdateDatasetDto,
+    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OutputDatasetObsoleteDto | null> {
     const foundDataset = await this.datasetsService.findOne({
       where: { pid },
@@ -1258,7 +1259,6 @@ export class DatasetsController {
       validatedUpdateDatasetObsoleteDto,
     ) as UpdateDatasetDto;
 
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const res = this.convertCurrentToObsoleteSchema(
       await this.datasetsService.findByIdAndUpdate(
         pid,

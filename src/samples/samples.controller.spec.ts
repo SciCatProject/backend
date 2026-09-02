@@ -76,12 +76,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        {},
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
 
@@ -89,7 +84,7 @@ describe("SamplesController", () => {
       samplesService.findOne = jest.fn().mockResolvedValue(null);
 
       await expect(
-        controller.update(mockRequest, sampleId, updateDto, {}),
+        controller.update(mockRequest, sampleId, updateDto),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -111,12 +106,13 @@ describe("SamplesController", () => {
           "Resource has been modified on the server since the date provided in header.",
         );
       });
-      const headers = {
-        "if-unmodified-since": new Date("2022-01-01").toUTCString(),
-      };
-
       await expect(
-        controller.update(mockRequest, sampleId, updateDto, headers),
+        controller.update(
+          mockRequest,
+          sampleId,
+          updateDto,
+          new Date("2022-01-01"),
+        ),
       ).rejects.toThrow(HttpException);
     });
 
@@ -141,16 +137,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const headers = {
-        "if-unmodified-since": "invalid-date-string",
-      };
-
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        headers,
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
 
@@ -175,12 +162,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        {},
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
   });

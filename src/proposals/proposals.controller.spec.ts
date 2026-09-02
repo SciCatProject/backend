@@ -164,12 +164,7 @@ describe("ProposalsController", () => {
       proposalsService.findOne.mockResolvedValue(null);
 
       await expect(
-        controller.update(
-          {},
-          "proposal-id",
-          {},
-          {} as PartialUpdateProposalDto,
-        ),
+        controller.update({}, "proposal-id", {} as PartialUpdateProposalDto),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -186,16 +181,12 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {
-        "if-unmodified-since": "2022-12-31",
-      };
-
       await expect(
         controller.update(
           {},
           "proposal-id",
-          headers,
           {} as PartialUpdateProposalDto,
+          new Date("2022-12-31"),
         ),
       ).rejects.toThrow(PreconditionFailedException);
 
@@ -220,14 +211,9 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const result = await controller.update(
-        {},
-        "proposal-id",
-        {},
-        {
-          title: "Updated",
-        },
-      );
+      const result = await controller.update({}, "proposal-id", {
+        title: "Updated",
+      });
 
       expect(result).toEqual(updatedProposal);
       expect(proposalsService.findOneAndUpdate).toHaveBeenCalledWith(
@@ -251,9 +237,7 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {}; // No 'if-unmodified-since'
-
-      const result = await controller.update({}, "proposal-id", headers, {
+      const result = await controller.update({}, "proposal-id", {
         title: "Updated",
       });
 
@@ -274,11 +258,7 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {
-        "if-unmodified-since": "not-a-valid-date",
-      };
-
-      const result = await controller.update({}, "proposal-id", headers, {
+      const result = await controller.update({}, "proposal-id", {
         title: "Updated",
       });
 

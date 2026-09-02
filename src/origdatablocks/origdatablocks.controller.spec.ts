@@ -100,16 +100,20 @@ describe("OrigDatablocksController", () => {
         updatedDatablock,
       );
 
-      const result = await controller.update(mockRequest, "123", mockDto);
+      const unmodifiedSince = new Date(
+        mockRequest.headers["if-unmodified-since"] as string,
+      );
+      const result = await controller.update(
+        mockRequest,
+        "123",
+        mockDto,
+        unmodifiedSince,
+      );
 
       expect(result).toEqual(updatedDatablock);
       expect(
         origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
-      ).toHaveBeenCalledWith(
-        { _id: "123" },
-        mockDto,
-        new Date(mockRequest.headers["if-unmodified-since"] as string),
-      );
+      ).toHaveBeenCalledWith({ _id: "123" }, mockDto, unmodifiedSince);
     });
 
     describe("update", () => {

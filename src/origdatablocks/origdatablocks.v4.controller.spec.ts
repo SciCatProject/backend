@@ -82,25 +82,25 @@ describe("OrigDatablocksV4Controller", () => {
 
       const mockRequest = {
         user: { id: "user123" },
-        headers: {
-          "if-unmodified-since": new Date(Date.now() - 10000).toISOString(),
-        },
+        headers: {},
       } as unknown as Request;
+      const unmodifiedSince = new Date(Date.now() - 10000);
 
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablockWrite")
         .mockResolvedValue(updatedDatablock);
 
       await expect(
-        controller.findByIdAndUpdate(mockRequest, "db123", mockUpdateDto),
+        controller.findByIdAndUpdate(
+          mockRequest,
+          "db123",
+          mockUpdateDto,
+          unmodifiedSince,
+        ),
       ).rejects.toThrow(PreconditionFailedException);
       expect(
         origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
-      ).toHaveBeenCalledWith(
-        { _id: "db123" },
-        mockUpdateDto,
-        new Date(mockRequest.headers["if-unmodified-since"] as string),
-      );
+      ).toHaveBeenCalledWith({ _id: "db123" }, mockUpdateDto, unmodifiedSince);
     });
 
     it("should throw NotFoundException if update returns null", async () => {

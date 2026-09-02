@@ -111,9 +111,9 @@ describe("AttachmentsController - findOneAndUpdate", () => {
     const req = {
       headers: {
         "content-type": "application/json",
-        "if-unmodified-since": "2000-01-01T00:00:00Z",
       },
     } as Partial<Request> as Request;
+    const unmodifiedSince = new Date("2000-01-01T00:00:00Z");
 
     jest.spyOn(service, "findOneAndUpdate").mockImplementation(() => {
       throw new PreconditionFailedException(
@@ -121,7 +121,9 @@ describe("AttachmentsController - findOneAndUpdate", () => {
       );
     });
 
-    await expect(controller.findOneAndUpdate(req, "123", dto)).rejects.toThrow(
+    await expect(
+      controller.findOneAndUpdate(req, "123", dto, unmodifiedSince),
+    ).rejects.toThrow(
       new HttpException(
         "Resource has been modified on server",
         HttpStatus.PRECONDITION_FAILED,
@@ -130,7 +132,7 @@ describe("AttachmentsController - findOneAndUpdate", () => {
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: "123" },
       expect.any(Object),
-      new Date("2000-01-01T00:00:00Z"),
+      unmodifiedSince,
     );
   });
 });

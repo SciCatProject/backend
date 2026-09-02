@@ -51,7 +51,7 @@ describe("InstrumentsController", () => {
       throw new NotFoundException("Instrument not found");
     });
 
-    await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
+    await expect(controller.update("123", mockUpdateDto)).rejects.toThrow(
       NotFoundException,
     );
   });
@@ -63,7 +63,7 @@ describe("InstrumentsController", () => {
       ...mockUpdateDto,
     });
 
-    const result = await controller.update("123", mockUpdateDto, {});
+    const result = await controller.update("123", mockUpdateDto);
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
@@ -77,17 +77,15 @@ describe("InstrumentsController", () => {
       throw new PreconditionFailedException("Resource has been modified");
     });
 
-    const headers = {
-      "if-unmodified-since": "2025-09-01T09:00:00Z",
-    };
+    const unmodifiedSince = new Date("2025-09-01T09:00:00Z");
 
     await expect(
-      controller.update("123", mockUpdateDto, headers),
+      controller.update("123", mockUpdateDto, unmodifiedSince),
     ).rejects.toThrow(PreconditionFailedException);
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
       mockUpdateDto,
-      new Date("2025-09-01T09:00:00Z"),
+      unmodifiedSince,
     );
   });
 
@@ -98,16 +96,18 @@ describe("InstrumentsController", () => {
       ...mockUpdateDto,
     });
 
-    const headers = {
-      "if-unmodified-since": "2025-09-02T10:00:00Z",
-    };
+    const unmodifiedSince = new Date("2025-09-02T10:00:00Z");
 
-    const result = await controller.update("123", mockUpdateDto, headers);
+    const result = await controller.update(
+      "123",
+      mockUpdateDto,
+      unmodifiedSince,
+    );
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
       mockUpdateDto,
-      new Date("2025-09-02T10:00:00Z"),
+      unmodifiedSince,
     );
   });
 
@@ -115,7 +115,7 @@ describe("InstrumentsController", () => {
     service.findOne.mockResolvedValue(mockInstrument);
     service.findOneAndUpdate.mockRejectedValue({ code: 11000 } as MongoError);
 
-    await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
+    await expect(controller.update("123", mockUpdateDto)).rejects.toThrow(
       ConflictException,
     );
   });

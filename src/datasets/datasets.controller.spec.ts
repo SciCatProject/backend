@@ -116,7 +116,12 @@ describe("DatasetsController", () => {
       } as unknown as Request;
 
       await expect(
-        controller.findByIdAndUpdate(mockRequest, "some-pid", {}),
+        controller.findByIdAndUpdate(
+          mockRequest,
+          "some-pid",
+          {},
+          new Date("2023-01-01T00:00:00Z"),
+        ),
       ).rejects.toThrow(PreconditionFailedException);
       expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
         "some-pid",

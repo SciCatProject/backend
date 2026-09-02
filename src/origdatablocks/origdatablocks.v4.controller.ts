@@ -68,7 +68,7 @@ import {
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
-import { parseDate } from "src/common/utils";
+import { IfUnmodifiedSince } from "src/common/decorators/if-unmodified-since.decorator";
 
 @ApiBearerAuth()
 @ApiTags("origdatablocks v4")
@@ -714,13 +714,13 @@ export class OrigDatablocksV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
     @Body() updateOrigDatablockDto: PartialUpdateOrigDatablockDto,
+    @IfUnmodifiedSince() unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
       Action.OrigdatablockUpdate,
     );
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
       { _id: id },
       updateOrigDatablockDto,
