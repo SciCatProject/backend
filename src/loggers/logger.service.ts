@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Logger, LoggerConfig } from "./interfaces/logger.interface";
+import { LOGGER_PROVIDERS } from "./loggingProviders";
 
 @Injectable()
 export class ScicatLogger implements Logger, OnModuleInit {
@@ -21,17 +22,8 @@ export class ScicatLogger implements Logger, OnModuleInit {
     if (!loggerConfigs || loggerConfigs.length < 1) {
       console.log('No logger configs found in "loggers.json"');
     } else {
-      await Promise.all(
-        loggerConfigs.map(async (loggerConfig) => {
-          try {
-            const LoggerClass = await import(loggerConfig.modulePath);
-            const logger = new LoggerClass.default(loggerConfig.config);
-
-            this.loggers.push(logger);
-          } catch (err) {
-            console.error(err);
-          }
-        }),
+      this.loggers = loggerConfigs.map((loggerConfig) =>
+        LOGGER_PROVIDERS[loggerConfig.type](loggerConfig.config),
       );
     }
   }

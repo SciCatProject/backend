@@ -76,7 +76,7 @@ export class SseListener implements OnModuleInit, OnModuleDestroy {
     ]);
 
     this.changeStream.on("change", (change) => this.onChange(change));
-    this.changeStream.on("error", (err) => this.onStreamError(err));
+    this.changeStream.on("error", (err) => void this.onStreamError(err));
 
     this.reconnectAttempts = 0;
     Logger.log("SSE change stream started");
