@@ -13,14 +13,14 @@ class UsersServiceMock {}
 const mockPolicy: Policy = {
   _id: "testId",
   manager: ["test@email.com"],
-  tapeRedundancy: "low",
-  autoArchive: true,
-  autoArchiveDelay: 7,
-  archiveEmailNotification: true,
-  archiveEmailsToBeNotified: [],
-  retrieveEmailNotification: true,
-  retrieveEmailsToBeNotified: [],
-  embargoPeriod: 3,
+  jobPolicies: {
+    archive: {
+      emailTo: [],
+      tapeRedundancy: "low",
+      autoArchive: true,
+      autoArchiveDelay: 7,
+    },
+  },
   ownerGroup: "testOwnerGroup",
   accessGroups: ["testAccessGroup"],
   instrumentGroup: "testInstrument",

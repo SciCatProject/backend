@@ -10,16 +10,12 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model } from "mongoose";
-import { CreatePolicyDto } from "./dto/create-policy.dto";
-import {
-  PartialUpdatePolicyDto,
-  UpdatePolicyDto,
-} from "./dto/update-policy.dto";
+import { LEGACY_NOTIFICATION_PIPE } from "./pipes/legacy-notification.pipe";
 import { Policy, PolicyDocument } from "./schemas/policy.schema";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { UsersService } from "src/users/users.service";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { addCreatedByFields, parseLimitFilters } from "src/common/utils";
 import { REQUEST } from "@nestjs/core";
 
@@ -84,7 +80,7 @@ export class PoliciesService implements OnModuleInit {
   }
 
   async create(
-    createPolicyDto: CreatePolicyDto,
+    createPolicyDto: Partial<Policy>,
     policyUsername: string | null = null,
   ): Promise<Policy> {
     const username = policyUsername
@@ -101,18 +97,15 @@ export class PoliciesService implements OnModuleInit {
     return createdPolicy.save();
   }
 
-  async findAll(filter: IPolicyFilter): Promise<Policy[]> {
+  async findAll(filter: IPolicyFilterV4): Promise<Policy[]> {
     const whereFilter: FilterQuery<PolicyDocument> = filter.where ?? {};
-
-    const limits = {
-      limit: filter.limit as number,
-      skip: filter.skip as number,
-      order: filter.order as string,
-    };
-    const { limit, skip, sort } = parseLimitFilters(limits);
+    const fieldsProjection = filter.fields?.length
+      ? Object.fromEntries(filter.fields.map((field) => [field, 1]))
+      : {};
+    const { limit, skip, sort } = parseLimitFilters(filter.limits ?? {});
 
     return this.policyModel
-      .find(whereFilter)
+      .find(whereFilter, fieldsProjection)
       .limit(limit)
       .skip(skip)
       .sort(sort)
@@ -128,25 +121,51 @@ export class PoliciesService implements OnModuleInit {
     return this.policyModel.findOne(filter).exec();
   }
 
+  // Turns a nested object into Mongo dot-path leaf keys (e.g.
+  // {jobPolicies: {archive: {emailTo: [...]}}} ->
+  // {"jobPolicies.archive.emailTo": [...]}), so a patch touching one field
+  // doesn't $set-clobber its untouched siblings. Top-level scalar/array
+  // fields (ownerGroup, manager, ...) come out as bare keys, unprefixed.
+  // Arrays are left as leaf values, not recursed into.
+  private flattenToDotPaths(
+    obj: Record<string, unknown>,
+    prefix = "",
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+        Object.assign(
+          result,
+          this.flattenToDotPaths(value as Record<string, unknown>, path),
+        );
+      } else {
+        result[path] = value;
+      }
+    }
+    return result;
+  }
+
   async update(
     filter: FilterQuery<PolicyDocument>,
-    updatePolicyDto: PartialUpdatePolicyDto,
+    updatePolicyDto: Partial<Policy>,
   ): Promise<Policy | null> {
     const username = (this.request.user as JWTUser).username;
+    const setFields = {
+      ...this.flattenToDotPaths(updatePolicyDto),
+      updatedBy: username,
+      updatedAt: new Date(),
+    };
+
     return this.policyModel
       .findOneAndUpdate(
         filter,
-        {
-          $set: {
-            ...updatePolicyDto,
-            updatedBy: username,
-            updatedAt: new Date(),
-          },
-        },
-        {
-          new: true,
-          runValidators: true,
-        },
+        { $set: setFields },
+        { new: true, runValidators: true },
       )
       .exec();
   }
@@ -157,7 +176,7 @@ export class PoliciesService implements OnModuleInit {
     return await this.policyModel.findOneAndDelete(filter).exec();
   }
 
-  async updateWhere(ownerGroupList: string, data: UpdatePolicyDto) {
+  async updateWhere(ownerGroupList: string, data: Partial<Policy>) {
     if (!ownerGroupList) {
       throw new InternalServerErrorException(
         "Invalid ownerGroupList parameter",
@@ -181,6 +200,8 @@ export class PoliciesService implements OnModuleInit {
       throw new NotFoundException();
     }
 
+    const setFields = this.flattenToDotPaths(data);
+
     await Promise.all(
       ownerGroups.map(async (ownerGroup) => {
         const email = userIdentity ? userIdentity.profile.email : user.email;
@@ -195,7 +216,11 @@ export class PoliciesService implements OnModuleInit {
           try {
             // allow all functional users
             return await this.policyModel
-              .updateOne({ ownerGroup }, data, {})
+              .updateOne(
+                { ownerGroup },
+                { $set: setFields },
+                { runValidators: true },
+              )
               .exec();
           } catch (error) {
             throw new InternalServerErrorException(error);
@@ -214,7 +239,11 @@ export class PoliciesService implements OnModuleInit {
 
           try {
             return await this.policyModel
-              .updateOne({ ownerGroup }, data, {})
+              .updateOne(
+                { ownerGroup },
+                { $set: setFields },
+                { runValidators: true },
+              )
               .exec();
           } catch (error) {
             throw new InternalServerErrorException(error);
@@ -241,7 +270,7 @@ export class PoliciesService implements OnModuleInit {
     Logger.log("Adding default policy", "PoliciesService.addDefaultPolicy");
 
     const defaultManager = this.configService.get<string[]>("defaultManager");
-    const defaultPolicy: CreatePolicyDto = {
+    const defaultPolicy = LEGACY_NOTIFICATION_PIPE.transform({
       ownerGroup,
       accessGroups,
       manager: ownerEmail
@@ -257,7 +286,7 @@ export class PoliciesService implements OnModuleInit {
       archiveEmailsToBeNotified: [],
       retrieveEmailsToBeNotified: [],
       embargoPeriod: 3,
-    };
+    });
 
     try {
       await this.create(defaultPolicy, policyUsername);
