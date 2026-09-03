@@ -1,5 +1,6 @@
 import { Injectable, PipeTransform } from "@nestjs/common";
 import { FilterPipe, WherePipe } from "src/common/pipes/filter.pipe";
+import { toApiToDBMap } from "src/common/utils/deep-mapper.util";
 import { Policy } from "../schemas/policy.schema";
 import { policyV3toV4FieldMap } from "../dto/policy.obsolete.dto";
 import {
@@ -20,11 +21,11 @@ export class NestPolicyLimitsPipe implements PipeTransform<
   }
 }
 
+const policyV3toV4FilterMap = toApiToDBMap(policyV3toV4FieldMap);
+
 export const V3_FILTER_PIPE = [
-  new FilterPipe<Policy>({ apiToDBMap: policyV3toV4FieldMap }),
+  new FilterPipe<Policy>(policyV3toV4FilterMap),
   new NestPolicyLimitsPipe(),
 ];
 
-export const V3_WHERE_PIPE = new WherePipe<Policy>({
-  apiToDBMap: policyV3toV4FieldMap,
-});
+export const V3_WHERE_PIPE = new WherePipe<Policy>(policyV3toV4FilterMap);

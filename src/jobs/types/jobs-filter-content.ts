@@ -3,6 +3,7 @@ import {
   SchemaObject,
 } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 import { parseBoolean } from "src/common/utils";
+import { path, PathSpec } from "src/common/utils/deep-mapper.util";
 
 const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
   where: {
@@ -89,11 +90,11 @@ export const getSwaggerJobFilterContent = (
 // these fields must be present in a jobInstance, such that casl permissions can be assessed
 export const mandatoryFields = ["_id", "id", "type", "ownerGroup", "ownerUser"];
 
-export const jobV3toV4FieldMap: Record<string, string> = {
-  emailJobInitiator: "contactEmail",
-  creationTime: "createdAt",
-  jobStatusMessage: "statusCode",
-  executionTime: "jobParams.executionTime",
-  "jobParams.username": "ownerUser",
-  datasetList: "jobParams.datasetList",
+export const jobV3toV4FieldMap: Record<string, PathSpec> = {
+  emailJobInitiator: path("contactEmail"),
+  creationTime: path("createdAt"),
+  jobStatusMessage: path("statusCode"),
+  executionTime: path("jobParams.executionTime"),
+  "jobParams.username": path("ownerUser"),
+  datasetList: path("jobParams.datasetList"),
 };

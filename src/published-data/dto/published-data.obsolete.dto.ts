@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Expose, Transform } from "class-transformer";
+import { Exclude, Expose, Transform } from "class-transformer";
 import {
   IsDateString,
   IsNumber,
@@ -8,38 +8,35 @@ import {
   NotEquals,
 } from "class-validator";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
-import { PublishedData } from "../schemas/published-data.schema";
-import { createDeepMapper } from "src/common/utils/deep-mapper.util";
+import { BaseOutputDto } from "src/common/dto/base-output.dto";
+import { path, PathSpec } from "src/common/utils/deep-mapper.util";
+import { TransformFromDeepMapping } from "src/common/decorators/transform-from-deep-mapping.decorator";
 
 export const publishedDataV3toV4FieldMap: Partial<
-  Record<keyof PublishedDataObsoleteDto & string, string>
+  Record<keyof PublishedDataObsoleteDto & string, PathSpec>
 > = {
-  pidArray: "datasetPids",
-  creator: "metadata.creators.[].name",
-  authors: "metadata.contributors.[].name",
-  publisher: "metadata.publisher.name",
-  relatedPublications: "metadata.relatedIdentifiers.[].relatedIdentifier",
-  affiliation: "metadata.affiliation",
-  publicationYear: "metadata.publicationYear",
-  url: "metadata.url",
-  dataDescription: "metadata.dataDescription",
-  resourceType: "metadata.resourceType",
-  numberOfFiles: "metadata.numberOfFiles",
-  sizeOfArchive: "metadata.sizeOfArchive",
-  scicatUser: "metadata.scicatUser",
-  thumbnail: "metadata.thumbnail",
-  downloadLink: "metadata.downloadLink",
+  pidArray: path("datasetPids"),
+  creator: path("metadata.creators").eachItem("name"),
+  authors: path("metadata.contributors").eachItem("name"),
+  publisher: path("metadata.publisher.name"),
+  relatedPublications: path("metadata.relatedIdentifiers").eachItem(
+    "relatedIdentifier",
+  ),
+  affiliation: path("metadata.affiliation"),
+  publicationYear: path("metadata.publicationYear"),
+  url: path("metadata.url"),
+  dataDescription: path("metadata.dataDescription"),
+  resourceType: path("metadata.resourceType"),
+  numberOfFiles: path("metadata.numberOfFiles"),
+  sizeOfArchive: path("metadata.sizeOfArchive"),
+  scicatUser: path("metadata.scicatUser"),
+  thumbnail: path("metadata.thumbnail"),
+  downloadLink: path("metadata.downloadLink"),
 };
 
-export const mapPublishedDataV3toV4Field = createDeepMapper<
-  PublishedData,
-  PublishedDataObsoleteDto
->(publishedDataV3toV4FieldMap);
-
-export class PublishedDataObsoleteDto {
-  @IsString()
-  @Expose()
-  _id: string;
+export class PublishedDataObsoleteDto extends BaseOutputDto {
+  @Exclude()
+  declare id: string;
 
   @ApiProperty({
     type: String,
@@ -61,9 +58,7 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   affiliation?: string;
 
   @ApiProperty({
@@ -76,9 +71,7 @@ export class PublishedDataObsoleteDto {
   })
   @IsString({ each: true })
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   creator: string[];
 
   @ApiProperty({
@@ -92,9 +85,7 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @NotEquals(null)
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   publisher: string;
 
   @ApiProperty({
@@ -107,9 +98,7 @@ export class PublishedDataObsoleteDto {
   })
   @IsNumber()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   publicationYear: number;
 
   @ApiProperty({
@@ -132,9 +121,7 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   url?: string;
 
   @ApiProperty({
@@ -160,9 +147,7 @@ export class PublishedDataObsoleteDto {
   })
   @IsString()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   dataDescription: string;
 
   @ApiProperty({
@@ -172,9 +157,7 @@ export class PublishedDataObsoleteDto {
   })
   @IsString()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   resourceType: string;
 
   @ApiProperty({
@@ -185,9 +168,7 @@ export class PublishedDataObsoleteDto {
   @IsNumber()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   numberOfFiles?: number;
 
   @ApiProperty({
@@ -198,9 +179,7 @@ export class PublishedDataObsoleteDto {
   @IsNumber()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   sizeOfArchive?: number;
 
   @ApiProperty({
@@ -212,9 +191,7 @@ export class PublishedDataObsoleteDto {
   })
   @IsString({ each: true })
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   pidArray: string[];
 
   @ApiProperty({
@@ -225,9 +202,7 @@ export class PublishedDataObsoleteDto {
   @IsString({ each: true })
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   authors?: string[];
 
   @ApiProperty({
@@ -265,9 +240,7 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   scicatUser?: string;
 
   @ApiProperty({
@@ -278,9 +251,7 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   thumbnail?: string;
 
   @ApiProperty({
@@ -292,9 +263,7 @@ export class PublishedDataObsoleteDto {
   @IsString({ each: true })
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   relatedPublications?: string[];
 
   @ApiProperty({
@@ -305,26 +274,6 @@ export class PublishedDataObsoleteDto {
   @IsString()
   @IsOptional()
   @Expose()
-  @Transform(({ obj, key }) => mapPublishedDataV3toV4Field(obj, key), {
-    toClassOnly: true,
-  })
+  @TransformFromDeepMapping(publishedDataV3toV4FieldMap)
   downloadLink?: string;
-
-  @ApiProperty({
-    type: Date,
-    description:
-      "Date when the published data was created. This property is added and maintained by the system",
-  })
-  @IsDateString()
-  @Expose()
-  createdAt: Date;
-
-  @ApiProperty({
-    type: Date,
-    description:
-      "Date when the published data was last updated. This property is added and maintained by the system",
-  })
-  @IsDateString()
-  @Expose()
-  updatedAt: Date;
 }

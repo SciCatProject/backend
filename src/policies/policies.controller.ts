@@ -13,13 +13,13 @@ import {
   HttpCode,
   HttpStatus,
   Req,
-  SerializeOptions,
 } from "@nestjs/common";
 import { Request } from "express";
 import { PoliciesService } from "./policies.service";
 import { CreatePolicyDto } from "./dto/create-policy.dto";
 import { PartialUpdatePolicyDto } from "./dto/update-policy.dto";
 import { PolicyObsoleteDto } from "./dto/policy.obsolete.dto";
+import { SerializeAsV3 } from "src/common/decorators/serialize-as-v3.decorator";
 import { LEGACY_NOTIFICATION_PIPE } from "./pipes/legacy-notification.pipe";
 import { V3_FILTER_PIPE, V3_WHERE_PIPE } from "./pipes/filter.pipe";
 import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -49,7 +49,7 @@ export class PoliciesController {
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Create, Policy),
   )
-  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  @SerializeAsV3(PolicyObsoleteDto)
   @Post()
   async create(
     @Body(LEGACY_NOTIFICATION_PIPE)
@@ -71,7 +71,7 @@ export class PoliciesController {
     required: false,
     example: '{"order":"ownerGroup:desc","skip":0,"limit":25}',
   })
-  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  @SerializeAsV3(PolicyObsoleteDto)
   async findAll(
     @Req() request: Request,
     @Filter(...V3_FILTER_PIPE)
@@ -127,7 +127,7 @@ export class PoliciesController {
     ability.can(Action.Read, Policy),
   )
   @Get(":id")
-  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  @SerializeAsV3(PolicyObsoleteDto)
   async findOne(@Param("id") id: string): Promise<Policy | null> {
     return this.policiesService.findOne({ _id: id });
   }
@@ -136,7 +136,7 @@ export class PoliciesController {
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Update, Policy),
   )
-  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  @SerializeAsV3(PolicyObsoleteDto)
   @Patch(":id")
   async update(
     @Param("id") id: string,
@@ -153,7 +153,7 @@ export class PoliciesController {
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Delete, Policy),
   )
-  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  @SerializeAsV3(PolicyObsoleteDto)
   @Delete(":id")
   async remove(@Param("id") id: string): Promise<unknown> {
     return this.policiesService.remove({ _id: id });
