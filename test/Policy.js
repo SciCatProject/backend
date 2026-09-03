@@ -67,7 +67,7 @@ describe("1300: Policy: Simple Policy tests", () => {
       .send(testdataset)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.CreationForbiddenStatusCode)
+      .expect(TestData.CreationForbiddenStatusCode);
   });
 
   it("0040: should delete this policy", async () => {
@@ -213,6 +213,72 @@ describe("1301: Policy: v3 jobPolicies mapping tests", () => {
         res.body.embargoPeriod.should.equal(5);
         // untouched sibling from 0110 must still survive
         res.body.autoArchiveDelay.should.equal(21);
+      });
+  });
+});
+
+describe("1302: Policy: v3 order/skip/limit tests", () => {
+  const groups = ["v3-order-test-a", "v3-order-test-b", "v3-order-test-c"];
+
+  before(async () => {
+    await db.collection("Policy").deleteMany({ ownerGroup: /^v3-order-test/ });
+
+    accessTokenAdminIngestor = await utils.getToken(appUrl, {
+      username: "adminIngestor",
+      password: TestData.Accounts["adminIngestor"]["password"],
+    });
+
+    for (const ownerGroup of groups) {
+      await request(appUrl)
+        .post("/api/v3/Policies")
+        .send({ ...testdataset, ownerGroup })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+    }
+  });
+
+  after(async () => {
+    await db.collection("Policy").deleteMany({ ownerGroup: /^v3-order-test/ });
+  });
+
+  it("0150: order/skip/limit (flat v3 shape) apply a descending sort with a cap", async () => {
+    return request(appUrl)
+      .get("/api/v3/Policies")
+      .query({
+        filter: JSON.stringify({
+          where: { ownerGroup: { $in: groups } },
+          order: "ownerGroup:desc",
+          skip: 0,
+          limit: 1,
+        }),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have.length(1);
+        res.body[0].ownerGroup.should.equal("v3-order-test-c");
+      });
+  });
+
+  it("0160: order without an explicit direction defaults to ascending", async () => {
+    return request(appUrl)
+      .get("/api/v3/Policies")
+      .query({
+        filter: JSON.stringify({
+          where: { ownerGroup: { $in: groups } },
+          order: "ownerGroup",
+          skip: 0,
+          limit: 1,
+        }),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have.length(1);
+        res.body[0].ownerGroup.should.equal("v3-order-test-a");
       });
   });
 });

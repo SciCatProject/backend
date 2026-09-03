@@ -7,3 +7,13 @@ export interface IPolicyFilter {
   skip?: number;
   limit?: number;
 }
+
+export interface IPolicyFilterV4 {
+  where?: FilterQuery<PolicyDocument>;
+  fields?: string[];
+  limits?: {
+    limit?: number;
+    skip?: number;
+    order?: string;
+  };
+}

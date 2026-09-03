@@ -143,6 +143,92 @@ describe("1310: Policy v4 tests", () => {
     });
   });
 
+  describe("Filter tests (fields, limits, order)", () => {
+    const groups = [
+      "v4-policy-filter-test-a",
+      "v4-policy-filter-test-b",
+      "v4-policy-filter-test-c",
+    ];
+
+    before(async () => {
+      await db
+        .collection("Policy")
+        .deleteMany({ ownerGroup: /^v4-policy-filter-test/ });
+
+      for (const ownerGroup of groups) {
+        await request(appUrl)
+          .post("/api/v4/policies")
+          .send({ ownerGroup, manager: ["adminIngestor"] })
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+          .expect(TestData.EntryCreatedStatusCode);
+      }
+    });
+
+    after(async () => {
+      await db
+        .collection("Policy")
+        .deleteMany({ ownerGroup: /^v4-policy-filter-test/ });
+    });
+
+    it("0150: fields limits the response to only the requested fields", async () => {
+      return request(appUrl)
+        .get("/api/v4/policies")
+        .query({
+          filter: JSON.stringify({
+            where: { ownerGroup: "v4-policy-filter-test-a" },
+            fields: ["ownerGroup", "manager"],
+          }),
+        })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.should.have.length(1);
+          res.body[0].should.have.property("ownerGroup");
+          res.body[0].should.have.property("manager");
+          res.body[0].should.not.have.property("jobPolicies");
+          res.body[0].should.not.have.property("createdBy");
+        });
+    });
+
+    it("0160: limits.order/skip/limit (nested v4 shape) apply a descending sort with a cap", async () => {
+      return request(appUrl)
+        .get("/api/v4/policies")
+        .query({
+          filter: JSON.stringify({
+            where: { ownerGroup: { $in: groups } },
+            limits: { order: "ownerGroup:desc", skip: 0, limit: 1 },
+          }),
+        })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.should.have.length(1);
+          res.body[0].ownerGroup.should.equal("v4-policy-filter-test-c");
+        });
+    });
+
+    it("0170: limits.order without an explicit direction defaults to ascending", async () => {
+      return request(appUrl)
+        .get("/api/v4/policies")
+        .query({
+          filter: JSON.stringify({
+            where: { ownerGroup: { $in: groups } },
+            limits: { order: "ownerGroup", skip: 0, limit: 1 },
+          }),
+        })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.should.have.length(1);
+          res.body[0].ownerGroup.should.equal("v4-policy-filter-test-a");
+        });
+    });
+  });
+
   describe("Unprivileged user access tests (user1)", () => {
     it("0200: user1 cannot create a policy", async () => {
       return request(appUrl)
