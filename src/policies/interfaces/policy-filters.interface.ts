@@ -3,6 +3,7 @@ import { PolicyDocument } from "../schemas/policy.schema";
 
 export interface IPolicyFilter {
   where?: FilterQuery<PolicyDocument>;
+  fields?: string[];
   order?: string;
   skip?: number;
   limit?: number;

@@ -281,4 +281,24 @@ describe("1302: Policy: v3 order/skip/limit tests", () => {
         res.body[0].ownerGroup.should.equal("v3-order-test-a");
       });
   });
+
+  it("0170: fields (flat v3 shape) restricts the returned fields", async () => {
+    return request(appUrl)
+      .get("/api/v3/Policies")
+      .query({
+        filter: JSON.stringify({
+          where: { ownerGroup: { $in: groups } },
+          fields: ["ownerGroup"],
+          limit: 1,
+        }),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have.length(1);
+        res.body[0].should.have.property("ownerGroup");
+        res.body[0].should.not.have.property("manager");
+      });
+  });
 });
