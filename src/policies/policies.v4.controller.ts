@@ -11,12 +11,21 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Request } from "express";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
+import { parseDate } from "src/common/utils";
 import { PoliciesService } from "./policies.service";
 import { Policy } from "./schemas/policy.schema";
 import { CreatePolicyV4Dto } from "./dto/create-policy-v4.dto";
@@ -99,18 +108,40 @@ export class PoliciesV4Controller {
     ability.can(Action.Update, Policy),
   )
   @Patch(":id")
+  @ApiOperation({
+    summary: "It partially updates the policy.",
+    description: `It updates the policy through the id specified. It updates only the specified fields, merging nested objects (e.g. individual \`jobPolicies\` entries) rather than replacing them wholesale.
+
+- In \`application/json\`, setting a property to \`null\` means "do not change this value."
+- In \`application/merge-patch+json\`, setting a property to \`null\` means "reset this value to \`null\`" (or the default value, if one is defined).
+
+**Caution:** updating a specific item in an array is not supported — the result will always replace the entire array.`,
+  })
   @ApiParam({
     name: "id",
     description: "Id of the policy to update",
     type: String,
   })
+  @ApiConsumes("application/json", "application/merge-patch+json")
+  @ApiBody({
+    description:
+      "Fields that needs to be updated in the policy. Only the fields that needs to be updated have to be passed in.",
+    required: true,
+    type: UpdatePolicyV4Dto,
+  })
   async update(
+    @Req() request: Request,
     @Param("id") id: string,
     @Body() updatePolicyDto: UpdatePolicyV4Dto,
   ): Promise<Policy | null> {
+    const isMergePatch = !!request.is("application/merge-patch+json");
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
+
     const updated = await this.policiesService.update(
       { _id: id },
       updatePolicyDto as Partial<Policy>,
+      unmodifiedSince,
+      isMergePatch,
     );
     if (!updated) {
       throw new NotFoundException(`Policy not found for id: ${id}`);
