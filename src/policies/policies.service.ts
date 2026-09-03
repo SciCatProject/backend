@@ -15,7 +15,7 @@ import { Policy, PolicyDocument } from "./schemas/policy.schema";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { UsersService } from "src/users/users.service";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { addCreatedByFields, parseLimitFilters } from "src/common/utils";
 import { REQUEST } from "@nestjs/core";
 
@@ -97,18 +97,15 @@ export class PoliciesService implements OnModuleInit {
     return createdPolicy.save();
   }
 
-  async findAll(filter: IPolicyFilter): Promise<Policy[]> {
+  async findAll(filter: IPolicyFilterV4): Promise<Policy[]> {
     const whereFilter: FilterQuery<PolicyDocument> = filter.where ?? {};
-
-    const limits = {
-      limit: filter.limit as number,
-      skip: filter.skip as number,
-      order: filter.order as string,
-    };
-    const { limit, skip, sort } = parseLimitFilters(limits);
+    const fieldsProjection = filter.fields?.length
+      ? Object.fromEntries(filter.fields.map((field) => [field, 1]))
+      : {};
+    const { limit, skip, sort } = parseLimitFilters(filter.limits ?? {});
 
     return this.policyModel
-      .find(whereFilter)
+      .find(whereFilter, fieldsProjection)
       .limit(limit)
       .skip(skip)
       .sort(sort)

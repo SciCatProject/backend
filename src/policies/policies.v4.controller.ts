@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -6,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -15,14 +17,11 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
-import { IFilters } from "src/common/interfaces/common.interface";
-import { Filter } from "src/datasets/decorators/filter.decorator";
 import { PoliciesService } from "./policies.service";
-import { Policy, PolicyDocument } from "./schemas/policy.schema";
+import { Policy } from "./schemas/policy.schema";
 import { CreatePolicyV4Dto } from "./dto/create-policy-v4.dto";
 import { UpdatePolicyV4Dto } from "./dto/update-policy-v4.dto";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
-import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { restrictToOwnPolicies } from "./utils/policy-access-filter.util";
 
 @ApiBearerAuth()
@@ -52,17 +51,26 @@ export class PoliciesV4Controller {
     name: "filter",
     description: "Database filters to apply when retrieving all policies",
     required: false,
-    example: '{"order":"ownerGroup:desc","skip":0,"limit":25}',
+    type: String,
+    example:
+      '{"where":{"ownerGroup":"group1"},"fields":["ownerGroup","manager"],"limits":{"limit":25,"skip":0,"order":"ownerGroup:desc"}}',
   })
   async findAll(
     @Req() request: Request,
-    @Filter(...V4_FILTER_PIPE)
-    queryFilter: { filter?: IFilters<PolicyDocument, IPolicyFilter> },
+    @Query("filter") queryFilter?: string,
   ): Promise<Policy[]> {
+    let parsedFilter: IPolicyFilterV4;
+    try {
+      parsedFilter = JSON.parse(queryFilter ?? "{}");
+    } catch (err) {
+      throw new BadRequestException(
+        `Invalid JSON in filter: ${(err as Error).message}`,
+      );
+    }
     const mergedFilters = restrictToOwnPolicies(
       this.caslAbilityFactory,
       request,
-      queryFilter.filter ?? {},
+      parsedFilter,
     );
 
     return this.policiesService.findAll(mergedFilters);

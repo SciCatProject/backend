@@ -29,9 +29,8 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
 import { Policy, PolicyDocument } from "./schemas/policy.schema";
 import { FilterQuery } from "mongoose";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { UpdateWherePolicyDto } from "./dto/update-where-policy.dto";
-import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { restrictToOwnPolicies } from "./utils/policy-access-filter.util";
@@ -76,7 +75,7 @@ export class PoliciesController {
   async findAll(
     @Req() request: Request,
     @Filter(...V3_FILTER_PIPE)
-    queryFilter: { filter?: IFilters<PolicyDocument, IPolicyFilter> },
+    queryFilter: { filter?: IPolicyFilterV4 },
   ): Promise<Policy[]> {
     const mergedFilters = restrictToOwnPolicies(
       this.caslAbilityFactory,
