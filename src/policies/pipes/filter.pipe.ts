@@ -15,8 +15,8 @@ export class NestPolicyLimitsPipe implements PipeTransform<
   transform(value: { filter?: IPolicyFilter }): { filter?: IPolicyFilterV4 } {
     if (!value?.filter) return value as { filter?: IPolicyFilterV4 };
 
-    const { where, order, skip, limit } = value.filter;
-    return { filter: { where, limits: { order, skip, limit } } };
+    const { where, fields, order, skip, limit } = value.filter;
+    return { filter: { where, fields, limits: { order, skip, limit } } };
   }
 }
 
