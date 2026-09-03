@@ -12,7 +12,8 @@ jobs:
     jobType: template_job
     # actions for POST requests
     create:
-      # user, @group, #all, #authenticated, #datasetPublic, #datasetAccess, or #datasetOwner
+      # user, @group, #all, #authenticated, #datasetPublic, #datasetAccess,
+      # #datasetOwner, or #datasetPolicyList
       auth: "#authenticated"
       actions:
         - actionType: log
@@ -73,6 +74,19 @@ jobs:
               const: true
     update:
       auth: "archivemanager"
+
+  - # Request data to be marked for deletion. Only users/groups listed in
+    # jobPolicies.markForDeletion.allowedList on the Policy for a dataset's
+    # ownerGroup (set via PATCH /api/v4/policies/:id) may create this job
+    # type for that dataset. Each allowedList entry is either a user email
+    # or a group name.
+    jobType: markForDeletion
+    create:
+      auth: "#datasetPolicyList"
+      actions:
+        - actionType: log
+    update:
+      auth: admin
 
   - jobType: email_demo
     create:

@@ -422,6 +422,14 @@ export class JobsControllerUtils {
         pid: { $in: datasetList.map((x) => x.pid) },
       },
     };
+    if (jobConfiguration.create.auth === CreateJobAuth.DatasetPolicyList) {
+      await this.checkDatasetPolicyListAccess(
+        jobConfiguration.jobType,
+        datasetList,
+        user,
+      );
+      return;
+    }
     const isPrivilegedUser = this.isPrivilegedUser(user);
     const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
@@ -453,6 +461,36 @@ export class JobsControllerUtils {
     const numberOfDatasetsWithAccess =
       await this.datasetsService.count(datasetsWhere);
     if (numberOfDatasetsWithAccess.count < datasetList.length)
+      throw new ForbiddenException(
+        "User does not have access to all datasets, cannot create job.",
+      );
+  }
+
+  /**
+   * Check that the user's email, or one of their groups, is listed in
+   * jobPolicies.<jobType>.allowedList on the Policy for every dataset's
+   * ownerGroup in `datasetList`. See
+   * DatasetsService.countPolicyAuthorizedDatasets.
+   */
+  private async checkDatasetPolicyListAccess(
+    jobType: string,
+    datasetList: DatasetListDto[],
+    user: JWTUser,
+  ) {
+    if (!user) throw new UnauthorizedException("User not authenticated");
+    if (!user.email)
+      throw new ForbiddenException(
+        "User has no email registered, cannot verify dataset job authorization.",
+      );
+    const userIdentities = [user.email, ...user.currentGroups];
+    const uniqueDatasetIds = [...new Set(datasetList.map((x) => x.pid))];
+    const authorizedCount =
+      await this.datasetsService.countPolicyAuthorizedDatasets(
+        uniqueDatasetIds,
+        jobType,
+        userIdentities,
+      );
+    if (authorizedCount < uniqueDatasetIds.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
       );
