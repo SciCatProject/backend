@@ -85,6 +85,15 @@ jobs:
       auth: "#datasetPolicyList"
       actions:
         - actionType: log
+        - # Notify each ownerGroup's data stewards. Groups the job's
+          # datasets by ownerGroup, and for each group sends one email to
+          # jobPolicies.markForDeletion.emailTo on that ownerGroup's Policy,
+          # but only when jobPolicies.markForDeletion.emailNotification is
+          # true. Groups with no policy, no emailTo, or the flag unset/false
+          # are skipped silently.
+          actionType: groupedEmail
+          subject: "Datasets marked for deletion in {{ datasets.[0].ownerGroup }}"
+          bodyTemplateFile: src/common/email-templates/job-template-simplified.html
     update:
       auth: admin
 
