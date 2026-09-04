@@ -43,6 +43,7 @@ export class PolicyAbility {
       /**
        * User belonging to ADMIN_GROUPS or POLICY_GROUPS
        */
+      can(Action.AccessAny, Policy);
 
       can(Action.Create, Policy);
       can(Action.Read, Policy);
