@@ -1,8 +1,9 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiExtraModels, ApiProperty, getSchemaPath } from "@nestjs/swagger";
 import { IsArray, IsObject, IsOptional } from "class-validator";
 import { OwnableDto } from "src/common/dto/ownable.dto";
 import { JobPolicy } from "../schemas/job-policy.schema";
 
+@ApiExtraModels(JobPolicy)
 export class CreatePolicyV4Dto extends OwnableDto {
   @ApiProperty({
     required: false,
@@ -14,8 +15,9 @@ export class CreatePolicyV4Dto extends OwnableDto {
   readonly manager?: string[];
 
   @ApiProperty({
-    type: JobPolicy,
-    required: false,
+    type: "object",
+    additionalProperties: { $ref: getSchemaPath(JobPolicy) },
+    selfRequired: false,
     description:
       "Per-job-type policy settings for this ownerGroup, keyed by job type.",
   })

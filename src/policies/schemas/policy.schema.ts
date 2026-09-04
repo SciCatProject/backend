@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiExtraModels, ApiProperty, getSchemaPath } from "@nestjs/swagger";
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { OwnableClass } from "src/common/schemas/ownable.schema";
 import { v4 as uuidv4 } from "uuid";
@@ -14,6 +14,7 @@ export type PolicyDocument = Policy & Document;
   },
   timestamps: true,
 })
+@ApiExtraModels(JobPolicy)
 export class Policy extends OwnableClass {
   @ApiProperty()
   @Prop({ type: String, default: () => uuidv4() })
@@ -27,8 +28,9 @@ export class Policy extends OwnableClass {
   manager: string[];
 
   @ApiProperty({
-    type: JobPolicy,
-    required: false,
+    type: "object",
+    additionalProperties: { $ref: getSchemaPath(JobPolicy) },
+    selfRequired: false,
     description:
       "Per-job-type policy settings for this ownerGroup (e.g. notification recipients), keyed by job type.",
   })

@@ -645,6 +645,9 @@ export const createFullqueryFilter = <T>(
         ...filterQuery,
         ...mapScientificQuery(key, fields[key]),
       };
+    } else if (key === "jobType") {
+      // not a dataset field: signals which job-type-creation eligibility
+      // filter to apply, handled separately via an extraWhereClause
     } else if (key === "userGroups") {
       // this is applied both on accessGroups and ownerGroup
       // (thus requiring the ORs list) being a generic user
@@ -1074,6 +1077,7 @@ export const datasetsFullQueryDescriptionFields =
   "_id": "item id", <optional>\n \
   "userGroups": ["group1", ...], <optional>\n \
   "sharedWith": ["email", ...], <optional>\n \
+  "jobType": "jobType1", <optional, restricts results to datasets the requesting user is authorized to create a job of this type for>\n \
 }\n \
   </pre>';
 

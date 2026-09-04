@@ -40,6 +40,7 @@ export interface IDatasetFields {
   _id?: string;
   userGroups?: string[];
   sharedWith?: string[];
+  jobType?: string;
   [key: string]: unknown;
 }
 

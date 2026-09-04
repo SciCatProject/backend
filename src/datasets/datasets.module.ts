@@ -25,6 +25,7 @@ import { ProposalsModule } from "src/proposals/proposals.module";
 import { HistoryModule } from "src/history/history.module";
 import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 import { OpensearchModule } from "src/opensearch/opensearch.module";
+import { JobConfigModule } from "src/config/job-config/jobconfig.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
     InitialDatasetsModule,
     HistoryModule,
     MetadataKeysModule,
+    JobConfigModule,
     ConditionalModule.registerWhen(
       OpensearchModule,
       (env: NodeJS.ProcessEnv) => env.OPENSEARCH_ENABLED === "yes",

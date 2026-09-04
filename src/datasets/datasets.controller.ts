@@ -37,7 +37,7 @@ import { ClassConstructor, plainToInstance } from "class-transformer";
 import { validate, ValidationError, ValidatorOptions } from "class-validator";
 import { Request } from "express";
 import { MongoError } from "mongodb";
-import { UpdateQuery } from "mongoose";
+import { FilterQuery, UpdateQuery } from "mongoose";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CreateAttachmentV3Dto } from "src/attachments/dto-obsolete/create-attachment.v3.dto";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
@@ -896,7 +896,17 @@ export class DatasetsController {
       fields.userGroups.push(...user.currentGroups);
     }
 
-    const datasets = await this.datasetsService.opensearchQuery(parsedFilters);
+    const jobTypeFilter: FilterQuery<DatasetDocument> = fields.jobType
+      ? await this.datasetsService.buildJobTypeAccessFilter(
+          fields.jobType,
+          user ? { email: user.email, groups: user.currentGroups } : undefined,
+        )
+      : {};
+
+    const datasets = await this.datasetsService.opensearchQuery(
+      parsedFilters,
+      jobTypeFilter,
+    );
 
     let outputDatasets: OutputDatasetObsoleteDto[] = [];
 

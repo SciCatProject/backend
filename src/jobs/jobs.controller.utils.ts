@@ -7,7 +7,7 @@ import {
   UnprocessableEntityException,
 } from "@nestjs/common";
 import { Request } from "express";
-import { Condition, FilterQuery } from "mongoose";
+import { FilterQuery } from "mongoose";
 import * as jmp from "json-merge-patch";
 import { JobsService } from "./jobs.service";
 import { CreateJobDto } from "./dto/create-job.dto";
@@ -18,7 +18,10 @@ import { Action } from "src/casl/action.enum";
 import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
-import { DatasetsService } from "src/datasets/datasets.service";
+import {
+  DatasetsService,
+  JobTypeAccessIdentity,
+} from "src/datasets/datasets.service";
 import { JobsConfigSchema } from "./types/jobs-config-schema.enum";
 import { OrigDatablocksService } from "src/origdatablocks/origdatablocks.service";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -398,6 +401,13 @@ export class JobsControllerUtils {
     return jobUser;
   }
 
+  /**
+   * Checking if user has access to all datasets in `datasetList` per the
+   * job type's create.auth mode. The mongo filter expressing what each auth
+   * mode means at the dataset level lives in
+   * DatasetsService.buildJobTypeAccessFilter - the single source of truth,
+   * also used to pre-filter datasets fullquery by job-type eligibility.
+   */
   private async checkDatasetsAccess(
     jobConfiguration: JobConfig,
     jobCreateDto: CreateJobDto,
@@ -408,45 +418,35 @@ export class JobsControllerUtils {
     if (this.isAdminUser(user)) return;
     if (!(
       jobConfiguration.create.auth &&
-      Object.values(this.jobDatasetAuthorization).includes(
-        jobConfiguration.create.auth,
-      )
+      this.jobDatasetAuthorization.includes(jobConfiguration.create.auth)
     ))
       return;
     if (!jobCreateDto.jobParams[JobParams.DatasetList])
       throw new UnprocessableEntityException(
         "Dataset ids list was not provided in jobParams",
       );
-    const datasetsWhere: { where: Condition<DatasetClass> } = {
-      where: {
-        pid: { $in: datasetList.map((x) => x.pid) },
-      },
-    };
+
     if (jobConfiguration.create.auth === CreateJobAuth.DatasetPolicyList) {
-      await this.checkDatasetPolicyListAccess(
+      if (!user) throw new UnauthorizedException("User not authenticated");
+      if (!user.email)
+        throw new ForbiddenException(
+          "User has no email registered, cannot verify dataset job authorization.",
+        );
+      await this.assertDatasetsMatchJobTypeAccess(
         jobConfiguration.jobType,
+        { email: user.email, groups: user.currentGroups },
         datasetList,
-        user,
       );
       return;
     }
+
     const isPrivilegedUser = this.isPrivilegedUser(user);
     const baseGroups = isPrivilegedUser
       ? (jobUser?.currentGroups ?? [])
       : (user?.currentGroups ?? []);
     const requestUserGroups = [...baseGroups];
-    if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
-      datasetsWhere.where.isPublished = true;
-    else if (jobConfiguration.create.auth === CreateJobAuth.DatasetAccess) {
-      if (requestUserGroups.length === 0)
-        datasetsWhere.where.isPublished = true;
-      else
-        datasetsWhere.where.$or = [
-          { ownerGroup: { $in: requestUserGroups } },
-          { accessGroups: { $in: requestUserGroups } },
-          { isPublished: true },
-        ];
-    } else if (jobConfiguration.create.auth === CreateJobAuth.DatasetOwner) {
+
+    if (jobConfiguration.create.auth === CreateJobAuth.DatasetOwner) {
       if (!user) throw new UnauthorizedException("User not authenticated");
       if (isPrivilegedUser)
         requestUserGroups.push(jobCreateDto.ownerGroup as string);
@@ -454,43 +454,29 @@ export class JobsControllerUtils {
         throw new ForbiddenException(
           "User does not belong to any group, cannot create job with #datasetOwner authorization.",
         );
-      datasetsWhere.where.ownerGroup = { $in: requestUserGroups };
-    } else {
-      datasetsWhere.where.isPublished = true;
     }
-    const numberOfDatasetsWithAccess =
-      await this.datasetsService.count(datasetsWhere);
-    if (numberOfDatasetsWithAccess.count < datasetList.length)
-      throw new ForbiddenException(
-        "User does not have access to all datasets, cannot create job.",
-      );
+
+    await this.assertDatasetsMatchJobTypeAccess(
+      jobConfiguration.jobType,
+      { groups: requestUserGroups },
+      datasetList,
+    );
   }
 
-  /**
-   * Check that the user's email, or one of their groups, is listed in
-   * jobPolicies.<jobType>.allowedList on the Policy for every dataset's
-   * ownerGroup in `datasetList`. See
-   * DatasetsService.countPolicyAuthorizedDatasets.
-   */
-  private async checkDatasetPolicyListAccess(
+  private async assertDatasetsMatchJobTypeAccess(
     jobType: string,
+    identity: JobTypeAccessIdentity,
     datasetList: DatasetListDto[],
-    user: JWTUser,
   ) {
-    if (!user) throw new UnauthorizedException("User not authenticated");
-    if (!user.email)
-      throw new ForbiddenException(
-        "User has no email registered, cannot verify dataset job authorization.",
-      );
-    const userIdentities = [user.email, ...user.currentGroups];
+    const accessFilter = await this.datasetsService.buildJobTypeAccessFilter(
+      jobType,
+      identity,
+    );
     const uniqueDatasetIds = [...new Set(datasetList.map((x) => x.pid))];
-    const authorizedCount =
-      await this.datasetsService.countPolicyAuthorizedDatasets(
-        uniqueDatasetIds,
-        jobType,
-        userIdentities,
-      );
-    if (authorizedCount < uniqueDatasetIds.length)
+    const numberOfDatasetsWithAccess = await this.datasetsService.count({
+      where: { pid: { $in: uniqueDatasetIds }, ...accessFilter },
+    });
+    if (numberOfDatasetsWithAccess.count < uniqueDatasetIds.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
       );

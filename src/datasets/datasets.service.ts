@@ -74,6 +74,21 @@ import { DATASET_OPENSEARCH_PROJECTION } from "../opensearch/utils/dataset-opens
 import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
+import { JobConfigService } from "src/config/job-config/jobconfig.service";
+import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
+import { AccessGroupsType } from "src/config/configuration";
+
+/**
+ * The identity (email + group memberships) whose access is being evaluated
+ * by buildJobTypeAccessFilter. Deliberately not a JWTUser: callers may need
+ * to evaluate access for an identity other than the raw requester (e.g. a
+ * privileged user acting on behalf of a job's effective owner).
+ */
+export interface JobTypeAccessIdentity {
+  email?: string;
+  groups: string[];
+}
+
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
   private readonly osDefaultIndex: string;
@@ -90,6 +105,7 @@ export class DatasetsService {
     @Optional() private opensearchService: OpensearchService,
     private metadataKeysService: MetadataKeysService,
     private proposalService: ProposalsService,
+    private jobConfigService: JobConfigService,
   ) {
     this.osDefaultIndex =
       this.configService.get<string>("opensearch.defaultIndex") || "dataset";
@@ -229,36 +245,6 @@ export class DatasetsService {
     return datasets;
   }
 
-  async countPolicyAuthorizedDatasets(
-    datasetPids: string[],
-    jobType: string,
-    userIdentities: string[],
-  ): Promise<number> {
-    const pipeline: PipelineStage[] = [
-      { $match: { pid: { $in: datasetPids } } },
-      {
-        $lookup: {
-          from: "Policy",
-          localField: "ownerGroup",
-          foreignField: "ownerGroup",
-          as: "linkedPolicy",
-        },
-      },
-      {
-        $match: {
-          [`linkedPolicy.jobPolicies.${jobType}.allowedList`]: {
-            $in: userIdentities,
-          },
-        },
-      },
-      { $count: "count" },
-    ];
-    const [result] = await this.datasetModel
-      .aggregate<{ count: number }>(pipeline)
-      .exec();
-    return result?.count ?? 0;
-  }
-
   async findAllComplete(
     filter: IDatasetFilters<DatasetDocument, IDatasetFields>,
     applyDefaults = true,
@@ -311,6 +297,94 @@ export class DatasetsService {
     }
   }
 
+  private mergeWhereClauses(
+    ...clauses: FilterQuery<DatasetDocument>[]
+  ): FilterQuery<DatasetDocument> {
+    const nonEmptyClauses = clauses.filter((clause) => !isEmpty(clause));
+    if (nonEmptyClauses.length === 0) return {};
+    if (nonEmptyClauses.length === 1) return nonEmptyClauses[0];
+    return { $and: nonEmptyClauses };
+  }
+
+  /**
+   * Resolves, for #datasetPolicyList job types, the ownerGroups whose Policy
+   * lists one of `userIdentities` in jobPolicies.<jobType>.allowedList.
+   */
+  private async allowedOwnerGroupsForJobType(
+    jobType: string,
+    userIdentities: string[],
+  ): Promise<string[]> {
+    if (userIdentities.length === 0) return [];
+    const policies = await this.datasetModel.db
+      .collection<{ ownerGroup: string }>("Policy")
+      .find(
+        { [`jobPolicies.${jobType}.allowedList`]: { $in: userIdentities } },
+        { projection: { ownerGroup: 1 } },
+      )
+      .toArray();
+    return [...new Set(policies.map((policy) => policy.ownerGroup))];
+  }
+
+  /**
+   * Builds a mongo filter restricting datasets to those `identity` is
+   * authorized to create a job of `jobType` for, given that job type's
+   * `create.auth` mode. Single source of truth for what each auth mode
+   * means at the dataset level - used both to pre-filter fullquery results
+   * (identity = the requesting user) and, in JobsControllerUtils, to
+   * validate an actual job-create request (identity = the requester, or the
+   * privileged-user's effective owner for #datasetOwner/#datasetAccess).
+   */
+  async buildJobTypeAccessFilter(
+    jobType: string,
+    identity?: JobTypeAccessIdentity,
+  ): Promise<FilterQuery<DatasetDocument>> {
+    const noMatch: FilterQuery<DatasetDocument> = { _id: { $in: [] } };
+    const jobConfiguration = this.jobConfigService.get(jobType);
+    if (!jobConfiguration) return noMatch;
+
+    const adminGroups = new Set(
+      this.configService.get<AccessGroupsType>("accessGroups")?.admin ?? [],
+    );
+    const userGroups = identity?.groups ?? [];
+    if (userGroups.some((group) => adminGroups.has(group))) return {};
+
+    switch (jobConfiguration.create.auth) {
+      case CreateJobAuth.DatasetPolicyList: {
+        if (!identity?.email) return noMatch;
+        const ownerGroups = await this.allowedOwnerGroupsForJobType(jobType, [
+          identity.email,
+          ...userGroups,
+        ]);
+        return ownerGroups.length
+          ? { ownerGroup: { $in: ownerGroups } }
+          : noMatch;
+      }
+      case CreateJobAuth.DatasetPublic:
+        return { isPublished: true };
+      case CreateJobAuth.DatasetAccess:
+        return userGroups.length === 0
+          ? { isPublished: true }
+          : {
+              $or: [
+                { ownerGroup: { $in: userGroups } },
+                { accessGroups: { $in: userGroups } },
+                { isPublished: true },
+              ],
+            };
+      case CreateJobAuth.DatasetOwner:
+        return userGroups.length === 0
+          ? noMatch
+          : { ownerGroup: { $in: userGroups } };
+      case CreateJobAuth.JobAdmin:
+        return noMatch;
+      case CreateJobAuth.Authenticated:
+        return identity ? {} : noMatch;
+      case CreateJobAuth.All:
+      default:
+        return {};
+    }
+  }
+
   async fullquery(
     filter: IFilters<DatasetDocument, IDatasetFields>,
     extraWhereClause: FilterQuery<DatasetDocument> = {},
@@ -322,10 +396,7 @@ export class DatasetsService {
         filter.fields as FilterQuery<DatasetDocument>,
       );
 
-    const whereClause: FilterQuery<DatasetDocument> = {
-      ...filterQuery,
-      ...extraWhereClause,
-    };
+    const whereClause = this.mergeWhereClauses(filterQuery, extraWhereClause);
     const modifiers: QueryOptions = parseLimitFilters(filter.limits);
 
     const datasets = await this.datasetModel
@@ -337,6 +408,7 @@ export class DatasetsService {
 
   async opensearchQuery(
     filter: IFilters<DatasetDocument, IDatasetFields>,
+    extraWhereClause: FilterQuery<DatasetDocument> = {},
   ): Promise<DatasetDocument[] | null> {
     if (
       !this.isOsEnabled ||
@@ -344,7 +416,7 @@ export class DatasetsService {
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
     ) {
-      return this.fullquery(filter);
+      return this.fullquery(filter, extraWhereClause);
     }
 
     const { text, isPublished, userGroups } = filter.fields || {};
@@ -366,8 +438,13 @@ export class DatasetsService {
       modifiers.limit,
       modifiers.skip,
     );
+    const whereClause = this.mergeWhereClauses(
+      { pid: { $in: osResult.data } },
+      mongoQuery,
+      extraWhereClause,
+    );
     const datasets = await this.datasetModel
-      .find({ pid: { $in: osResult.data }, ...mongoQuery })
+      .find(whereClause)
       .sort(modifiers.sort)
       .exec();
 

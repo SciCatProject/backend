@@ -17,12 +17,18 @@ import { OpensearchService } from "src/opensearch/opensearch.service";
 import { REQUEST } from "@nestjs/core";
 import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
+import { JobConfigService } from "src/config/job-config/jobconfig.service";
 
 class InitialDatasetsServiceMock {}
 
 class LogbooksServiceMock {}
 
 class CaslAbilityFactoryMock {}
+
+class JobConfigServiceMock {
+  get = jest.fn().mockReturnValue(undefined);
+  allJobConfigs = {};
+}
 
 class MetadataKeysServiceMock {
   insertManyFromSource = jest.fn().mockResolvedValue([]);
@@ -134,6 +140,7 @@ describe("DatasetsService", () => {
         { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
+        { provide: JobConfigService, useClass: JobConfigServiceMock },
         { provide: REQUEST, useValue: { user: { username: "tester" } } },
       ],
     }).compile();
