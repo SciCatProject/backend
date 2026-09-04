@@ -108,10 +108,11 @@ describe("AttachmentsController - findOneAndUpdate", () => {
   it("should throw PRECONDITION_FAILED if attachments service throws it", async () => {
     const dto = { caption: "Should Fail" };
 
+    const unmodifiedSince = new Date("2000-01-01T00:00:00.000Z");
     const req = {
       headers: {
         "content-type": "application/json",
-        "if-unmodified-since": "2000-01-01T00:00:00Z",
+        "if-unmodified-since": unmodifiedSince.toISOString(),
       },
     } as Partial<Request> as Request;
 
@@ -130,7 +131,7 @@ describe("AttachmentsController - findOneAndUpdate", () => {
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: "123" },
       expect.any(Object),
-      new Date("2000-01-01T00:00:00Z"),
+      unmodifiedSince,
     );
   });
 });

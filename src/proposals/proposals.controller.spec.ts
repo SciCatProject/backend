@@ -160,14 +160,17 @@ describe("ProposalsController", () => {
   });
 
   describe("update", () => {
+    const requestWithHeaders = (headers: Record<string, string> = {}) => ({
+      headers,
+    });
+
     it("should throw NotFoundException if proposal not found", async () => {
       proposalsService.findOne.mockResolvedValue(null);
 
       await expect(
         controller.update(
-          {},
+          requestWithHeaders(),
           "proposal-id",
-          {},
           {} as PartialUpdateProposalDto,
         ),
       ).rejects.toThrow(NotFoundException);
@@ -186,15 +189,14 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {
-        "if-unmodified-since": "2022-12-31",
-      };
+      const unmodifiedSince = new Date("2022-12-31T00:00:00.000Z");
 
       await expect(
         controller.update(
-          {},
+          requestWithHeaders({
+            "if-unmodified-since": unmodifiedSince.toISOString(),
+          }),
           "proposal-id",
-          headers,
           {} as PartialUpdateProposalDto,
         ),
       ).rejects.toThrow(PreconditionFailedException);
@@ -202,7 +204,7 @@ describe("ProposalsController", () => {
       expect(proposalsService.findOneAndUpdate).toHaveBeenCalledWith(
         { proposalId: "proposal-id" },
         expect.anything(),
-        new Date("2022-12-31"),
+        unmodifiedSince,
       );
     });
 
@@ -221,9 +223,8 @@ describe("ProposalsController", () => {
         .mockResolvedValue(proposal);
 
       const result = await controller.update(
-        {},
+        requestWithHeaders(),
         "proposal-id",
-        {},
         {
           title: "Updated",
         },
@@ -251,11 +252,13 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {}; // No 'if-unmodified-since'
-
-      const result = await controller.update({}, "proposal-id", headers, {
-        title: "Updated",
-      });
+      const result = await controller.update(
+        requestWithHeaders(),
+        "proposal-id",
+        {
+          title: "Updated",
+        },
+      );
 
       expect(result).toEqual(updatedProposal);
     });
@@ -274,13 +277,13 @@ describe("ProposalsController", () => {
         .spyOn(controller, "checkPermissionsForProposal")
         .mockResolvedValue(proposal);
 
-      const headers = {
-        "if-unmodified-since": "not-a-valid-date",
-      };
-
-      const result = await controller.update({}, "proposal-id", headers, {
-        title: "Updated",
-      });
+      const result = await controller.update(
+        requestWithHeaders({ "if-unmodified-since": "not-a-valid-date" }),
+        "proposal-id",
+        {
+          title: "Updated",
+        },
+      );
 
       expect(result).toEqual(updatedProposal);
     });

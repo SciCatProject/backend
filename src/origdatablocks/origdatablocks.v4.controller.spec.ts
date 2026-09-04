@@ -80,11 +80,10 @@ describe("OrigDatablocksV4Controller", () => {
         new PreconditionFailedException("Resource has been modified on server"),
       );
 
+      const unmodifiedSince = new Date(Date.now() - 10000);
       const mockRequest = {
         user: { id: "user123" },
-        headers: {
-          "if-unmodified-since": new Date(Date.now() - 10000).toISOString(),
-        },
+        headers: { "if-unmodified-since": unmodifiedSince.toISOString() },
       } as unknown as Request;
 
       jest
@@ -96,11 +95,7 @@ describe("OrigDatablocksV4Controller", () => {
       ).rejects.toThrow(PreconditionFailedException);
       expect(
         origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
-      ).toHaveBeenCalledWith(
-        { _id: "db123" },
-        mockUpdateDto,
-        new Date(mockRequest.headers["if-unmodified-since"] as string),
-      );
+      ).toHaveBeenCalledWith({ _id: "db123" }, mockUpdateDto, unmodifiedSince);
     });
 
     it("should throw NotFoundException if update returns null", async () => {

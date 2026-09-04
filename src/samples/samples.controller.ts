@@ -18,7 +18,6 @@ import {
   Req,
   Header,
   NotFoundException,
-  Headers,
   ClassSerializerInterceptor,
   SerializeOptions,
 } from "@nestjs/common";
@@ -61,9 +60,9 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
-  parseDate,
   samplesFullQueryDescriptionFields,
   samplesFullQueryExampleFields,
+  parseIfUnmodifiedSince,
 } from "src/common/utils";
 import { Request } from "express";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -741,12 +740,12 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
     @Body() updateSampleDto: PartialUpdateSampleDto,
-    @Headers() headers: Record<string, string>,
   ): Promise<OutputSampleDto | null> {
     await this.checkPermissionsForSample(request, id, Action.SampleUpdate);
 
-    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
-
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     const updatedSample = await this.samplesService.findOneAndUpdate(
       { sampleId: id },
       updateSampleDto,

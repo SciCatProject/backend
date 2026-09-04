@@ -110,7 +110,7 @@ describe("DatasetsController", () => {
       const mockRequest = {
         user: {},
         headers: {
-          "if-unmodified-since": "2023-01-01T00:00:00Z",
+          "if-unmodified-since": "2023-01-01T00:00:00.000Z",
           "content-type": "application/json",
         },
       } as unknown as Request;
@@ -121,7 +121,7 @@ describe("DatasetsController", () => {
       expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
         "some-pid",
         expect.anything(),
-        new Date("2023-01-01T00:00:00Z"),
+        new Date("2023-01-01T00:00:00.000Z"),
       );
     });
 

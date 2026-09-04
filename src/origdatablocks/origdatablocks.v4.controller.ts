@@ -68,7 +68,7 @@ import {
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { DatafilesMetadataValidationPipe } from "./pipes/datafiles-metadata-validation.pipe";
-import { parseDate } from "src/common/utils";
+import { parseIfUnmodifiedSince } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiTags("origdatablocks v4")
@@ -720,7 +720,9 @@ export class OrigDatablocksV4Controller {
       id,
       Action.OrigdatablockUpdate,
     );
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
       { _id: id },
       updateOrigDatablockDto,

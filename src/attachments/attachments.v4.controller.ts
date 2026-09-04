@@ -58,7 +58,7 @@ import {
   ALLOWED_ATTACHMENT_FILTER_KEYS,
 } from "./types/attachment-lookup";
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
-import { parseDate } from "src/common/utils";
+import { parseIfUnmodifiedSince } from "src/common/utils";
 
 @ApiBearerAuth()
 @ApiExtraModels(AttachmentRelationshipClass)
@@ -384,7 +384,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
 
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
       updateAttachmentDtoForservice,

@@ -44,7 +44,11 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { UTCTimeInterceptor } from "src/common/interceptors/utc-time.interceptor";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
-import { IsRecord, IsValueUnitObject, parseDate } from "../common/utils";
+import {
+  IsRecord,
+  IsValueUnitObject,
+  parseIfUnmodifiedSince,
+} from "../common/utils";
 import { DatasetsService } from "./datasets.service";
 import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.interceptor";
 import {
@@ -729,6 +733,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Body()
     updateDatasetDto: PartialUpdateDatasetDto,
   ): Promise<OutputDatasetDto | null> {
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     const foundDataset = await this.datasetsService.findOne({
       where: { pid },
     });
@@ -760,7 +767,6 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundDataset, updateDatasetDto)
         : updateDatasetDto;
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const updatedDataset = await this.datasetsService.findByIdAndUpdate(
       pid,
       updateDatasetDtoForService,

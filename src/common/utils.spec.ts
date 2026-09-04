@@ -1,5 +1,10 @@
 // Currently only covers converToSI
-import { convertToSI, parseBoolean, parseDate } from "./utils";
+import {
+  convertToSI,
+  parseBoolean,
+  parseDate,
+  parseIfUnmodifiedSince,
+} from "./utils";
 
 describe("convertToSI", () => {
   it("should convert a known unit to SI successfully", () => {
@@ -63,6 +68,48 @@ describe("parseDate", () => {
   it("should return undefined for undefined input", () => {
     const result = parseDate(undefined);
     expect(result).toBeUndefined();
+  });
+});
+
+describe("parseIfUnmodifiedSince", () => {
+  it("returns undefined when the header is absent", () => {
+    expect(parseIfUnmodifiedSince(undefined)).toBeUndefined();
+  });
+
+  it("returns undefined when the header is unparseable", () => {
+    expect(parseIfUnmodifiedSince("not-a-date")).toBeUndefined();
+  });
+
+  it("widens a standard HTTP-date (no fractional seconds) to the end of its second", () => {
+    const raw = "Thu, 01 Jan 2026 00:00:00 GMT";
+    const result = parseIfUnmodifiedSince(raw);
+
+    expect(result?.getTime()).toBe(new Date(raw).getTime() + 999);
+  });
+
+  it("widens an ISO-8601 value with no fractional seconds the same way", () => {
+    const raw = "2026-01-01T00:00:00Z";
+    const result = parseIfUnmodifiedSince(raw);
+
+    expect(result?.getTime()).toBe(new Date(raw).getTime() + 999);
+  });
+
+  it("compares an ISO-8601 value with genuine millisecond precision exactly, unwidened", () => {
+    const raw = "2026-01-01T00:00:00.123Z";
+    const result = parseIfUnmodifiedSince(raw);
+
+    expect(result?.getTime()).toBe(new Date(raw).getTime());
+  });
+
+  it("does not widen an exact millisecond-precision value that happens to be .000 - the bug this guards against", () => {
+    const raw = "2026-01-01T00:00:00.000Z";
+    const result = parseIfUnmodifiedSince(raw);
+
+    // Must compare exactly, not be pushed 999ms into the future: the client
+    // explicitly provided sub-second precision (a literal ".000" in the
+    // string), so this is indistinguishable from a genuine exact-millisecond
+    // read and must not be treated as a coarse HTTP-date.
+    expect(result?.getTime()).toBe(new Date(raw).getTime());
   });
 });
 
