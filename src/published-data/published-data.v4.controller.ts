@@ -710,20 +710,8 @@ export class PublishedDataV4Controller {
       }
     }
 
-    const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
-
-    let returnValue = null;
-    if (OAIServerUri) {
-      returnValue = await this.publishedDataService.resyncOAIPublication(
-        id,
-        { ...publishedData, ...data },
-        OAIServerUri,
-      );
-    }
-
-    await this.publishedDataService.update({ doi: id }, data);
-
-    return returnValue;
+    const res = await this.publishedDataService.update({ doi: id }, data);
+    return res ? { doi: res.doi } : null;
   }
 
   doiRegistrationJSON(publishedData: PublishedData): object {
