@@ -15,7 +15,7 @@ import { CreateMeasurementPeriodDto } from "./create-measurement-period.dto";
 @ApiTags("proposals")
 export class UpdateProposalDto extends OwnableDto {
   /**
-   * Email of principal investigator.
+   * Email of the Principal Investigator of the proposal.
    */
   @IsOptional()
   @IsEmail()
@@ -62,34 +62,34 @@ export class UpdateProposalDto extends OwnableDto {
   readonly title: string;
 
   /**
-   * The proposal abstract.
+   * Abstract of the proposal.
    */
   @IsOptional()
   @IsString()
   readonly abstract?: string;
 
   /**
-   * The date when the data collection starts.
+   * ISO Timestamp when the proposal is planned to or has actually started.
    */
   @IsOptional()
   @IsDateString()
   readonly startTime?: Date;
 
   /**
-   * The date when data collection finishes.
+   * ISO Timestamp when the proposal is planned to or has actually ended.
    */
   @IsOptional()
   @IsDateString()
   readonly endTime?: Date;
 
   /**
-   * Embedded information used inside proposals to define which type of experiment has to be pursued, where (at which instrument) and when.
+   * List of measurement periods/visits scheduled for the proposal.
    */
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateMeasurementPeriodDto)
-  readonly MeasurementPeriodList?: CreateMeasurementPeriodDto[];
+  readonly MeasurementPeriodList?: CreateMeasurementPeriodDto[] = [];
 
   /**
    * JSON object containing the proposal metadata.
@@ -113,12 +113,21 @@ export class UpdateProposalDto extends OwnableDto {
   readonly type?: string;
 
   /**
-   * List of instrument IDs associated with the proposal.
+   * Ids of the instruments that this proposal is associated with or scheduled on.
    */
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   readonly instrumentIds?: string[];
+
+  /*
+   * Array of metadata entries associated with the proposal. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.
+   */
+  @IsOptional()
+  @IsString({
+    each: true,
+  })
+  readonly keywords?: string[];
 }
 
 export class PartialUpdateProposalDto extends PartialType(UpdateProposalDto) {}

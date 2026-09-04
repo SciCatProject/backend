@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { MustFields } from "./fields.enum";
 
-import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl";
+import { QueryContainer } from "@opensearch-project/opensearch/api/_types/_common.query_dsl.js";
 import { ISearchFilter } from "../interfaces/os-common.type";
 
 @Injectable()
