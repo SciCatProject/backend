@@ -6,6 +6,7 @@ import { ProposalsService } from "src/proposals/proposals.service";
 import { ReadOnlyDatasetsService, ValidatorService } from "./validator.service";
 import { ErrorObject } from "ajv";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 describe("ValidatorService", () => {
   let service: ValidatorService;
 
@@ -125,7 +126,6 @@ describe("ValidatorService", () => {
 
       service = await createService({ metadataSchema: schema });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (service as any).dynamicDefaults.set(
         "userDefinedFunction",
         () => () => 5,
@@ -152,7 +152,6 @@ describe("ValidatorService", () => {
       service = await createService({ metadataSchema: schema });
 
       mockDataService.count.mockImplementation(() => 6);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (service as any).dynamicDefaults.set(
         "userDefinedAsyncFunction",
         async function (ctx: { datasetsService: ReadOnlyDatasetsService }) {
@@ -184,6 +183,89 @@ describe("ValidatorService", () => {
       const mockData = { metadata: {} };
       await expect(service.validate(mockData)).rejects.toThrow(
         'invalid "dynamicDefaults" keyword property value: notImplemented',
+      );
+    });
+  });
+
+  describe("Custom Keywords", () => {
+    it("should handle user-defined synchronous keyword", async () => {
+      const schema = {
+        type: "object",
+        properties: {
+          evenNumber: {
+            type: "number",
+            isEven: true,
+          },
+        },
+      };
+
+      service = await createService({ metadataSchema: schema });
+
+      (service as any).keywords = [
+        {
+          keyword: "isEven",
+          validate: (schemaVal: boolean, data: number) => {
+            if (!schemaVal) return true;
+            return data % 2 === 0;
+          },
+        },
+      ];
+
+      const validData = { metadata: { evenNumber: 4 } };
+      let errors = await service.validate(validData);
+      expect(errors).toBeNull();
+
+      const invalidData = { metadata: { evenNumber: 7 } };
+      errors = await service.validate(invalidData);
+      expect(errors).toBeDefined();
+      expect(errors![0].keyword).toBe("isEven");
+    });
+
+    it("should handle user-defined asynchronous keyword", async () => {
+      const schema = {
+        type: "object",
+        properties: {
+          proposalId: {
+            type: "string",
+            proposalExists: true,
+          },
+        },
+      };
+
+      service = await createService({ metadataSchema: schema });
+
+      mockDataService.findOne.mockImplementation(async (id) => {
+        return id === "prop-123";
+      });
+
+      const checkProposalExistence = async function (ctx: any) {
+        const proposalExists = await ctx.proposalService.findOne(
+          ctx.publishedData.metadata.proposalId,
+        );
+
+        return function () {
+          return proposalExists;
+        };
+      };
+
+      (service as any).keywords = [
+        {
+          keyword: "proposalExists",
+          validate: checkProposalExistence,
+        },
+      ];
+
+      const validData = { metadata: { proposalId: "prop-123" } };
+      let errors = await service.validate(validData);
+      expect(errors).toBeNull();
+      expect(mockDataService.findOne).toHaveBeenCalledWith("prop-123");
+
+      const invalidData = { metadata: { proposalId: "prop-999" } };
+      errors = await service.validate(invalidData);
+      expect(mockDataService.findOne).toHaveBeenCalledWith("prop-999");
+      expect(errors).toBeDefined();
+      expect(errors![0].message).toBe(
+        'must pass "proposalExists" keyword validation',
       );
     });
   });
