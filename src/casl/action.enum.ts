@@ -89,6 +89,17 @@ export enum Action {
   RuntimeConfigRead = "runtimeconfig_read",
   RuntimeConfigUpdate = "runtimeconfig_update",
 
+  // Samples
+  SampleCreate = "sample_create",
+  SampleRead = "sample_read",
+  SampleUpdate = "sample_update",
+  SampleDelete = "sample_delete",
+
+  SampleAttachmentCreate = "sample_attachment_create",
+  SampleAttachmentRead = "sample_attachment_read",
+  SampleAttachmentUpdate = "sample_attachment_update",
+  SampleAttachmentDelete = "sample_attachment_delete",
+
   // Server-Sent Events
   SseRead = "sse_read",
 
@@ -98,44 +109,4 @@ export enum Action {
   UserUpdate = "user_update",
   UserDelete = "user_delete",
   UserCreateJwt = "user_create_jwt",
-
-  // -------------------------------------
-  // Samples
-  // -------------------------------------
-  // sample endpoint authorization
-  SampleCreate = "sample_create",
-  SampleRead = "sample_read",
-  SampleUpdate = "sample_update",
-  SampleDelete = "sample_delete",
-  SampleAttachmentCreate = "sample_attachment_create",
-  SampleAttachmentRead = "sample_attachment_read",
-  SampleAttachmentUpdate = "sample_attachment_update",
-  SampleAttachmentDelete = "sample_attachment_delete",
-  SampleDatasetRead = "sample_dataset_read",
-  // -------------------------------------
-  // sample data instance authorization
-  SampleCreateOwner = "sample_create_owner",
-  SampleCreateAny = "sample_create_any",
-  SampleReadManyPublic = "sample_read_many_public",
-  SampleReadManyAccess = "sample_read_many_access",
-  SampleReadManyOwner = "sample_read_many_owner",
-  SampleReadOnePublic = "sample_read_one_public",
-  SampleReadOneAccess = "sample_read_one_access",
-  SampleReadOneOwner = "sample_read_one_owner",
-  SampleReadAny = "sample_read_any",
-
-  SampleUpdateOwner = "sample_update_owner",
-  SampleUpdateAny = "sample_update_any",
-  SampleDeleteOwner = "sample_delete_owner",
-  SampleDeleteAny = "sample_delete_any",
-  SampleAttachmentCreateOwner = "sample_attachment_create_owner",
-  SampleAttachmentCreateAny = "sample_attachment_create_any",
-  SampleAttachmentReadPublic = "sample_attachment_read_public",
-  SampleAttachmentReadAccess = "sample_attachment_read_access",
-  SampleAttachmentReadOwner = "sample_attachment_read_owner",
-  SampleAttachmentReadAny = "sample_attachment_read_any",
-  SampleAttachmentUpdateOwner = "sample_attachment_update_owner",
-  SampleAttachmentUpdateAny = "sample_attachment_update_any",
-  SampleAttachmentDeleteOwner = "sample_attachment_delete_owner",
-  SampleAttachmentDeleteAny = "sample_attachment_delete_any",
 }
