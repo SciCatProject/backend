@@ -94,7 +94,7 @@ The following inline partials are defined for inclusion below:
           </ol>
       </td>
       {{else if (eq ../job.jobParams.option "PSI-RA")}}
-      <td>/das/work/{{subString ownerGroup 0 3}}/retrieve/{{ownerGroup}}/{{strip sourceFolder "/"}}/</td>
+      <td>/das/work/{{subString ownerGroup 0 3}}/retrieve/{{ownerGroup}}/{{trim sourceFolder "/"}}/</td>
       <td>{{formatUnit size "B"}}</td>
       {{else}}
       <td>{{sourceFolder}}</td>

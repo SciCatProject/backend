@@ -9,6 +9,7 @@ import { JobParams } from "src/jobs/types/job-types.enum";
 import { FormatOptions, unit } from "mathjs";
 import { HelperOptions } from "handlebars";
 import { parseBoolean } from "./utils";
+import { trim } from "lodash";
 
 /**
  * Convert json objects to HTML
@@ -196,4 +197,6 @@ export const handlebarsHelpers: hb.HelperDeclareSpec = {
   formatUnit: formatUnit,
   subString: (str: string | null | undefined, start: number, end?: number) =>
     (str ?? "").substring(start, end),
+  trim: (str: string | null | undefined, chars: string) =>
+    trim(str ?? "", chars),
 };
