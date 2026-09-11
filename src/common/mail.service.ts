@@ -15,7 +15,7 @@ export class MailService {
   async sendMail(options: ISendMailOptions): Promise<SentMessageInfo> {
     try {
       Logger.log("Sending email to: " + options.to, "Utils.sendMail");
-      await this.mailerService.sendMail(options);
+      return await this.mailerService.sendMail(options);
     } catch (error) {
       if (isAxiosError(error)) {
         if (error.response) {

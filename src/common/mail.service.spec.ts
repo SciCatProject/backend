@@ -10,12 +10,16 @@ describe("MailService", () => {
     mailService = new MailService(mailerService);
   });
 
-  it("resolves when the underlying mailer succeeds", async () => {
-    (mailerService.sendMail as jest.Mock).mockResolvedValue(undefined);
+  it("forwards the underlying mailer's result when it succeeds", async () => {
+    const sentMessageInfo = {
+      messageId: "abc123",
+      accepted: ["a@example.com"],
+    };
+    (mailerService.sendMail as jest.Mock).mockResolvedValue(sentMessageInfo);
 
     await expect(
       mailService.sendMail({ to: "a@example.com", subject: "s", html: "b" }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(sentMessageInfo);
   });
 
   it("rethrows when the underlying mailer fails", async () => {
