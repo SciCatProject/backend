@@ -37,6 +37,7 @@ export class MailService {
         );
         Logger.error(error, "MailService.sendMail");
       }
+      throw error;
     }
   }
 }
