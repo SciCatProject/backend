@@ -25,6 +25,7 @@ export const DATASET_OPENSEARCH_FIELDS = [
   "instrumentIds",
   "sampleIds",
   "techniques",
+  "runNumber",
   "principalInvestigators",
   "creationTime",
   "createdAt",
