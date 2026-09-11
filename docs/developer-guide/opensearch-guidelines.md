@@ -81,7 +81,7 @@ https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/
 
 ### Required mappings
 
-> **Important:** the query builder targets specific field names. A custom `opensearchConfig.json` is not free-form — if it omits any of the fields below, queries will not error, they will silently return **no results**. This is easy to miss, because index creation and sync both succeed
+> **Important:** the query builder targets specific field names. A custom `opensearchConfig.json` is not free-form — if it omits any of the fields below, queries will not error, they will silently return **no results**. This is easy to miss, because index creation and sync both succeed.
 
 The contract between `opensearchConfig.json` and `SearchQueryService` is:
 
