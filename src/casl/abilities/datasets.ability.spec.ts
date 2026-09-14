@@ -129,40 +129,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -182,40 +238,94 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
@@ -233,40 +343,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -286,40 +452,94 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
@@ -337,40 +557,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -390,40 +666,94 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
@@ -441,40 +771,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -494,40 +880,94 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
@@ -545,40 +985,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -598,40 +1094,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
@@ -651,40 +1203,94 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
       expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        false,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
@@ -696,7 +1302,6 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-
       expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
@@ -705,40 +1310,96 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
       expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(true);
 
-      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetAttachmentDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.DatasetDatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockCreate, ownedDataset)).toBe(
+        false,
+      );
       expect(ability.can(Action.DatasetDatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetDatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetDatablockDelete, ownedDataset)).toBe(
+        true,
+      );
 
-      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.DatasetOrigdatablockCreate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockCreate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, publicDataset)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockRead, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, DatasetClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockUpdate, ownedDataset)).toBe(
+        false,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, DatasetClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.DatasetOrigdatablockDelete, ownedDataset)).toBe(
+        true,
+      );
 
       expect(ability.can(Action.DatasetLogbookRead, DatasetClass)).toBe(true);
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(false);
