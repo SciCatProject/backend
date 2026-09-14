@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AttachmentAbility } from "./attachments.ability";
 
 describe("AttachmentAbility", () => {
-  let ability: AttachmentAbility;
+  let abilityBuilder: AttachmentAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("AttachmentAbility", () => {
       providers: [AttachmentAbility],
     }).compile();
 
-    ability = module.get<AttachmentAbility>(AttachmentAbility);
+    abilityBuilder = module.get<AttachmentAbility>(AttachmentAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

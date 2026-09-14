@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { OpensearchAbility } from "./opensearch.ability";
 
 describe("OpensearchAbility", () => {
-  let ability: OpensearchAbility;
+  let abilityBuilder: OpensearchAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("OpensearchAbility", () => {
       providers: [OpensearchAbility],
     }).compile();
 
-    ability = module.get<OpensearchAbility>(OpensearchAbility);
+    abilityBuilder = module.get<OpensearchAbility>(OpensearchAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

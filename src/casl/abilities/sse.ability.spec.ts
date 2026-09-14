@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { SseAbility } from "./sse.ability";
 
 describe("SseAbility", () => {
-  let ability: SseAbility;
+  let abilityBuilder: SseAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("SseAbility", () => {
       providers: [SseAbility],
     }).compile();
 
-    ability = module.get<SseAbility>(SseAbility);
+    abilityBuilder = module.get<SseAbility>(SseAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

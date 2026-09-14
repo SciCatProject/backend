@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { RuntimeConfigAbility } from "./runtime-config.ability";
 
 describe("RuntimeConfigAbility", () => {
-  let ability: RuntimeConfigAbility;
+  let abilityBuilder: RuntimeConfigAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("RuntimeConfigAbility", () => {
       providers: [RuntimeConfigAbility],
     }).compile();
 
-    ability = module.get<RuntimeConfigAbility>(RuntimeConfigAbility);
+    abilityBuilder = module.get<RuntimeConfigAbility>(RuntimeConfigAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

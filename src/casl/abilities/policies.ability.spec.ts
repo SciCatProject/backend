@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { PolicyAbility } from "./policies.ability";
 
 describe("PolicyAbility", () => {
-  let ability: PolicyAbility;
+  let abilityBuilder: PolicyAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("PolicyAbility", () => {
       providers: [PolicyAbility],
     }).compile();
 
-    ability = module.get<PolicyAbility>(PolicyAbility);
+    abilityBuilder = module.get<PolicyAbility>(PolicyAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

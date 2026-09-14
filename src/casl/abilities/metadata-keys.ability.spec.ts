@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { MetadataKeyAbility } from "./metadata-keys.ability";
 
 describe("MetadataKeyAbility", () => {
-  let ability: MetadataKeyAbility;
+  let abilityBuilder: MetadataKeyAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("MetadataKeyAbility", () => {
       providers: [MetadataKeyAbility],
     }).compile();
 
-    ability = module.get<MetadataKeyAbility>(MetadataKeyAbility);
+    abilityBuilder = module.get<MetadataKeyAbility>(MetadataKeyAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

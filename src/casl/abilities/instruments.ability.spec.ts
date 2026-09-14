@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { InstrumentAbility } from "./instruments.ability";
 
 describe("InstrumentAbility", () => {
-  let ability: InstrumentAbility;
+  let abilityBuilder: InstrumentAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("InstrumentAbility", () => {
       providers: [InstrumentAbility],
     }).compile();
 
-    ability = module.get<InstrumentAbility>(InstrumentAbility);
+    abilityBuilder = module.get<InstrumentAbility>(InstrumentAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

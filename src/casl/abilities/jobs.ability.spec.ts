@@ -6,7 +6,7 @@ import { JobAbility } from "./jobs.ability";
 class JobConfigServiceMock {}
 
 describe("JobAbility", () => {
-  let ability: JobAbility;
+  let abilityBuilder: JobAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,11 +17,11 @@ describe("JobAbility", () => {
       ],
     }).compile();
 
-    ability = module.get<JobAbility>(JobAbility);
+    abilityBuilder = module.get<JobAbility>(JobAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

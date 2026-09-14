@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { HistoryAbility } from "./history.ability";
 
 describe("HistoryAbility", () => {
-  let ability: HistoryAbility;
+  let abilityBuilder: HistoryAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("HistoryAbility", () => {
       providers: [HistoryAbility],
     }).compile();
 
-    ability = module.get<HistoryAbility>(HistoryAbility);
+    abilityBuilder = module.get<HistoryAbility>(HistoryAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

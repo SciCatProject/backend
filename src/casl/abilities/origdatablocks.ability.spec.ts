@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { OrigDatablockAbility } from "./origdatablocks.ability";
 
 describe("OrigDatablockAbility", () => {
-  let ability: OrigDatablockAbility;
+  let abilityBuilder: OrigDatablockAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("OrigDatablockAbility", () => {
       providers: [OrigDatablockAbility],
     }).compile();
 
-    ability = module.get<OrigDatablockAbility>(OrigDatablockAbility);
+    abilityBuilder = module.get<OrigDatablockAbility>(OrigDatablockAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});

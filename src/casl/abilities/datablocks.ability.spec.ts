@@ -3,7 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { DatablockAbility } from "./datablocks.ability";
 
 describe("DatablockAbility", () => {
-  let ability: DatablockAbility;
+  let abilityBuilder: DatablockAbility;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,11 +11,11 @@ describe("DatablockAbility", () => {
       providers: [DatablockAbility],
     }).compile();
 
-    ability = module.get<DatablockAbility>(DatablockAbility);
+    abilityBuilder = module.get<DatablockAbility>(DatablockAbility);
   });
 
   it("should be defined", () => {
-    expect(ability).toBeDefined();
+    expect(abilityBuilder).toBeDefined();
   });
 
   describe("Unauthenticated permissions", () => {});
