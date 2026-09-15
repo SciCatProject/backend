@@ -355,7 +355,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   })
   @ApiParam({
     name: "aid",
-    description: "ID of the attachment to modify",
+    description: "Id of the attachment to modify",
     type: String,
   })
   @ApiConsumes("application/json", "application/merge-patch+json")
@@ -525,7 +525,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     description: "It delete the attachment specified through the id specified.",
   })
   @ApiParam({
-    name: "id",
+    name: "aid",
     description: "Id of the attachment to delete",
     type: String,
   })
