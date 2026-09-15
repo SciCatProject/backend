@@ -62,6 +62,24 @@ export class Policy extends OwnableClass {
   @Prop({ type: MongooseSchema.Types.Mixed, required: false })
   policyParams?: Record<string, unknown>;
 
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description:
+      "User emails authorized to create jobs of this type for datasets owned by this ownerGroup. Only enforced for job types configured with the '#datasetPolicyAllowList' create auth. Not populated automatically - must be set explicitly.",
+  })
+  @Prop({ type: [String], required: false })
+  allowedUsers?: string[];
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description:
+      "Group names authorized to create jobs of this type for datasets owned by this ownerGroup. Only enforced for job types configured with the '#datasetPolicyAllowList' create auth. Not populated automatically - must be set explicitly.",
+  })
+  @Prop({ type: [String], required: false })
+  allowedGroups?: string[];
+
   // Internal bookkeeping, not part of the public API: if set, this document
   // has been superseded by the (ownerGroup, type) document with this id and
   // is retained only for historical/audit purposes - it is never returned

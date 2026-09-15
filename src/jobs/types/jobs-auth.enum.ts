@@ -11,6 +11,10 @@ export enum CreateJobAuth {
   // User belongs to dataset's ownerGroup for all `datasetIds`.
   // Equivalent to write access to all datasets in the request
   DatasetOwner = "#datasetOwner",
+  // User's email appears in allowedUsers, or one of their groups appears in
+  // allowedGroups, on the (ownerGroup, type) Policy for the ownerGroup of
+  // every dataset in `datasetIds`, where type is this job's type.
+  DatasetPolicyAllowList = "#datasetPolicyAllowList",
   // User belongs to either ADMIN_GROUP or CREATE_JOB_PRIVILEGED_GROUP
   // Equivalent to jobs admin only
   JobAdmin = "#jobAdmin",

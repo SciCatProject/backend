@@ -50,4 +50,22 @@ export class CreatePolicyV4Dto extends OwnableDto {
   @IsObject()
   @IsOptional()
   readonly policyParams?: Record<string, unknown>;
+
+  @ApiProperty({
+    required: false,
+    description:
+      "User emails authorized to create jobs of this type for datasets owned by this ownerGroup. Only enforced for job types configured with the '#datasetPolicyAllowList' create auth.",
+  })
+  @IsArray()
+  @IsOptional()
+  readonly allowedUsers?: string[];
+
+  @ApiProperty({
+    required: false,
+    description:
+      "Group names authorized to create jobs of this type for datasets owned by this ownerGroup. Only enforced for job types configured with the '#datasetPolicyAllowList' create auth.",
+  })
+  @IsArray()
+  @IsOptional()
+  readonly allowedGroups?: string[];
 }
