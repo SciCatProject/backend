@@ -46,21 +46,26 @@ export class PoliciesController {
   ): IFilters<PolicyDocument, IPolicyFilter> {
     const user: JWTUser = request.user as JWTUser;
 
-    if (user) {
-      const ability = this.caslAbilityFactory.policyAccess(user);
-      // these actions are not defined in casl
-      const canViewAll = ability.can(Action.ListAll, Policy);
-      const canViewTheirOwn = ability.can(Action.ListOwn, Policy);
-      if (!canViewAll && canViewTheirOwn) {
-        if (!mergedFilters.where) {
-          mergedFilters.where = {};
-        }
-        mergedFilters.where["$or"] = [
+    const ability = this.caslAbilityFactory.policyAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, Policy);
+    const canView = ability.can(Action.Read, Policy);
+
+    mergedFilters.where = mergedFilters.where ?? {};
+
+    if (!user) {
+      mergedFilters.where["$and"] = mergedFilters.where["$and"] ?? [];
+      mergedFilters.where["$and"].push({
+        isPublished: true,
+      });
+    } else if (!canViewAny && canView) {
+      mergedFilters.where["$and"] = mergedFilters.where["$and"] ?? [];
+      mergedFilters.where["$and"].push({
+        $or: [
           { ownerGroup: { $in: user.currentGroups } },
           { accessGroups: { $in: user.currentGroups } },
           { isPublished: true },
-        ];
-      }
+        ],
+      });
     }
 
     return mergedFilters;
