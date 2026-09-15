@@ -103,4 +103,7 @@ async function bootstrap() {
 
   await app.listen(port);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  Logger.error("Failed to bootstrap the application", error, "Main");
+  process.exit(1);
+});

@@ -1287,6 +1287,66 @@ describe("2250: Sample Authorization", () => {
       });
   });
 
+  // -------------------------------
+  // access samples via findOne
+  //
+  it("0631: fetch sample 1 via findOne as its owner (Admin Ingestor)", async () => {
+    const filter = {
+      where: {
+        sampleId: sampleId1,
+      },
+    };
+
+    return request(appUrl)
+      .get(
+        `/api/v3/Samples/findOne?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have.property("sampleId").and.be.equal(sampleId1);
+      });
+  });
+
+  it("0632: fetch sample 1 via findOne as User 2, who has no access, should return nothing", async () => {
+    const filter = {
+      where: {
+        sampleId: sampleId1,
+      },
+    };
+
+    return request(appUrl)
+      .get(
+        `/api/v3/Samples/findOne?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.be.an("object").and.to.be.deep.equal({});
+      });
+  });
+
+  it("0633: fetch sample 5 via findOne as User 2, who has access through accessGroups", async () => {
+    const filter = {
+      where: {
+        sampleId: sampleId5,
+      },
+    };
+
+    return request(appUrl)
+      .get(
+        `/api/v3/Samples/findOne?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have.property("sampleId").and.be.equal(sampleId5);
+      });
+  });
+
   // -----------------------
   // Access individual sample
   //

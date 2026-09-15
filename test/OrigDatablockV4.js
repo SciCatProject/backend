@@ -10,8 +10,8 @@ let accessTokenAdminIngestor = null,
   accessTokenUser2 = null,
   accessTokenUser3 = null,
   accessTokenUser4 = null,
-
-  datasetPid = null,
+  datasetPid1 = null,
+  datasetPid2 = null,
   datasetPidWrong = null,
   origDatablockMinPid = null,
   origDatablockPid = null;
@@ -53,27 +53,65 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     await request(appUrl)
       .post("/api/v4/datasets")
-      .send({...TestData.RawCorrectMinV4, ownerGroup: "group1", accessGroups: [ "group3" ]})
+      .send({
+        ...TestData.RawCorrectMinV4,
+        ownerGroup: "group1",
+        accessGroups: ["group3"],
+      })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
-        datasetPid = res.body.pid;
+        datasetPid1 = res.body.pid;
+      });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: "group2",
+        accessGroups: ["group2"],
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        datasetPid2 = res.body.pid;
       });
 
     datasetPidWrong = TestData.PidPrefix + "/" + uuidv4();
 
     await request(appUrl)
       .post("/api/v4/origdatablocks")
-      .send({...TestData.OrigDatablockV4MinCorrect, datasetId: datasetPid, ownerGroup: "group1", accessGroups: [ "group3" ]})
+      .send({
+        ...TestData.OrigDatablockV4MinCorrect,
+        datasetId: datasetPid1,
+        ownerGroup: "group1",
+        accessGroups: ["group3"],
+      })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
         origDatablockMinPid = res.body._id;
       });
-    
+
     await request(appUrl)
       .post("/api/v4/origdatablocks")
-      .send({...TestData.OrigDatablockV4Correct, datasetId: datasetPid, ownerGroup: "group1", accessGroups: [ "group3" ]})
+      .send({
+        ...TestData.OrigDatablockV4MinCorrect,
+        datasetId: datasetPid2,
+        ownerGroup: "group2",
+        accessGroups: ["group2"],
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    await request(appUrl)
+      .post("/api/v4/origdatablocks")
+      .send({
+        ...TestData.OrigDatablockV4Correct,
+        datasetId: datasetPid1,
+        ownerGroup: "group1",
+        accessGroups: ["group3"],
+      })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
@@ -104,7 +142,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
       await deleteDataset(item);
     }
   }
-  
+
   async function processOrigDatablockArray(array) {
     for (const item of array) {
       await deleteOrigDatablock(item);
@@ -115,7 +153,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0100: should not be able to validate origdatablock if not logged in", async () => {
       const odb = {
         ...TestData.OrigDatablockV4MinCorrect,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -127,7 +165,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0101: check if minimal origdatablock is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4MinCorrect,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -143,7 +181,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0102: check if average origdatablock is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -159,7 +197,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0103: check if origdatablock with wrong field type is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4WrongType,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -175,7 +213,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0104: check if origdatablock with missing field is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4MissingField,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -191,7 +229,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0105: check if origdatablock with empty dataFileList is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4EmptyDataFiles,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -207,7 +245,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0106: check if origdatablock with wrong chkAlg is valid", async () => {
       const odb = {
         ...TestData.OrigDatablockV4EmptyChkAlg,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks/isValid")
@@ -241,7 +279,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0200: should not be able to create origdatablock if not logged in", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -253,7 +291,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0201: adds a new minimal origdatablock", async () => {
       const odb = {
         ...TestData.OrigDatablockV4MinCorrect,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -271,7 +309,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0202: adds a new origdatablock", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -289,7 +327,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0203: tries to add an origdatablock with wrong data type", async () => {
       const odb = {
         ...TestData.OrigDatablockV4WrongType,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -305,7 +343,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0204: tries to add an origdatablock with missing field", async () => {
       const odb = {
         ...TestData.OrigDatablockV4MissingField,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -321,7 +359,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0205: tries to add an origdatablock with empty dataFileList", async () => {
       const odb = {
         ...TestData.OrigDatablockV4EmptyDataFiles,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -337,7 +375,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0206: tries to add an origdatablock with wrong chkAlg", async () => {
       const odb = {
         ...TestData.OrigDatablockV4EmptyChkAlg,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -369,7 +407,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0250: should be able to add new origdatablock with access to datasetId", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -383,11 +421,11 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
           res.body.should.have.property("ownerGroup").and.be.a("string");
         });
     });
-    
+
     it("0251: should not be able to add new origdatablock with user that is not in create dataset list", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -400,7 +438,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0252: should not be able to add new origdatablock without access to datasetId", async () => {
       const odb = {
         ...TestData.OrigDatablockV4Correct,
-        datasetId: datasetPid,
+        datasetId: datasetPid1,
       };
       return request(appUrl)
         .post("/api/v4/origdatablocks")
@@ -583,14 +621,14 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
             odb.dataset.should.have.length(1);
             const [dataset] = odb.dataset;
             dataset.should.have.property("pid");
-          });          
+          });
         });
     });
 
     it("0306: should be able to fetch the origdatablocks providing where filter", async () => {
       const filter = {
         where: {
-          datasetId: datasetPid,
+          datasetId: datasetPid1,
         },
       };
 
@@ -605,7 +643,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
           res.body.forEach((odb) => {
             odb.should.have.property("_id").and.be.a("string");
             odb.should.have.property("datasetId").and.be.a("string");
-            odb.datasetId.should.be.eq(datasetPid);
+            odb.datasetId.should.be.eq(datasetPid1);
           });
         });
     });
@@ -613,7 +651,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     it("0307: should be able to fetch the origdatablocks providing all allowed filters together", async () => {
       const filter = {
         where: {
-          datasetId: datasetPid,
+          datasetId: datasetPid1,
         },
         include: ["all"],
         fields: ["_id", "datasetId", "dataset"],
@@ -638,13 +676,13 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
           res.body.forEach((odb) => {
             odb.should.have.property("_id").and.be.a("string");
             odb.should.have.property("datasetId").and.be.a("string");
-            odb.datasetId.should.be.eq(datasetPid);
+            odb.datasetId.should.be.eq(datasetPid1);
             odb.should.have.property("dataset");
             odb.dataset.should.be.a("array");
             odb.dataset.should.have.length(1);
             const [dataset] = odb.dataset;
             dataset.should.have.property("pid");
-            dataset.pid.should.be.eq(datasetPid);
+            dataset.pid.should.be.eq(datasetPid1);
             odb.should.not.have.property("size");
             odb.should.not.have.property("chkAlg");
           });
@@ -670,7 +708,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
       return request(appUrl)
         .get("/api/v4/origdatablocks")
         .query({ filter: JSON.stringify(filter) })
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .then((res) => {
           res.body.should.be.a("array");
@@ -680,9 +718,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     it("0351: should fetch origdatablocks and relation fields with correct data included with ownerGroup rights", async () => {
       const filter = {
-        include: [
-          "dataset",
-        ],
+        include: ["dataset"],
       };
 
       return request(appUrl)
@@ -707,9 +743,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     it("0352: should fetch origdatablocks and relation fields with correct data included with accessGroup rights", async () => {
       const filter = {
-        include: [
-          "dataset",
-        ],
+        include: ["dataset"],
       };
 
       return request(appUrl)
@@ -728,7 +762,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
             odb.dataset.should.have.length(1);
             const [dataset] = odb.dataset;
             dataset.should.have.property("pid");
-            dataset.pid.should.be.eq(datasetPid);
+            dataset.pid.should.be.eq(datasetPid1);
           });
         });
     });
@@ -737,14 +771,18 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
   describe("OrigDatablocks v4 findById tests", () => {
     it("0400: should not be able to fetch origdatablock by id if not logged in", () => {
       return request(appUrl)
-        .get(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockMinPid)}`)
+        .get(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockMinPid)}`,
+        )
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
     it("0401: should fetch origdatablock by id", () => {
       return request(appUrl)
-        .get(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockMinPid)}`)
+        .get(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockMinPid)}`,
+        )
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
@@ -797,9 +835,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     it("0450: should not be able to fetch origdatablock without the correct access rights", () => {
       return request(appUrl)
-        .get(
-          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`,
-        )
+        .get(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
         .auth(accessTokenUser2, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -807,7 +843,9 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     it("0451: should fetch origdatablocks and relation fields with correct data included with ownerGroup rights", () => {
       return request(appUrl)
-        .get(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}?include=dataset`)
+        .get(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}?include=dataset`,
+        )
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
@@ -825,7 +863,9 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
 
     it("0452: should fetch origdatablocks and relation fields with correct data included with accessGroup rights", () => {
       return request(appUrl)
-        .get(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}?include=dataset`)
+        .get(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}?include=dataset`,
+        )
         .auth(accessTokenUser3, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
@@ -870,7 +910,7 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
           res.body.should.be.a("object");
           res.body.should.have.property("_id").and.be.a("string");
           res.body.should.have.property("datasetId").and.be.a("string");
-          res.body.should.have.property("size")
+          res.body.should.have.property("size");
           res.body.size.should.be.eq(updatedOrigDatablock.size);
         });
     });
@@ -909,51 +949,162 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     });
   });
 
-  describe("OrigDatablocks v4 delete tests", () => {
-    it("0600: should not be able to delete origdatablock if not logged in", () => {
+  describe("OrigDatablocks v4 count tests", () => {
+    let expectedTotal,
+      expectedCorrectCountForUser1,
+      expectedCorrectCountForUser2;
+
+    before(async () => {
+      const countFiles = async (match) => {
+        const res = await db
+          .collection("OrigDatablock")
+          .aggregate([
+            { $match: match },
+            { $unwind: "$dataFileList" },
+            { $count: "count" },
+          ])
+          .toArray();
+
+        return res[0]?.count ?? 0;
+      };
+      expectedTotal = await countFiles({});
+      expectedCorrectCountForUser1 = await countFiles({
+        datasetId: datasetPid1,
+      });
+      expectedCorrectCountForUser2 = await countFiles({
+        datasetId: datasetPid2,
+      });
+    });
+
+    it("0600: should not be able to fetch the count of origdatablocks files if not logged in", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid1,
+            $options: "i",
+          },
+        },
+      };
+
       return request(appUrl)
-        .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0601: should not be able to delete origdatablock as owner", () => {
-      return request(appUrl)
-        .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
-        .auth(accessTokenUser1, { type: "bearer" })
-        .expect(TestData.AccessForbiddenStatusCode)
-        .expect("Content-Type", /json/);
-    });
+    it("0610: should be able to fetch all the count of origdatablocks files as admin", async () => {
+      const filter = {
+        where: {},
+      };
 
-    it("0602: should not be able to delete origdatablock as adminIngestor", () => {
       return request(appUrl)
-        .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.AccessForbiddenStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0603: should be able to delete origdatablock as archivemanager", () => {
-      return request(appUrl)
-        .delete(`/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`)
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulDeleteStatusCode)
+        .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.a("object");
-          res.body.should.have.property("_id").and.be.a("string");
-          res.body.should.have.property("datasetId").and.be.a("string");
+          res.body.should.have.property("count");
+          res.body.count.should.equal(expectedTotal);
+        });
+    });
+
+    it("0620: should be able to fetch correct count of origdatablocks files without filter as user1", async () => {
+      const filter = {
+        where: {},
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.equal(expectedCorrectCountForUser1);
+        });
+    });
+
+    it("0625: should be able to fetch correct count of origdatablocks files with filter as user2", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid2,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenUser2, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.equal(expectedCorrectCountForUser2);
+        });
+    });
+
+    it("0630: should not be able to fetch the count of origdatablock files for datasetPid2 as user1", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid2,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.equal(0);
+        });
+    });
+    it("0635: should not be able to fetch the count of origdatablock files for datasetPid1 as user2", async () => {
+      const filter = {
+        where: {
+          datasetId: {
+            $regex: datasetPid1,
+            $options: "i",
+          },
+        },
+      };
+
+      return request(appUrl)
+        .get("/api/v4/origdatablocks/files/count")
+        .query({ filter: JSON.stringify(filter) })
+        .auth(accessTokenUser2, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.be.a("object");
+          res.body.should.have.property("count");
+          res.body.count.should.equal(0);
         });
     });
   });
 
   describe("OrigDatablocks v4 optimistic concurrency control tests", () => {
-    it("0800: should fail one request with HTTP 412 when two requests try to update the same origdatablock", async () => {
+    it("0700: should fail one request with HTTP 412 when two requests try to update the same origdatablock", async () => {
       const res = await request(appUrl)
         .post("/api/v4/origdatablocks")
         .send({
           ...TestData.OrigDatablockV4MinCorrect,
-          datasetId: datasetPid,
+          datasetId: datasetPid1,
         })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
@@ -985,27 +1136,61 @@ describe("2800: OrigDatablock v4 endpoint tests", () => {
     });
   });
 
-  describe("Cleanup after the tests", () => {
-    it("0900: delete all origdatablocks as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/origdatablocks")
-        .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          return processOrigDatablockArray(res.body);
-        });
+  describe("OrigDatablocks v4 delete tests", () => {
+    it("0800: should not be able to delete origdatablock if not logged in", () => {
+      return request(appUrl)
+        .delete(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`,
+        )
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
     });
 
-    it("0901: delete all datasets as archivemanager", async () => {
-      return await request(appUrl)
-        .get("/api/v4/datasets")
+    it("0801: should not be able to delete origdatablock as owner", () => {
+      return request(appUrl)
+        .delete(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`,
+        )
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0802: should not be able to delete origdatablock as adminIngestor", () => {
+      return request(appUrl)
+        .delete(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`,
+        )
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0803: should be able to delete origdatablock as archivemanager", () => {
+      return request(appUrl)
+        .delete(
+          `/api/v4/origdatablocks/${encodeURIComponent(origDatablockPid)}`,
+        )
         .auth(accessTokenArchiveManager, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
+        .expect(TestData.SuccessfulDeleteStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          return processDatasetArray(res.body);
+          res.body.should.be.a("object");
+          res.body.should.have.property("_id").and.be.a("string");
+          res.body.should.have.property("datasetId").and.be.a("string");
         });
     });
+  });
+
+  after(async () => {
+    const odbs = await request(appUrl)
+      .get("/api/v4/origdatablocks")
+      .auth(accessTokenArchiveManager, { type: "bearer" });
+    await processOrigDatablockArray(odbs.body);
+
+    const datasets = await request(appUrl)
+      .get("/api/v4/datasets")
+      .auth(accessTokenArchiveManager, { type: "bearer" });
+    await processDatasetArray(datasets.body);
   });
 });

@@ -237,6 +237,115 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
       });
   });
 
+  it("0175: should not be able to add a dataset with a type not supported in datasetTypes.json", async () => {
+    const customDatasetWithUnsupportedType = {
+      ...TestData.CustomDatasetCorrect,
+      pid: TestData.PidPrefix + "/" + uuidv4(),
+      type: "unsupportedType",
+    };
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(customDatasetWithUnsupportedType)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("message")
+          .and.equal("Invalid dataset type!");
+      });
+  });
+
+  it("0176: should be able to update a custom dataset without providing its type", async () => {
+    const createRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...TestData.CustomDatasetCorrect,
+        pid: TestData.PidPrefix + "/" + uuidv4(),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    const createdPid = createRes.body.pid;
+
+    await request(appUrl)
+      .patch(`/api/v3/Datasets/${encodeURIComponent(createdPid)}`)
+      .send({ datasetName: "Updated without type field" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("datasetName")
+          .and.equal("Updated without type field");
+      });
+
+    await request(appUrl)
+      .delete("/api/v3/Datasets/" + encodeURIComponent(createdPid))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
+  it("0177: should be able to add a raw dataset even though datasetTypes.json only lists custom types", async () => {
+    const rawDataset = {
+      ...TestData.RawCorrectMin,
+      pid: TestData.PidPrefix + "/" + uuidv4(),
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(rawDataset)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then(async (res) => {
+        res.body.should.have.property("type").and.equal("raw");
+        res.body.should.have.property("pid").and.equal(rawDataset.pid);
+
+        await request(appUrl)
+          .delete("/api/v3/Datasets/" + encodeURIComponent(res.body.pid))
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+          .expect(TestData.SuccessfulDeleteStatusCode);
+      });
+  });
+
+  it("0178: should not be able to patch a dataset's type", async () => {
+    const createRes = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...TestData.CustomDatasetCorrect,
+        pid: TestData.PidPrefix + "/" + uuidv4(),
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    const createdPid = createRes.body.pid;
+
+    await request(appUrl)
+      .patch(`/api/v3/Datasets/${encodeURIComponent(createdPid)}`)
+      .send({ type: "custom" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("message").and.match(/should not exist/);
+      });
+
+    await request(appUrl)
+      .delete("/api/v3/Datasets/" + encodeURIComponent(createdPid))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.SuccessfulDeleteStatusCode);
+  });
+
   it("0180: should fetch several custom datasets", async () => {
     const filter = {
       where: {
@@ -594,6 +703,116 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
             .property("scientificMetadataValid")
             .and.be.equal(false);
         });
+    });
+  });
+
+  describe("Datasets v3 custom dataset size fields should survive unrelated patches", () => {
+    let sizeFieldsPid = null;
+
+    it("0895: adds a new custom dataset without size, packedSize, numberOfFiles or numberOfFilesArchived and defaults them to 0", async () => {
+      const { size, numberOfFiles, ...customDatasetWithoutSizeFields } =
+        TestData.CustomDatasetCorrect;
+
+      return request(appUrl)
+        .post("/api/v3/Datasets")
+        .send(customDatasetWithoutSizeFields)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then(async (res) => {
+          res.body.should.have.property("pid").and.be.a("string");
+          res.body.should.have.property("size").and.equal(0);
+          res.body.should.have.property("packedSize").and.equal(0);
+          res.body.should.have.property("numberOfFiles").and.equal(0);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(0);
+
+          await request(appUrl)
+            .delete("/api/v3/Datasets/" + encodeURIComponent(res.body.pid))
+            .set("Accept", "application/json")
+            .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+            .expect(TestData.SuccessfulDeleteStatusCode);
+        });
+    });
+
+    it("0900: adds a new custom dataset with explicit size and numberOfFiles", async () => {
+      const customDatasetWithSize = {
+        ...TestData.CustomDatasetCorrect,
+        size: 12345,
+        numberOfFiles: 6,
+      };
+
+      return request(appUrl)
+        .post("/api/v3/Datasets")
+        .send(customDatasetWithSize)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("pid").and.be.a("string");
+          res.body.should.have.property("size").and.equal(12345);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          sizeFieldsPid = res.body["pid"];
+        });
+    });
+
+    it("0910: explicitly sets packedSize and numberOfFilesArchived", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ packedSize: 6789, numberOfFilesArchived: 3 })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0915: patches only size and preserves packedSize, numberOfFiles and numberOfFilesArchived", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ size: 54321 })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("size").and.equal(54321);
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0920: preserves size, packedSize, numberOfFiles and numberOfFilesArchived when patching an unrelated field", async () => {
+      return request(appUrl)
+        .patch(`/api/v3/Datasets/${encodeURIComponent(sizeFieldsPid)}`)
+        .send({ datasetName: "Updated custom dataset name" })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have
+            .property("datasetName")
+            .and.equal("Updated custom dataset name");
+          res.body.should.have.property("size").and.equal(54321);
+          res.body.should.have.property("packedSize").and.equal(6789);
+          res.body.should.have.property("numberOfFiles").and.equal(6);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(3);
+        });
+    });
+
+    it("0930: should delete the size fields test dataset", async () => {
+      return request(appUrl)
+        .delete("/api/v3/Datasets/" + encodeURIComponent(sizeFieldsPid))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+        .expect(TestData.SuccessfulDeleteStatusCode)
+        .expect("Content-Type", /json/);
     });
   });
 });

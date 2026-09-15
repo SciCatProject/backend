@@ -4,6 +4,7 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
+  accessTokenUser1 = null,
 
   datasetId = null,
   ownerGroup = null,
@@ -23,6 +24,11 @@ describe("Datablocks", () => {
     accessTokenArchiveManager = await utils.getToken(appUrl, {
       username: "archiveManager",
       password: TestData.Accounts["archiveManager"]["password"],
+    });
+
+    accessTokenUser1 = await utils.getToken(appUrl, {
+      username: "user1",
+      password: TestData.Accounts["user1"]["password"],
     });
   });
 
@@ -88,6 +94,23 @@ describe("Datablocks", () => {
       })
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.should.have.property("error");
+      });
+  });
+
+  it("0035: fails to add a datablock when user does not own the target dataset", async () => {
+    return request(appUrl)
+      .post(`/api/v3/datablocks`)
+      .send({
+        ...TestData.DataBlockCorrect,
+        archiveId: "New archive Id",
+        datasetId,
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
       .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
@@ -209,6 +232,62 @@ describe("Datablocks", () => {
     });
   });
 
+  it("0067: should update the packedSize and dataFileList of the first datablock and remove the old contribution while adding the new one", async () => {
+    const updatedPackedSize = TestData.DataBlockCorrect.packedSize + 999;
+    const updatedDataFileList = [TestData.DataBlockCorrect.dataFileList[0]];
+
+    await request(appUrl)
+      .patch(`/api/v3/datablocks/${datablockId}`)
+      .send({
+        packedSize: updatedPackedSize,
+        dataFileList: updatedDataFileList,
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("packedSize")
+          .and.equal(updatedPackedSize);
+        res.body.should.have
+          .property("dataFileList")
+          .and.be.instanceof(Array)
+          .and.to.have.length(updatedDataFileList.length);
+      });
+
+    return request(appUrl)
+      .get("/api/v3/Datasets/" + encodeURIComponent(datasetId))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("packedSize")
+          .and.equal(updatedPackedSize + TestData.DataBlockCorrect.packedSize);
+        res.body.should.have
+          .property("numberOfFilesArchived")
+          .and.equal(
+            updatedDataFileList.length +
+              TestData.DataBlockCorrect.dataFileList.length,
+          );
+      });
+  });
+
+  it("0068: fails to update datablock when user does not own the associated dataset", async () => {
+    return request(appUrl)
+      .patch(`/api/v3/datablocks/${encodeURIComponent(datablockId2)}`)
+      .send({ size: 42 })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.should.have.property("error");
+      });
+  });
+
   it("0070: should delete first datablock", async () => {
     return request(appUrl)
       .delete(`/api/v3/datablocks/${datablockId}`)
@@ -296,6 +375,7 @@ describe("Datablocks", () => {
         datasetId: historyDatasetId, // Override with our specific values
         ownerGroup: historyOwnerGroup,
         size: originalSize,
+        packedSize: originalSize,
         archiveId: "original-archive-id",
       };
 
@@ -312,10 +392,26 @@ describe("Datablocks", () => {
         });
     });
 
+    it("1005: should update the dataset packedSize and numberOfFilesArchived after creating the datablock", async () => {
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(originalSize);
+          res.body.should.have
+            .property("numberOfFilesArchived")
+            .and.equal(TestData.DataBlockCorrect.dataFileList.length);
+        });
+    });
+
     it("1010: should update datablock with new archiveId and size", async () => {
       const updatePayload = {
         archiveId: "994394",
         size: 737243,
+        packedSize: 737243,
       };
 
       return request(appUrl)
@@ -332,6 +428,9 @@ describe("Datablocks", () => {
             .property("archiveId")
             .equal(updatePayload.archiveId);
           res.body.should.have.property("size").equal(updatePayload.size);
+          res.body.should.have
+            .property("packedSize")
+            .equal(updatePayload.packedSize);
         });
     });
 
@@ -346,6 +445,21 @@ describe("Datablocks", () => {
           res.body.should.be.a("object");
           res.body.should.have.property("archiveId").equal("994394");
           res.body.should.have.property("size").equal(737243);
+        });
+    });
+
+    it("1025: should update the dataset packedSize after the datablock size was updated", async () => {
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(737243);
+          res.body.should.have
+            .property("numberOfFilesArchived")
+            .and.equal(TestData.DataBlockCorrect.dataFileList.length);
         });
     });
 
@@ -396,6 +510,25 @@ describe("Datablocks", () => {
           // After should have the updated values
           updateHistory.after.should.have.property("archiveId").equal("994394");
           updateHistory.after.should.have.property("size").equal(737243);
+        });
+    });
+
+    it("1035: should reset the dataset packedSize and numberOfFilesArchived after deleting the datablock", async () => {
+      await request(appUrl)
+        .delete(`/api/v3/datablocks/${historyDatablockId}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
+        .expect(TestData.SuccessfulDeleteStatusCode);
+
+      return request(appUrl)
+        .get("/api/v3/Datasets/" + encodeURIComponent(historyDatasetId))
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("packedSize").and.equal(0);
+          res.body.should.have.property("numberOfFilesArchived").and.equal(0);
         });
     });
 

@@ -205,8 +205,7 @@ describe("ProposalsService", () => {
       service.addLookupFields(pipeline, [ProposalLookupKeysEnum.samples]);
 
       const lookupStage = pipeline.find((s) => "$lookup" in s) as
-        | { $lookup: { from: string; as: string } }
-        | undefined;
+        { $lookup: { from: string; as: string } } | undefined;
       expect(lookupStage).toBeDefined();
       expect(lookupStage!.$lookup.from).toBe("Sample");
       expect(lookupStage!.$lookup.as).toBe("samples");

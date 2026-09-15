@@ -463,6 +463,33 @@ describe("1500: Proposal: Simple Proposal", () => {
       });
   });
 
+  it("0121: updating a proposal without the measurement period list should not remove it", async () => {
+    return request(appUrl)
+      .patch("/api/v3/Proposals/" + proposalId)
+      .send({ title: "An updated complete test proposal" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenProposalIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("title")
+          .and.equal("An updated complete test proposal");
+        res.body.should.have
+          .property("MeasurementPeriodList")
+          .and.be.an("array")
+          .and.have.lengthOf(
+            TestData.ProposalCorrectComplete.MeasurementPeriodList.length,
+          );
+        res.body.MeasurementPeriodList[0].should.have
+          .property("instrument")
+          .and.equal(
+            TestData.ProposalCorrectComplete.MeasurementPeriodList[0]
+              .instrument,
+          );
+      });
+  });
+
   it("0130: should delete this proposal attachment", async () => {
     return request(appUrl)
       .delete(

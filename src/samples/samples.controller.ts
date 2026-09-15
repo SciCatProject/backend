@@ -598,11 +598,11 @@ export class SamplesController {
     description: "Return sample requested",
   })
   async findOne(
+    @Req() request: Request,
     @Query("filter") queryFilters?: string,
   ): Promise<SampleWithAttachmentsAndDatasets | null> {
-    const jsonFilters: IFilters<SampleDocument, ISampleFields> = queryFilters
-      ? JSON.parse(queryFilters)
-      : {};
+    const jsonFilters: IFilters<SampleDocument, ISampleFields> =
+      this.updateFiltersForList(request, JSON.parse(queryFilters ?? "{}"));
     const whereFilters = jsonFilters.where ?? {};
 
     const sample = (
@@ -998,19 +998,18 @@ export class SamplesController {
     await this.checkPermissionsForSample(request, id, Action.SampleRead);
 
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
 
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
-      if (canViewAccess) {
-        fields.userGroups = user.currentGroups ?? [];
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
+
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny) {
+      if (canView && !fields.isPublished) {
+        fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-        // fields.sharedWith = user.email;
       } else {
         fields.isPublished = true;
       }

@@ -30,7 +30,7 @@ class DatasetsServiceMock {
 class OrigDatablocksServiceMock {}
 
 class CaslAbilityFactoryMock {
-  datasetInstanceAccess = jest.fn();
+  datasetAccess = jest.fn();
 }
 
 class LogbooksServiceMock {}
@@ -98,7 +98,7 @@ describe("DatasetsController", () => {
       };
       datasetsService.findOne.mockResolvedValue(mockDataset);
 
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => true,
       });
       datasetsService.findByIdAndUpdate.mockImplementation(() => {
@@ -136,7 +136,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => false,
       });
 
@@ -166,7 +166,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => true,
       });
       jest
@@ -207,7 +207,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => true,
       });
       jest

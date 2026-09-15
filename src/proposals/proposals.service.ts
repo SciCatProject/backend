@@ -52,8 +52,7 @@ export class ProposalsService {
 
   private extractRelationsAndScopes(
     proposalLookupFields:
-      | (ProposalLookupKeysEnum | IProposalRelation)[]
-      | undefined,
+      (ProposalLookupKeysEnum | IProposalRelation)[] | undefined,
   ) {
     const scopes = {} as Record<ProposalLookupKeysEnum, IProposalScopes>;
     const fieldsList: ProposalLookupKeysEnum[] = [];
