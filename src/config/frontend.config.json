@@ -90,6 +90,12 @@
   "metadataEditingUnitListDisabled": true,
   "hideEmptyMetadataTable": false,
   "datafilesActionsEnabled": true,
+  "datasetDetailsTabsInclude": {
+    "details": ["proposals", "samples", "instruments"],
+    "datafiles": ["origdatablocks"],
+    "attachments": ["attachments"],
+    "admin": ["datablocks"]
+  },
   "datafilesActions": [
     {
       "id": "eed8efec-4354-11ef-a3b5-d75573a5d37f",
@@ -845,16 +851,19 @@
           {
             "element": "internalLink",
             "source": "proposalIds",
+            "internalLinkLabel": "title",
             "order": 0
           },
           {
             "element": "internalLink",
             "source": "instrumentIds",
+            "internalLinkLabel": "name",
             "order": 1
           },
           {
-            "element": "tag",
+            "element": "internalLink",
             "source": "sampleIds",
+            "internalLinkLabel": "sampleId",
             "order": 2
           },
           {
