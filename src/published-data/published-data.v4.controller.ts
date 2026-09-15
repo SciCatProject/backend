@@ -43,7 +43,10 @@ import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataV4Dto } from "./dto/create-published-data.v4.dto";
-import { PartialUpdatePublishedDataV4Dto } from "./dto/update-published-data.v4.dto";
+import {
+  PartialUpdatePublishedDataV4Dto,
+  UpdatePublishedDataV4Dto,
+} from "./dto/update-published-data.v4.dto";
 import {
   FormPopulateData,
   ICount,
@@ -101,6 +104,7 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
+    await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
@@ -347,6 +351,19 @@ export class PublishedDataV4Controller {
     return publishedData;
   }
 
+  private async validateMergedUpdate(
+    publishedData: PublishedData,
+    update: PartialUpdatePublishedDataV4Dto,
+  ): Promise<UpdatePublishedDataV4Dto> {
+    const record = (
+      publishedData as PublishedDataDocument
+    ).toObject<PublishedData>();
+    const merged: UpdatePublishedDataV4Dto = { ...record, ...update };
+    await this.validatorService.validate(merged);
+
+    return merged;
+  }
+
   // PATCH /publisheddata/:id
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
@@ -396,10 +413,12 @@ export class PublishedDataV4Controller {
       }
     }
 
-    return this.publishedDataService.update(
-      { doi: id },
+    const merged = await this.validateMergedUpdate(
+      publishedData,
       updatePublishedDataDto,
     );
+
+    return this.publishedDataService.update({ doi: id }, merged);
   }
 
   // POST /publisheddata/:id/publish
@@ -712,16 +731,18 @@ export class PublishedDataV4Controller {
 
     const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
+    const merged = await this.validateMergedUpdate(publishedData, data);
+
     let returnValue = null;
     if (OAIServerUri) {
       returnValue = await this.publishedDataService.resyncOAIPublication(
         id,
-        { ...publishedData, ...data },
+        merged,
         OAIServerUri,
       );
     }
 
-    await this.publishedDataService.update({ doi: id }, data);
+    await this.publishedDataService.update({ doi: id }, merged);
 
     return returnValue;
   }
