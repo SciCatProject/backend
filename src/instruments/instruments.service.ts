@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  Scope,
-  NotFoundException,
-  PreconditionFailedException,
-} from "@nestjs/common";
+import { Injectable, Inject, Scope, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model } from "mongoose";
 import { IFilters } from "src/common/interfaces/common.interface";
@@ -22,7 +16,7 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
-import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { findOneAndUpdateWithOCC } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class InstrumentsService {
@@ -100,31 +94,15 @@ export class InstrumentsService {
       );
     }
 
-    const queryFilter = withOCCFilter(filter, unmodifiedSince);
-
-    const updatedInstrument = await this.instrumentModel
-      .findOneAndUpdate(
-        queryFilter,
-        {
-          $set: {
-            ...addUpdatedByField(updateInstrumentDto, username),
-            updatedAt: new Date(),
-          },
-        },
-        { new: true, runValidators: true },
-      )
-      .exec();
-
-    if (!updatedInstrument) {
-      if (!unmodifiedSince) {
-        throw new NotFoundException(
-          `Instrument not found with filter: ${JSON.stringify(filter)}`,
-        );
-      }
-      throw new PreconditionFailedException(
-        `Instrument #${filter._id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
-      );
-    }
+    const updatedInstrument = await findOneAndUpdateWithOCC(
+      this.instrumentModel,
+      filter,
+      addUpdatedByField(updateInstrumentDto, username),
+      unmodifiedSince,
+      `Instrument not found with filter: ${JSON.stringify(filter)}`,
+      `Instrument #${filter._id} has been modified on server since ${unmodifiedSince?.toUTCString()}`,
+      { runValidators: true },
+    );
 
     await this.metadataKeysService.replaceManyFromSource(
       createMetadataKeysInstance(this.instrumentModel.collection.name, {
