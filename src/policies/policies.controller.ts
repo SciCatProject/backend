@@ -1,4 +1,5 @@
 import {
+  ClassSerializerInterceptor,
   Controller,
   Get,
   Post,
@@ -7,15 +8,19 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
   Query,
   HttpCode,
   HttpStatus,
   Req,
+  SerializeOptions,
 } from "@nestjs/common";
 import { Request } from "express";
 import { PoliciesService } from "./policies.service";
 import { CreatePolicyDto } from "./dto/create-policy.dto";
 import { PartialUpdatePolicyDto } from "./dto/update-policy.dto";
+import { PolicyObsoleteDto } from "./dto/policy.obsolete.dto";
+import { V3_FILTER_PIPE, V3_WHERE_PIPE } from "./pipes/filter.pipe";
 import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
@@ -23,59 +28,31 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
 import { Policy, PolicyDocument } from "./schemas/policy.schema";
 import { FilterQuery } from "mongoose";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
 import { UpdateWherePolicyDto } from "./dto/update-where-policy.dto";
-import { IFilters } from "src/common/interfaces/common.interface";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { FilterPipe } from "src/common/pipes/filter.pipe";
 import { CountApiResponse } from "src/common/types";
 import { Filter } from "src/datasets/decorators/filter.decorator";
+import { restrictToOwnPolicies } from "./utils/policy-access-filter.util";
 
 @ApiBearerAuth()
 @ApiTags("policies")
 @Controller("policies")
+@UseInterceptors(ClassSerializerInterceptor)
 export class PoliciesController {
   constructor(
     private readonly policiesService: PoliciesService,
     private caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
-  updateMergedFiltersForList(
-    request: Request,
-    mergedFilters: IFilters<PolicyDocument, IPolicyFilter>,
-  ): IFilters<PolicyDocument, IPolicyFilter> {
-    const user: JWTUser = request.user as JWTUser;
-
-    const ability = this.caslAbilityFactory.policyAccess(user);
-    const canViewAny = ability.can(Action.AccessAny, Policy);
-    const canView = ability.can(Action.Read, Policy);
-
-    mergedFilters.where = mergedFilters.where ?? {};
-
-    if (!user) {
-      mergedFilters.where["$and"] = mergedFilters.where["$and"] ?? [];
-      mergedFilters.where["$and"].push({
-        isPublished: true,
-      });
-    } else if (!canViewAny && canView) {
-      mergedFilters.where["$and"] = mergedFilters.where["$and"] ?? [];
-      mergedFilters.where["$and"].push({
-        $or: [
-          { ownerGroup: { $in: user.currentGroups } },
-          { accessGroups: { $in: user.currentGroups } },
-          { isPublished: true },
-        ],
-      });
-    }
-
-    return mergedFilters;
-  }
   @UseGuards(PoliciesGuard)
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Create, Policy),
   )
+  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
   @Post()
-  async create(@Body() createPolicyDto: CreatePolicyDto): Promise<Policy> {
+  async create(
+    @Body() createPolicyDto: CreatePolicyDto,
+  ): Promise<PolicyObsoleteDto | null> {
     return this.policiesService.create(createPolicyDto);
   }
 
@@ -90,15 +67,17 @@ export class PoliciesController {
     required: false,
     example: '{"order":"ownerGroup:desc","skip":0,"limit":25}',
   })
+  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
   async findAll(
     @Req() request: Request,
-    @Filter(new FilterPipe())
-    queryFilter: { filter?: IFilters<PolicyDocument, IPolicyFilter> },
-  ): Promise<Policy[]> {
-    const mergedFilters = this.updateMergedFiltersForList(
+    @Filter(...V3_FILTER_PIPE)
+    queryFilter: { filter?: IPolicyFilterV4 },
+  ): Promise<PolicyObsoleteDto[]> {
+    const mergedFilters = restrictToOwnPolicies(
+      this.caslAbilityFactory,
       request,
       queryFilter.filter ?? {},
-    ) as IFilters<PolicyDocument, IPolicyFilter>;
+    );
 
     return this.policiesService.findAll(mergedFilters);
   }
@@ -120,9 +99,10 @@ export class PoliciesController {
     description:
       "Return the number of datasets in the following format: { count: integer }",
   })
-  async count(@Query("where") where?: string) {
-    const parsedWhere: FilterQuery<PolicyDocument> = JSON.parse(where ?? "{}");
-    return this.policiesService.count(parsedWhere);
+  async count(
+    @Query("where", V3_WHERE_PIPE) where?: FilterQuery<PolicyDocument>,
+  ) {
+    return this.policiesService.count(where ?? {});
   }
 
   @UseGuards(PoliciesGuard)
@@ -134,7 +114,7 @@ export class PoliciesController {
   async updateWhere(@Body() updateWherePolicyDto: UpdateWherePolicyDto) {
     return this.policiesService.updateWhere(
       updateWherePolicyDto.ownerGroupList,
-      updateWherePolicyDto.data,
+      updateWherePolicyDto.data ?? {},
     );
   }
 
@@ -143,28 +123,31 @@ export class PoliciesController {
     ability.can(Action.Read, Policy),
   )
   @Get(":id")
-  async findOne(@Param("id") id: string): Promise<Policy | null> {
-    return this.policiesService.findOne({ _id: id });
+  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
+  async findOne(@Param("id") id: string): Promise<PolicyObsoleteDto | null> {
+    return this.policiesService.findOne(id);
   }
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Update, Policy),
   )
+  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
   @Patch(":id")
   async update(
     @Param("id") id: string,
     @Body() updatePolicyDto: PartialUpdatePolicyDto,
-  ): Promise<Policy | null> {
-    return this.policiesService.update({ _id: id }, updatePolicyDto);
+  ): Promise<PolicyObsoleteDto | null> {
+    return this.policiesService.update(id, updatePolicyDto);
   }
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("policies", (ability: AppAbility) =>
     ability.can(Action.Delete, Policy),
   )
+  @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
   @Delete(":id")
   async remove(@Param("id") id: string): Promise<unknown> {
-    return this.policiesService.remove({ _id: id });
+    return this.policiesService.remove(id);
   }
 }

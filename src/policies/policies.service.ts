@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -9,20 +10,44 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model } from "mongoose";
+import { REQUEST } from "@nestjs/core";
+import { Request } from "express";
+import { FilterQuery, Model, PipelineStage } from "mongoose";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { UsersService } from "src/users/users.service";
+import {
+  addCreatedByFields,
+  parseLimitFilters,
+  parsePipelineSort,
+} from "src/common/utils";
+import { Policy, PolicyDocument } from "./schemas/policy.schema";
+import { PolicyObsoleteDto } from "./dto/policy.obsolete.dto";
 import { CreatePolicyDto } from "./dto/create-policy.dto";
 import {
   PartialUpdatePolicyDto,
   UpdatePolicyDto,
 } from "./dto/update-policy.dto";
-import { Policy, PolicyDocument } from "./schemas/policy.schema";
-import { Request } from "express";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { UsersService } from "src/users/users.service";
-import { IPolicyFilter } from "./interfaces/policy-filters.interface";
-import { addCreatedByFields, parseLimitFilters } from "src/common/utils";
-import { REQUEST } from "@nestjs/core";
+import { IPolicyFilterV4 } from "./interfaces/policy-filters.interface";
+import { flattenToDotPaths, liveFilter } from "./utils/policy.util";
+import {
+  findUniqueByType,
+  hasArchiveFields,
+  hasRetrieveFields,
+  mergeArchiveRetrieveToLegacyDto,
+  toArchivePolicy,
+  toRetrievePolicy,
+} from "./utils/policy-legacy-shape.util";
 
+/**
+ * Backs the v3 policy API: one flat "policy" resource per ownerGroup,
+ * hardcoding exactly two job types (archive/retrieve), merged/split from two
+ * Policy documents. Owns its own Mongoose model access directly - it does
+ * not share a persistence layer with PoliciesV4Service, which backs the
+ * unrelated, much simpler v4 shape (one document per resource, no merge).
+ * The two are independent on purpose: forcing them through a common DAO
+ * would mean that DAO's shape had to satisfy both a legacy compatibility
+ * shim and a clean, versioned API at once.
+ */
 @Injectable()
 export class PoliciesService implements OnModuleInit {
   constructor(
@@ -83,81 +108,144 @@ export class PoliciesService implements OnModuleInit {
     }
   }
 
-  async create(
-    createPolicyDto: CreatePolicyDto,
-    policyUsername: string | null = null,
-  ): Promise<Policy> {
-    const username = policyUsername
-      ? policyUsername
-      : (this.request.user as JWTUser)?.username;
-    if (!username) {
-      throw new UnauthorizedException("User not present in the request");
-    }
-
-    const createdPolicy = new this.policyModel(
-      addCreatedByFields(createPolicyDto, username),
-    );
-
-    return createdPolicy.save();
+  async create(body: CreatePolicyDto): Promise<PolicyObsoleteDto | null> {
+    const [archive, retrieve] = await Promise.all([
+      this.persistNew(toArchivePolicy(body)),
+      this.persistNew(toRetrievePolicy(body)),
+    ]);
+    return mergeArchiveRetrieveToLegacyDto(archive, retrieve);
   }
 
-  async findAll(filter: IPolicyFilter): Promise<Policy[]> {
-    const whereFilter: FilterQuery<PolicyDocument> = filter.where ?? {};
+  async findAll(filter: IPolicyFilterV4): Promise<PolicyObsoleteDto[]> {
+    const { limit, skip, sort } = parseLimitFilters(filter.limits ?? {});
+    return this.findMergedPolicies(filter.where ?? {}, { limit, skip, sort });
+  }
 
-    const limits = {
-      limit: filter.limit as number,
-      skip: filter.skip as number,
-      order: filter.order as string,
-    };
-    const { limit, skip, sort } = parseLimitFilters(limits);
+  private async findMergedPolicies(
+    where: FilterQuery<PolicyDocument>,
+    {
+      limit,
+      skip,
+      sort,
+    }: {
+      limit?: number;
+      skip?: number;
+      sort?: Record<string, "asc" | "desc">;
+    } = {},
+  ): Promise<PolicyObsoleteDto[]> {
+    const [sortField, sortDirection] = Object.entries(
+      (sort ?? {}) as Record<string, "asc" | "desc">,
+    )[0] ?? ["ownerGroup", "asc"];
+    const pipelineSort = parsePipelineSort({ sortValue: sortDirection });
 
-    return this.policyModel
-      .find(whereFilter)
-      .limit(limit)
-      .skip(skip)
-      .sort(sort)
+    const pipeline: PipelineStage[] = [
+      { $match: liveFilter(where) },
+      {
+        $group: {
+          _id: "$ownerGroup",
+          docs: { $push: "$$ROOT" },
+          sortValue: { $first: `$${sortField}` },
+        },
+      },
+      { $match: { "docs.type": { $in: ["archive", "retrieve"] } } },
+      { $sort: pipelineSort },
+    ];
+    if (skip) pipeline.push({ $skip: skip });
+    if (limit) pipeline.push({ $limit: limit });
+
+    const groups = await this.policyModel
+      .aggregate<{ _id: string; docs: Record<string, unknown>[] }>(pipeline)
       .exec();
+
+    return groups
+      .map((group) => group.docs.map((doc) => this.policyModel.hydrate(doc)))
+      .map((docs) =>
+        mergeArchiveRetrieveToLegacyDto(
+          findUniqueByType(docs, "archive"),
+          findUniqueByType(docs, "retrieve"),
+        ),
+      )
+      .filter((policy): policy is PolicyObsoleteDto => policy !== null);
   }
 
   async count(where: FilterQuery<PolicyDocument>): Promise<{ count: number }> {
-    const count = await this.policyModel.countDocuments(where).exec();
-    return { count };
+    // v3 exposes one policy "resource" per ownerGroup, so count distinct
+    // ownerGroups, not the number of (ownerGroup, type) documents.
+    const ownerGroups = await this.policyModel
+      .distinct("ownerGroup", liveFilter(where))
+      .exec();
+    return { count: ownerGroups.length };
   }
 
-  async findOne(filter: FilterQuery<PolicyDocument>): Promise<Policy | null> {
-    return this.policyModel.findOne(filter).exec();
+  async findOne(id: string): Promise<PolicyObsoleteDto | null> {
+    const anyPolicy = await this.policyModel
+      .findOne(liveFilter({ _id: id }))
+      .exec();
+    if (!anyPolicy) return null;
+
+    const [merged] = await this.findMergedPolicies({
+      ownerGroup: anyPolicy.ownerGroup,
+    });
+    return merged ?? null;
   }
 
   async update(
-    filter: FilterQuery<PolicyDocument>,
-    updatePolicyDto: PartialUpdatePolicyDto,
-  ): Promise<Policy | null> {
-    const username = (this.request.user as JWTUser).username;
+    id: string,
+    body: PartialUpdatePolicyDto,
+  ): Promise<PolicyObsoleteDto | null> {
+    const anyPolicy = await this.policyModel
+      .findOne(liveFilter({ _id: id }))
+      .exec();
+    if (!anyPolicy) return null;
+
+    // Upserts the touched side(s) rather than silently no-op'ing when a
+    // sibling document doesn't exist yet: a v3 client has no concept that
+    // "the retrieve side of this resource might not exist" - it's patching
+    // one resource that has always had all these fields, so a plain,
+    // create-nothing PATCH would silently drop the write. v4's PATCH stays
+    // strict (id-based, already requires an existing document), so this
+    // relaxation is scoped to the v3 compatibility path only.
+    await Promise.all([
+      hasArchiveFields(body)
+        ? this.persistUpdate(
+            { ownerGroup: anyPolicy.ownerGroup, type: "archive" },
+            toArchivePolicy(body),
+          )
+        : null,
+      hasRetrieveFields(body)
+        ? this.persistUpdate(
+            { ownerGroup: anyPolicy.ownerGroup, type: "retrieve" },
+            toRetrievePolicy(body),
+          )
+        : null,
+    ]);
+
+    // Re-fetch by the *new* ownerGroup, not anyPolicy's pre-update value:
+    // ownerGroup is itself a patchable common field (see
+    // hasArchiveFields/hasRetrieveFields above), and persistUpdate above
+    // already wrote body.ownerGroup to both documents when present - using
+    // the stale value here would look for documents that no longer exist
+    // under it, silently returning null instead of the updated policy.
+    const [merged] = await this.findMergedPolicies({
+      ownerGroup: body.ownerGroup ?? anyPolicy.ownerGroup,
+    });
+    return merged ?? null;
+  }
+
+  async remove(id: string): Promise<unknown> {
+    const anyPolicy = await this.policyModel
+      .findOne(liveFilter({ _id: id }))
+      .exec();
+    if (!anyPolicy) return null;
+
+    // Only the live documents - historical documents marked supersededBy
+    // are kept for audit purposes and must survive an unrelated delete.
     return this.policyModel
-      .findOneAndUpdate(
-        filter,
-        {
-          $set: {
-            ...updatePolicyDto,
-            updatedBy: username,
-            updatedAt: new Date(),
-          },
-        },
-        {
-          new: true,
-          runValidators: true,
-        },
-      )
+      .deleteMany(liveFilter({ ownerGroup: anyPolicy.ownerGroup }))
       .exec();
   }
 
-  async remove(filter: FilterQuery<PolicyDocument>): Promise<unknown> {
-    Logger.log("Removing policy with filter:", filter);
-
-    return await this.policyModel.findOneAndDelete(filter).exec();
-  }
-
-  async updateWhere(ownerGroupList: string, data: UpdatePolicyDto) {
+  async updateWhere(ownerGroupList: string, data: Partial<UpdatePolicyDto>) {
     if (!ownerGroupList) {
       throw new InternalServerErrorException(
         "Invalid ownerGroupList parameter",
@@ -166,7 +254,6 @@ export class PoliciesService implements OnModuleInit {
 
     const ownerGroups = ownerGroupList
       .split(",")
-
       .map((ownerGroup) => ownerGroup.trim().replace(new RegExp('"', "g"), ""));
     if (!ownerGroups) {
       throw new InternalServerErrorException(
@@ -181,6 +268,9 @@ export class PoliciesService implements OnModuleInit {
       throw new NotFoundException();
     }
 
+    const updateArchive = hasArchiveFields(data);
+    const updateRetrieve = hasRetrieveFields(data);
+
     await Promise.all(
       ownerGroups.map(async (ownerGroup) => {
         const email = userIdentity ? userIdentity.profile.email : user.email;
@@ -191,16 +281,11 @@ export class PoliciesService implements OnModuleInit {
           throw new InternalServerErrorException(error);
         }
 
-        if (!userIdentity) {
-          try {
-            // allow all functional users
-            return await this.policyModel
-              .updateOne({ ownerGroup }, data, {})
-              .exec();
-          } catch (error) {
-            throw new InternalServerErrorException(error);
-          }
-        } else {
+        if (userIdentity) {
+          // NOTE: this only checks whether the user manages *any* of this
+          // ownerGroup's per-type policies, not specifically the type(s)
+          // being touched by `data` - same coarse, all-or-nothing semantics
+          // as before the type split.
           const hasPermission = await this.validatePermission(
             ownerGroup,
             userIdentity.profile.email,
@@ -211,18 +296,38 @@ export class PoliciesService implements OnModuleInit {
               "User not authorised for action based on policy",
             );
           }
+        }
 
-          try {
-            return await this.policyModel
-              .updateOne({ ownerGroup }, data, {})
-              .exec();
-          } catch (error) {
-            throw new InternalServerErrorException(error);
-          }
+        try {
+          // allow all functional users; upsert since addDefaultPolicy only
+          // bootstraps a *missing* ownerGroup, not a partially-missing one
+          // (e.g. archive exists but retrieve doesn't).
+          return await Promise.all([
+            updateArchive
+              ? this.persistUpdate(
+                  { ownerGroup, type: "archive" },
+                  toArchivePolicy(data),
+                )
+              : null,
+            updateRetrieve
+              ? this.persistUpdate(
+                  { ownerGroup, type: "retrieve" },
+                  toRetrievePolicy(data),
+                )
+              : null,
+          ]);
+        } catch (error) {
+          throw new InternalServerErrorException(error);
         }
       }),
     );
     return { message: "successful policy update" };
+  }
+
+  async findArchivePolicy(ownerGroup: string): Promise<PolicyDocument | null> {
+    return this.policyModel
+      .findOne(liveFilter({ ownerGroup, type: "archive" }))
+      .exec();
   }
 
   async addDefaultPolicy(
@@ -232,16 +337,18 @@ export class PoliciesService implements OnModuleInit {
     tapeRedundancy: string,
     policyUsername: string | null = null,
   ) {
-    const policy = await this.policyModel.findOne({ ownerGroup }).exec();
+    const existing = await this.policyModel
+      .findOne(liveFilter({ ownerGroup }))
+      .exec();
 
-    if (policy) {
+    if (existing) {
       return;
     }
 
     Logger.log("Adding default policy", "PoliciesService.addDefaultPolicy");
 
     const defaultManager = this.configService.get<string[]>("defaultManager");
-    const defaultPolicy: CreatePolicyDto = {
+    const defaultPolicyBody: Partial<UpdatePolicyDto> = {
       ownerGroup,
       accessGroups,
       manager: ownerEmail
@@ -260,8 +367,14 @@ export class PoliciesService implements OnModuleInit {
     };
 
     try {
-      await this.create(defaultPolicy, policyUsername);
+      await Promise.all([
+        this.persistNew(toArchivePolicy(defaultPolicyBody), policyUsername),
+        this.persistNew(toRetrievePolicy(defaultPolicyBody), policyUsername),
+      ]);
     } catch (error) {
+      if (error instanceof ConflictException) {
+        return;
+      }
       throw new InternalServerErrorException(
         error,
         "Error when creating default policy",
@@ -269,20 +382,99 @@ export class PoliciesService implements OnModuleInit {
     }
   }
 
-  async validatePermission(
+  private async siblingsOf(ownerGroup: string): Promise<PolicyDocument[]> {
+    return this.policyModel.find(liveFilter({ ownerGroup })).exec();
+  }
+
+  // NOTE: checks whether the user manages *any* of this ownerGroup's
+  // per-type policies, not a specific one - see the comment in updateWhere
+  // for why this stays coarse for now.
+  private async validatePermission(
     ownerGroup: string,
     email: string,
   ): Promise<boolean> {
-    const policy = await this.policyModel.findOne({ ownerGroup }).exec();
+    const policies = await this.siblingsOf(ownerGroup);
+    return policies.some((policy) => policy.manager?.includes(email));
+  }
 
-    if (!policy) {
-      return false;
+  private async persistNew(
+    createPolicyDto: Partial<Policy>,
+    policyUsername: string | null = null,
+  ): Promise<PolicyDocument> {
+    const username = policyUsername
+      ? policyUsername
+      : (this.request.user as JWTUser)?.username;
+    if (!username) {
+      throw new UnauthorizedException("User not present in the request");
     }
 
-    if (policy.manager.includes(email)) {
-      return true;
-    }
+    const createdPolicy = new this.policyModel(
+      addCreatedByFields(createPolicyDto, username),
+    );
 
-    return false;
+    try {
+      return await createdPolicy.save();
+    } catch (error) {
+      if ((error as { code?: number }).code === 11000) {
+        throw new ConflictException(
+          `A policy for ownerGroup "${createPolicyDto.ownerGroup}" and type "${createPolicyDto.type}" already exists.`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Upserts the one document matching `filter`: updates it if it exists,
+   * creates it otherwise - any equality conditions in `filter` (e.g.
+   * ownerGroup/type) are applied to the new document by Mongo itself.
+   * `createdBy` is set only on an actual insert, via $setOnInsert; existing
+   * documents keep their original `createdBy`/`createdAt`. Always upserts:
+   * every caller in this class needs it (a v3 PATCH must create a missing
+   * archive/retrieve sibling rather than silently no-op - see `update`
+   * below), so there's no plain-update variant to choose between.
+   *
+   * Concurrent upserts for the same (ownerGroup, type) can still race past
+   * each other and hit the unique index - MongoDB's own recommended pattern
+   * for this is to retry as a plain (non-upsert) update, which is what the
+   * catch below does; the loser of the race ends up updating the winner's
+   * document instead of failing outright.
+   */
+  private async persistUpdate(
+    filter: FilterQuery<PolicyDocument>,
+    updatePolicyDto: Partial<Policy>,
+  ): Promise<PolicyDocument | null> {
+    const username = (this.request.user as JWTUser).username;
+    const setFields = {
+      ...flattenToDotPaths(updatePolicyDto),
+      updatedBy: username,
+    };
+    const liveMatch = liveFilter(filter);
+
+    try {
+      return await this.policyModel
+        .findOneAndUpdate(
+          liveMatch,
+          { $set: setFields, $setOnInsert: { createdBy: username } },
+          {
+            new: true,
+            runValidators: true,
+            upsert: true,
+            setDefaultsOnInsert: true,
+          },
+        )
+        .exec();
+    } catch (error) {
+      if ((error as { code?: number }).code === 11000) {
+        return this.policyModel
+          .findOneAndUpdate(
+            liveMatch,
+            { $set: setFields },
+            { new: true, runValidators: true },
+          )
+          .exec();
+      }
+      throw error;
+    }
   }
 }
