@@ -21,14 +21,14 @@ class ConfigServiceMock {
         createDatasetWithPid: ["createDatasetWithPid"],
         createDatasetPrivileged: ["createDatasetPrivileged"],
         updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyProposal: ["historyProposal"],
+        historyAttachments: ["historyAttachment"],
+        historyDatablocks: ["historyDatablock"],
         historyDataset: ["historyDataset"],
-        historySample: ["historySample"],
         historyInstrument: ["historyInstrument"],
+        historyPolicies: ["historyPolicy"],
+        historyProposal: ["historyProposal"],
         historyPublishedData: ["historyPublishedData"],
-        historyPolicies: ["historyPolicies"],
-        historyDatablocks: ["historyDatablocks"],
-        historyAttachments: ["historyAttachments"],
+        historySample: ["historySample"],
         createJobPrivileged: ["createJobPrivileged"],
         updateJobPrivileged: ["updateJobPrivileged"],
         deleteJob: ["deleteJob"],
@@ -60,7 +60,7 @@ class JobConfigServiceMock {
         create: { auth: CreateJobAuth.JobAdmin },
         update: { auth: UpdateJobAuth.JobAdmin },
       } as unknown as JobConfig,
-    };;
+    };
   }
 }
 
@@ -70,48 +70,46 @@ describe("JobAbility", () => {
   const unauthenticatedUser = null;
 
   const authenticatedUser1 = {
+    username: "user1",
     currentGroups: ["group1"],
   } as unknown as JWTUser;
 
   const authenticatedUser2 = {
+    username: "user2",
     currentGroups: ["group2"],
   } as unknown as JWTUser;
 
-  const createJobPrivilegedUser1 = {
-    currentGroups: ["group1", "createJobPrivileged"],
+  const createJobPrivilegedUser = {
+    username: "jobAdmin",
+    currentGroups: ["jobAdminGroup", "createJobPrivileged"],
   } as unknown as JWTUser;
 
-  const createJobPrivilegedUser2 = {
-    currentGroups: ["group2", "createJobPrivileged"],
-  } as unknown as JWTUser;
-
-  const updateJobPrivilegedUser1 = {
-    currentGroups: ["group1", "updateJobPrivileged"],
-  } as unknown as JWTUser;
-
-  const updateJobPrivilegedUser2 = {
-    currentGroups: ["group2", "updateJobPrivileged"],
+  const updateJobPrivilegedUser = {
+    username: "jobAdmin",
+    currentGroups: ["jobAdminGroup", "updateJobPrivileged"],
   } as unknown as JWTUser;
 
   const adminUser = {
     currentGroups: ["admin"],
   } as unknown as JWTUser;
 
-  const deleteUser = {
-    currentGroups: ["delete"],
+  const deleteJobUser = {
+    currentGroups: ["deleteJob"],
   } as unknown as JWTUser;
 
   const publicJob = new JobClass();
   publicJob.type = "public";
-  publicJob.ownerGroup = "group1";
+  publicJob.ownerUser = "anonymous";
 
   const ownedJob = new JobClass();
   ownedJob.type = "owned";
+  ownedJob.ownerUser = "user1";
   ownedJob.ownerGroup = "group1";
 
   const privilegedJob = new JobClass();
   privilegedJob.type = "privileged";
-  privilegedJob.ownerGroup = "group1";
+  privilegedJob.ownerUser = "jobAdmin";
+  privilegedJob.ownerGroup = "jobAdminGroup";
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -132,48 +130,138 @@ describe("JobAbility", () => {
   describe("Unauthenticated permissions", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
+
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(false);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
   });
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
+
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
 
     it("should give correct rights to authenticated users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
+
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
   });
 
   describe("CREATE_JOB_PRIVILEGED_GROUPS permissions", () => {
-    it("should give correct rights to CREATE_JOB_PRIVILEGED_GROUPS users that own the resource", () => {
-      const ability = abilityBuilder.buildAbility(createJobPrivilegedUser1);
-    });
+    it("should give correct rights to CREATE_JOB_PRIVILEGED_GROUPS users", () => {
+      const ability = abilityBuilder.buildAbility(createJobPrivilegedUser);
 
-    it("should give correct rights to CREATE_JOB_PRIVILEGED_GROUPS users that don't own the resource", () => {
-      const ability = abilityBuilder.buildAbility(createJobPrivilegedUser2);
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(false);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
   });
 
   describe("UPDATE_JOB_PRIVILEGED_GROUPS permissions", () => {
-    it("should give correct rights to UPDATE_JOB_PRIVILEGED_GROUPS users that own the resource", () => {
-      const ability = abilityBuilder.buildAbility(updateJobPrivilegedUser1);
-    });
+    it("should give correct rights to UPDATE_JOB_PRIVILEGED_GROUPS users", () => {
+      const ability = abilityBuilder.buildAbility(updateJobPrivilegedUser);
 
-    it("should give correct rights to UPDATE_JOB_PRIVILEGED_GROUPS users that don't own the resource", () => {
-      const ability = abilityBuilder.buildAbility(updateJobPrivilegedUser2);
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(false);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(false);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
   });
 
   describe("ADMIN_GROUPS permissions", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
+
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(true);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
     });
   });
 
   describe("DELETE_JOB_GROUPS permissions", () => {
     it("should give correct rights to DELETE_JOB_GROUPS users", () => {
-      const ability = abilityBuilder.buildAbility(deleteUser);
+      const ability = abilityBuilder.buildAbility(deleteJobUser);
+
+      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
+      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
+      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
+      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
+      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
+      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
+      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
+      expect(ability.can(Action.JobDelete, JobClass)).toBe(true);
     });
   });
 });

@@ -4,6 +4,7 @@ import { AccessGroupsType } from "src/config/configuration";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { InstrumentAbility } from "./instruments.ability";
+import { Instrument } from "src/instruments/schemas/instrument.schema";
 
 class ConfigServiceMock {
   get = jest.fn((key: string) => {
@@ -17,14 +18,14 @@ class ConfigServiceMock {
         createDatasetWithPid: ["createDatasetWithPid"],
         createDatasetPrivileged: ["createDatasetPrivileged"],
         updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyProposal: ["historyProposal"],
+        historyAttachments: ["historyAttachment"],
+        historyDatablocks: ["historyDatablock"],
         historyDataset: ["historyDataset"],
-        historySample: ["historySample"],
         historyInstrument: ["historyInstrument"],
+        historyPolicies: ["historyPolicy"],
+        historyProposal: ["historyProposal"],
         historyPublishedData: ["historyPublishedData"],
-        historyPolicies: ["historyPolicies"],
-        historyDatablocks: ["historyDatablocks"],
-        historyAttachments: ["historyAttachments"],
+        historySample: ["historySample"],
         createJobPrivileged: ["createJobPrivileged"],
         updateJobPrivileged: ["updateJobPrivileged"],
         deleteJob: ["deleteJob"],
@@ -73,24 +74,44 @@ describe("InstrumentAbility", () => {
   describe("Unauthenticated permissions", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
+
+      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
     });
   });
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser);
+
+      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
     });
   });
 
   describe("ADMIN_GROUPS permissions", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
+
+      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
     });
   });
 
   describe("DELETE_GROUPS permissions", () => {
     it("should give correct rights to DELETE_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
+
+      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
+      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
+      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(true);
     });
   });
 });
