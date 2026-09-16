@@ -10,25 +10,7 @@ export enum Action {
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
 
-  // ---------------
-  // Attachments
-  AttachmentCreate = "attachment_create",
-  AttachmentRead = "attachment_read",
-  AttachmentUpdate = "attachment_update",
-  AttachmentDelete = "attachment_delete",
-
-  // Datablock
-  DatablockCreate = "datablock_create",
-  DatablockRead = "datablock_read",
-  DatablockUpdate = "datablock_update",
-  DatablockDelete = "datablock_delete",
-
   // Datasets
-  DatasetCreate = "dataset_create",
-  DatasetRead = "dataset_read",
-  DatasetUpdate = "dataset_update",
-  DatasetDelete = "dataset_delete",
-
   DatasetLifecycleUpdate = "dataset_lifecycle_update",
 
   DatasetAttachmentCreate = "dataset_attachment_create",
@@ -51,33 +33,7 @@ export enum Action {
   // History
   HistoryRead = "history_read",
 
-  // Instruments
-  InstrumentCreate = "instrument_create",
-  InstrumentRead = "instrument_read",
-  InstrumentUpdate = "instrument_update",
-  InstrumentDelete = "instrument_delete",
-
-  // Jobs
-  JobCreate = "jobs_create",
-  JobRead = "jobs_read",
-  JobUpdate = "job_update",
-  JobDelete = "job_delete",
-
-  // MetadataKeys
-  MetadataKeyRead = "metadatakey_read",
-
-  // Origdatablock
-  OrigdatablockCreate = "origdatablock_create",
-  OrigdatablockRead = "origdatablock_read",
-  OrigdatablockUpdate = "origdatablock_update",
-  OrigdatablockDelete = "origdatablock_delete",
-
   // Proposals
-  ProposalCreate = "proposal_create",
-  ProposalRead = "proposal_read",
-  ProposalUpdate = "proposal_update",
-  ProposalDelete = "proposal_delete",
-
   ProposalAttachmentCreate = "proposal_attachment_create",
   ProposalAttachmentRead = "proposal_attachment_read",
   ProposalAttachmentUpdate = "proposal_attachment_update",
@@ -85,18 +41,7 @@ export enum Action {
 
   ProposalDatasetRead = "proposal_dataset_read",
 
-  // RuntimeConfig
-  RuntimeConfigRead = "runtimeconfig_read",
-  RuntimeConfigUpdate = "runtimeconfig_update",
-
-  // Server-Sent Events
-  SseRead = "sse_read",
-
   // Users
-  UserCreate = "user_create",
-  UserRead = "user_read",
-  UserUpdate = "user_update",
-  UserDelete = "user_delete",
   UserCreateJwt = "user_create_jwt",
 
   // -------------------------------------

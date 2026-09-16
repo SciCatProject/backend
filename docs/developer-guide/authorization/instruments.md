@@ -6,10 +6,10 @@ This document describes the authorization model used for instruments and associa
 
 The following actions are defined for instruments:
 
-- `InstrumentCreate`
-- `InstrumentRead`
-- `InstrumentUpdate`
-- `InstrumentDelete`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 
 ## Permissions
 
@@ -39,10 +39,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - |
-| `InstrumentCreate` | - | - | any | - |
-| `InstrumentRead` | any | any | any | any |
-| `InstrumentUpdate` | - | - | any | - |
-| `InstrumentDelete` | - | - | - | any |
+| `Create` | - | - | any | - |
+| `Read` | any | any | any | any |
+| `Update` | - | - | any | - |
+| `Delete` | - | - | - | any |
 
 Legend:
 - any: unrestricted access

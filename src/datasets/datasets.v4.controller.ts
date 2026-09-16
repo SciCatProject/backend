@@ -170,7 +170,7 @@ export class DatasetsV4Controller {
   ): IDatasetFiltersV4<DatasetDocument, IDatasetFields> {
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       // In API v4 unauthorized users must use the public endpoints
@@ -247,7 +247,7 @@ export class DatasetsV4Controller {
   // POST /api/v4/datasets
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetCreate, DatasetClass),
+    ability.can(Action.Create, DatasetClass),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -285,7 +285,7 @@ export class DatasetsV4Controller {
     const datasetDto = await this.checkPermissionsForDatasetExtended(
       request,
       createDatasetDto,
-      Action.DatasetCreate,
+      Action.Create,
     );
 
     try {
@@ -308,7 +308,7 @@ export class DatasetsV4Controller {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetCreate, DatasetClass),
+    ability.can(Action.Create, DatasetClass),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -346,7 +346,7 @@ export class DatasetsV4Controller {
     const datasetDto = await this.checkPermissionsForDatasetExtended(
       request,
       createDatasetDtoInstance,
-      Action.DatasetCreate,
+      Action.Create,
     );
 
     const errors = await validate(datasetDto);
@@ -359,7 +359,7 @@ export class DatasetsV4Controller {
   // GET /datasets
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
@@ -412,7 +412,7 @@ export class DatasetsV4Controller {
   // GET /fullfacets
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @UseInterceptors(SubDatasetsPublicInterceptor)
   @Get("/fullfacet")
@@ -440,7 +440,7 @@ export class DatasetsV4Controller {
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -460,7 +460,7 @@ export class DatasetsV4Controller {
   // GET /datasets/metadataKeys
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @UseInterceptors(SubDatasetsPublicInterceptor)
   @Get("/metadataKeys")
@@ -501,7 +501,7 @@ export class DatasetsV4Controller {
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -520,7 +520,7 @@ export class DatasetsV4Controller {
   // GET /datasets/findOne
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -570,7 +570,7 @@ export class DatasetsV4Controller {
   // GET /datasets/count
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @Get("/count")
   @ApiOperation({
@@ -627,7 +627,7 @@ export class DatasetsV4Controller {
   //@UseGuards(PoliciesGuard)
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @Get("/:pid")
   @UseInterceptors(ClassSerializerInterceptor)
@@ -671,7 +671,7 @@ export class DatasetsV4Controller {
     await this.checkPermissionsForDatasetExtended(
       request,
       dataset,
-      Action.DatasetRead,
+      Action.Read,
     );
 
     return dataset;
@@ -681,7 +681,7 @@ export class DatasetsV4Controller {
   // body: modified fields
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetUpdate, DatasetClass),
+    ability.can(Action.Update, DatasetClass),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -738,7 +738,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForDatasetExtended(
       request,
       foundDataset,
-      Action.DatasetUpdate,
+      Action.Update,
     );
 
     if (foundDataset && IsRecord(updateDatasetDto) && IsRecord(foundDataset)) {
@@ -772,7 +772,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // GET /datasets/:id/datasetlifecycle
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetRead, DatasetClass),
+    ability.can(Action.Read, DatasetClass),
   )
   @Get("/:pid/datasetlifecycle")
   @ApiOperation({
@@ -799,7 +799,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForDatasetExtended(
       request,
       dataset,
-      Action.DatasetRead,
+      Action.Read,
     );
 
     return dataset?.datasetlifecycle;
@@ -873,7 +873,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // PUT /datasets/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetUpdate, DatasetClass),
+    ability.can(Action.Update, DatasetClass),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -919,7 +919,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForDatasetExtended(
       request,
       foundDataset,
-      Action.DatasetUpdate,
+      Action.Update,
     );
 
     const outputDatasetDto = await this.datasetsService.findByIdAndReplace(
@@ -933,7 +933,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // DELETE /datasets/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetDelete, DatasetClass),
+    ability.can(Action.Delete, DatasetClass),
   )
   @Delete("/:pid")
   @ApiOperation({
@@ -958,7 +958,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForDatasetExtended(
       request,
       foundDataset,
-      Action.DatasetDelete,
+      Action.Delete,
     );
 
     const removedDataset = await this.datasetsService.findByIdAndDelete(pid);

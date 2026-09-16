@@ -6,6 +6,7 @@ This document describes the authorization model used for policies and associated
 
 The following actions are defined for policies:
 
+- `AccessAny`
 - `Create`
 - `Read`
 - `Update`

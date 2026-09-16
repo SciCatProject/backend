@@ -6,10 +6,11 @@ This document describes the authorization model used for attachments and associa
 
 The following actions are defined for attachments:
 
-- `AttachmentCreate`
-- `AttachmentRead`
-- `AttachmentUpdate`
-- `AttachmentDelete`
+- `AccessAny`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 
 ## Permissions
 
@@ -51,10 +52,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `ATTACHMENT_GROUPS` | `ATTACHMENT_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - |
-| `AttachmentCreate` | - | - | owner | any | any | - |
-| `AttachmentRead` | public | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
-| `AttachmentUpdate` | - | - | owner | owner | any | - |
-| `AttachmentDelete` | - | - | owner | owner | any | any |
+| `Create` | - | - | owner | any | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
+| `Update` | - | - | owner | owner | any | - |
+| `Delete` | - | - | owner | owner | any | any |
 
 Legend:
 - public: attachment's `isPublished` field must be `true`

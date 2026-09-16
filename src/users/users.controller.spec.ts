@@ -251,7 +251,7 @@ describe("UsersController", () => {
           if (action === Action.AccessAny && subject === User) {
             return false;
           }
-          if (action === Action.UserRead && subject === User) {
+          if (action === Action.Read && subject === User) {
             return true;
           }
           return false;

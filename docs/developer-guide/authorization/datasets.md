@@ -6,10 +6,11 @@ This document describes the authorization model used for datasets and associated
 
 The following actions are defined for datasets:
 
-- `DatasetCreate`
-- `DatasetRead`
-- `DatasetUpdate`
-- `DatasetDelete`
+- `AccessAny`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 - `DatasetLifecycleUpdate`
 - `DatasetAttachmentCreate`
 - `DatasetAttachmentRead`
@@ -25,7 +26,7 @@ The following actions are defined for datasets:
 - `DatasetDatablockDelete`
 - `DatasetLogbookRead`
 
-The first four actions are the major actions used on most endpoints. `DatasetLifecycleUpdate` is used for a special update endpoint with strict control on the request content.
+The first five actions are the major actions used on most endpoints. `DatasetLifecycleUpdate` is used for a special update endpoint with strict control on the request content.
 The other actions are used for specific endpoints giving access to linked resources from a given dataset, and exist mostly for compatibility with API v3.
 
 ## Permissions
@@ -84,10 +85,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `CREATE_DATASET_GROUPS` | `CREATE_DATASET_WITH_PID_GROUPS` | `CREATE_DATASET_PRIVILEGED_GROUPS` | `UPDATE_DATASET_LIFECYCLE_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - | - | - |
-| `DatasetCreate` | - | - | owner, no `pid` | owner | any | - | any | - |
-| `DatasetRead` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | any | public/owner/access |
-| `DatasetUpdate` | - | - | owner | owner | owner | - | any | - |
-| `DatasetDelete` | - | - | - | - | - | - | - | any |
+| `Create` | - | - | owner, no `pid` | owner | any | - | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | any | public/owner/access |
+| `Update` | - | - | owner | owner | owner | - | any | - |
+| `Delete` | - | - | - | - | - | - | - | any |
 | `DatasetLifecycleUpdate` | - | - | owner | owner | owner | any | any | - |
 | `DatasetAttachmentCreate` | - | - | owner | owner | any | - | any | - |
 | `DatasetAttachmentRead` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | any | public/owner/access |
