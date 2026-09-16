@@ -6,10 +6,11 @@ This document describes the authorization model used for datablocks and associat
 
 The following actions are defined for datablocks:
 
-- `DatablockCreate`
-- `DatablockRead`
-- `DatablockUpdate`
-- `DatablockDelete`
+- `AccessAny`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 
 ## Permissions
 
@@ -48,12 +49,12 @@ If a user is part of a group listed in configuration as part of `DELETE_GROUPS`,
 
 Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.
 
-| Operation | Unauthenticated | Authenticated | `CREATE_DATASET_GROUPS`/`CREATE_DATASET_WITH_PID_GROUPS`/`CREATE_DATASET_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
-| - | - | - | - | - | - |
-| `DatablockCreate` | - | - | any | any | - |
-| `DatablockRead` | public | public/owner/access | public/owner/access | any | any |
-| `DatablockUpdate` | - | owner | any | any | any |
-| `DatablockDelete` | - | - | - | - | any |
+| Operation | Unauthenticated | Authenticated | `CREATE_DATASET_GROUPS` | `CREATE_DATASET_WITH_PID_GROUPS` | `CREATE_DATASET_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
+| - | - | - | - | - | - | - | - |
+| `Create` | - | - | any | any | any | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | any |
+| `Update` | - | owner | any | any | any | any | any |
+| `Delete` | - | - | - | - | - | - | any |
 
 Legend:
 - public: datablock's `isPublished` field must be `true`

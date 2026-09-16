@@ -6,8 +6,8 @@ This document describes the authorization model used for the server-sent event s
 
 The following actions are defined for server-sent events:
 
-- `SseRead`
 - `AccessAny`
+- `Read`
 
 ## Permissions
 
@@ -31,8 +31,8 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation   | Unauthenticated | Authenticated | `ADMIN_GROUPS` |
 | ----------- | --------------- | ------------- | -------------- |
-| `SseRead`   | -               | own           | any            |
 | `AccessAny` | -               | -             | any            |
+| `Read`      | -               | own           | any            |
 
 Legend:
 
