@@ -120,7 +120,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockCreate, Datablock),
+    ability.can(Action.Create, Datablock),
   )
   @Post()
   async create(
@@ -139,7 +139,7 @@ export class DatablocksController {
       accessGroups: dataset.accessGroups,
     };
 
-    this.checkPermission(req, datablock, Action.DatablockCreate);
+    this.checkPermission(req, datablock, Action.Create);
 
     try {
       return await this.datablocksService.createAndUpdateDatasetSizeAndFileCount(
@@ -158,7 +158,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockRead, Datablock),
+    ability.can(Action.Read, Datablock),
   )
   @ApiQuery({
     name: "filter",
@@ -188,7 +188,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockRead, Datablock),
+    ability.can(Action.Read, Datablock),
   )
   @Get("/count")
   @ApiOperation({
@@ -257,7 +257,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockRead, Datablock),
+    ability.can(Action.Read, Datablock),
   )
   @Get(":id")
   async findById(
@@ -272,14 +272,14 @@ export class DatablocksController {
       throw new NotFoundException();
     }
 
-    this.checkPermission(request, datablockInstance, Action.DatablockRead);
+    this.checkPermission(request, datablockInstance, Action.Read);
 
     return datablockInstance;
   }
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockUpdate, Datablock),
+    ability.can(Action.Update, Datablock),
   )
   @Patch(":id")
   async update(
@@ -295,7 +295,7 @@ export class DatablocksController {
       throw new NotFoundException();
     }
 
-    this.checkPermission(request, datablockInstance, Action.DatablockUpdate);
+    this.checkPermission(request, datablockInstance, Action.Update);
 
     await this.checkDatasetPermission(
       request,
@@ -321,7 +321,7 @@ export class DatablocksController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.DatablockDelete, Datablock),
+    ability.can(Action.Delete, Datablock),
   )
   @Delete(":id")
   async remove(
@@ -340,7 +340,7 @@ export class DatablocksController {
       this.generateDatablockInstanceForPermissions(datablock);
 
     const ability = this.caslAbilityFactory.datablockAccess(user);
-    const canDelete = ability.can(Action.DatablockDelete, datablockInstance);
+    const canDelete = ability.can(Action.Delete, datablockInstance);
 
     if (!canDelete) {
       throw new ForbiddenException("Unauthorized to delete this datablock");

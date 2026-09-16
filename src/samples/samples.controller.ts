@@ -1002,7 +1002,7 @@ export class SamplesController {
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       fields.isPublished = true;
