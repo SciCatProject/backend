@@ -4,6 +4,7 @@ import { AccessGroupsType } from "src/config/configuration";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { LogbookAbility } from "./logbooks.ability";
+import { Logbook } from "src/logbooks/schemas/logbook.schema";
 
 class ConfigServiceMock {
   get = jest.fn((key: string) => {
@@ -65,12 +66,16 @@ describe("LogbookAbility", () => {
   describe("Unauthenticated permissions", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
+
+      expect(ability.can(Action.Read, Logbook)).toBe(false);
     });
   });
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser);
+
+      expect(ability.can(Action.Read, Logbook)).toBe(true);
     });
   });
 });
