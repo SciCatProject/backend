@@ -2,7 +2,7 @@ import {
   ContentObject,
   SchemaObject,
 } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
-import { boolean } from "mathjs";
+import { parseBoolean } from "src/common/utils";
 
 const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
   where: {
@@ -58,7 +58,7 @@ export const getSwaggerMetadatakeysFilterContent = (
     limits: true,
   },
 ): ContentObject | undefined => {
-  if (boolean(process.env.SDK_PACKAGE_SWAGGER_HELPERS_DISABLED ?? false)) {
+  if (parseBoolean(process.env.SDK_PACKAGE_SWAGGER_HELPERS_DISABLED ?? false)) {
     return undefined;
   }
 

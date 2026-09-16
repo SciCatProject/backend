@@ -1121,7 +1121,7 @@ describe("2500: Datasets v4 tests", () => {
         .query({ filter: JSON.stringify(filter) })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
-    });
+    });        
 
     it("0401: should be able to fetch the datasets count providing where filter", async () => {
       const filter = {

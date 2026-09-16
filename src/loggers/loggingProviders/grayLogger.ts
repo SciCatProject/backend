@@ -5,6 +5,11 @@ import { Logger } from "../interfaces/logger.interface";
 export default class GrayLogger implements Logger {
   private logger: GrayLogLogger;
   constructor(config: GrayLoggerConfig) {
+    if (!config?.server || !config.port) {
+      throw new Error(
+        "GrayLogger requires 'server' and 'port' in loggers.json",
+      );
+    }
     this.logger = new GrayLogLogger(
       config.server,
       config.port,

@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common";
+import type { IndexSettings } from "@opensearch-project/opensearch/api/_types/indices._common.js";
 import { IsObject, IsOptional, IsString } from "class-validator";
+import { opensearchIndexSettingsExample } from "src/common/utils";
 
 export class UpdateIndexDto {
   @ApiProperty({
@@ -16,13 +17,7 @@ export class UpdateIndexDto {
   @ApiProperty({
     description: "Index settings to update",
     type: Object,
-    example: {
-      index: {
-        number_of_replicas: 1,
-        refresh_interval: "1s",
-        max_result_window: 1000000,
-      },
-    },
+    example: opensearchIndexSettingsExample,
   })
   @IsObject()
   @IsOptional()

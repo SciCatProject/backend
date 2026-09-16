@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import { merge } from "lodash";
-import { boolean } from "mathjs";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
+import { parseBoolean } from "src/common/utils";
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -286,25 +286,31 @@ const configuration = () => {
         .map((v) => v.trim()),
       deleteJob: deleteJobGroups.split(",").map((v) => v.trim()),
     },
-    datasetCreationValidationEnabled: boolean(datasetCreationValidationEnabled),
+    datasetCreationValidationEnabled: parseBoolean(
+      datasetCreationValidationEnabled,
+    ),
     datasetCreationValidationRegex: datasetCreationValidationRegex,
     logoutURL: process.env.LOGOUT_URL ?? "", // Example: http://localhost:3000/
     accessGroupsGraphQlConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_GRAPHQL_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_GRAPHQL_ENABLED || false,
+      ),
       token: process.env.ACCESS_GROUP_SERVICE_TOKEN,
       apiUrl: process.env.ACCESS_GROUP_SERVICE_API_URL,
       responseProcessorSrc: process.env.ACCESS_GROUP_SERVICE_HANDLER, // ts import defining the resposne processor and query
     },
     accessGroupsStaticConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_STATIC_ENABLED || true),
+      enabled: parseBoolean(process.env?.ACCESS_GROUPS_STATIC_ENABLED || true),
       value: accessGroupsStaticValues.split(",").map((v) => v.trim()) ?? [],
     },
     accessGroupsOIDCPayloadConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false,
+      ),
       accessGroupProperty: process.env?.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
     },
     accessGroupsRestConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
+      enabled: parseBoolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
       authKey:
         process.env?.ACCESS_GROUPS_SERVICE_REST_AUTH_KEY || "Authorization",
       token: process.env.ACCESS_GROUPS_SERVICE_REST_AUTH_VALUE,
@@ -312,7 +318,9 @@ const configuration = () => {
       userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
     },
     accessGroupsLdapPayloadConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false,
+      ),
       accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY || "cn", // Examples: "cn" or "ou"
     },
     doiPrefix: process.env.DOI_PREFIX,

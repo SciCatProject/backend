@@ -2,12 +2,9 @@ export enum Action {
   Manage = "manage",
   Create = "create",
   Read = "read",
-  ReadOwn = "readown",
-  ReadAll = "readall",
   Update = "update",
   Delete = "delete",
-  ListOwn = "listown",
-  ListAll = "listall",
+
   // ---------------
   // Generic access any action that can be applied to any resource
   // Currently used by addAccessBasedFilters for admin/special group users
