@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { ConfigService } from "@nestjs/config";
-import { DatasetAbility } from "./datasets.ability";
-import { Action } from "../action.enum";
-import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { AccessGroupsType } from "src/config/configuration";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { Action } from "../action.enum";
+import { DatasetAbility } from "./datasets.ability";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 
 class ConfigServiceMock {
   get = jest.fn((key: string) => {
@@ -27,7 +27,7 @@ class ConfigServiceMock {
         historyDatablocks: ["historyDatablocks"],
         historyAttachments: ["historyAttachments"],
         createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJpbPrivileged"],
+        updateJobPrivileged: ["updateJobPrivileged"],
         deleteJob: ["deleteJob"],
         policy: ["policy"],
         proposal: ["proposal"],
@@ -226,7 +226,7 @@ describe("DatasetAbility", () => {
   });
 
   describe("Authenticated permissions", () => {
-    it("should give correct rights to authenticated users that own the dataset", () => {
+    it("should give correct rights to authenticated users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -331,7 +331,7 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
     });
 
-    it("should give correct rights to authenticated users that don't own the dataset", () => {
+    it("should give correct rights to authenticated users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -440,7 +440,7 @@ describe("DatasetAbility", () => {
   });
 
   describe("CREATE_DATASET_GROUPS permissions", () => {
-    it("should give correct rights to CREATE_DATASET_GROUPS users that own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -545,7 +545,7 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
     });
 
-    it("should give correct rights to CREATE_DATASET_GROUPS users that don't own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -654,7 +654,7 @@ describe("DatasetAbility", () => {
   });
 
   describe("CREATE_DATASET_WITH_PID_GROUPS permissions", () => {
-    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetWithPidUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -759,7 +759,7 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
     });
 
-    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that don't own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetWithPidUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -868,7 +868,7 @@ describe("DatasetAbility", () => {
   });
 
   describe("CREATE_DATASET_PRIVILEGED_GROUPS permissions", () => {
-    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
@@ -973,7 +973,7 @@ describe("DatasetAbility", () => {
       expect(ability.can(Action.DatasetLogbookRead, ownedDataset)).toBe(true);
     });
 
-    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that don't own the dataset", () => {
+    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
