@@ -8,7 +8,6 @@ let accessTokenAdminIngestor = null,
   accessTokenUser3 = null,
   accessTokenUser51 = null,
   accessTokenAdmin = null,
-
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,

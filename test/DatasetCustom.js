@@ -7,7 +7,6 @@ let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
-
   pid = null,
   minPid = null,
   explicitPid = null,
@@ -207,7 +206,9 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("valid").and.equal(false);
-        res.body.should.have.property("error").and.equal("datasetName must be a string");
+        res.body.should.have
+          .property("error")
+          .and.equal("datasetName must be a string");
       });
   });
 

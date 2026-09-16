@@ -5,7 +5,6 @@ const { TestData } = require("./TestData");
 let accessTokenAdminIngestor = null,
   accessTokenUser51 = null,
   accessTokenAdmin = null,
-
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,
@@ -270,10 +269,13 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
       ownerGroup: "group5",
       jobParams: {
         datasetList: [
-          { pid: datasetPid1, files: [
-            TestData.OrigDatablockV4Correct.dataFileList[0].path, 
-            TestData.OrigDatablockV4Correct.dataFileList[1].path
-          ]},
+          {
+            pid: datasetPid1,
+            files: [
+              TestData.OrigDatablockV4Correct.dataFileList[0].path,
+              TestData.OrigDatablockV4Correct.dataFileList[1].path,
+            ],
+          },
         ],
       },
     };
@@ -285,7 +287,7 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
         datasetId: datasetPid1,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     return request(appUrl)
       .post("/api/v4/Jobs")

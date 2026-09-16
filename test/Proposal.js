@@ -8,7 +8,6 @@ let accessTokenProposalIngestor = null,
   accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
-
   defaultProposalId = null,
   minimalProposalId = null,
   proposalId = null,
