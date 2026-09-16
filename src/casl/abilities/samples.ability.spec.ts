@@ -101,48 +101,345 @@ describe("SampleAbility", () => {
   describe("Unauthenticated permissions", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        false,
+      );
     });
   });
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        false,
+      );
     });
 
     it("should give correct rights to authenticated users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        false,
+      );
     });
   });
 
   describe("SAMPLE_GROUPS permissions", () => {
     it("should give correct rights to SAMPLE_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(sampleUser1);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        true,
+      );
     });
 
     it("should give correct rights to SAMPLE_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(sampleUser2);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        false,
+      );
     });
   });
 
   describe("SAMPLE_PRIVILEGED_GROUPS permissions", () => {
     it("should give correct rights to SAMPLE_PRIVILEGED_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(samplePrivilegedUser1);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        true,
+      );
     });
 
     it("should give correct rights to SAMPLE_PRIVILEGED_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(samplePrivilegedUser2);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        false,
+      );
     });
   });
 
   describe("ADMIN_GROUPS permissions", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        true,
+      );
     });
   });
 
   describe("DELETE_GROUPS permissions", () => {
     it("should give correct rights to DELETE_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
+
+      expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
+      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(true);
+
+      expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentCreate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentRead, SampleClass)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, publicSample)).toBe(true);
+      expect(ability.can(Action.SampleAttachmentRead, ownedSample)).toBe(false);
+      expect(ability.can(Action.SampleAttachmentUpdate, SampleClass)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentUpdate, ownedSample)).toBe(
+        false,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, SampleClass)).toBe(
+        true,
+      );
+      expect(ability.can(Action.SampleAttachmentDelete, ownedSample)).toBe(
+        true,
+      );
     });
   });
 });

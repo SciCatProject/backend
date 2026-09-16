@@ -4,6 +4,7 @@ import { AccessGroupsType } from "src/config/configuration";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { RuntimeConfigAbility } from "./runtime-config.ability";
+import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 
 class ConfigServiceMock {
   get = jest.fn((key: string) => {
@@ -69,18 +70,31 @@ describe("RuntimeConfigAbility", () => {
   describe("Unauthenticated permissions", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
+
+      expect(ability.can(Action.RuntimeConfigRead, RuntimeConfig)).toBe(true);
+      expect(ability.can(Action.RuntimeConfigUpdate, RuntimeConfig)).toBe(
+        false,
+      );
     });
   });
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser);
+
+      expect(ability.can(Action.RuntimeConfigRead, RuntimeConfig)).toBe(true);
+      expect(ability.can(Action.RuntimeConfigUpdate, RuntimeConfig)).toBe(
+        false,
+      );
     });
   });
 
   describe("ADMIN_GROUPS permissions", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
+
+      expect(ability.can(Action.RuntimeConfigRead, RuntimeConfig)).toBe(true);
+      expect(ability.can(Action.RuntimeConfigUpdate, RuntimeConfig)).toBe(true);
     });
   });
 });
