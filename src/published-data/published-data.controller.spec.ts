@@ -7,6 +7,7 @@ import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataController } from "./published-data.controller";
 import { PublishedDataService } from "./published-data.service";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 
 class AttachmentsServiceMock {}
 
@@ -20,6 +21,8 @@ class PublishedDataServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
+class DatasetsV4ControllerMock {}
+
 describe("PublishedDataController", () => {
   let controller: PublishedDataController;
 
@@ -30,6 +33,7 @@ describe("PublishedDataController", () => {
         ConfigService,
         { provide: AttachmentsService, useClass: AttachmentsServiceMock },
         { provide: DatasetsService, useClass: DatasetsServiceMock },
+        { provide: DatasetsV4Controller, useClass: DatasetsV4ControllerMock },
         { provide: HttpService, useClass: HttpServiceMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },

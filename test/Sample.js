@@ -7,7 +7,6 @@ let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
-
   sampleId = null,
   attachmentId = null,
   datasetId = null,

@@ -9,12 +9,10 @@ let accessTokenAdminIngestor = null,
   accessTokenUser52 = null,
   accessTokenAdmin = null,
   accessTokenArchiveManager = null,
-
   adminEmail = null,
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,
-
   jobId1 = null,
   encodedJobOwnedByAdmin = null,
   jobId2 = null,

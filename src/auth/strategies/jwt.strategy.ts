@@ -1,11 +1,17 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Request } from "express";
 import { RolesService } from "src/users/roles.service";
 import { UsersService } from "src/users/users.service";
 import { JWTUser } from "../interfaces/jwt-user.interface";
 import { User } from "src/users/schemas/user.schema";
 import { ConfigService } from "@nestjs/config";
+import {
+  SSE_STREAM_PATH,
+  fromSseTicket,
+  requireJwtSecret,
+} from "src/auth/utils/jwt.util";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,13 +21,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private usersService: UsersService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        fromSseTicket,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>("jwt.secret") || "defaultSecret",
+      secretOrKey: requireJwtSecret(configService),
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: Omit<User, "password">) {
+  async validate(
+    request: Request,
+    payload: Omit<User, "password"> & { purpose?: string },
+  ) {
+    const isSsePath = request.path === SSE_STREAM_PATH;
+    const isSseTicket = payload.purpose === "sse";
+    if (isSsePath !== isSseTicket) {
+      throw new UnauthorizedException();
+    }
+
     const roles = await this.rolesService.find({ userId: payload._id });
 
     const userIdentity = await this.usersService.findByIdUserIdentity(

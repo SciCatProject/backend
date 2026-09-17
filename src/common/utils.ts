@@ -13,6 +13,7 @@ import { ScientificRelation } from "./scientific-relation.enum";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
 import { isPlainObject, mapValues, omit, pickBy, some } from "lodash";
 import { MetadataSourceDoc } from "src/metadata-keys/metadatakeys.service";
+import type { IJobFields } from "src/jobs/interfaces/job-filters.interface";
 
 // add Å to mathjs accepted units as equivalent to angstrom
 const isAlphaOriginal = Unit.isValidAlpha;
@@ -585,10 +586,11 @@ export const searchExpression = <T>(
       return value;
     }
   } else if (valueType === "Date") {
-    return {
-      $gte: new Date((value as Record<string, string | Date>).begin),
-      $lte: new Date((value as Record<string, string | Date>).end),
-    };
+    const { begin, end } = value as Record<string, string | Date>;
+    const dateRange: { $gte?: Date; $lte?: Date } = {};
+    if (begin) dateRange.$gte = new Date(begin);
+    if (end) dateRange.$lte = new Date(end);
+    return dateRange;
   } else if (valueType === "Boolean") {
     return {
       $eq: value,
@@ -1184,6 +1186,104 @@ This last version is deprecated and will be discontinued as soon as the FE is up
 It has been maintanined for backward compatibility.\n \
 </pre>';
 
+export const opensearchIndexMappingsExample = {
+  dynamic: false,
+  properties: {
+    all_text: {
+      type: "text",
+      analyzer: "autocomplete",
+      search_analyzer: "autocomplete_search",
+      fields: {
+        wild: { type: "wildcard" },
+      },
+    },
+    isPublished: { type: "boolean" },
+    ownerGroup: { type: "keyword" },
+    accessGroups: { type: "keyword" },
+
+    pid: { type: "keyword", copy_to: "all_text" },
+    owner: { type: "keyword", copy_to: "all_text" },
+    ownerEmail: { type: "keyword", copy_to: "all_text" },
+    contactEmail: { type: "keyword", copy_to: "all_text" },
+    sourceFolder: { type: "keyword", copy_to: "all_text" },
+    type: { type: "keyword", copy_to: "all_text" },
+    keywords: { type: "keyword", copy_to: "all_text" },
+    description: { type: "keyword", copy_to: "all_text" },
+    datasetName: { type: "keyword", copy_to: "all_text" },
+    classification: { type: "keyword", copy_to: "all_text" },
+    version: { type: "keyword", copy_to: "all_text" },
+    createdBy: { type: "keyword", copy_to: "all_text" },
+    updatedBy: { type: "keyword", copy_to: "all_text" },
+    creationLocation: { type: "keyword", copy_to: "all_text" },
+    proposalIds: { type: "keyword", copy_to: "all_text" },
+    instrumentIds: { type: "keyword", copy_to: "all_text" },
+    sampleIds: { type: "keyword", copy_to: "all_text" },
+    techniques: {
+      properties: {
+        pid: { type: "keyword", copy_to: "all_text" },
+        name: { type: "keyword", copy_to: "all_text" },
+      },
+    },
+    principalInvestigators: { type: "keyword", copy_to: "all_text" },
+    creationTime: { type: "date", copy_to: "all_text" },
+    createdAt: { type: "date", copy_to: "all_text" },
+    updatedAt: { type: "date", copy_to: "all_text" },
+    numberOfFiles: { type: "long", copy_to: "all_text" },
+    runNumber: { type: "long", copy_to: "all_text" },
+    size: { type: "long", copy_to: "all_text" },
+    datasetlifecycle: {
+      properties: {
+        archiveStatusMessage: { type: "keyword", copy_to: "all_text" },
+        retrieveStatusMessage: { type: "keyword", copy_to: "all_text" },
+      },
+    },
+
+    scientificMetadata: { type: "object", enabled: false },
+    scientificMetadataText: {
+      type: "text",
+      index: false,
+      copy_to: "all_text",
+    },
+  },
+};
+
+export const opensearchIndexSettingsExample = {
+  index: {
+    max_result_window: 10000,
+    number_of_replicas: 0,
+  },
+  analysis: {
+    analyzer: {
+      autocomplete: {
+        type: "custom",
+        tokenizer: "autocomplete",
+        filter: ["word_delimiter", "lowercase"],
+      },
+      autocomplete_search: {
+        type: "custom",
+        tokenizer: "keyword",
+        filter: ["lowercase"],
+      },
+    },
+    tokenizer: {
+      autocomplete: {
+        type: "edge_ngram",
+        min_gram: 2,
+        max_gram: 64,
+        token_chars: ["letter", "digit", "symbol", "punctuation"],
+      },
+    },
+    filter: {
+      word_delimiter: {
+        type: "word_delimiter_graph",
+        split_on_case_change: false,
+        split_on_numerics: false,
+        preserve_original: true,
+        type_table: [". => ALPHA"],
+      },
+    },
+  },
+};
 export const parseBoolean = (v: unknown): boolean => {
   switch (v) {
     case true:
@@ -1374,4 +1474,20 @@ export function createMetadataKeysInstance(
       doc.sampleCharacteristics ??
       {},
   };
+}
+
+export function addAccessMatchToPipeline<T>(
+  pipeline: PipelineStage[],
+  access: FilterQuery<T>,
+  fields: IJobFields,
+) {
+  if ("text" in fields) {
+    pipeline.splice(1, 0, {
+      $match: access,
+    });
+  } else {
+    pipeline.unshift({
+      $match: access,
+    });
+  }
 }

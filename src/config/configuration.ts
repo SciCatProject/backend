@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import { merge } from "lodash";
-import { boolean } from "mathjs";
-import { DatasetType } from "src/datasets/types/dataset-type.enum";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
+import { parseBoolean } from "src/common/utils";
 
 const configuration = () => {
+  const jwtSecret = process.env.JWT_SECRET;
   const accessGroupsStaticValues =
     process.env.ACCESS_GROUPS_STATIC_VALUES || "";
   const adminGroups = process.env.ADMIN_GROUPS || "";
@@ -141,11 +141,6 @@ const configuration = () => {
     }
   });
 
-  // NOTE: Add the default dataset types here
-  Object.assign(jsonConfigMap.datasetTypes, {
-    Raw: DatasetType.Raw,
-    Derived: DatasetType.Derived,
-  });
   // NOTE: Add the default proposal type here
   Object.assign(jsonConfigMap.proposalTypes, {
     DefaultProposal: DEFAULT_PROPOSAL_TYPE,
@@ -291,25 +286,31 @@ const configuration = () => {
         .map((v) => v.trim()),
       deleteJob: deleteJobGroups.split(",").map((v) => v.trim()),
     },
-    datasetCreationValidationEnabled: boolean(datasetCreationValidationEnabled),
+    datasetCreationValidationEnabled: parseBoolean(
+      datasetCreationValidationEnabled,
+    ),
     datasetCreationValidationRegex: datasetCreationValidationRegex,
     logoutURL: process.env.LOGOUT_URL ?? "", // Example: http://localhost:3000/
     accessGroupsGraphQlConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_GRAPHQL_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_GRAPHQL_ENABLED || false,
+      ),
       token: process.env.ACCESS_GROUP_SERVICE_TOKEN,
       apiUrl: process.env.ACCESS_GROUP_SERVICE_API_URL,
       responseProcessorSrc: process.env.ACCESS_GROUP_SERVICE_HANDLER, // ts import defining the resposne processor and query
     },
     accessGroupsStaticConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_STATIC_ENABLED || true),
+      enabled: parseBoolean(process.env?.ACCESS_GROUPS_STATIC_ENABLED || true),
       value: accessGroupsStaticValues.split(",").map((v) => v.trim()) ?? [],
     },
     accessGroupsOIDCPayloadConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_OIDCPAYLOAD_ENABLED || false,
+      ),
       accessGroupProperty: process.env?.OIDC_ACCESS_GROUPS_PROPERTY, // Example: groups
     },
     accessGroupsRestConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
+      enabled: parseBoolean(process.env?.ACCESS_GROUPS_REST_ENABLED || false),
       authKey:
         process.env?.ACCESS_GROUPS_SERVICE_REST_AUTH_KEY || "Authorization",
       token: process.env.ACCESS_GROUPS_SERVICE_REST_AUTH_VALUE,
@@ -317,7 +318,9 @@ const configuration = () => {
       userIdField: process.env.ACCESS_GROUPS_SERVICE_REST_USER_ID_FIELD,
     },
     accessGroupsLdapPayloadConfig: {
-      enabled: boolean(process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false),
+      enabled: parseBoolean(
+        process.env?.ACCESS_GROUPS_LDAPPAYLOAD_ENABLED || false,
+      ),
       accessGroupProperty: process.env?.LDAP_ACCESS_GROUPS_PROPERTY || "cn", // Examples: "cn" or "ou"
     },
     doiPrefix: process.env.DOI_PREFIX,
@@ -332,7 +335,7 @@ const configuration = () => {
     httpMaxRedirects: process.env.HTTP_MAX_REDIRECTS ?? 5,
     httpTimeOut: process.env.HTTP_TIMEOUT ?? 5000,
     jwt: {
-      secret: process.env.JWT_SECRET,
+      secret: jwtSecret,
       expiresIn: parseInt(process.env.JWT_EXPIRES_IN ?? "3600", 10),
       neverExpires: process.env.JWT_NEVER_EXPIRES ?? "100y",
     },
@@ -455,7 +458,7 @@ const configuration = () => {
       policyPublicationShiftInYears: process.env.POLICY_PUBLICATION_SHIFT ?? 3,
       policyRetentionShiftInYears: process.env.POLICY_RETENTION_SHIFT ?? -1,
     },
-    datasetTypes: jsonConfigMap.datasetTypes,
+    customDatasetTypes: jsonConfigMap.datasetTypes,
     proposalTypes: jsonConfigMap.proposalTypes,
     frontendConfig: jsonConfigMap.frontendConfig,
     frontendTheme: jsonConfigMap.frontendTheme,
@@ -463,6 +466,7 @@ const configuration = () => {
     ajvCustomDefinitions: ajvCustomDefinitions,
     opensearchConfig: jsonConfigMap.opensearchConfig,
     datafilesMetadataSchema: jsonConfigMap.datafilesMetadataSchema,
+    sseTicketExpiresIn: parseInt(process.env.SSE_TICKET_EXPIRES_IN || "60", 10),
   };
   return merge(config, localconfiguration);
 };

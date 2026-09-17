@@ -9,7 +9,6 @@ let accessTokenProposalIngestor = null,
   accessTokenAdminIngestor = null,
   accessTokenUser1 = null,
   accessTokenUser3 = null,
-
   proposalPid1 = null,
   encodedProposalPid1 = null,
   proposalPid2 = null,

@@ -105,7 +105,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly size?: number = 0;
+  readonly size?: number;
 
   @ApiProperty({
     type: Number,
@@ -116,7 +116,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly packedSize?: number = 0;
+  readonly packedSize?: number;
 
   @ApiProperty({
     type: Number,
@@ -127,7 +127,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly numberOfFiles?: number = 0;
+  readonly numberOfFiles?: number;
 
   @ApiProperty({
     type: Number,
@@ -163,7 +163,7 @@ export class UpdateDatasetDto extends OwnableDto {
     required: false,
     isArray: true,
     description:
-      "Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
+      "Array of metadata entries associated with this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
   })
   @IsOptional()
   @IsString({
