@@ -41,7 +41,11 @@ import { IOrigDatablockFields } from "./interfaces/origdatablocks.interface";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { filterDescription, filterExample, parseDate } from "src/common/utils";
+import {
+  filterDescription,
+  filterExample,
+  parseIfUnmodifiedSince,
+} from "src/common/utils";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateRawDatasetObsoleteDto } from "src/datasets/dto/create-raw-dataset-obsolete.dto";
@@ -527,7 +531,9 @@ export class OrigDatablocksController {
       id,
       Action.OrigdatablockUpdate,
     );
-    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
+    const unmodifiedSince = parseIfUnmodifiedSince(
+      request.headers["if-unmodified-since"],
+    );
     return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
       { _id: id },
       updateOrigDatablockDto,

@@ -2,7 +2,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  PreconditionFailedException,
   BadRequestException,
   Scope,
 } from "@nestjs/common";
@@ -39,7 +38,7 @@ import { ProposalClass, ProposalDocument } from "./schemas/proposal.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateMeasurementPeriodDto } from "./dto/create-measurement-period.dto";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
-import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { findOneAndUpdateWithOCC } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
@@ -277,33 +276,15 @@ export class ProposalsService {
       );
     }
 
-    const filterQuery = withOCCFilter(filter, unmodifiedSince);
-
-    const updatedProposal = await this.proposalModel
-      .findOneAndUpdate(
-        filterQuery,
-        {
-          $set: {
-            ...addUpdatedByField(updateProposalDto, username),
-          },
-        },
-        {
-          new: true, // Return the modified document
-          runValidators: true, // Run validators on update
-        },
-      )
-      .exec();
-
-    if (!updatedProposal) {
-      if (!unmodifiedSince) {
-        throw new NotFoundException(
-          `Proposal not found with filter: ${JSON.stringify(filter)}`,
-        );
-      }
-      throw new PreconditionFailedException(
-        `Proposal ${filter.proposalId} has been modified on server since ${unmodifiedSince.toISOString()}`,
-      );
-    }
+    const updatedProposal = await findOneAndUpdateWithOCC(
+      this.proposalModel,
+      filter,
+      addUpdatedByField(updateProposalDto, username),
+      unmodifiedSince,
+      `Proposal not found with filter: ${JSON.stringify(filter)}`,
+      `Proposal ${filter.proposalId} has been modified on server since ${unmodifiedSince?.toISOString()}`,
+      { runValidators: true },
+    );
 
     await this.metadataKeysService.replaceManyFromSource(
       createMetadataKeysInstance(

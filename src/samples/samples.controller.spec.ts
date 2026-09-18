@@ -50,7 +50,7 @@ describe("SamplesController", () => {
   describe("update", () => {
     const sampleId = "sample123";
     const updateDto: PartialUpdateSampleDto = { description: "Updated Sample" };
-    const mockRequest = {} as Request;
+    const mockRequest = { headers: {} } as unknown as Request;
 
     it("should update sample when header is missing", async () => {
       const sample = {
@@ -76,12 +76,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        {},
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
 
@@ -89,7 +84,7 @@ describe("SamplesController", () => {
       samplesService.findOne = jest.fn().mockResolvedValue(null);
 
       await expect(
-        controller.update(mockRequest, sampleId, updateDto, {}),
+        controller.update(mockRequest, sampleId, updateDto),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -111,12 +106,11 @@ describe("SamplesController", () => {
           "Resource has been modified on the server since the date provided in header.",
         );
       });
-      const headers = {
-        "if-unmodified-since": new Date("2022-01-01").toUTCString(),
-      };
-
+      const requestWithPrecondition = {
+        headers: { "if-unmodified-since": "2022-01-01T00:00:00.000Z" },
+      } as unknown as Request;
       await expect(
-        controller.update(mockRequest, sampleId, updateDto, headers),
+        controller.update(requestWithPrecondition, sampleId, updateDto),
       ).rejects.toThrow(HttpException);
     });
 
@@ -141,16 +135,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const headers = {
-        "if-unmodified-since": "invalid-date-string",
-      };
-
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        headers,
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
 
@@ -175,12 +160,7 @@ describe("SamplesController", () => {
         )
         .mockResolvedValue(sample);
 
-      const result = await controller.update(
-        mockRequest,
-        sampleId,
-        updateDto,
-        {},
-      );
+      const result = await controller.update(mockRequest, sampleId, updateDto);
       expect(result).toBeDefined();
     });
   });

@@ -4,7 +4,6 @@ import {
   Scope,
   ForbiddenException,
   NotFoundException,
-  PreconditionFailedException,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -47,7 +46,7 @@ import {
 } from "./types/origdatablock-lookup";
 import { isEmpty } from "lodash";
 import { CountApiResponse } from "src/common/types";
-import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { findOneAndUpdateWithOCC } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class OrigDatablocksService {
@@ -350,27 +349,17 @@ export class OrigDatablocksService {
     unmodifiedSince?: Date,
   ): Promise<OrigDatablock | null> {
     const username = (this.request.user as JWTUser).username;
-    let filter: FilterQuery<OrigDatablockDocument> = { _id: id };
-    filter = withOCCFilter(filter, unmodifiedSince);
-    const patchedOrigDatablock = await this.origDatablockModel
-      .findOneAndUpdate(
-        filter,
-        addUpdatedByField(
-          updateDatasetDto as UpdateQuery<OrigDatablockDocument>,
-          username,
-        ),
-        { new: true },
-      )
-      .exec();
-    if (!patchedOrigDatablock) {
-      if (!unmodifiedSince) {
-        throw new NotFoundException(`OrigDatablock #${id} not found`);
-      }
-      throw new PreconditionFailedException(
-        `OrigDatablock #${id} has been modified on server since ${unmodifiedSince.toUTCString()}`,
-      );
-    }
-    return patchedOrigDatablock;
+    return findOneAndUpdateWithOCC(
+      this.origDatablockModel,
+      { _id: id },
+      addUpdatedByField(
+        updateDatasetDto as UpdateQuery<OrigDatablockDocument>,
+        username,
+      ),
+      unmodifiedSince,
+      `OrigDatablock #${id} not found`,
+      `OrigDatablock #${id} has been modified on server since ${unmodifiedSince?.toUTCString()}`,
+    );
   }
 
   async count(

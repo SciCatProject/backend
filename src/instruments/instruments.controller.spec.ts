@@ -9,6 +9,7 @@ import {
   PreconditionFailedException,
 } from "@nestjs/common";
 import { MongoError } from "mongodb";
+import { Request } from "express";
 
 class InstrumentsServiceMock {
   findOne = jest.fn();
@@ -46,14 +47,17 @@ describe("InstrumentsController", () => {
     expect(controller).toBeDefined();
   });
 
+  const requestWithHeaders = (headers: Record<string, string> = {}) =>
+    ({ headers }) as unknown as Request;
+
   it("should throw NotFoundException if instrument not found", async () => {
     service.findOneAndUpdate.mockImplementation(() => {
       throw new NotFoundException("Instrument not found");
     });
 
-    await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      controller.update(requestWithHeaders(), "123", mockUpdateDto),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it("should update if header is missing", async () => {
@@ -63,7 +67,11 @@ describe("InstrumentsController", () => {
       ...mockUpdateDto,
     });
 
-    const result = await controller.update("123", mockUpdateDto, {});
+    const result = await controller.update(
+      requestWithHeaders(),
+      "123",
+      mockUpdateDto,
+    );
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
@@ -77,17 +85,21 @@ describe("InstrumentsController", () => {
       throw new PreconditionFailedException("Resource has been modified");
     });
 
-    const headers = {
-      "if-unmodified-since": "2025-09-01T09:00:00Z",
-    };
+    const unmodifiedSince = new Date("2025-09-01T09:00:00.000Z");
 
     await expect(
-      controller.update("123", mockUpdateDto, headers),
+      controller.update(
+        requestWithHeaders({
+          "if-unmodified-since": unmodifiedSince.toISOString(),
+        }),
+        "123",
+        mockUpdateDto,
+      ),
     ).rejects.toThrow(PreconditionFailedException);
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
       mockUpdateDto,
-      new Date("2025-09-01T09:00:00Z"),
+      unmodifiedSince,
     );
   });
 
@@ -98,16 +110,20 @@ describe("InstrumentsController", () => {
       ...mockUpdateDto,
     });
 
-    const headers = {
-      "if-unmodified-since": "2025-09-02T10:00:00Z",
-    };
+    const unmodifiedSince = new Date("2025-09-02T10:00:00.000Z");
 
-    const result = await controller.update("123", mockUpdateDto, headers);
+    const result = await controller.update(
+      requestWithHeaders({
+        "if-unmodified-since": unmodifiedSince.toISOString(),
+      }),
+      "123",
+      mockUpdateDto,
+    );
     expect(result).toEqual({ ...mockInstrument, ...mockUpdateDto });
     expect(service.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: "123" }),
       mockUpdateDto,
-      new Date("2025-09-02T10:00:00Z"),
+      unmodifiedSince,
     );
   });
 
@@ -115,8 +131,8 @@ describe("InstrumentsController", () => {
     service.findOne.mockResolvedValue(mockInstrument);
     service.findOneAndUpdate.mockRejectedValue({ code: 11000 } as MongoError);
 
-    await expect(controller.update("123", mockUpdateDto, {})).rejects.toThrow(
-      ConflictException,
-    );
+    await expect(
+      controller.update(requestWithHeaders(), "123", mockUpdateDto),
+    ).rejects.toThrow(ConflictException);
   });
 });

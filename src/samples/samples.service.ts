@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  Scope,
-  NotFoundException,
-  PreconditionFailedException,
-} from "@nestjs/common";
+import { Injectable, Inject, Scope, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -28,7 +22,7 @@ import { SampleClass, SampleDocument } from "./schemas/sample.schema";
 import { CountApiResponse } from "src/common/types";
 import { OutputSampleDto } from "./dto/output-sample.dto";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
-import { withOCCFilter } from "src/datasets/utils/occ-util";
+import { findOneAndUpdateWithOCC } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class SamplesService {
@@ -179,32 +173,15 @@ export class SamplesService {
 
     const updateData = addUpdatedByField(updateSampleDto, username);
 
-    const updateDataMongoose = {
-      ...updateData,
-      updatedBy: username,
-      updatedAt: new Date(),
-    };
-
-    const filterQuery = withOCCFilter(filter, unmodifiedSince);
-
-    const updatedSample = await this.sampleModel
-      .findOneAndUpdate(
-        filterQuery,
-        { $set: updateDataMongoose },
-        { new: true, runValidators: true },
-      )
-      .exec();
-
-    if (!updatedSample) {
-      if (!unmodifiedSince) {
-        throw new NotFoundException(
-          `Sample not found with filter: ${JSON.stringify(filter)}`,
-        );
-      }
-      throw new PreconditionFailedException(
-        `Sample #${filter.sampleId} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
-      );
-    }
+    const updatedSample = await findOneAndUpdateWithOCC(
+      this.sampleModel,
+      filter,
+      updateData,
+      unmodifiedSince,
+      `Sample not found with filter: ${JSON.stringify(filter)}`,
+      `Sample #${filter.sampleId} has been modified on the server since ${unmodifiedSince?.toUTCString()}.`,
+      { runValidators: true },
+    );
 
     await this.metadataKeysService.replaceManyFromSource(
       createMetadataKeysInstance(
