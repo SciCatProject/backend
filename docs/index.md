@@ -165,7 +165,6 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`METADATA_KEYS_RETURN_LIMIT`| number | Yes | The return limit for the`/Datasets/metadataKeys`endpoint. | |
 |`METADATA_PARENT_INSTANCES_RETURN_LIMIT`| number | Yes | The return limit of Datasets to extract metadata keys from for the`/Datasets/metadataKeys`endpoint. | |
 |`MONGODB_URI`| string | | The URI for your MongoDB instance. | |
-|`OAI_PROVIDER_ROUTE`| string | Yes | URI to OAI provider, used for the`/publisheddata/:id/resync`endpoint. | |
 |`PID_PREFIX`| string | | The facility PID prefix, with trailing slash. | |
 |`PUBLIC_URL_PREFIX`| string | | The base URL to the facility Landing Page. | |
 |`PORT`| number | Yes | The port on which you want to access the app. | 3000 |
