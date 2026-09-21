@@ -67,7 +67,7 @@ describe("1300: Policy: Simple Policy tests", () => {
       .send(testdataset)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.CreationForbiddenStatusCode)
+      .expect(TestData.CreationForbiddenStatusCode);
   });
 
   it("0040: should delete this policy", async () => {

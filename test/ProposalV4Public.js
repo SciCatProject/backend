@@ -40,7 +40,10 @@ describe("3100: Proposals v4 public tests", () => {
 
     // Create some published proposals for testing
     const uniqueId1 = `${ProposalCorrectPublishedV4_1.proposalId}-${uuidv4()}`;
-    const proposalToCreate1 = { ...ProposalCorrectPublishedV4_1, proposalId: uniqueId1 };
+    const proposalToCreate1 = {
+      ...ProposalCorrectPublishedV4_1,
+      proposalId: uniqueId1,
+    };
     const response1 = await request(appUrl)
       .post("/api/v4/proposals")
       .send(proposalToCreate1)
@@ -49,7 +52,10 @@ describe("3100: Proposals v4 public tests", () => {
     proposalIdPublished1 = response1.body.proposalId;
 
     const uniqueId2 = `${ProposalCorrectPublishedV4_2.proposalId}-${uuidv4()}`;
-    const proposalToCreate2 = { ...ProposalCorrectPublishedV4_2, proposalId: uniqueId2 };
+    const proposalToCreate2 = {
+      ...ProposalCorrectPublishedV4_2,
+      proposalId: uniqueId2,
+    };
     const response2 = await request(appUrl)
       .post("/api/v4/proposals")
       .send(proposalToCreate2)
@@ -99,7 +105,9 @@ describe("3100: Proposals v4 public tests", () => {
         .then((res) => {
           assert(Array.isArray(res.body));
           res.body.should.have.lengthOf(1);
-          res.body[0].should.have.property("proposalId").and.equal(proposalIdPublished1);
+          res.body[0].should.have
+            .property("proposalId")
+            .and.equal(proposalIdPublished1);
         });
     });
 
@@ -197,7 +205,9 @@ describe("3100: Proposals v4 public tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(proposalIdPublished1);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(proposalIdPublished1);
         });
     });
 
@@ -213,7 +223,9 @@ describe("3100: Proposals v4 public tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(proposalIdPublished2);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(proposalIdPublished2);
         });
     });
   });
@@ -221,22 +233,33 @@ describe("3100: Proposals v4 public tests", () => {
   describe("Proposals v4 public findById tests", () => {
     it("3100:0500: should get public proposal by proposalId without auth", async () => {
       return request(appUrl)
-        .get("/api/v4/proposals/public/" + encodeURIComponent(proposalIdPublished1))
+        .get(
+          "/api/v4/proposals/public/" +
+            encodeURIComponent(proposalIdPublished1),
+        )
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(proposalIdPublished1);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(proposalIdPublished1);
           res.body.should.have.property("isPublished").and.equal(true);
         });
     });
 
     it("3100:0501: should get public proposal with include without auth", async () => {
       return request(appUrl)
-        .get("/api/v4/proposals/public/" + encodeURIComponent(proposalIdPublished2) + "?include=samples")
+        .get(
+          "/api/v4/proposals/public/" +
+            encodeURIComponent(proposalIdPublished2) +
+            "?include=samples",
+        )
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(proposalIdPublished2);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(proposalIdPublished2);
           res.body.should.have.property("isPublished").and.equal(true);
         });
     });
@@ -260,7 +283,10 @@ describe("3100: Proposals v4 public tests", () => {
 
       // Try to get it via public endpoint - should not be found
       return request(appUrl)
-        .get("/api/v4/proposals/public/" + encodeURIComponent(unpublishedProposal.proposalId))
+        .get(
+          "/api/v4/proposals/public/" +
+            encodeURIComponent(unpublishedProposal.proposalId),
+        )
         .expect(TestData.NotFoundStatusCode);
     });
 
@@ -284,7 +310,9 @@ describe("3100: Proposals v4 public tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           assert(Array.isArray(res.body));
-          res.body.every(p => p.title && p.title.toLowerCase().includes("public")).should.be.true;
+          res.body.every(
+            (p) => p.title && p.title.toLowerCase().includes("public"),
+          ).should.be.true;
         });
     });
 

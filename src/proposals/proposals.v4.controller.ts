@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -18,7 +17,6 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
-  UsePipes,
   ClassSerializerInterceptor,
   SerializeOptions,
 } from "@nestjs/common";

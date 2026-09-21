@@ -51,7 +51,6 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateMeasurementPeriodDto } from "./dto/create-measurement-period.dto";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { withOCCFilter } from "src/datasets/utils/occ-util";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProposalsService {
@@ -393,7 +392,8 @@ export class ProposalsService {
     pipeline: PipelineStage[],
     proposalLookupFields?: ProposalLookupKeysEnumV4[],
   ): string[] {
-    const { relations } = this.extractRelationsAndScopesV4(proposalLookupFields);
+    const { relations } =
+      this.extractRelationsAndScopesV4(proposalLookupFields);
 
     const addedRelations: string[] = [];
     for (const field of relations) {
