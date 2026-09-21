@@ -10,7 +10,6 @@ let accessTokenAdminIngestor = null,
   accessTokenUser2 = null,
   accessTokenUser3 = null,
   accessTokenArchiveManager = null,
-
   groupedDatasets = {
     1: [],
     2: [],

@@ -5,7 +5,6 @@ const { TestData } = require("./TestData");
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
-
   datasetId = null,
   ownerGroup = null,
   datablockId = null,
@@ -39,7 +38,7 @@ describe("Datablocks", () => {
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
 
     await request(appUrl)
       .post("/api/v3/Datasets")
@@ -150,9 +149,7 @@ describe("Datablocks", () => {
         .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
-        .then((res) =>
-          res.body.should.have.property("count").and.equal(1)
-        );
+        .then((res) => res.body.should.have.property("count").and.equal(1));
     });
   });
 
@@ -178,7 +175,10 @@ describe("Datablocks", () => {
 
   ["datablockId", "datablockId2"].forEach((dbId, index) => {
     it(`005${(index + 1) * 3}: should fetch datablock by id`, async () => {
-      const datablocks = { datablockId: datablockId, datablockId2: datablockId2 };
+      const datablocks = {
+        datablockId: datablockId,
+        datablockId2: datablockId2,
+      };
       const id = datablocks[dbId];
       return request(appUrl)
         .get(`/api/v3/datablocks/${encodeURIComponent(id)}`)
@@ -186,9 +186,7 @@ describe("Datablocks", () => {
         .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
-        .then((res) =>
-          res.body.should.have.property("id").and.equal(id)
-        );
+        .then((res) => res.body.should.have.property("id").and.equal(id));
     });
   });
 
@@ -200,15 +198,11 @@ describe("Datablocks", () => {
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.have
-          .property("size")
-          .and.equal(0);
+        res.body.should.have.property("size").and.equal(0);
         res.body.should.have
           .property("packedSize")
           .and.equal(TestData.DataBlockCorrect.packedSize * 2);
-        res.body.should.have
-          .property("numberOfFiles")
-          .and.equal(0);
+        res.body.should.have.property("numberOfFiles").and.equal(0);
         res.body.should.have
           .property("numberOfFilesArchived")
           .and.equal(TestData.DataBlockCorrect.dataFileList.length * 2);
@@ -217,7 +211,10 @@ describe("Datablocks", () => {
 
   ["datablockId", "datablockId2"].forEach((dbId, index) => {
     it(`006${(index + 1) * 3}: should update datablock by id`, async () => {
-      const datablocks = { datablockId: datablockId, datablockId2: datablockId2 };
+      const datablocks = {
+        datablockId: datablockId,
+        datablockId2: datablockId2,
+      };
       const version = `new-version-${index}`;
       return request(appUrl)
         .patch(`/api/v3/datablocks/${encodeURIComponent(datablocks[dbId])}`)
@@ -227,7 +224,7 @@ describe("Datablocks", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) =>
-          res.body.should.have.property("version").and.equal(version)
+          res.body.should.have.property("version").and.equal(version),
         );
     });
   });
@@ -305,15 +302,11 @@ describe("Datablocks", () => {
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.have
-          .property("size")
-          .and.equal(0);
+        res.body.should.have.property("size").and.equal(0);
         res.body.should.have
           .property("packedSize")
           .and.equal(TestData.DataBlockCorrect.packedSize);
-        res.body.should.have
-          .property("numberOfFiles")
-          .and.equal(0);
+        res.body.should.have.property("numberOfFiles").and.equal(0);
         res.body.should.have
           .property("numberOfFilesArchived")
           .and.equal(TestData.DataBlockCorrect.dataFileList.length);
