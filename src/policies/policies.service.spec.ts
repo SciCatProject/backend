@@ -301,10 +301,34 @@ describe("PoliciesService", () => {
       expect(pipeline[0]).toEqual({
         $match: { supersededBy: { $exists: false } },
       });
-      expect(pipeline[1]).toMatchObject({ $group: { _id: "$ownerGroup" } });
-      expect(pipeline[3]).toEqual({ $sort: { sortValue: -1 } });
+      expect(pipeline[1]).toEqual({ $sort: { ownerGroup: -1 } });
+      expect(pipeline[2]).toMatchObject({ $group: { _id: "$ownerGroup" } });
+      expect(pipeline).toContainEqual({ $sort: { sortValue: -1 } });
       expect(pipeline).toContainEqual({ $skip: 10 });
       expect(pipeline).toContainEqual({ $limit: 5 });
+    });
+
+    it("0225: sorts the live documents by the requested field before grouping, so $first is deterministic", async () => {
+      policyModel.aggregate.mockReturnValue(execResolving([]));
+
+      await service.findAll({
+        limits: { order: "updatedAt:asc" },
+      });
+
+      const [pipeline] = policyModel.aggregate.mock.calls[0];
+      const groupIndex = pipeline.findIndex(
+        (stage: Record<string, unknown>) => "$group" in stage,
+      );
+      const preGroupSortIndex = pipeline.findIndex(
+        (stage: Record<string, unknown>) =>
+          "$sort" in stage &&
+          "updatedAt" in (stage.$sort as Record<string, unknown>),
+      );
+      expect(preGroupSortIndex).toBeGreaterThanOrEqual(0);
+      expect(preGroupSortIndex).toBeLessThan(groupIndex);
+      expect(pipeline[preGroupSortIndex]).toEqual({
+        $sort: { updatedAt: 1 },
+      });
     });
 
     it("0230: drops ownerGroups with no archive/retrieve document before pagination, not after", async () => {

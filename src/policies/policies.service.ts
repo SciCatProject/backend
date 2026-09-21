@@ -140,6 +140,7 @@ export class PoliciesService implements OnModuleInit {
 
     const pipeline: PipelineStage[] = [
       { $match: liveFilter(where) },
+      { $sort: parsePipelineSort({ [sortField]: sortDirection }) },
       {
         $group: {
           _id: "$ownerGroup",
