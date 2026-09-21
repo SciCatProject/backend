@@ -19,6 +19,8 @@ import { PolicyAbility } from "./abilities/policies.ability";
 import { ProposalAbility } from "./abilities/proposals.ability";
 import { PublishedDataAbility } from "./abilities/published-data.ability";
 import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { SampleAbility } from "./abilities/samples.ability";
+import { SseAbility } from "./abilities/sse.ability";
 import { UserAbility } from "./abilities/users.ability";
 
 describe("CaslAbilityFactory", () => {
@@ -26,8 +28,6 @@ describe("CaslAbilityFactory", () => {
     const configService = new ConfigService();
     expect(
       new CaslAbilityFactory(
-        configService,
-        new JobConfigService({}, {}, configService),
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
@@ -45,6 +45,8 @@ describe("CaslAbilityFactory", () => {
         new ProposalAbility(configService),
         new PublishedDataAbility(configService),
         new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
         new UserAbility(configService),
       ),
     ).toBeDefined();
@@ -66,7 +68,6 @@ describe("CaslAbilityFactory", () => {
             : undefined,
       } as unknown as ConfigService;
       return new CaslAbilityFactory(
-        configService,
         new AttachmentAbility(configService),
         new DatablockAbility(configService),
         new DatasetAbility(configService),
@@ -83,6 +84,8 @@ describe("CaslAbilityFactory", () => {
         new ProposalAbility(configService),
         new PublishedDataAbility(configService),
         new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
         new UserAbility(configService),
       );
     };
