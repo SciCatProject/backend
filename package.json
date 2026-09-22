@@ -20,7 +20,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "start:test": "dotenv -o -e test/config/.env -e test/config/.env.override -- npm run start",
+    "start:test": "dotenv run --override -f test/config/.env -- npm run start",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\"  \"test/**/*.js\" --fix",
     "test": "jest",
@@ -28,8 +28,8 @@
     "test:cov": "jest --coverage --maxWorkers=50%",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:api": "npm run test:api:jest --maxWorkers=50% && concurrently -k -s first \"wait-on http://localhost:3000/explorer/ && npm run test:api:mocha\" \"npm run start:test\"",
-    "test:api:jest": "dotenv -o -e test/config/.env -e test/config/.env.override -- jest --config ./test/config/jest-e2e.json --maxWorkers=50%",
-    "test:api:mocha": "dotenv -o -e test/config/.env -e test/config/.env.override -- mocha --config ./test/config/.mocharc.js -r chai/register-should.js",
+    "test:api:jest": "dotenv run --override -f test/config/.env -- jest --config ./test/config/jest-e2e.json --maxWorkers=50%",
+    "test:api:mocha": "dotenv run --override -f test/config/.env -- mocha --config ./test/config/.mocharc.js -r chai/register-should.js",
     "prepare:local": "docker-compose -f CI/E2E/docker-compose-local.yaml up  -d && cp test/config/functionalAccounts.json functionalAccounts.json && cp proposalTypes.example.json proposalTypes.json && cp publishedDataConfig.example.json publishedDataConfig.json"
   },
   "dependencies": {
@@ -61,7 +61,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "connect-mongo": "^6.0.0",
-    "dotenv": "^17.2.0",
+    "dotenv": "^18.0.1",
     "express-session": "^1.17.3",
     "handlebars": "^4.7.7",
     "js-yaml": "^5.4.1",

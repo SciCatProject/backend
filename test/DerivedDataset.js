@@ -7,7 +7,6 @@ let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
-
   pid = null,
   minPid = null,
   explicitPid = null;
@@ -221,7 +220,11 @@ describe("0700: DerivedDataset: Derived Datasets", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("valid").and.equal(false);
-        res.body.should.have.property("error").and.equal("each value in inputDatasets must be a string; each value in usedSoftware must be a string");
+        res.body.should.have
+          .property("error")
+          .and.equal(
+            "each value in inputDatasets must be a string; each value in usedSoftware must be a string",
+          );
       });
   });
 

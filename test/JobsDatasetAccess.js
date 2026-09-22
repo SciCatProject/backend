@@ -7,11 +7,9 @@ let accessTokenAdminIngestor = null,
   accessTokenUser3 = null,
   accessTokenUser51 = null,
   accessTokenAdmin = null,
-
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,
-
   jobId1 = null,
   encodedJobOwnedByAdmin = null,
   jobId2 = null,
@@ -344,7 +342,9 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User does not have access to all datasets, cannot create job.");
+          .and.be.equal(
+            "User does not have access to all datasets, cannot create job.",
+          );
       });
   });
 
@@ -425,7 +425,9 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User does not have access to all datasets, cannot create job.");
+          .and.be.equal(
+            "User does not have access to all datasets, cannot create job.",
+          );
       });
   });
 
@@ -471,7 +473,9 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User does not have access to all datasets, cannot create job.");
+          .and.be.equal(
+            "User does not have access to all datasets, cannot create job.",
+          );
       });
   });
 
@@ -520,7 +524,9 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User does not have access to all datasets, cannot create job.");
+          .and.be.equal(
+            "User does not have access to all datasets, cannot create job.",
+          );
       });
   });
 
@@ -579,7 +585,9 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("User does not have access to all datasets, cannot create job.");
+          .and.be.equal(
+            "User does not have access to all datasets, cannot create job.",
+          );
       });
   });
 

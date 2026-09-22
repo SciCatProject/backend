@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
-
   datasetPid = null,
   datablockId = null,
   datablockId2 = null;
@@ -198,7 +197,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
         ownerGroup: TestData.Accounts.user1.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     const filter = {
       where: {
@@ -214,19 +213,16 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne?filter=" +
-        encodeURIComponent(JSON.stringify(filter))
+          encodeURIComponent(JSON.stringify(filter)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.datablocks.should.be
-          .instanceof(Array)
-          .and.to.have.length(2);
+        res.body.datablocks.should.be.instanceof(Array).and.to.have.length(2);
       });
   });
-
 
   it("0080: The size and numFiles fields in the dataset should be correctly updated", async () => {
     return request(appUrl)
@@ -289,7 +285,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
     const datasetPid2 = encodeURIComponent(dataset2.body["pid"]);
 
     await request(appUrl)
@@ -298,7 +294,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
 
     await request(appUrl)
       .post(`/api/v3/datasets/${datasetPid2}/Datablocks`)
@@ -306,7 +302,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
 
     await request(appUrl)
       .get(`/api/v3/Datasets/${datasetPid2}`)
@@ -316,7 +312,9 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("packedSize").and.be.greaterThan(0);
-        res.body.should.have.property("numberOfFilesArchived").and.be.greaterThan(0);
+        res.body.should.have
+          .property("numberOfFilesArchived")
+          .and.be.greaterThan(0);
       });
 
     await request(appUrl)
@@ -350,7 +348,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .delete(`/api/v3/datasets/${datasetPid}/Datablocks/${datablockId}`)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
+      .expect(TestData.SuccessfulDeleteStatusCode);
   });
 
   it("0100: The size and numFiles fields in the dataset should be correctly updated", async () => {
@@ -375,7 +373,7 @@ describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw D
       .delete(`/api/v3/datasets/${datasetPid}/Datablocks/${datablockId2}`)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
+      .expect(TestData.SuccessfulDeleteStatusCode);
   });
 
   it("0120: The size and numFiles fields in the dataset should be correctly updated", async () => {
