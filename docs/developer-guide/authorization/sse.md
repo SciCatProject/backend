@@ -43,12 +43,12 @@ Legend:
 
 The definition is implemented in the casl module under `/src/casl/abilities/sse.ability.ts` and accessible elsewhere via `CaslAbilityFactory.sseAccess`. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.
 
-Unlike other subjects, the casl ability alone does not express the full model. `SseRead` is granted unconditionally to every authenticated user, so endpoint authorization admits anyone logged in. The document-level restriction shown as `own` above is enforced separately in `SseService.emit`, which tests each outgoing document against each connected user before delivering it. Group membership is evaluated against the user captured when the connection opened, so changes take effect on the next connection rather than immediately.
+Unlike other subjects, the casl ability alone does not express the full model. `Read` is granted unconditionally to every authenticated user, so endpoint authorization admits anyone logged in. The document-level restriction shown as `own` above is enforced separately in `SseService.emit`, which tests each outgoing document against each connected user before delivering it. Group membership is evaluated against the user captured when the connection opened, so changes take effect on the next connection rather than immediately.
 
 `SseClass` is an empty marker class rather than a schema. Server-sent events have no persisted document, so it exists only to give casl a subject to attach grants to.
 
 ## Authentication Notes
 
-The stream endpoint authenticates differently from the rest of the API. `EventSource` cannot set request headers, so `GET /events/stream` accepts a ticket as a query parameter instead of a bearer token. The ticket is a JWT carrying `purpose: "sse"`, minted by `POST /events/ticket`, which is itself guarded by `SseRead`. Authorization is therefore evaluated twice against the same rules, once when the ticket is issued and again when the stream is opened.
+The stream endpoint authenticates differently from the rest of the API. `EventSource` cannot set request headers, so `GET /events/stream` accepts a ticket as a query parameter instead of a bearer token. The ticket is a JWT carrying `purpose: "sse"`, minted by `POST /events/ticket`, which is itself guarded by `Read`. Authorization is therefore evaluated twice against the same rules, once when the ticket is issued and again when the stream is opened.
 
 `JwtStrategy.validate` rejects a ticket presented on any other route, and rejects a normal bearer token on the stream route. The first direction is a security property: a credential in a URL reaches access logs and browser history, so it must be useless elsewhere. The second is a consistency choice that makes the ticket the only way to open a stream.

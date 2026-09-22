@@ -1,14 +1,21 @@
 export enum Action {
+  // "manage" is a special casl term that will work as a wildcard for any action when granted
+  // Should only ever be given at admin level
   Manage = "manage",
+
+  // Generic CRUD actions
   Create = "create",
   Read = "read",
   Update = "update",
   Delete = "delete",
 
-  // ---------------
   // Generic access any action that can be applied to any resource
   // Currently used by addAccessBasedFilters for admin/special group users
   AccessAny = "access_any",
+
+  // ---------------
+  // Special actions for each collection
+  // ---------------
 
   // Datasets
   DatasetLifecycleUpdate = "dataset_lifecycle_update",
@@ -41,32 +48,12 @@ export enum Action {
 
   ProposalDatasetRead = "proposal_dataset_read",
 
-  // Users
-  UserCreateJwt = "user_create_jwt",
-
-  // -------------------------------------
-  // RuntimeConfig
-  RuntimeConfigRead = "runtimeconfig_read",
-  RuntimeConfigUpdate = "runtimeconfig_update",
-
   // Samples
-  SampleCreate = "sample_create",
-  SampleRead = "sample_read",
-  SampleUpdate = "sample_update",
-  SampleDelete = "sample_delete",
-
   SampleAttachmentCreate = "sample_attachment_create",
   SampleAttachmentRead = "sample_attachment_read",
   SampleAttachmentUpdate = "sample_attachment_update",
   SampleAttachmentDelete = "sample_attachment_delete",
 
-  // Server-Sent Events
-  SseRead = "sse_read",
-
   // Users
-  UserCreate = "user_create",
-  UserRead = "user_read",
-  UserUpdate = "user_update",
-  UserDelete = "user_delete",
   UserCreateJwt = "user_create_jwt",
 }

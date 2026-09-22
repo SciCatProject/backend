@@ -36,7 +36,7 @@ export class SampleAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.SampleRead, SampleClass, ifPublished);
+    can(Action.Read, SampleClass, ifPublished);
     can(Action.SampleAttachmentRead, SampleClass, ifPublished);
 
     if (!user) {
@@ -52,9 +52,9 @@ export class SampleAbility {
     /**
      * Authenticated user
      */
-    can(Action.SampleRead, SampleClass, ifOwner);
-    can(Action.SampleRead, SampleClass, ifAccess);
-    can(Action.SampleRead, SampleClass, ifPublished);
+    can(Action.Read, SampleClass, ifOwner);
+    can(Action.Read, SampleClass, ifAccess);
+    can(Action.Read, SampleClass, ifPublished);
 
     can(Action.SampleAttachmentRead, SampleClass, ifOwner);
     can(Action.SampleAttachmentRead, SampleClass, ifAccess);
@@ -67,8 +67,8 @@ export class SampleAbility {
       /**
        * User belonging to SAMPLE_GROUPS
        */
-      can(Action.SampleCreate, SampleClass, ifOwner);
-      can(Action.SampleUpdate, SampleClass, ifOwner);
+      can(Action.Create, SampleClass, ifOwner);
+      can(Action.Update, SampleClass, ifOwner);
 
       can(Action.SampleAttachmentCreate, SampleClass, ifOwner);
       can(Action.SampleAttachmentUpdate, SampleClass, ifOwner);
@@ -83,8 +83,8 @@ export class SampleAbility {
       /**
        * User belonging to SAMPLE_PRIVILEGED_GROUPS
        */
-      can(Action.SampleCreate, SampleClass);
-      can(Action.SampleUpdate, SampleClass, ifOwner);
+      can(Action.Create, SampleClass);
+      can(Action.Update, SampleClass, ifOwner);
 
       can(Action.SampleAttachmentCreate, SampleClass);
       can(Action.SampleAttachmentUpdate, SampleClass, ifOwner);
@@ -97,9 +97,9 @@ export class SampleAbility {
        */
       can(Action.AccessAny, SampleClass);
 
-      can(Action.SampleCreate, SampleClass);
-      can(Action.SampleRead, SampleClass);
-      can(Action.SampleUpdate, SampleClass);
+      can(Action.Create, SampleClass);
+      can(Action.Read, SampleClass);
+      can(Action.Update, SampleClass);
 
       can(Action.SampleAttachmentCreate, SampleClass);
       can(Action.SampleAttachmentRead, SampleClass);
@@ -113,7 +113,7 @@ export class SampleAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.SampleDelete, SampleClass);
+      can(Action.Delete, SampleClass);
       can(Action.SampleAttachmentDelete, SampleClass);
     }
 
