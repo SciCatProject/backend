@@ -6,7 +6,6 @@ let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
   accessTokenUser2 = null,
-
   pidRaw1 = null,
   pidRaw2 = null,
   rawDatasetWithMetadataPid = null,

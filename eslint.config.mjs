@@ -55,6 +55,8 @@ export default [
 
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-inferrable-types": "error",
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
 
       quotes: [
         "error",

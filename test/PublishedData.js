@@ -5,7 +5,6 @@ const sandbox = require("sinon").createSandbox();
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   idOrigDatablock = null,
   pid = null,
   pidnonpublic = null,
@@ -58,23 +57,53 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        res.body.should.have.property("affiliation").and.equal(publishedData.affiliation);
-        res.body.should.have.property("creator").and.deep.equal(publishedData.creator);
-        res.body.should.have.property("publisher").and.equal(publishedData.publisher);
-        res.body.should.have.property("publicationYear").and.equal(publishedData.publicationYear);
+        res.body.should.have
+          .property("affiliation")
+          .and.equal(publishedData.affiliation);
+        res.body.should.have
+          .property("creator")
+          .and.deep.equal(publishedData.creator);
+        res.body.should.have
+          .property("publisher")
+          .and.equal(publishedData.publisher);
+        res.body.should.have
+          .property("publicationYear")
+          .and.equal(publishedData.publicationYear);
         res.body.should.have.property("title").and.equal(publishedData.title);
         res.body.should.have.property("url").and.equal(publishedData.url);
-        res.body.should.have.property("abstract").and.equal(publishedData.abstract);
-        res.body.should.have.property("dataDescription").and.equal(publishedData.dataDescription);
-        res.body.should.have.property("resourceType").and.equal(publishedData.resourceType);
-        res.body.should.have.property("numberOfFiles").and.equal(publishedData.numberOfFiles);
-        res.body.should.have.property("sizeOfArchive").and.equal(publishedData.sizeOfArchive);
-        res.body.should.have.property("pidArray").and.deep.equal(publishedData.pidArray);
-        res.body.should.have.property("authors").and.deep.equal(publishedData.authors);
-        res.body.should.have.property("scicatUser").and.equal(publishedData.scicatUser);
-        res.body.should.have.property("thumbnail").and.equal(publishedData.thumbnail);
-        res.body.should.have.property("relatedPublications").and.deep.equal(publishedData.relatedPublications);
-        res.body.should.have.property("downloadLink").and.equal(publishedData.downloadLink);
+        res.body.should.have
+          .property("abstract")
+          .and.equal(publishedData.abstract);
+        res.body.should.have
+          .property("dataDescription")
+          .and.equal(publishedData.dataDescription);
+        res.body.should.have
+          .property("resourceType")
+          .and.equal(publishedData.resourceType);
+        res.body.should.have
+          .property("numberOfFiles")
+          .and.equal(publishedData.numberOfFiles);
+        res.body.should.have
+          .property("sizeOfArchive")
+          .and.equal(publishedData.sizeOfArchive);
+        res.body.should.have
+          .property("pidArray")
+          .and.deep.equal(publishedData.pidArray);
+        res.body.should.have
+          .property("authors")
+          .and.deep.equal(publishedData.authors);
+        res.body.should.have
+          .property("scicatUser")
+          .and.equal(publishedData.scicatUser);
+        res.body.should.have
+          .property("thumbnail")
+          .and.equal(publishedData.thumbnail);
+        res.body.should.have
+          .property("relatedPublications")
+          .and.deep.equal(publishedData.relatedPublications);
+        res.body.should.have
+          .property("downloadLink")
+          .and.equal(publishedData.downloadLink);
         res.body.should.have.property("status").and.equal(publishedData.status);
         doi = encodeURIComponent(res.body["doi"]);
       });
@@ -216,14 +245,18 @@ describe("1600: PublishedData: Test of access to published data", () => {
   it("0066: should fetch published data with filter", async () => {
     const filter = { where: { creator: "New Creator" } };
     await request(appUrl)
-      .get(`/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`)
+      .get(
+        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.length.should.equal(1);
-        res.body[0].should.have.property("creator").and.deep.equal(["New Creator"]);
+        res.body[0].should.have
+          .property("creator")
+          .and.deep.equal(["New Creator"]);
         res.body[0].should.have.property("thumbnail");
       });
     return request(appUrl)
@@ -235,7 +268,9 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.length.should.equal(1);
-        res.body[0].should.have.property("creator").and.deep.equal(["New Creator"]);
+        res.body[0].should.have
+          .property("creator")
+          .and.deep.equal(["New Creator"]);
         res.body[0].should.have.property("thumbnail");
       });
   });
@@ -243,10 +278,12 @@ describe("1600: PublishedData: Test of access to published data", () => {
   it("0067: should fetch published data excluding thumbnail using list", async () => {
     const filter = {
       where: { creator: "New Creator" },
-      fields: { thumbnail: 0, creator: 1 }
+      fields: { thumbnail: 0, creator: 1 },
     };
     return request(appUrl)
-      .get(`/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`)
+      .get(
+        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
@@ -261,7 +298,9 @@ describe("1600: PublishedData: Test of access to published data", () => {
     const filter = { where: { creator: "New Creator" } };
     filter.fields = { creator: 1 };
     await request(appUrl)
-      .get(`/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`)
+      .get(
+        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
@@ -272,7 +311,9 @@ describe("1600: PublishedData: Test of access to published data", () => {
       });
     filter.fields = ["creator"];
     return request(appUrl)
-      .get(`/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`)
+      .get(
+        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
@@ -436,10 +477,10 @@ describe("1600: PublishedData: Test of access to published data", () => {
     return request(appUrl)
       .get(
         "/api/v3/Datasets/fullquery" +
-        "?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          "?fields=" +
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)
@@ -460,10 +501,10 @@ describe("1600: PublishedData: Test of access to published data", () => {
     return request(appUrl)
       .get(
         "/api/v3/Datasets/fullquery" +
-        "?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          "?fields=" +
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)
@@ -498,10 +539,10 @@ describe("1600: PublishedData: Test of access to published data", () => {
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne" +
-        "?filter=" +
-        encodeURIComponent(JSON.stringify(filter)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          "?filter=" +
+          encodeURIComponent(JSON.stringify(filter)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .expect(TestData.SuccessfulGetStatusCode)
@@ -557,5 +598,271 @@ describe("1600: PublishedData: Test of access to published data", () => {
       .set("Accept", "application/json")
       .expect(TestData.NotFoundStatusCode)
       .expect("Content-Type", /json/);
+  });
+});
+
+describe("1601: PublishedData: Test of access scope and update guard on v3 endpoints", () => {
+  let accessTokenAdmin = null,
+    accessTokenUser1 = null,
+    accessTokenUser2 = null,
+    doiUser1 = null,
+    doiUser1Registered = null,
+    doiAdminRegistered = null;
+
+  const user1PublishedData = {
+    ...TestData.PublishedData,
+    pidArray: [],
+    title: "User1 published data",
+  };
+
+  before(async () => {
+    db.collection("PublishedData").deleteMany({});
+
+    accessTokenAdmin = await utils.getToken(appUrl, {
+      username: "admin",
+      password: TestData.Accounts["admin"]["password"],
+    });
+
+    accessTokenUser1 = await utils.getToken(appUrl, {
+      username: "user1",
+      password: TestData.Accounts["user1"]["password"],
+    });
+
+    accessTokenUser2 = await utils.getToken(appUrl, {
+      username: "user2",
+      password: TestData.Accounts["user2"]["password"],
+    });
+  });
+
+  afterEach((done) => {
+    sandbox.restore();
+    done();
+  });
+
+  it("0010: adds a published data as user1", async () => {
+    return request(appUrl)
+      .post("/api/v3/PublishedData")
+      .send(user1PublishedData)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("status").and.equal(defaultStatus);
+        doiUser1 = encodeURIComponent(res.body["doi"]);
+      });
+  });
+
+  it("0020: should fetch the published data as its owner", async () => {
+    return request(appUrl)
+      .get("/api/v3/PublishedData/" + doiUser1)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("title")
+          .and.equal(user1PublishedData.title);
+      });
+  });
+
+  it("0030: should not fetch the published data of another user in private state", async () => {
+    return request(appUrl)
+      .get("/api/v3/PublishedData/" + doiUser1)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.NotFoundStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0040: should fetch the published data of another user as admin", async () => {
+    return request(appUrl)
+      .get("/api/v3/PublishedData/" + doiUser1)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0050: should not list or count the published data of another user in private state", async () => {
+    await request(appUrl)
+      .get("/api/v3/PublishedData")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array).and.to.have.length(0);
+      });
+    return request(appUrl)
+      .get("/api/v3/PublishedData/count")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.count.should.equal(0);
+      });
+  });
+
+  it("0060: should list and count own published data in private state", async () => {
+    await request(appUrl)
+      .get("/api/v3/PublishedData")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array).and.to.have.length(1);
+        res.body[0].should.have
+          .property("title")
+          .and.equal(user1PublishedData.title);
+      });
+    return request(appUrl)
+      .get("/api/v3/PublishedData/count")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.count.should.equal(1);
+      });
+  });
+
+  it("0070: should not update the published data of another user", async () => {
+    await request(appUrl)
+      .patch("/api/v3/PublishedData/" + doiUser1)
+      .send({ title: "Updated by user2" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.NotFoundStatusCode)
+      .expect("Content-Type", /json/);
+    return request(appUrl)
+      .get("/api/v3/PublishedData/" + doiUser1)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.have
+          .property("title")
+          .and.equal(user1PublishedData.title);
+      });
+  });
+
+  it("0080: should update own published data in private state", async () => {
+    return request(appUrl)
+      .patch("/api/v3/PublishedData/" + doiUser1)
+      .send({ title: "Updated by user1" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("title").and.equal("Updated by user1");
+      });
+  });
+
+  it("0090: should not register the published data of another user", async () => {
+    return request(appUrl)
+      .post("/api/v3/PublishedData/" + doiUser1 + "/register")
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.NotFoundStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0100: should not resync the published data of another user", async () => {
+    return request(appUrl)
+      .post("/api/v3/PublishedData/" + doiUser1 + "/resync")
+      .send({ ...user1PublishedData, title: "Resynced by user2" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.NotFoundStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0110: adds a published data in registered state as user1", async () => {
+    return request(appUrl)
+      .post("/api/v3/PublishedData")
+      .send({
+        ...user1PublishedData,
+        title: "User1 registered published data",
+        status: "registered",
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("status").and.equal("registered");
+        doiUser1Registered = encodeURIComponent(res.body["doi"]);
+      });
+  });
+
+  it("0120: should not update own published data that is not in private state", async () => {
+    return request(appUrl)
+      .patch("/api/v3/PublishedData/" + doiUser1Registered)
+      .send({ title: "Updated by user1" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0130: adds a published data in registered state as admin", async () => {
+    return request(appUrl)
+      .post("/api/v3/PublishedData")
+      .send({
+        ...user1PublishedData,
+        title: "Admin registered published data",
+        status: "registered",
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        doiAdminRegistered = encodeURIComponent(res.body["doi"]);
+      });
+  });
+
+  it("0140: should not update a registered published data as admin", async () => {
+    return request(appUrl)
+      .patch("/api/v3/PublishedData/" + doiAdminRegistered)
+      .send({ title: "Updated by admin" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/);
+  });
+
+  it("0150: should update the published data of another user in private state as admin", async () => {
+    return request(appUrl)
+      .patch("/api/v3/PublishedData/" + doiUser1)
+      .send({ title: "Updated by admin" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("title").and.equal("Updated by admin");
+      });
+  });
+
+  it("0160: should only expose registered published data anonymously", async () => {
+    return request(appUrl)
+      .get("/api/v3/PublishedData")
+      .set("Accept", "application/json")
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array).and.to.have.length(2);
+        res.body.forEach((publishedDataItem) => {
+          publishedDataItem.should.have
+            .property("status")
+            .and.equal("registered");
+        });
+      });
   });
 });

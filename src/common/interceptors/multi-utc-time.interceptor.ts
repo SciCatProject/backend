@@ -23,7 +23,12 @@ export class MultiUTCTimeInterceptor<T, U> implements NestInterceptor {
   ): Observable<unknown> | Promise<Observable<unknown>> {
     const req = context.switchToHttp().getRequest();
     const instances = req.body[this.subGroup] as U[];
-    req.body[this.subGroup] = updateAllTimesToUTC<U>(this.dateKeys, instances);
+    if (instances) {
+      req.body[this.subGroup] = updateAllTimesToUTC<U>(
+        this.dateKeys,
+        instances,
+      );
+    }
     return next.handle();
   }
 }

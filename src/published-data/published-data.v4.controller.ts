@@ -43,7 +43,10 @@ import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataV4Dto } from "./dto/create-published-data.v4.dto";
-import { PartialUpdatePublishedDataV4Dto } from "./dto/update-published-data.v4.dto";
+import {
+  PartialUpdatePublishedDataV4Dto,
+  UpdatePublishedDataV4Dto,
+} from "./dto/update-published-data.v4.dto";
 import {
   FormPopulateData,
   ICount,
@@ -101,6 +104,7 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
+    await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
@@ -143,11 +147,11 @@ export class PublishedDataV4Controller {
       publishedDataFilters.limits = publishedDataLimits;
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       publishedDataFilters.where = {
         ...publishedDataFilters.where,
         $or: [
@@ -189,11 +193,11 @@ export class PublishedDataV4Controller {
   ) {
     const jsonFilters: IPublishedDataFilters = filter?.filter ?? {};
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       jsonFilters.where = {
         ...jsonFilters.where,
         $or: [
@@ -239,12 +243,18 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string[] | string) {
+  async formPopulate(
+    @Req() request: Request,
+    @Query("pid") pid: string[] | string,
+  ) {
     pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid: pid[0] },
-    })) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid[0],
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
@@ -287,10 +297,10 @@ export class PublishedDataV4Controller {
     const filter: FilterQuery<PublishedData> = {
       doi,
     };
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       filter.$or = [
         { createdBy: (request.user as JWTUser)?.username },
         { status: PublishedDataStatus.REGISTERED },
@@ -341,6 +351,19 @@ export class PublishedDataV4Controller {
     return publishedData;
   }
 
+  private async validateMergedUpdate(
+    publishedData: PublishedData,
+    update: PartialUpdatePublishedDataV4Dto,
+  ): Promise<UpdatePublishedDataV4Dto> {
+    const record = (
+      publishedData as PublishedDataDocument
+    ).toObject<PublishedData>();
+    const merged: UpdatePublishedDataV4Dto = { ...record, ...update };
+    await this.validatorService.validate(merged);
+
+    return merged;
+  }
+
   // PATCH /publisheddata/:id
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
@@ -365,11 +388,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -390,10 +413,12 @@ export class PublishedDataV4Controller {
       }
     }
 
-    return this.publishedDataService.update(
-      { doi: id },
+    const merged = await this.validateMergedUpdate(
+      publishedData,
       updatePublishedDataDto,
     );
+
+    return this.publishedDataService.update({ doi: id }, merged);
   }
 
   // POST /publisheddata/:id/publish
@@ -464,11 +489,11 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<PublishedData | null> {
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (!canAccessAny) {
       throw new HttpException(
@@ -513,11 +538,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -679,11 +704,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -706,16 +731,18 @@ export class PublishedDataV4Controller {
 
     const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
+    const merged = await this.validateMergedUpdate(publishedData, data);
+
     let returnValue = null;
     if (OAIServerUri) {
       returnValue = await this.publishedDataService.resyncOAIPublication(
         id,
-        { ...publishedData, ...data },
+        merged,
         OAIServerUri,
       );
     }
 
-    await this.publishedDataService.update({ doi: id }, data);
+    await this.publishedDataService.update({ doi: id }, merged);
 
     return returnValue;
   }

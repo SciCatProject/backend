@@ -13,7 +13,6 @@ import {
   Req,
   ForbiddenException,
   NotFoundException,
-  InternalServerErrorException,
   UsePipes,
 } from "@nestjs/common";
 import { Request } from "express";
@@ -41,7 +40,7 @@ import {
   OrigDatablock,
   OrigDatablockDocument,
 } from "./schemas/origdatablock.schema";
-import { IFacets, IFilters } from "src/common/interfaces/common.interface";
+import { IFacets } from "src/common/interfaces/common.interface";
 import {
   IOrigDatablockFields,
   IOrigDatablockFiltersV4,
@@ -49,7 +48,6 @@ import {
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { DatasetsService } from "src/datasets/datasets.service";
-import { PartialUpdateDatasetDto } from "src/datasets/dto/update-dataset.dto";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateDatasetDto } from "src/datasets/dto/create-dataset.dto";
@@ -58,6 +56,7 @@ import {
   IsValidResponse,
   FullFacetFilters,
   FullFacetResponse,
+  CountApiResponse,
 } from "src/common/types";
 import { getSwaggerOrigDatablockFilterContent } from "./types/origdatablock-filter-content";
 import {
@@ -88,9 +87,7 @@ export class OrigDatablocksV4Controller {
 
   async generateOrigDatablockInstanceForPermissions(
     origdatablock:
-      | CreateOrigDatablockDto
-      | OutputOrigDatablockDto
-      | OrigDatablock,
+      CreateOrigDatablockDto | OutputOrigDatablockDto | OrigDatablock,
   ): Promise<OrigDatablock> {
     const origDatablockInstance = new OrigDatablock();
     origDatablockInstance.datasetId = origdatablock.datasetId || "";
@@ -124,44 +121,9 @@ export class OrigDatablocksV4Controller {
     const origDatablockInstance =
       await this.generateOrigDatablockInstanceForPermissions(origdatablock);
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
 
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.OrigdatablockCreate:
-        canDoAction =
-          ability.can(Action.OrigdatablockCreateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockCreateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockRead:
-        canDoAction =
-          ability.can(Action.OrigdatablockReadAny, origDatablockInstance) ||
-          ability.can(
-            Action.OrigdatablockReadOnePublic,
-            origDatablockInstance,
-          ) ||
-          ability.can(
-            Action.OrigdatablockReadOneAccess,
-            origDatablockInstance,
-          ) ||
-          ability.can(Action.OrigdatablockReadOneOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockUpdate:
-        canDoAction =
-          ability.can(Action.OrigdatablockUpdateAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockUpdateOwner, origDatablockInstance);
-        break;
-      case Action.OrigdatablockDelete:
-        canDoAction =
-          ability.can(Action.OrigdatablockDeleteAny, origDatablockInstance) ||
-          ability.can(Action.OrigdatablockDeleteOwner, origDatablockInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const canDoAction = ability.can(group, origDatablockInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
@@ -181,28 +143,8 @@ export class OrigDatablocksV4Controller {
     const datasetInstance =
       await this.generateDatasetInstanceForPermissions(dataset);
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-
-    let canDoAction = false;
-
-    switch (group) {
-      case Action.DatasetRead:
-        canDoAction =
-          ability.can(Action.DatasetReadAny, datasetInstance) ||
-          ability.can(Action.DatasetReadOneOwner, datasetInstance) ||
-          ability.can(Action.DatasetReadOneAccess, datasetInstance) ||
-          ability.can(Action.DatasetReadOnePublic, datasetInstance);
-        break;
-      case Action.DatasetUpdate:
-        canDoAction =
-          ability.can(Action.DatasetUpdateAny, datasetInstance) ||
-          ability.can(Action.DatasetUpdateOwner, datasetInstance);
-        break;
-      default:
-        throw new InternalServerErrorException(
-          "Permission for the action is not specified",
-        );
-    }
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canDoAction = ability.can(group, datasetInstance);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
@@ -315,73 +257,39 @@ export class OrigDatablocksV4Controller {
       IOrigDatablockFields
     >,
   ): IOrigDatablockFiltersV4<OrigDatablockDocument, IOrigDatablockFields> {
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    const canViewOwner = ability.can(
-      Action.OrigdatablockReadManyOwner,
-      OrigDatablock,
-    );
-    const canViewAccess = ability.can(
-      Action.OrigdatablockReadManyAccess,
-      OrigDatablock,
-    );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-    if (!filter.where) {
-      filter.where = {};
-    }
-
-    if (!canViewAny) {
-      if (canViewAccess) {
-        if (filter.where["$and"]) {
-          filter.where["$and"].push({
+    if (!user) {
+      // In API v4 unauthorized users must use the public endpoints
+      throw new ForbiddenException("Unauthorized access");
+    } else if (!canViewAny && canView) {
+      filter.where = filter.where ?? {};
+      if (filter.where["$and"]) {
+        filter.where["$and"].push({
+          $or: [
+            { ownerGroup: { $in: user.currentGroups } },
+            { accessGroups: { $in: user.currentGroups } },
+            { sharedWith: { $in: [user.email] } },
+            { isPublished: true },
+          ],
+        });
+      } else {
+        filter.where["$and"] = [
+          {
             $or: [
               { ownerGroup: { $in: user.currentGroups } },
               { accessGroups: { $in: user.currentGroups } },
               { sharedWith: { $in: [user.email] } },
               { isPublished: true },
             ],
-          });
-        } else {
-          filter.where["$and"] = [
-            {
-              $or: [
-                { ownerGroup: { $in: user.currentGroups } },
-                { accessGroups: { $in: user.currentGroups } },
-                { sharedWith: { $in: [user.email] } },
-                { isPublished: true },
-              ],
-            },
-          ];
-        }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
+          },
+        ];
       }
     }
 
     return filter;
-  }
-
-  async updateDatasetSizeAndFiles(pid: string) {
-    const parsedFilters: IFilters<OrigDatablockDocument, IOrigDatablockFields> =
-      { where: { datasetId: pid } };
-    const datasetOrigdatablocks =
-      (await this.origDatablocksService.findAllComplete(
-        parsedFilters,
-      )) as OutputOrigDatablockDto[];
-
-    const updateDatasetDto: PartialUpdateDatasetDto = {
-      size: datasetOrigdatablocks
-        .map((odb) => odb.size)
-        .reduce((ps, a) => ps + a, 0),
-      numberOfFiles: datasetOrigdatablocks
-        .map((odb) => odb.dataFileList.length)
-        .reduce((ps, a) => ps + a, 0),
-    };
-
-    await this.datasetsService.findByIdAndUpdate(pid, updateDatasetDto);
   }
 
   // POST /origdatablocks
@@ -430,16 +338,9 @@ export class OrigDatablocksV4Controller {
       createOrigDatablockDto,
       Action.OrigdatablockCreate,
     );
-
-    const origdatablock = await this.origDatablocksService.create(
+    return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
       createOrigDatablockDto,
     );
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
   }
 
   // POST /origdatablocks/isValid
@@ -613,26 +514,17 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters: IFacets<IOrigDatablockFields> = {
       fields: fields,
       facets: JSON.parse(filters.facets ?? "{}"),
@@ -663,26 +555,17 @@ export class OrigDatablocksV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IOrigDatablockFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.origDatablockInstanceAccess(user);
-    const canViewAny = ability.can(Action.OrigdatablockReadAny, OrigDatablock);
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.OrigdatablockReadManyAccess,
-        OrigDatablock,
-      );
-      const canViewOwner = ability.can(
-        Action.OrigdatablockReadManyOwner,
-        OrigDatablock,
-      );
+    const ability = this.caslAbilityFactory.origDatablockAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
+    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
 
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters = {
       fields: fields,
       limits: JSON.parse(filters.facets ?? "{}"),
@@ -695,6 +578,60 @@ export class OrigDatablocksV4Controller {
     );
   }
 
+  // GET /origdatablocks/files/count
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
+    ability.can(Action.OrigdatablockRead, OrigDatablock),
+  )
+  @Get("/files/count")
+  @ApiOperation({
+    summary: "It returns the count of files",
+    description:
+      "It returns the total number of files across all origdatablocks matching the provided filter.",
+  })
+  @ApiQuery({
+    name: "filter",
+    description: "Database filters to apply when retrieving count for files",
+    required: false,
+    type: String,
+    content: getSwaggerOrigDatablockFilterContent({
+      where: true,
+      include: false,
+      fields: false,
+      limits: false,
+    }),
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CountApiResponse,
+    description:
+      "Return the number of files in the following format: { count: integer }",
+  })
+  async countFiles(
+    @Req() request: Request,
+    @Query(
+      "filter",
+      new FilterValidationPipe(
+        ALLOWED_ORIGDATABLOCK_KEYS,
+        ALLOWED_ORIGDATABLOCK_FILTER_KEYS,
+        {
+          where: true,
+          include: false,
+          fields: false,
+          limits: false,
+        },
+      ),
+    )
+    queryFilter?: string,
+  ) {
+    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const mergedFilter = this.addAccessBasedFilters(
+      request.user as JWTUser,
+      parsedFilter,
+    );
+
+    return this.origDatablocksService.countFiles(mergedFilter);
+  }
   // GET /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
@@ -784,17 +721,11 @@ export class OrigDatablocksV4Controller {
       Action.OrigdatablockUpdate,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
-    const origdatablock = await this.origDatablocksService.findByIdAndUpdate(
-      id,
+    return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
+      { _id: id },
       updateOrigDatablockDto,
       unmodifiedSince,
     );
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
   }
 
   // DELETE /origdatablocks/:id
@@ -814,26 +745,21 @@ export class OrigDatablocksV4Controller {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: OutputOrigDatablockDto,
+    type: OrigDatablock,
     description: "Removed origdatablock value is returned",
   })
   async findByIdAndDelete(
     @Req() request: Request,
     @Param("id") id: string,
-  ): Promise<OutputOrigDatablockDto | null> {
+  ): Promise<OrigDatablock | null> {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
       Action.OrigdatablockDelete,
     );
 
-    const origdatablock =
-      await this.origDatablocksService.findByIdAndDelete(id);
-
-    if (origdatablock) {
-      await this.updateDatasetSizeAndFiles(origdatablock.datasetId);
-    }
-
-    return origdatablock;
+    return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({
+      _id: id,
+    });
   }
 }

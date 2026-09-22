@@ -11,7 +11,7 @@ export class MeasurementPeriodClass {
   @Prop({
     type: String,
   })
-  _id: string;
+  _id?: string;
 
   /**
    * Instrument or beamline identifier where measurement was pursued, e.g. /PSI/SLS/TOMCAT
@@ -35,7 +35,7 @@ export class MeasurementPeriodClass {
    * Additional information relevant for this measurement period, e.g. if different accounts were used for data taking.
    */
   @Prop({ type: String })
-  comment: string;
+  comment?: string;
 }
 
 export const MeasurementPeriodSchema = SchemaFactory.createForClass(

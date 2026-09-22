@@ -8,7 +8,6 @@ let accessTokenProposalIngestor = null,
   accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
-
   defaultProposalId = null,
   minimalProposalId = null,
   proposalId = null,
@@ -460,6 +459,33 @@ describe("1500: Proposal: Simple Proposal", () => {
         res.body.should.have.property("proposalId").and.be.string;
         res.body.should.have.property("parentProposalId").and.be.string;
         res.body.parentProposalId.should.be.equal(minimalProposalId);
+      });
+  });
+
+  it("0121: updating a proposal without the measurement period list should not remove it", async () => {
+    return request(appUrl)
+      .patch("/api/v3/Proposals/" + proposalId)
+      .send({ title: "An updated complete test proposal" })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenProposalIngestor}` })
+      .expect(TestData.SuccessfulPatchStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("title")
+          .and.equal("An updated complete test proposal");
+        res.body.should.have
+          .property("MeasurementPeriodList")
+          .and.be.an("array")
+          .and.have.lengthOf(
+            TestData.ProposalCorrectComplete.MeasurementPeriodList.length,
+          );
+        res.body.MeasurementPeriodList[0].should.have
+          .property("instrument")
+          .and.equal(
+            TestData.ProposalCorrectComplete.MeasurementPeriodList[0]
+              .instrument,
+          );
       });
   });
 

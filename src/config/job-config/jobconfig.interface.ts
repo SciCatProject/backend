@@ -64,8 +64,7 @@ export interface JobPerformContext<
 }
 
 export type JobTemplateContext =
-  | JobValidateContext<JobDto>
-  | JobPerformContext<JobDto>;
+  JobValidateContext<JobDto> | JobPerformContext<JobDto>;
 
 /**
  * Superclass for all responses to Job changes

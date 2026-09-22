@@ -5,30 +5,90 @@ import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
+import { AttachmentAbility } from "./abilities/attachments.ability";
+import { DatablockAbility } from "./abilities/datablocks.ability";
+import { DatasetAbility } from "./abilities/datasets.ability";
+import { HistoryAbility } from "./abilities/history.ability";
+import { InstrumentAbility } from "./abilities/instruments.ability";
+import { JobAbility } from "./abilities/jobs.ability";
+import { LogbookAbility } from "./abilities/logbooks.ability";
+import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { PolicyAbility } from "./abilities/policies.ability";
+import { ProposalAbility } from "./abilities/proposals.ability";
+import { PublishedDataAbility } from "./abilities/published-data.ability";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { SampleAbility } from "./abilities/samples.ability";
+import { SseAbility } from "./abilities/sse.ability";
+import { UserAbility } from "./abilities/users.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
-    expect(new CaslAbilityFactory(new ConfigService())).toBeDefined();
+    const configService = new ConfigService();
+    expect(
+      new CaslAbilityFactory(
+        new AttachmentAbility(configService),
+        new DatablockAbility(configService),
+        new DatasetAbility(configService),
+        new HistoryAbility(configService),
+        new InstrumentAbility(configService),
+        new JobAbility(
+          configService,
+          new JobConfigService({}, {}, configService),
+        ),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
+        new OrigDatablockAbility(configService),
+        new PolicyAbility(configService),
+        new ProposalAbility(configService),
+        new PublishedDataAbility(configService),
+        new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
+        new UserAbility(configService),
+      ),
+    ).toBeDefined();
   });
 
   describe("DatasetLifecycleUpdate permission", () => {
-    const buildFactory = (updateDatasetLifecycle: unknown) =>
-      new CaslAbilityFactory(
-        {
-          get: (key: string) =>
-            key === "accessGroups"
-              ? {
-                  admin: [],
-                  delete: [],
-                  createDataset: [],
-                  createDatasetWithPid: [],
-                  createDatasetPrivileged: [],
-                  updateDatasetLifecycle,
-                }
-              : undefined,
-        } as unknown as ConfigService,
-        { allJobConfigs: {} } as unknown as JobConfigService,
+    const buildFactory = (updateDatasetLifecycle: unknown) => {
+      const configService = {
+        get: (key: string) =>
+          key === "accessGroups"
+            ? {
+                admin: [],
+                delete: [],
+                createDataset: [],
+                createDatasetWithPid: [],
+                createDatasetPrivileged: [],
+                updateDatasetLifecycle,
+              }
+            : undefined,
+      } as unknown as ConfigService;
+      return new CaslAbilityFactory(
+        new AttachmentAbility(configService),
+        new DatablockAbility(configService),
+        new DatasetAbility(configService),
+        new HistoryAbility(configService),
+        new InstrumentAbility(configService),
+        new JobAbility(configService, {
+          allJobConfigs: {},
+        } as unknown as JobConfigService),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
+        new OrigDatablockAbility(configService),
+        new PolicyAbility(configService),
+        new ProposalAbility(configService),
+        new PublishedDataAbility(configService),
+        new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
+        new UserAbility(configService),
       );
+    };
 
     const userInSubstringGroup: JWTUser = {
       _id: "uid",
