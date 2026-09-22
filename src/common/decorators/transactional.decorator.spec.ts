@@ -1,6 +1,5 @@
 import { Transactional } from "./transactional.decorator";
 import { MongoTransactionService } from "../services/mongo-transaction.service";
-import { getCurrentSession } from "../utils/session-context.util";
 
 describe("Transactional", () => {
   class TestService {
@@ -40,49 +39,29 @@ describe("Transactional", () => {
     );
   });
 
-  describe("nesting on top of the real MongoTransactionService", () => {
-    const mockSession = {
-      withTransaction: jest.fn().mockImplementation((fn) => fn()),
-      endSession: jest.fn().mockResolvedValue(undefined),
-    };
+  it("throws when a @Transactional() method calls another one, on top of the real MongoTransactionService", async () => {
     const connection = {
-      startSession: jest.fn().mockResolvedValue(mockSession),
+      transaction: jest.fn().mockImplementation((fn) => fn({})),
     };
 
     class RealTransactionService {
       mongoTransactionService = new MongoTransactionService(
         connection as never,
       );
-      sessionsSeen: unknown[] = [];
 
       @Transactional()
       async outer() {
-        this.sessionsSeen.push(getCurrentSession());
         return this.inner();
       }
 
       @Transactional()
       async inner() {
-        this.sessionsSeen.push(getCurrentSession());
         return "inner-done";
       }
     }
 
-    beforeEach(() => {
-      jest.clearAllMocks();
-      mockSession.withTransaction.mockImplementation((fn) => fn());
-      connection.startSession.mockResolvedValue(mockSession);
-    });
-
-    it("joins the outer transaction instead of nesting a second one", async () => {
-      const realService = new RealTransactionService();
-
-      const result = await realService.outer();
-
-      expect(result).toBe("inner-done");
-      expect(connection.startSession).toHaveBeenCalledTimes(1);
-      expect(mockSession.endSession).toHaveBeenCalledTimes(1);
-      expect(realService.sessionsSeen).toEqual([mockSession, mockSession]);
-    });
+    await expect(new RealTransactionService().outer()).rejects.toThrow(
+      /already inside a transaction/,
+    );
   });
 });

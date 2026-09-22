@@ -1,45 +1,28 @@
 import { MongoServerError } from "mongodb";
 import { MongoTransactionService } from "./mongo-transaction.service";
-import { getCurrentSession } from "../utils/session-context.util";
 
 describe("MongoTransactionService", () => {
-  const mockSession = {
-    withTransaction: jest.fn().mockImplementation((fn) => fn()),
-    endSession: jest.fn().mockResolvedValue(undefined),
-  };
+  const mockSession = { id: "mock-session" };
 
   const connection = {
-    startSession: jest.fn().mockResolvedValue(mockSession),
+    transaction: jest.fn().mockImplementation((fn) => fn(mockSession)),
   };
 
   let service: MongoTransactionService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSession.withTransaction.mockImplementation((fn) => fn());
-    connection.startSession.mockResolvedValue(mockSession);
+    connection.transaction.mockImplementation((fn) => fn(mockSession));
     service = new MongoTransactionService(connection as never);
   });
 
-  it("runs fn with the session available via getCurrentSession", async () => {
-    const result = await service.run(async () => getCurrentSession());
-
-    expect(result).toBe(mockSession);
-    expect(mockSession.endSession).toHaveBeenCalled();
-  });
-
-  it("also passes the session explicitly as fn's argument", async () => {
+  it("runs fn inside connection.transaction, passing it the session", async () => {
     const fn = jest.fn().mockResolvedValue("done");
 
-    await service.run(fn);
+    const result = await service.run(fn);
 
+    expect(result).toBe("done");
     expect(fn).toHaveBeenCalledWith(mockSession);
-  });
-
-  it("does not leak the session outside of run", async () => {
-    await service.run(async () => getCurrentSession());
-
-    expect(getCurrentSession()).toBeUndefined();
   });
 
   it("falls back to a non-transactional run when transactions are not supported", async () => {
@@ -48,148 +31,85 @@ describe("MongoTransactionService", () => {
         "Transaction numbers are only allowed on a replica set member or mongos",
     });
     notSupportedError.code = 20;
-    mockSession.withTransaction.mockImplementationOnce(() => {
+    connection.transaction.mockImplementationOnce(() => {
       throw notSupportedError;
     });
-    const fn = jest.fn().mockImplementation(async () => getCurrentSession());
+    const fn = jest.fn().mockResolvedValue("done");
 
     const result = await service.run(fn);
 
-    expect(fn).toHaveBeenCalledTimes(1);
     expect(fn).toHaveBeenCalledWith(undefined);
-    expect(result).toBeUndefined();
-    expect(mockSession.endSession).toHaveBeenCalled();
+    expect(result).toBe("done");
   });
 
-  it("caches unsupported-transactions detection so later calls skip starting a session", async () => {
+  it("caches unsupported-transactions detection so later calls skip connection.transaction", async () => {
     const notSupportedError = new MongoServerError({
       message:
         "Transaction numbers are only allowed on a replica set member or mongos",
     });
     notSupportedError.code = 20;
-    mockSession.withTransaction.mockImplementationOnce(() => {
+    connection.transaction.mockImplementationOnce(() => {
       throw notSupportedError;
     });
 
     await service.run(async () => "first");
     await service.run(async () => "second");
 
-    expect(connection.startSession).toHaveBeenCalledTimes(1);
+    expect(connection.transaction).toHaveBeenCalledTimes(1);
   });
 
   it("rethrows errors that are not the transactions-not-supported case", async () => {
     const otherError = new MongoServerError({ message: "boom" });
     otherError.code = 11000;
-    mockSession.withTransaction.mockImplementationOnce(() => {
+    connection.transaction.mockImplementationOnce(() => {
       throw otherError;
     });
 
     await expect(service.run(async () => "unreachable")).rejects.toThrow(
       otherError,
     );
-    expect(mockSession.endSession).toHaveBeenCalled();
   });
 
-  it("ends the session even when fn rejects", async () => {
+  it("propagates fn's rejection", async () => {
+    connection.transaction.mockImplementationOnce((fn) => fn(mockSession));
+
     await expect(
       service.run(async () => {
         throw new Error("fn failed");
       }),
     ).rejects.toThrow("fn failed");
-    expect(mockSession.endSession).toHaveBeenCalled();
   });
 
-  it("joins an already-active transaction instead of starting a nested one", async () => {
-    const sessionsSeen: unknown[] = [];
+  it("throws when run() is called again from inside an active transaction", async () => {
+    connection.transaction.mockImplementationOnce((fn) => fn(mockSession));
 
-    const result = await service.run(async () => {
-      sessionsSeen.push(getCurrentSession());
-      return service.run(async () => {
-        sessionsSeen.push(getCurrentSession());
-        return "nested-done";
-      });
-    });
-
-    expect(result).toBe("nested-done");
-    expect(connection.startSession).toHaveBeenCalledTimes(1);
-    expect(mockSession.endSession).toHaveBeenCalledTimes(1);
-    expect(sessionsSeen).toEqual([mockSession, mockSession]);
+    await expect(
+      service.run(async () => service.run(async () => "nested")),
+    ).rejects.toThrow(/already inside a transaction/);
   });
 
-  describe("ambient: false", () => {
-    it("passes the session as fn's argument without making it ambient", async () => {
-      const fn = jest.fn().mockImplementation(async () => getCurrentSession());
+  it("does not throw for sequential (non-nested) calls", async () => {
+    await service.run(async () => "first");
+    const result = await service.run(async () => "second");
 
-      const result = await service.run(fn, {
-        ambient: false,
-      });
+    expect(result).toBe("second");
+  });
 
-      expect(fn).toHaveBeenCalledWith(mockSession);
-      expect(result).toBeUndefined();
+  it("allows nesting when the outer call already fell back to non-transactional", async () => {
+    const notSupportedError = new MongoServerError({
+      message:
+        "Transaction numbers are only allowed on a replica set member or mongos",
     });
-
-    it("starts an independent transaction when nested without existingSession", async () => {
-      const result = await service.run(
-        async () =>
-          service.run(async () => "nested-done", {
-            ambient: false,
-          }),
-        { ambient: false },
-      );
-
-      expect(result).toBe("nested-done");
-      expect(connection.startSession).toHaveBeenCalledTimes(2);
-      expect(mockSession.endSession).toHaveBeenCalledTimes(2);
+    notSupportedError.code = 20;
+    connection.transaction.mockImplementationOnce(() => {
+      throw notSupportedError;
     });
+    await service.run(async () => "prime the fallback cache");
 
-    it("joins the given existingSession instead of starting a new transaction", async () => {
-      const fn = jest.fn().mockResolvedValue("done");
+    const result = await service.run(async () =>
+      service.run(async () => "nested"),
+    );
 
-      const result = await service.run(fn, {
-        ambient: false,
-        existingSession: mockSession as never,
-      });
-
-      expect(result).toBe("done");
-      expect(fn).toHaveBeenCalledWith(mockSession);
-      expect(connection.startSession).not.toHaveBeenCalled();
-    });
-
-    it("falls back to a non-transactional run when transactions are not supported", async () => {
-      const notSupportedError = new MongoServerError({
-        message:
-          "Transaction numbers are only allowed on a replica set member or mongos",
-      });
-      notSupportedError.code = 20;
-      mockSession.withTransaction.mockImplementationOnce(() => {
-        throw notSupportedError;
-      });
-      const fn = jest.fn().mockResolvedValue("done");
-
-      const result = await service.run(fn, {
-        ambient: false,
-      });
-
-      expect(fn).toHaveBeenCalledWith(undefined);
-      expect(result).toBe("done");
-    });
-
-    it("shares the unsupported-transactions cache with the ambient mode", async () => {
-      const notSupportedError = new MongoServerError({
-        message:
-          "Transaction numbers are only allowed on a replica set member or mongos",
-      });
-      notSupportedError.code = 20;
-      mockSession.withTransaction.mockImplementationOnce(() => {
-        throw notSupportedError;
-      });
-
-      await service.run(async () => "first");
-      const fn = jest.fn().mockResolvedValue("second");
-      await service.run(fn, { ambient: false });
-
-      expect(connection.startSession).toHaveBeenCalledTimes(1);
-      expect(fn).toHaveBeenCalledWith(undefined);
-    });
+    expect(result).toBe("nested");
   });
 });

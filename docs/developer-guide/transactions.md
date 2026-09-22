@@ -19,10 +19,9 @@ created_on: 2026-08-04
 ## Overview
 
 This is the framework for running MongoDB operations atomically inside a
-transaction. It's introduced here without being applied to any schema or
-service yet — later PRs will opt specific models and methods into it. This
-document explains what's available and what a PR needs to do to actually use
-it.
+transaction. It's introduced here without being applied to any service yet —
+later PRs will opt specific methods into it. This document explains what's
+available and what a PR needs to do to actually use it.
 
 The pieces:
 
@@ -31,22 +30,19 @@ The pieces:
 - `@Transactional()` (`src/common/decorators/transactional.decorator.ts`) —
   a method decorator that wraps a whole method body in
   `MongoTransactionService.run()`, so you don't have to call it by hand.
-- `sessionPlugin` (`src/common/mongoose/plugins/session.plugin.ts`) — a
-  mongoose schema plugin that automatically attaches the active transaction
-  session to every query, aggregate, and save on that schema, so callers
-  don't need to pass `{ session }` explicitly. **Must be registered on a
-  schema for that schema's models to participate in transactions
-  automatically** — see [Registering the plugin on a schema](#registering-the-plugin-on-a-schema).
-- `session-context.util.ts` — the underlying `AsyncLocalStorage` plumbing
-  that makes the session "ambient" (see below). You shouldn't need to use
-  this directly.
+
+Session propagation to queries, saves, and aggregates is handled by
+mongoose itself via
+[`transactionAsyncLocalStorage`](https://mongoosejs.com/docs/transactions.html#asynclocalstorage),
+enabled once at startup in `main.ts`. There's no project-specific plumbing
+for it and nothing to opt a schema into.
 
 ## Core concept: the ambient session
 
-Once inside a transaction, the active `ClientSession` is made "ambient" —
-readable via `getCurrentSession()` from anywhere in the same call chain,
-without being passed as an argument. `sessionPlugin` uses this to attach the
-session to a query automatically. This is what lets you write:
+Once inside a transaction, mongoose makes the active `ClientSession`
+"ambient" for the duration of the wrapped function — every query, save, and
+aggregate started from within it automatically joins the transaction,
+without passing `{ session }` explicitly. This is what lets you write:
 
 ```ts
 return this.mongoTransactionService.run(async () => {
@@ -56,35 +52,13 @@ return this.mongoTransactionService.run(async () => {
 });
 ```
 
-instead of manually threading `{ session }` through every call, as long as
-`DatasetSchema` and the datablock schema have `sessionPlugin` registered.
-
-An explicit `{ session }` passed to any individual query always wins over
-the ambient one — including `session: null`, which is respected as "opt this
-one query out of the transaction" rather than being treated as "no session
-set." See `attachAmbientSession` in `session.plugin.ts` for the exact rule.
+instead of manually threading `{ session }` through every call. An explicit
+`{ session }` passed to any individual query always wins over the ambient
+one.
 
 ## How to use it
 
-### 1. Registering the plugin on a schema
-
-For `sessionPlugin` to have any effect, the model's schema must register it:
-
-```ts
-import { sessionPlugin } from "src/common/mongoose/plugins/session.plugin";
-
-// ...after SchemaFactory.createForClass(...)
-DatasetSchema.plugin(sessionPlugin);
-```
-
-Registering the plugin is a per-schema, opt-in choice — it lets you decide
-selectively which models pick up the ambient session automatically. If you
-want more control over a given model, and would rather avoid automatic
-session pickup for it, simply don't register the plugin on that schema:
-queries on it will then only join a transaction when you pass `{ session }`
-explicitly. It currently isn't registered on any schema in this codebase.
-
-### 2. Injecting `MongoTransactionService`
+### 1. Injecting `MongoTransactionService`
 
 Both the decorator and calling `run()` directly require the owning class to
 inject `MongoTransactionService` via its constructor:
@@ -99,7 +73,7 @@ export class DatasetsService {
 }
 ```
 
-### 3. Using `@Transactional()`
+### 2. Using `@Transactional()`
 
 For the common case — wrap this whole method in a transaction — annotate
 the method. The property **must** be named `mongoTransactionService`; the
@@ -119,105 +93,53 @@ class doesn't inject `MongoTransactionService` as `this.mongoTransactionService`
 calling the method throws a clear error naming the class and the fix needed,
 rather than a generic "cannot read properties of undefined."
 
-### 4. Calling `MongoTransactionService.run()` directly
+### 3. Calling `MongoTransactionService.run()` directly
 
 Use this when you need more control than a bare decorator gives you, or when
 you're not inside a class that has `@Transactional()` available.
 
 `fn` always receives the session as its argument, in addition to it being
-made ambient — use whichever is more convenient at each call site.
-
-**Passing the session explicitly** is necessary in two situations, even on
-schemas where `sessionPlugin` is already attaching it to your queries
-automatically:
-
-- Anything `sessionPlugin` can't reach — it only hooks mongoose
-  query/aggregate/document middleware, not raw driver-level collection
-  methods like `bulkWrite`:
-
-  ```ts
-  return this.mongoTransactionService.run(async (session) => {
-    return this.datasetModel.collection.bulkWrite(operations, { session });
-  });
-  ```
-
-- Calling a method directly on the session itself, rather than attaching it
-  to a query — `sessionPlugin` only ever attaches the session *to* queries,
-  it never exposes the session object for you to act on. For example,
-  ending the transaction early based on a business check instead of
-  throwing an error — the driver explicitly supports this: if `fn` calls
-  `session.abortTransaction()` itself, `withTransaction` detects that and
-  returns without attempting to commit:
-
-  ```ts
-  return this.mongoTransactionService.run(async (session) => {
-    const [dataset] = await this.datasetModel.create([dto]);
-    if (!isStillValid(dataset)) {
-      await session.abortTransaction();
-      return null;
-    }
-    return dataset;
-  });
-  ```
-
-**Without passing the session** works for everything `sessionPlugin` already
-covers — plain mongoose calls just pick up the ambient session on their own,
-the same way they would inside a `@Transactional()` method:
+made ambient — use whichever is more convenient at each call site. Passing
+it explicitly is necessary for anything the ambient session can't reach —
+raw driver-level collection methods like `bulkWrite`:
 
 ```ts
-return this.mongoTransactionService.run(async () => {
+return this.mongoTransactionService.run(async (session) => {
+  return this.datasetModel.collection.bulkWrite(operations, { session });
+});
+```
+
+— or for calling a method directly on the session itself, rather than
+attaching it to a query. For example, ending the transaction early based on
+a business check instead of throwing an error — the driver explicitly
+supports this: if `fn` calls `session.abortTransaction()` itself, the
+transaction is aborted without attempting to commit:
+
+```ts
+return this.mongoTransactionService.run(async (session) => {
   const [dataset] = await this.datasetModel.create([dto]);
-  await this.datablocksService.createBlocks(dataset);
+  if (!isStillValid(dataset)) {
+    await session.abortTransaction();
+    return null;
+  }
   return dataset;
 });
 ```
 
-### 5. Explicit mode (`{ ambient: false }`)
-
-By default, `run()` makes the session ambient (as described above). Pass
-`{ ambient: false }` to disable that — nothing will be attached
-automatically, and every query that should join the transaction must be
-given `{ session }` explicitly:
-
-```ts
-return this.mongoTransactionService.run(
-  async (session) => {
-    const [dataset] = await this.datasetModel.create([dto], { session });
-    await this.createBlocks(dataset, session); // threaded to a sibling
-    return dataset;
-  },
-  { ambient: false },
-);
-```
-
-This is useful when you want the transaction boundary to be visible at every
-call site rather than implicit, or when working with a schema that doesn't
-have `sessionPlugin` registered.
-
 ### Nesting
 
 Calling `run()` (or a `@Transactional()` method) from inside another active
-`run()` call joins the existing transaction instead of starting a second,
-independent one — only the outermost call actually opens a session and
-commits/aborts it. This works automatically in the default (ambient) mode.
-In explicit mode, nesting isn't auto-detected — pass the session you
-received down as `existingSession` to join it:
+`run()` call throws. Mongoose's `connection.transaction()` doesn't join an
+outer transaction when nested — it starts an independent one, on its own
+session. That's dangerous to allow silently: the nested transaction could
+commit even if the outer one later rolls back (breaking atomicity), and it
+wouldn't see the outer transaction's uncommitted writes (breaking
+isolation). `MongoTransactionService.run()` detects this and throws instead.
 
-```ts
-return this.mongoTransactionService.run(
-  async (session) =>
-    this.mongoTransactionService.run(fn, {
-      ambient: false,
-      existingSession: session,
-    }),
-  { ambient: false },
-);
-```
-
-Don't mix ambient and explicit calls inside one another without threading
-the session through by hand — the two modes can't detect each other, so
-you'd end up with two separate, possibly conflicting transactions instead of
-one.
+If you need to share logic between a transactional method and its callers,
+pull the shared logic into a plain method (not decorated, not calling
+`run()` itself) and call that directly — its queries still join the ambient
+transaction automatically, the same as any other query inside `fn`.
 
 ## Deployments without replica sets
 

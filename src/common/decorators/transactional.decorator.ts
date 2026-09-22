@@ -6,14 +6,12 @@ interface WithMongoTransactionService {
 
 /**
  * Runs the decorated method inside a MongoDB transaction via
- * `MongoTransactionService.run`, joining an already-active transaction
- * instead of nesting a new one when called from another `@Transactional()`
- * method.
- *
- * The session is ambient, read via `getCurrentSession()` by whatever the
- * decorated method calls. The method must be async and return a Promise.
- * The owning class must inject `MongoTransactionService` as
+ * `MongoTransactionService.run`. The method must be async and return a
+ * Promise. The owning class must inject `MongoTransactionService` as
  * `this.mongoTransactionService`.
+ *
+ * Calling a `@Transactional()` method from inside another one throws — see
+ * `MongoTransactionService.run`.
  */
 export function Transactional(): MethodDecorator {
   return function (
