@@ -45,7 +45,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentCreate, Instrument),
+    ability.can(Action.Create, Instrument),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<Instrument>("customMetadata"),
@@ -74,7 +74,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentRead, Instrument),
+    ability.can(Action.Read, Instrument),
   )
   @Get()
   @ApiQuery({
@@ -91,7 +91,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentRead, Instrument),
+    ability.can(Action.Read, Instrument),
   )
   @Get("/count")
   @ApiQuery({
@@ -109,7 +109,7 @@ export class InstrumentsController {
   // GET /instrument/findOne
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentRead, Instrument),
+    ability.can(Action.Read, Instrument),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -141,7 +141,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentRead, Instrument),
+    ability.can(Action.Read, Instrument),
   )
   @Get(":id")
   async findById(@Param("id") pid: string): Promise<Instrument | null> {
@@ -150,7 +150,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentUpdate, Instrument),
+    ability.can(Action.Update, Instrument),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<Instrument>("customMetadata"),
@@ -191,7 +191,7 @@ export class InstrumentsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.InstrumentDelete, Instrument),
+    ability.can(Action.Delete, Instrument),
   )
   @Delete(":id")
   async remove(@Param("id") id: string): Promise<unknown> {

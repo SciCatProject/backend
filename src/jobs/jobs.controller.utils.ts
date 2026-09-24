@@ -225,7 +225,7 @@ export class JobsControllerUtils {
    */
   readAccessFilter(user: JWTUser) {
     const abilities = this.caslAbilityFactory.jobAccess(user);
-    const query = accessibleBy(abilities, Action.JobRead).ofType(JobClass);
+    const query = accessibleBy(abilities, Action.Read).ofType(JobClass);
 
     // No access at all:
     // Return an "always false" query as returned by accessibleBy() casl function
@@ -339,7 +339,7 @@ export class JobsControllerUtils {
         "Invalid new job. Unauthenticated user cannot initiate a job owned by another user.",
       );
     const ability = this.caslAbilityFactory.jobAccess(user);
-    const canCreate = ability.can(Action.JobCreate, jobInstance);
+    const canCreate = ability.can(Action.Create, jobInstance);
     if (!canCreate)
       throw new ForbiddenException("Unauthorized to create this job.");
     return jobInstance;
@@ -539,7 +539,7 @@ export class JobsControllerUtils {
     const jobConfig = this.getJobTypeConfiguration(currentJob.type);
     const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
     // check if the user can update this job
-    const canUpdate = ability.can(Action.JobUpdate, currentJobInstance);
+    const canUpdate = ability.can(Action.Update, currentJobInstance);
     if (!canUpdate) {
       throw new ForbiddenException("Unauthorized to update this job.");
     }
@@ -654,7 +654,7 @@ export class JobsControllerUtils {
       await this.generateJobInstanceForPermissions(job);
 
     const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
-    const canRead = ability.can(Action.JobRead, currentJobInstance);
+    const canRead = ability.can(Action.Read, currentJobInstance);
 
     if (!canRead) {
       throw new ForbiddenException("Unauthorized to get this job.");

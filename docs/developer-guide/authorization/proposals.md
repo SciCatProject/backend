@@ -7,10 +7,10 @@ This document describes the authorization model used for proposals and associate
 The following actions are defined for proposals:
 
 - `AccessAny`
-- `ProposalCreate`
-- `ProposalRead`
-- `ProposalUpdate`
-- `ProposalDelete`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 - `ProposalAttachmentCreate`
 - `ProposalAttachmentRead`
 - `ProposalAttachmentUpdate`
@@ -51,10 +51,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `PROPOSAL_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - |
-| `ProposalCreate` | - | - | any | any | - |
-| `ProposalRead` | public | public/owner/access | any | any | public/owner/access |
-| `ProposalUpdate` | - | - | any | any | - |
-| `ProposalDelete` | - | - | - | - | any |
+| `Create` | - | - | any | any | - |
+| `Read` | public | public/owner/access | any | any | public/owner/access |
+| `Update` | - | - | any | any | - |
+| `Delete` | - | - | - | - | any |
 | `ProposalAttachmentCreate` | - | - | any | any | - |
 | `ProposalAttachmentRead` | public | public/owner/access | public/owner/access | any | public/owner/access |
 | `ProposalAttachmentUpdate` | - | - | owner | any | - |

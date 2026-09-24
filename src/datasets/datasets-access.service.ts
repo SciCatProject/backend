@@ -24,14 +24,14 @@ export class DatasetsAccessService {
       case DatasetLookupKeysEnum.proposals: {
         const ability = this.caslAbilityFactory.proposalAccess(user);
         const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-        const canView = ability.can(Action.ProposalRead, ProposalClass);
+        const canView = ability.can(Action.Read, ProposalClass);
 
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.origdatablocks: {
         const ability = this.caslAbilityFactory.origDatablockAccess(user);
         const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
-        const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+        const canView = ability.can(Action.Read, OrigDatablock);
 
         return { canViewAny, canView };
       }
@@ -44,13 +44,13 @@ export class DatasetsAccessService {
       case DatasetLookupKeysEnum.samples: {
         const ability = this.caslAbilityFactory.sampleAccess(user);
         const canViewAny = ability.can(Action.AccessAny, SampleClass);
-        const canView = ability.can(Action.SampleRead, SampleClass);
+        const canView = ability.can(Action.Read, SampleClass);
 
         return { canViewAny, canView };
       }
       case DatasetLookupKeysEnum.instruments: {
         const ability = this.caslAbilityFactory.instrumentAccess(user);
-        const canViewAny = ability.can(Action.InstrumentRead, Instrument);
+        const canViewAny = ability.can(Action.Read, Instrument);
         return {
           canViewAny,
           canView: false,
@@ -113,7 +113,7 @@ export class DatasetsAccessService {
     const currentUser = this.request.user as JWTUser;
     const ability = this.caslAbilityFactory.datasetAccess(currentUser);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!canViewAny) {
       if (currentUser && canView) {

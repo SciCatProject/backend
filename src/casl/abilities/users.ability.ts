@@ -47,10 +47,10 @@ export class UserAbility {
     /**
      * Authenticated user
      */
-    can(Action.UserCreate, User, matchUid);
-    can(Action.UserRead, User, matchUid);
-    can(Action.UserUpdate, User, matchUid);
-    can(Action.UserDelete, User, matchUid);
+    can(Action.Create, User, matchUid);
+    can(Action.Read, User, matchUid);
+    can(Action.Update, User, matchUid);
+    can(Action.Delete, User, matchUid);
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
@@ -58,10 +58,10 @@ export class UserAbility {
        */
       can(Action.AccessAny, User);
 
-      can(Action.UserCreate, User);
-      can(Action.UserRead, User);
-      can(Action.UserUpdate, User);
-      can(Action.UserDelete, User);
+      can(Action.Create, User);
+      can(Action.Read, User);
+      can(Action.Update, User);
+      can(Action.Delete, User);
       can(Action.UserCreateJwt, User);
     }
 

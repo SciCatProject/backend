@@ -253,7 +253,7 @@ export class PublishedDataV4Controller {
       (await this.datasetsController.checkPermissionsForDatasetExtended(
         request,
         pid[0],
-        Action.DatasetRead,
+        Action.Read,
       )) as unknown as DatasetClass;
 
     let proposalId;

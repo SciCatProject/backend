@@ -36,7 +36,7 @@ export class ProposalAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.ProposalRead, ProposalClass, ifPublished);
+    can(Action.Read, ProposalClass, ifPublished);
     can(Action.ProposalAttachmentRead, ProposalClass, ifPublished);
 
     if (!user) {
@@ -52,9 +52,9 @@ export class ProposalAbility {
     /**
      * Authenticated user
      */
-    can(Action.ProposalRead, ProposalClass, ifOwner);
-    can(Action.ProposalRead, ProposalClass, ifAccess);
-    can(Action.ProposalRead, ProposalClass, ifPublished);
+    can(Action.Read, ProposalClass, ifOwner);
+    can(Action.Read, ProposalClass, ifAccess);
+    can(Action.Read, ProposalClass, ifPublished);
 
     can(Action.ProposalAttachmentRead, ProposalClass, ifOwner);
     can(Action.ProposalAttachmentRead, ProposalClass, ifAccess);
@@ -70,9 +70,9 @@ export class ProposalAbility {
        */
       can(Action.AccessAny, ProposalClass);
 
-      can(Action.ProposalCreate, ProposalClass);
-      can(Action.ProposalRead, ProposalClass);
-      can(Action.ProposalUpdate, ProposalClass);
+      can(Action.Create, ProposalClass);
+      can(Action.Read, ProposalClass);
+      can(Action.Update, ProposalClass);
 
       can(Action.ProposalAttachmentCreate, ProposalClass);
       can(Action.ProposalAttachmentUpdate, ProposalClass, ifOwner);
@@ -87,9 +87,9 @@ export class ProposalAbility {
        */
       can(Action.AccessAny, ProposalClass);
 
-      can(Action.ProposalCreate, ProposalClass);
-      can(Action.ProposalRead, ProposalClass);
-      can(Action.ProposalUpdate, ProposalClass);
+      can(Action.Create, ProposalClass);
+      can(Action.Read, ProposalClass);
+      can(Action.Update, ProposalClass);
 
       can(Action.ProposalAttachmentCreate, ProposalClass);
       can(Action.ProposalAttachmentRead, ProposalClass);
@@ -105,7 +105,7 @@ export class ProposalAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.ProposalDelete, ProposalClass);
+      can(Action.Delete, ProposalClass);
     }
 
     return build({
