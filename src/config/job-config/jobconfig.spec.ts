@@ -6,6 +6,7 @@ import { actionType as logActionType } from "./actions/logaction/logaction.inter
 import { actionType as validateActionType } from "./actions/validateaction/validateaction.interface";
 import { actionType as urlActionType } from "./actions/urlaction/urlaction.interface";
 import { actionType as rabbitmqActionType } from "./actions/rabbitmqaction/rabbitmqaction.interface";
+import { actionType as datasetPolicyEmailActionType } from "./actions/datasetpolicyemailaction/datasetpolicyemailaction.interface";
 import {
   CREATE_JOB_ACTION_CREATORS,
   UPDATE_JOB_ACTION_CREATORS,
@@ -19,6 +20,7 @@ const creatorsMock = {
   [validateActionType]: actionCreatorMock,
   [urlActionType]: actionCreatorMock,
   [rabbitmqActionType]: actionCreatorMock,
+  [datasetPolicyEmailActionType]: actionCreatorMock,
 };
 const creatorProviders = [
   {

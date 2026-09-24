@@ -31,6 +31,9 @@ import { actionType as switchActionType } from "./switchaction/switchaction.inte
 import { ErrorJobActionModule } from "./erroraction/erroraction.module";
 import { ErrorJobActionCreator } from "./erroraction/erroraction.service";
 import { actionType as errorActionType } from "./erroraction/erroraction.interface";
+import { DatasetPolicyEmailJobActionModule } from "./datasetpolicyemailaction/datasetpolicyemailaction.module";
+import { DatasetPolicyEmailJobActionCreator } from "./datasetpolicyemailaction/datasetpolicyemailaction.service";
+import { actionType as datasetPolicyEmailActionType } from "./datasetpolicyemailaction/datasetpolicyemailaction.interface";
 
 /**
  * Provide a list of built-in job action creators.
@@ -50,6 +53,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
     ),
     SwitchJobActionModule,
     ErrorJobActionModule,
+    DatasetPolicyEmailJobActionModule,
   ],
   providers: [
     {
@@ -62,6 +66,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
         rabbitMQJobActionCreator: RabbitMQJobActionCreator | null,
         switchCreateJobActionCreator,
         errorJobActionCreator,
+        datasetPolicyEmailJobActionCreator,
       ) => {
         return {
           [logActionType]: logJobActionCreator,
@@ -71,6 +76,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
           [rabbitmqActionType]: rabbitMQJobActionCreator,
           [switchActionType]: switchCreateJobActionCreator,
           [errorActionType]: errorJobActionCreator,
+          [datasetPolicyEmailActionType]: datasetPolicyEmailJobActionCreator,
         };
       },
       inject: [
@@ -81,6 +87,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
         { token: RabbitMQJobActionCreator, optional: true },
         SwitchCreateJobActionCreator,
         ErrorJobActionCreator,
+        DatasetPolicyEmailJobActionCreator,
       ],
     },
     {
@@ -93,6 +100,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
         rabbitMQJobActionCreator: RabbitMQJobActionCreator | null,
         switchUpdateJobActionCreator,
         errorJobActionCreator,
+        datasetPolicyEmailJobActionCreator,
       ) => {
         return {
           [logActionType]: logJobActionCreator,
@@ -102,6 +110,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
           [rabbitmqActionType]: rabbitMQJobActionCreator,
           [switchActionType]: switchUpdateJobActionCreator,
           [errorActionType]: errorJobActionCreator,
+          [datasetPolicyEmailActionType]: datasetPolicyEmailJobActionCreator,
         };
       },
       inject: [
@@ -112,6 +121,7 @@ import { actionType as errorActionType } from "./erroraction/erroraction.interfa
         { token: RabbitMQJobActionCreator, optional: true },
         SwitchUpdateJobActionCreator,
         ErrorJobActionCreator,
+        DatasetPolicyEmailJobActionCreator,
       ],
     },
   ],

@@ -105,6 +105,22 @@ jobs:
               - actionType: log
                 perform: "(Job {{job.id}} Skip email notification for status {{job.statusCode}}"
 
+  - # Send one email per ownerGroup of the job's datasets. Recipients come
+    # from each ownerGroup's Policy (set via PATCH /api/v4/policies/:id):
+    # emailTo, but only when emailNotification is true for a Policy whose
+    # type matches this jobType. Groups with no matching policy, no
+    # emailTo, or the flag unset/false are skipped silently.
+    jobType: dataset_policy_email_demo
+    create:
+      auth: admin
+      actions:
+        - actionType: datasetPolicyEmail
+          ignoreErrors: true
+          subject: "Datasets updated in {{ datasets.[0].ownerGroup }}"
+          bodyTemplateFile: src/common/email-templates/job-template-simplified.html
+    update:
+      auth: "#jobOwnerUser"
+
 
   - jobType: url_demo
     create:

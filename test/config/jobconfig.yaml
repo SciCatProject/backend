@@ -42,6 +42,16 @@ jobs:
       auth: "#jobAdmin"
     update:
       auth: "#jobAdmin"
+  - jobType: dataset_policy_email_access
+    create:
+      auth: "#all"
+      actions:
+        - actionType: datasetPolicyEmail
+          ignoreErrors: true
+          subject: "Job {{ job.id }} update for {{ datasets.[0].ownerGroup }}"
+          bodyTemplateFile: src/common/email-templates/test-minimal-template.spec.html
+    update:
+      auth: "#all"
   - jobType: archive
     create:
       auth: "#all"
