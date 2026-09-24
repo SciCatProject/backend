@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { Policy, PolicySchema, PolicyDocument } from "../schemas/policy.schema";
 import {
   findUniqueByType,
+  hasArchiveFields,
+  hasRetrieveFields,
   mergeArchiveRetrieveToLegacyDto,
 } from "./policy-legacy-shape.util";
 
@@ -94,6 +96,18 @@ describe("mergeArchiveRetrieveToLegacyDto", () => {
       expect.arrayContaining(["a@example.com", "b@example.com"]),
     );
     expect((merged?.manager as string[]).length).toBe(2);
+  });
+});
+
+describe("hasArchiveFields/hasRetrieveFields", () => {
+  it("0300: treats instrumentGroup as a common field touching both sides", () => {
+    expect(hasArchiveFields({ instrumentGroup: "instrument1" })).toBe(true);
+    expect(hasRetrieveFields({ instrumentGroup: "instrument1" })).toBe(true);
+  });
+
+  it("0310: returns false for a body with no archive/retrieve/common fields", () => {
+    expect(hasArchiveFields({})).toBe(false);
+    expect(hasRetrieveFields({})).toBe(false);
   });
 });
 

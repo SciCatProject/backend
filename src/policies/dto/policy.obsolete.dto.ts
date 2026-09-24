@@ -29,6 +29,22 @@ export const retrieveV3FieldMap: Partial<
   retrieveEmailsToBeNotified: "emailTo",
 };
 
+// archiveV3FieldMap/retrieveV3FieldMap collide on these four keys - e.g.
+// both "archiveEmailNotification" and "retrieveEmailNotification" map to
+// the same schema field, "emailNotification". Excluded from the merged
+// map in pipes/filter.pipe.ts so a where/order query keeps its original
+// v3 name instead of losing which side it meant; PoliciesService resolves
+// them itself (see prefixMergedFilterFields).
+export const AMBIGUOUS_TYPE_FIELD_MAP: Record<
+  string,
+  { type: "archive" | "retrieve"; path: string }
+> = {
+  archiveEmailNotification: { type: "archive", path: "emailNotification" },
+  retrieveEmailNotification: { type: "retrieve", path: "emailNotification" },
+  archiveEmailsToBeNotified: { type: "archive", path: "emailTo" },
+  retrieveEmailsToBeNotified: { type: "retrieve", path: "emailTo" },
+};
+
 export const mapArchiveV3toV4Field = createDeepMapper<
   Policy,
   PolicyArchiveFragmentDto

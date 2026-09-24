@@ -10,28 +10,23 @@ import {
   PolicyRetrieveFragmentDto,
 } from "../dto/policy.obsolete.dto";
 import {
-  LEGACY_ARCHIVE_PIPE,
-  LEGACY_RETRIEVE_PIPE,
-} from "../pipes/legacy-policy.pipe";
+  toArchivePolicyFields,
+  toRetrievePolicyFields,
+} from "./legacy-policy-field-map.util";
 
-/**
- * v3 exposes one flat "policy" resource per ownerGroup, hardcoding exactly
- * two job types: archive and retrieve. Storage is one Policy document per
- * (ownerGroup, type). These helpers bridge the two directly - no generic
- * "any number of types" shape in between, since v3 was never generic
- * across job types either.
- *
- * `manager`/`ownerGroup`/`accessGroups`/`isPublished` apply to both type
- * documents at once (v3 has only one flat field for each), so a v3 write
- * touching only those "common" fields still needs to reach both documents -
- * see hasArchiveFields/hasRetrieveFields below.
- */
+// v3 exposes one flat "policy" resource per ownerGroup, hardcoding exactly
+// two job types: archive and retrieve, stored as one Policy document each.
+// These helpers bridge the two shapes directly.
 
+// Fields that apply to both type documents at once (v3 has only one flat
+// field for each), so a write touching only these still needs to reach
+// both documents - see hasArchiveFields/hasRetrieveFields below.
 const COMMON_LEGACY_FIELDS = new Set([
   "manager",
   "ownerGroup",
   "accessGroups",
   "isPublished",
+  "instrumentGroup",
 ]);
 
 export function hasArchiveFields(body: Partial<UpdatePolicyDto>): boolean {
@@ -49,13 +44,13 @@ export function hasRetrieveFields(body: Partial<UpdatePolicyDto>): boolean {
 export function toArchivePolicy(
   body: Partial<UpdatePolicyDto>,
 ): Partial<Policy> {
-  return { ...LEGACY_ARCHIVE_PIPE.transform(body), type: "archive" };
+  return { ...toArchivePolicyFields(body), type: "archive" };
 }
 
 export function toRetrievePolicy(
   body: Partial<UpdatePolicyDto>,
 ): Partial<Policy> {
-  return { ...LEGACY_RETRIEVE_PIPE.transform(body), type: "retrieve" };
+  return { ...toRetrievePolicyFields(body), type: "retrieve" };
 }
 
 export function findUniqueByType(
@@ -71,26 +66,12 @@ export function findUniqueByType(
   return matches[0];
 }
 
-/**
- * Combines the archive and retrieve documents for one ownerGroup into the
- * flat plain object PolicyObsoleteDto expects. Either document may be
- * missing (e.g. a stray/legacy ownerGroup with no policy of that type at
- * all) - PolicyArchiveFragmentDto/PolicyRetrieveFragmentDto fall back to
- * their documented v3 defaults in that case. Extraneous fields spread in
- * from the representative document (its own `type`, `emailTo`, ...) are
- * harmless: PolicyObsoleteDto only exposes the fields it declares.
- *
- * The merged object's envelope fields (`_id`, `id`, `createdAt`, ...) come
- * from whichever document is `representative`: the archive document when it
- * exists, the retrieve document otherwise. This is a deliberate, documented
- * convention, not an accident of argument order - it's the answer to "what
- * id does GET .../<retrieveDocId> echo back, given v3 only has room for
- * one id in its response": always the archive document's id, if there is
- * one. A pure-v3 client can never actually observe this (v3 has never
- * exposed the retrieve document's id anywhere), but a client mixing v4 and
- * v3 usage - e.g. listing via v4, then fetching one of those ids via v3 -
- * can, so it's worth being predictable about.
- */
+// Combines the archive and retrieve documents for one ownerGroup into the
+// flat object PolicyObsoleteDto expects. Either may be missing; the
+// fragment DTOs fall back to their documented v3 defaults in that case.
+// Envelope fields (`_id`, `id`, `createdAt`, ...) come from the archive
+// document when it exists, retrieve otherwise - deliberate, so a client
+// mixing v4 and v3 usage always sees the same id for a given ownerGroup.
 export function mergeArchiveRetrieveToLegacyDto(
   archiveDoc: PolicyDocument | undefined,
   retrieveDoc: PolicyDocument | undefined,

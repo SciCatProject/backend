@@ -10,11 +10,14 @@ export type PolicyDocument = Policy & Document;
   collection: "Policy",
   toJSON: {
     getters: true,
-    // supersededBy is internal bookkeeping (see below) - strip it from
-    // every response regardless of which controller/endpoint returns the
-    // document, rather than relying on each one to remember to omit it.
+    // supersededBy/originalPolicyId are internal migration bookkeeping
+    // (see migrations/20260903120000-policy-type-split-migration.js) -
+    // strip them from every response regardless of which controller/
+    // endpoint returns the document, rather than relying on each one to
+    // remember to omit them.
     transform: (_doc, ret: Record<string, unknown>) => {
       delete ret.supersededBy;
+      delete ret.originalPolicyId;
       return ret;
     },
   },

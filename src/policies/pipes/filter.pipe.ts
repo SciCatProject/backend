@@ -2,6 +2,7 @@ import { Injectable, PipeTransform } from "@nestjs/common";
 import { FilterPipe, WherePipe } from "src/common/pipes/filter.pipe";
 import { Policy } from "../schemas/policy.schema";
 import {
+  AMBIGUOUS_TYPE_FIELD_MAP,
   archiveV3FieldMap,
   retrieveV3FieldMap,
 } from "../dto/policy.obsolete.dto";
@@ -23,7 +24,13 @@ export class NestPolicyLimitsPipe implements PipeTransform<
   }
 }
 
-const policyV3toV4FieldMap = { ...archiveV3FieldMap, ...retrieveV3FieldMap };
+// Excludes AMBIGUOUS_TYPE_FIELD_MAP's keys - PoliciesService resolves
+// those itself, against the original v3 name.
+const policyV3toV4FieldMap = Object.fromEntries(
+  Object.entries({ ...archiveV3FieldMap, ...retrieveV3FieldMap }).filter(
+    ([key]) => !(key in AMBIGUOUS_TYPE_FIELD_MAP),
+  ),
+);
 
 export const V3_FILTER_PIPE = [
   new FilterPipe<Policy>({ apiToDBMap: policyV3toV4FieldMap }),

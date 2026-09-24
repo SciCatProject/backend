@@ -147,7 +147,7 @@ export class PoliciesController {
   )
   @SerializeOptions({ type: PolicyObsoleteDto, excludeExtraneousValues: true })
   @Delete(":id")
-  async remove(@Param("id") id: string): Promise<unknown> {
+  async remove(@Param("id") id: string): Promise<PolicyObsoleteDto | null> {
     return this.policiesService.remove(id);
   }
 }
