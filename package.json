@@ -20,7 +20,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "start:test": "o=test/config/.env.override; dotenv run --override -f -f test/config/.env $([ -f $o ] && echo -f $o) -- npm run start",
+    "start:test": "o=test/config/.env.override; dotenv run --override -f test/config/.env $([ -f $o ] && echo -f $o) -- npm run start",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\"  \"test/**/*.js\" --fix",
     "test": "jest",
