@@ -229,6 +229,51 @@ export class DatasetsService {
     return datasets;
   }
 
+  /**
+   * Count how many of `datasetPids` have their ownerGroup's live
+   * (ownerGroup, type: jobType) Policy carrying `userEmail` in its
+   * allowedUsers, or one of `userGroups` in its allowedGroups.
+   */
+  async countPolicyAuthorizedDatasets(
+    datasetPids: string[],
+    jobType: string,
+    userEmail: string,
+    userGroups: string[],
+  ): Promise<number> {
+    const pipeline: PipelineStage[] = [
+      { $match: { pid: { $in: datasetPids } } },
+      {
+        $lookup: {
+          from: "Policy",
+          let: { ownerGroup: "$ownerGroup" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$ownerGroup", "$$ownerGroup"] },
+                type: jobType,
+                supersededBy: null,
+              },
+            },
+          ],
+          as: "linkedPolicy",
+        },
+      },
+      {
+        $match: {
+          $or: [
+            { "linkedPolicy.allowedUsers": userEmail },
+            { "linkedPolicy.allowedGroups": { $in: userGroups } },
+          ],
+        },
+      },
+      { $count: "count" },
+    ];
+    const [result] = await this.datasetModel
+      .aggregate<{ count: number }>(pipeline)
+      .exec();
+    return result?.count ?? 0;
+  }
+
   async findAllComplete(
     filter: IDatasetFilters<DatasetDocument, IDatasetFields>,
     applyDefaults = true,
