@@ -40,7 +40,7 @@ Thank you for your interest in contributing to our project!
 3. Add _.env_ file to project root folder. See [Environment variables](#environment-variables).
 4. _Optional_ Add [functionalAccounts.json](#local-user-accounts) file to project root folder to create local users.
 5. _Optional_ Add [loggers.json](#loggers-configuration) file to the root folder and configure multiple loggers.
-6. _Optional_ Add [proposalTypes.json](#prpopsal-types-configuration) file to the root folder and configure the proposal types.
+6. _Optional_ Add [proposalTypes.json](#proposal-types-configuration) file to the root folder and configure the proposal types.
 7. `npm run start:dev`
 8. Go to http://localhost:3000/explorer to get an overview of available endpoints and database schemas.
 9. To be able to run the e2e tests with the same setup as in the Github actions you will need to run `npm run  prepare:local` and after that run `npm run start:dev`. This will start all needed containers and copy some configuration to the right place.
@@ -51,7 +51,7 @@ Thank you for your interest in contributing to our project!
 2. docker-compose -f docker-compose.dev.yaml up -d
 3. _Optional_ Mount [functionalAccounts.json](#local-user-accounts) file to a volume in the container to create local users.
 4. _Optional_ Mount [loggers.json](#loggers-configuration) file to a volume in the container to configure multiple loggers.
-5. _Optional_ Mount [proposalTypes.json](#prpopsal-types-configuration) file to a volume in the container to configure the proposal types.
+5. _Optional_ Mount [proposalTypes.json](#proposal-types-configuration) file to a volume in the container to configure the proposal types.
 6. _Optional_ change the container env variables
 7. Attach to the container
 8. `npm run start:dev`
@@ -74,15 +74,15 @@ There are multiple ways to configure your SciCat instance.
 In order to configure a SciCat instance run on barebone OS, there are three options:
 
 1. Edit directly the file `src/config/configuration.ts`
-2. Create a `.env` file with your local value of the variables listed in the next session. Only the variables that are required by your installation should be defined. To create your `.env` file, you can copy and edit the sample `.env.example` provided with in code
+2. Create a `.env` file with your local value of the variables listed in the next section. Only the variables that are required by your installation should be defined. To create your `.env` file, you can copy and edit the sample `.env.example` provided within the code
 3. Define in your environment all the necessary variables (list provided below), prior running SciCat.
 
-If SciCat runs in a containeraized environment, like docker or kubernetes, you can run the release image and specify your configuration using one of the following two methods:
+If SciCat runs in a containerized environment, like docker or kubernetes, you can run the release image and specify your configuration using one of the following two methods:
 
 1. create `.env` and mount it directly in your container.
 2. define the necessary environment variables directly in your container.
 
-More information are provided in the official documentation.
+More information is provided in the official documentation.
 
 ### Local User Accounts
 
@@ -94,9 +94,9 @@ your own _functionalAccounts.json_ file.
 
 ### Loggers configuration
 
-Providing a file called _loggers.json_ at the root of the project, locally or in the container, and create an external logger class in the `src/loggers/loggingProviders/`directory will automatically create specified one or multiple loggers instances.
+Providing a file called _loggers.json_ at the root of the project, locally or in the container, and creating an external logger class in the `src/loggers/loggingProviders/`directory will automatically create one or multiple logger instances.
 
-The `loggers.json.example` file in the root directory showcases the example of configuration structure for the one or multiple loggers. `logger.service.ts` file contains the configuration handling process logic, and `src/loggers/loggingProviders/grayLogger.ts` includes actual usecase of grayLogger.
+The `loggers.json.example` file in the root directory showcases the example of configuration structure for one or multiple loggers. `logger.service.ts` file contains the configuration handling process logic, and `src/loggers/loggingProviders/grayLogger.ts` includes an actual use case of grayLogger.
 
 ### Proposal types configuration
 
@@ -106,7 +106,7 @@ The `proposalTypes.json.example` file in the root directory showcases the exampl
 
 ## Environment variables
 
-Valid environment variables for the .env file. See [.env.example](/.env.example) for examples value formats.
+Valid environment variables for the .env file. See [.env.example](/.env.example) for example value formats.
 
 | Environment Variable | Type | Optional | Description | Default Value |
 |---------------------------------------------|---------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
@@ -118,7 +118,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `DATASET_CREATION_VALIDATION_REGEX` | string | | Regular expression validation for new dataset request. | "" |
 | `PROPOSAL_GROUPS` | string | Yes | Comma-separated list of proposal groups with permission to create any proposals. Example: "proposaladmin, proposalingestor". For more details check: [Scicat Documentation](https://scicatproject.github.io/documentation/Development/v4.x/backend/authorization.html) | |
 | `SAMPLE_GROUPS` | string | Yes | Comma-separated list of sample groups with permission to create any samples. Example: "sampleadmin, sampleingestor". For more details check: [Scicat Documentation](https://scicatproject.github.io/documentation/Development/v4.x/backend/authorization.html) | |
-| `ACCESS_GROUPS_GRAPHQL_ENABLED` | string | Yes | Flag to enable/disable the GraphQL service to get access groups. Requires configuration of `ACCESS_GROUP_SERVICE_TOKEN`, `ACCESS_GROUP_SERVICE_API_URL`, and `ACCESS_GROUP_SERVICE_HANDLER`. | true |
+| `ACCESS_GROUPS_GRAPHQL_ENABLED` | string | Yes | Flag to enable/disable the GraphQL service to get access groups. Requires configuration of `ACCESS_GROUPS_SERVICE_TOKEN`, `ACCESS_GROUP_SERVICE_API_URL`, and `ACCESS_GROUP_SERVICE_HANDLER`. | true |
 | `ACCESS_GROUPS_SERVICE_TOKEN` | string | Yes | Authentication token used if access groups are obtained from a third-party service. Not used by the vanilla installation, but only if the instance is customized to use an external service to provide user groups, like the ESS example. | |
 | `ACCESS_GROUP_SERVICE_API_URL` | string | Yes | URL of the service providing the users' access groups. Not used by the vanilla installation, but only if the instance is customized to use an external service to provide user groups, like the ESS example. | |
 | `ACCESS_GROUP_SERVICE_HANDLER` | string | Yes | Configuration property that points to the source of a module. This module provides a specific responseProcessor function for handling GraphQL responses and a query template for making GraphQL requests. | |
@@ -228,12 +228,12 @@ For the full documentation please go to the [SciCat home page](https://scicatpro
 
 ## Migration documentation and NestJs resources
 
-Following are the post that I found useful working on the migration:
+The following are posts that I found useful while working on the migration:
 
 - Schema and DTOs: https://betterprogramming.pub/how-to-use-data-transfer-objects-dto-for-validation-in-nest-js-7ff95309f650
 - Validation:
   - [Official documentation](https://docs.nestjs.com/techniques/validation)
-  - [Custom validation with datasbase in NestJs](https://dev.to/avantar/custom-validation-with-database-in-nestjs-gao)
+  - [Custom validation with database in NestJs](https://dev.to/avantar/custom-validation-with-database-in-nestjs-gao)
   - [Validating nested objects with class-validator in NestJs](https://dev.to/avantar/validating-nested-objects-with-class-validator-in-nestjs-1gn8)
   - [Validating numeric query parameters in NestJS](https://dev.to/avantar/validating-numeric-query-parameters-in-nestjs-gk9)
   - [Injecting request object to a custom validation class in NestJS](https://dev.to/avantar/injecting-request-object-to-a-custom-validation-class-in-nestjs-5dal)
