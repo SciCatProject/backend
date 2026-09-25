@@ -98,7 +98,7 @@ Providing a file called _loggers.json_ at the root of the project, locally or in
 
 The `loggers.json.example` file in the root directory showcases the example of configuration structure for the one or multiple loggers. `logger.service.ts` file contains the configuration handling process logic, and `src/loggers/loggingProviders/grayLogger.ts` includes actual usecase of grayLogger.
 
-### Prpopsal types configuration
+### Proposal types configuration
 
 Providing a file called _proposalTypes.json_ at the root of the project, locally or in the container, will be automatically loaded into the application configuration service under property called `proposalTypes` and used for validation against proposal creation and update.
 
@@ -107,6 +107,7 @@ The `proposalTypes.json.example` file in the root directory showcases the exampl
 ## Environment variables
 
 Valid environment variables for the .env file. See [.env.example](/.env.example) for examples value formats.
+
 | Environment Variable | Type | Optional | Description | Default Value |
 |---------------------------------------------|---------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
 | `ADMIN_GROUPS` | string | Yes | Comma-separated list of admin groups with admin permission assigned to the listed users. Example: "admin, ingestor". For more details check: [Scicat Documentation](https://scicatproject.github.io/documentation/Development/v4.x/backend/authorization.html) | |
