@@ -126,7 +126,7 @@ describe("RuntimeConfigService", () => {
       const source = { foo: "bar" };
       configService.get.mockReturnValue(source);
       model.findOne.mockReturnValue({
-        lean: () => ({ cid: "frontendConfig" }),
+        lean: () => ({ cid: "frontendConfig", updatedBy: "system" }),
       });
       model.updateOne.mockResolvedValue({ acknowledged: true });
 
@@ -136,6 +136,19 @@ describe("RuntimeConfigService", () => {
         { cid: "frontendConfig" },
         { data: source, updatedBy: "system" },
       );
+    });
+
+    it("overwrites entry if existing and never changed", async () => {
+      const source = { foo: "bar" };
+      configService.get.mockReturnValue(source);
+      model.findOne.mockReturnValue({
+        lean: () => ({ cid: "frontendConfig", updatedBy: "admin" }),
+      });
+      model.updateOne.mockResolvedValue({ acknowledged: true });
+
+      await service.syncConfig("frontendConfig");
+
+      expect(model.updateOne).toHaveBeenCalledTimes(0);
     });
   });
 
