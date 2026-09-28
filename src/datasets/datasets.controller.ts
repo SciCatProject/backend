@@ -481,6 +481,10 @@ export class DatasetsController {
       if ("proposalIds" in inputDataset && inputDataset.proposalIds?.length) {
         propertiesModifier.proposalId = inputDataset.proposalIds[0];
       }
+      const relatedProposals = (inputDataset as any).proposals;
+      if (relatedProposals?.length) {
+        propertiesModifier.proposalName = relatedProposals[0].title;
+      }
       if ("sampleIds" in inputDataset && inputDataset.sampleIds?.length) {
         propertiesModifier.sampleId = inputDataset.sampleIds[0];
       }
@@ -879,6 +883,14 @@ export class DatasetsController {
   ): Promise<OutputDatasetObsoleteDto[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
+    const searchText = fields.text;
+    if (
+      typeof searchText === "string" &&
+      /^20\.\d+\/[0-9a-f-]+$/i.test(searchText.trim())
+    ) {
+      fields.pid = searchText.trim();
+      delete fields.text;
+    }
 
     const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
       fields: fields,
@@ -946,6 +958,14 @@ export class DatasetsController {
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
+    const searchText = fields.text;
+    if (
+      typeof searchText === "string" &&
+      /^20\.\d+\/[0-9a-f-]+$/i.test(searchText.trim())
+    ) {
+      fields.pid = searchText.trim();
+      delete fields.text;
+    }
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
@@ -1141,6 +1161,14 @@ export class DatasetsController {
     const filterObj = queryFilter.filter ?? {};
     filterObj.where = filterObj.where ?? {};
     filterObj.where.pid = id;
+    filterObj.include = [
+      ...(filterObj.include ?? []),
+      ...(filterObj.include?.some(
+        (relation) => relation.relation === "proposals",
+      )
+        ? []
+        : [{ relation: "proposals" }]),
+    ];
     const dataset = await this.findAll(request, {
       filter: filterObj,
     });

@@ -368,12 +368,23 @@ export class DatasetsService {
   async opensearchFacet(
     filters: IFacets<IDatasetFields>,
   ): Promise<Record<string, unknown>[]> {
-    const fields = filters.fields ?? {};
+    filters.fields = filters.fields ?? {};
+    const searchText = filters.fields.text;
+    if (
+      typeof searchText === "string" &&
+      /^20\.\d+\/[0-9a-f-]+$/i.test(searchText.trim())
+    ) {
+      filters.fields.pid = searchText.trim();
+      delete filters.fields.text;
+    }
+
+    const fields = filters.fields;
     const facets = filters.facets ?? [];
 
     if (
       !this.isOsEnabled ||
       !filters.fields?.text ||
+      filters.fields.pid ||
       !this.opensearchService.connected() ||
       !(await this.opensearchService.isPopulated())
     ) {

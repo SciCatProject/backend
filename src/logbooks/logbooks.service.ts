@@ -9,11 +9,15 @@ import { firstValueFrom, catchError, of } from "rxjs";
 import { handleAxiosRequestError } from "src/common/utils";
 import { Logbook } from "./schemas/logbook.schema";
 import { Message } from "./schemas/message.schema";
+import { MongoClient } from "mongodb";
+import { randomUUID } from "crypto";
 
 @Injectable()
 export class LogbooksService {
   private logbookEnabled;
   private baseUrl;
+  private localMongoClient: MongoClient;
+  private localMongoConnected = false;
 
   constructor(
     private readonly configService: ConfigService,
@@ -21,6 +25,81 @@ export class LogbooksService {
   ) {
     this.logbookEnabled = this.configService.get<boolean>("logbook.enabled");
     this.baseUrl = this.configService.get<string>("logbook.baseUrl");
+  }
+
+  private async localMessages(name: string): Promise<Message[]> {
+    const uri = this.configService.get<string>("mongodbUri");
+    if (!uri) return [];
+    this.localMongoClient ??= new MongoClient(uri);
+    if (!this.localMongoConnected) {
+      await this.localMongoClient.connect();
+      this.localMongoConnected = true;
+    }
+    const dbName = new URL(uri).pathname.replace(/^\//, "");
+    return this.localMongoClient
+      .db(dbName)
+      .collection("LocalLogbookMessage")
+      .find({ room: name })
+      .sort({ origin_server_ts: 1 })
+      .toArray() as unknown as Promise<Message[]>;
+  }
+
+  private async saveLocalMessage(
+    name: string,
+    message: string,
+    metadataPrefix?: string,
+    senderName = "SciCat user",
+    datasetPid?: string,
+  ): Promise<string> {
+    const uri = this.configService.get<string>("mongodbUri");
+    if (!uri) {
+      throw new InternalServerErrorException("MongoDB is not configured");
+    }
+    this.localMongoClient ??= new MongoClient(uri);
+    if (!this.localMongoConnected) {
+      await this.localMongoClient.connect();
+      this.localMongoConnected = true;
+    }
+    const dbName = new URL(uri).pathname.replace(/^\//, "");
+    const eventId = randomUUID();
+    await this.localMongoClient.db(dbName).collection("LocalLogbookMessage").insertOne({
+      room: name,
+      event_id: eventId,
+      origin_server_ts: Date.now(),
+      sender: "@scicat-user:local",
+      senderName,
+      datasetPid,
+      content: { msgtype: "m.text", body: message, metadataPrefix, datasetPid },
+    });
+    return eventId;
+  }
+
+  private filterMessages(messages: Message[], filters: string): Message[] {
+    const {
+      showBotMessages = true,
+      showImages = true,
+      showUserMessages = true,
+      textSearch = "",
+    } = JSON.parse(filters);
+    const query = textSearch.trim().toLowerCase();
+
+    return messages.filter((message) => {
+      const senderName = (message as Message & { senderName?: string }).senderName;
+      const isImage = message.content?.msgtype === "m.image";
+      const isBot = message.sender?.includes("bot") ||
+        senderName?.toLowerCase().includes("control");
+      const isUserMessage = !isBot && !isImage;
+      const matchesText = !query ||
+        message.content?.body?.toLowerCase().includes(query) ||
+        senderName?.toLowerCase().includes(query);
+
+      return (
+        matchesText &&
+        (showImages || !isImage) &&
+        (showBotMessages || !isBot) &&
+        (showUserMessages || !isUserMessage)
+      );
+    });
   }
 
   async findAll(): Promise<Logbook[] | null> {
@@ -73,13 +152,20 @@ export class LogbooksService {
             ),
         );
 
-        if (!res.data) {
+        const local = await this.localMessages(name);
+        if (!res.data && local.length === 0) {
           Logger.log("Logbook not found", { name });
           return null;
         }
 
         Logger.log("Found logbook " + name, "LogbooksService.findByName");
+        const logbook: Logbook = {
+          name: res.data?.name || name,
+          roomId: res.data?.roomId || name,
+          messages: [...(res.data?.messages || []), ...local],
+        };
         const { skip, limit, sortField } = JSON.parse(filters);
+        logbook.messages = this.filterMessages(logbook.messages, filters);
         Logger.log(
           "Applying filters skip: " +
             skip +
@@ -90,14 +176,14 @@ export class LogbooksService {
           "LogbooksService.findByName",
         );
         if (!!sortField && sortField.indexOf(":") > 0) {
-          res.data.messages = sortMessages(res.data.messages, sortField);
+          logbook.messages = sortMessages(logbook.messages, sortField);
         }
         if (skip >= 0 && limit >= 0) {
           const end = skip + limit;
-          const messages = res.data.messages.slice(skip, end);
-          return { ...res.data, messages };
+          const messages = logbook.messages.slice(skip, end);
+          return { ...logbook, messages };
         }
-        return res.data;
+        return logbook;
       } catch (error) {
         handleAxiosRequestError(error, "LogbooksService.findByName");
       }
@@ -107,7 +193,12 @@ export class LogbooksService {
 
   async sendMessage(
     name: string,
-    data: { message: string },
+    data: {
+      message: string;
+      metadataPrefix?: string;
+      senderName?: string;
+      datasetPid?: string;
+    },
   ): Promise<{ event_id: string } | null> {
     if (this.logbookEnabled) {
       try {
@@ -115,17 +206,18 @@ export class LogbooksService {
           "Sending message to room " + name,
           "LogbooksService.sendMessage",
         );
-        const res = await firstValueFrom(
-          this.httpService.post<{ event_id: string }>(
-            this.baseUrl + `/Logbooks/${name}/message`,
-            data,
-          ),
+        const eventId = await this.saveLocalMessage(
+          name,
+          data.message,
+          data.metadataPrefix,
+          data.senderName || "SciCat user",
+          data.datasetPid,
         );
         Logger.log(
-          "Message with eventId " + res.data.event_id + " sent to room " + name,
+          "Message with eventId " + eventId + " saved to room " + name,
           "LogbooksService.sendMessage",
         );
-        return res.data;
+        return { event_id: eventId };
       } catch (error) {
         handleAxiosRequestError(error, "LogbooksService.sendMessage");
       }

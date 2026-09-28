@@ -19,6 +19,15 @@ import { HistoryClass } from "../schemas/history.schema";
 export class OutputDatasetObsoleteDto extends UpdateDatasetObsoleteDto {
   @ApiProperty({
     type: String,
+    required: false,
+    description: "Title of the proposal associated with the dataset.",
+  })
+  @IsOptional()
+  @IsString()
+  readonly proposalName?: string;
+
+  @ApiProperty({
+    type: String,
     required: true,
     description: "Persistent identifier of the dataset.",
   })

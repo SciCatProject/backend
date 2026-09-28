@@ -19,6 +19,12 @@ export class Message {
   sender: string;
 
   @Prop()
+  senderName?: string;
+
+  @Prop()
+  datasetPid?: string;
+
+  @Prop()
   type: string;
 
   @Prop(

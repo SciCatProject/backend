@@ -1,100 +1,79 @@
 {
   "defaultMainPage": {
-    "nonAuthenticatedUser": "DATASETS",
-    "authenticatedUser": "PROPOSALS"
+    "nonAuthenticatedUser": "PROPOSALS",
+    "authenticatedUser": "DATASETS"
   },
-  "statusBannerMessage": "",
-  "statusBannerCode": "INFO",
-  "realTimeUpdatesEnabled": false,
-  "autoApplyFilters": false,
+  "defaultTab": {
+    "proposal": "datasets"
+  },
+  "realTimeUpdatesEnabled": true,
+  "skipSciCatLoginPageEnabled": true,
+  "checkBoxFilterClickTrigger": true,
   "accessTokenPrefix": "Bearer ",
-  "addDatasetEnabled": false,
-  "allowConfigOverrides": true,
+  "addDatasetEnabled": true,
   "addScientificMetadataKeysAsColumn": true,
   "archiveWorkflowEnabled": false,
-  "datasetReduceEnabled": true,
-  "datasetRelationshipsEnabled": false,
-  "datasetJsonScientificMetadata": true,
-  "editDatasetEnabled": true,
+  "datasetReduceEnabled": false,
+  "datasetJsonScientificMetadata": false,
   "editDatasetSampleEnabled": true,
   "editMetadataEnabled": true,
   "editPublishedData": true,
-  "addSampleEnabled": false,
+  "editSampleEnabled": false,
   "externalAuthEndpoint": "/api/v3/auth/msad",
-  "facility": "SciCat Vanilla",
-  "siteIcon": "site-header-logo.png",
-  "siteHeaderLogoUrl": "https://my.facility.site",
-  "siteTitle": "Local development",
-  "siteSciCatLogo": "full",
-  "loginFacilityLabel": "SciCat Vanilla",
+  "siteTitle": "Frontend: Latest Backend: Latest",
+  "facility": "ESS",
+  "loginFacilityLabel": "ESS-DEV",
   "loginLdapLabel": "Ldap",
   "loginLocalLabel": "Local",
   "loginFacilityEnabled": true,
-  "loginLdapEnabled": true,
+  "loginLdapEnabled": false,
   "loginLocalEnabled": true,
-  "fileColorEnabled": true,
+  "localLoginLabel": "Local",
+  "fileColorEnabled": false,
   "fileDownloadEnabled": true,
   "gettingStarted": null,
   "ingestManual": null,
   "jobsEnabled": true,
-  "jsonMetadataEnabled": true,
-  "jupyterHubUrl": "",
+  "jsonMetadataEnabled": false,
+  "jupyterHubUrl": null,
   "landingPage": "doi.ess.eu/detail/",
-  "lbBaseURL": "http://localhost:3000",
-  "ingestorComponent": {
-    "ingestorEnabled": false,
-    "ingestorAutodiscoveryOptions": [
-      {
-        "mailDomain": "university.ch",
-        "description": "University/facility of Choice",
-        "facilityBackend": "http://localhost:8888"
-      }
-    ]
-  },
+  "lbBaseURL": "",
   "logbookEnabled": false,
   "loginFormEnabled": true,
   "thumbnailFetchLimitPerPage": 100,
-  "metadataFloatFormatEnabled": true,
-  "metadataFloatFormat": {
-    "significantDigits": 6,
-    "minCutoff": 0.001,
-    "maxCutoff": 1000
-  },
+  "maxDirectDownloadSize": 1047521824,
+  "maxFileSizeWarning": "Some files are above <maxDirectDownloadSize> and cannot be downloaded directly. These file can be downloaded via sftp host: <sftpHost> in directory: <sourceFolder>",
   "metadataPreviewEnabled": true,
   "metadataStructure": "",
-  "multipleDownloadAction": "http:/127.0.0.1:3012/zip",
+  "multipleDownloadAction": "https://scicatfileserver.esss.dk/zip",
   "multipleDownloadEnabled": true,
   "oAuth2Endpoints": [
     {
       "authURL": "api/v3/auth/oidc",
-      "displayText": "ESS One Identity"
-    }
-  ],
-  "policiesEnabled": true,
+        "displayText": "ESS One Identity"
+      }
+    ],
+  "policiesEnabled": false,
   "retrieveDestinations": [],
-  "riotBaseUrl": "http://scichat.esss.lu.se",
+  "riotBaseUrl": "http://scichat.dev-sims.ess.eu",
   "scienceSearchEnabled": true,
   "scienceSearchUnitsEnabled": true,
   "searchPublicDataEnabled": true,
   "searchSamples": true,
-  "sftpHost": "login.esss.dk",
-  "shareEnabled": false,
-  "sourceFolder": "/data/ess",
-  "maxDirectDownloadSize": 5000000000,
-  "maxFileSizeWarning": "Some files are above <maxDirectDownloadSize> and cannot be downloaded directly. These file can be downloaded via sftp host: <sftpHost> in directory: <sourceFolder>",
+  "sftpHost": "sftpserver2.esss.dk",
+  "shareEnabled": true,
   "shoppingCartEnabled": true,
   "shoppingCartOnHeader": true,
   "tableSciDataEnabled": true,
   "datasetDetailsShowMissingProposalId": false,
   "notificationInterceptorEnabled": true,
   "metadataEditingUnitListDisabled": true,
-  "hideEmptyMetadataTable": false,
   "datafilesActionsEnabled": true,
   "datafilesActions": [
     {
       "id": "eed8efec-4354-11ef-a3b5-d75573a5d37f",
       "description": "This action let users download all files using the zip service",
-      "order": 1,
+        "order": 1,
       "label": "Download All",
       "files": "all",
       "mat_icon": "download",
@@ -288,271 +267,121 @@
       "target": "_blank"
     }
   ],
-  "datasetDetailsActionsEnabled": false,
-  "datasetDetailsActions": [],
-  "selectionActionsEnabled": true,
-  "selectionActions": [],
-  "labelMaps": {
-    "filters": {
-      "LocationFilter": "Location",
-      "PidFilter": "Pid",
-      "GroupFilter": "Group",
-      "TypeFilter": "Type",
-      "KeywordFilter": "Keyword",
-      "DateRangeFilter": "Start Date - End Date",
-      "TextFilter": "Text"
-    }
-  },
+  "dateFormat": "yyyy-MM-dd HH:mm",
   "defaultDatasetsListSettings": {
     "columns": [
       {
         "name": "select",
+        "order": 0,
         "type": "standard",
-        "width": 120,
         "enabled": true
       },
       {
         "name": "pid",
+        "order": 1,
+        "width": 160,
         "type": "standard",
-        "width": 130,
-        "enabled": true
+        "enabled": false
       },
       {
         "name": "datasetName",
+        "order": 2,
+        "width": 260,
         "type": "standard",
-        "width": 250,
+        "enabled": true
+      },
+      {
+        "name": "instrumentIds",
+        "order": 3,
+        "header": "Instrument",
+        "width": 140,
+        "type": "standard",
         "enabled": true
       },
       {
         "name": "runNumber",
-        "type": "standard",
+        "order": 4,
         "width": 120,
+        "type": "standard",
         "enabled": true
       },
       {
         "name": "sourceFolder",
+        "order": 5,
+        "width": 170,
         "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "sourceFolderHost",
-        "type": "standard",
-        "width": 200,
         "enabled": false
       },
       {
         "name": "size",
+        "order": 6,
         "width": 120,
         "type": "standard",
         "enabled": true
-      },
-      {
-        "name": "numberOfFiles",
-        "type": "standard",
-        "width": 120,
-        "enabled": false
       },
       {
         "name": "creationTime",
-        "type": "date",
+        "order": 7,
+        "width": 180,
+        "type": "standard",
         "enabled": true,
-        "width": 200,
-        "format": "yyyy-mm-dd HH:MM"
-      },
-      {
-        "name": "keywords",
-        "type": "list",
-        "enabled": false,
-        "width": 200
-      },
-      {
-        "name": "description",
-        "type": "hovercontent",
-        "enabled": false,
-        "width": 150
+        "sort": "desc"
       },
       {
         "name": "type",
-        "width": 120,
-        "type": "standard",
-        "enabled": false
-      },
-      {
-        "name": "image",
+        "order": 8,
         "width": 120,
         "type": "standard",
         "enabled": true
       },
       {
-        "name": "scientificMetadata",
-        "type": "hovercontent",
-        "width": 200,
-        "enabled": false
+        "name": "image",
+        "order": 9,
+        "width": 120,
+        "type": "standard",
+        "enabled": true
       },
       {
-        "name": "scientificMetadataSchema",
+        "name": "metadata",
+        "order": 10,
+        "width": 120,
         "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "scientificMetadataValid",
-        "type": "standard",
-        "width": 100,
-        "enabled": false
-      },
-      {
-        "name": "owner",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "ownerEmail",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "orcidOfOwner",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "contactEmail",
-        "type": "standard",
-        "width": 200,
         "enabled": false
       },
       {
         "name": "proposalId",
+        "order": 11,
+        "width": 120,
         "type": "standard",
-        "width": 200,
         "enabled": true
       },
       {
-        "name": "proposalIds",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "license",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "isPublished",
-        "type": "standard",
-        "width": 100,
-        "enabled": false
-      },
-      {
-        "name": "techniques",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "comment",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "dataQualityMetrics",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "principalInvestigator",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "startTime",
-        "type": "date",
-        "width": 200,
-        "enabled": false,
-        "format": "yyyy-mm-dd HH:MM",
-        "sort": "desc"
-      },
-      {
-        "name": "endTime",
-        "type": "date",
-        "width": 200,
-        "enabled": false,
-        "format": "yyyy-mm-dd HH:MM"
-      },
-      {
-        "name": "creationLocation",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "sampleIds",
-        "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
         "name": "ownerGroup",
+        "order": 12,
         "width": 120,
         "type": "standard",
         "enabled": false
       },
       {
         "name": "dataStatus",
+        "order": 13,
+        "width": 270,
         "type": "standard",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "accessGroups",
-        "type": "standard",
-        "width": 200,
         "enabled": false
       }
     ],
     "filters": [
       {
-        "key": "creationLocation",
-        "label": "Location",
-        "type": "multiSelect",
-        "description": "Filter by creation location on the dataset",
-        "enabled": true
-      },
-      {
-        "key": "pid",
-        "label": "Pid",
-        "type": "text",
-        "description": "Filter by dataset pid",
-        "enabled": true
-      },
-      {
-        "key": "ownerGroup",
-        "label": "Group",
-        "type": "multiSelect",
-        "description": "Filter by owner group of the dataset",
-        "enabled": true
-      },
-      {
-        "key": "type",
-        "label": "Type",
-        "type": "multiSelect",
-        "description": "Filter by dataset type",
+        "key": "instrumentIds",
+        "label": "Instrument",
+        "type": "checkbox",
+        "description": "Filter datasets by instrument",
         "enabled": true
       },
       {
         "key": "keywords",
         "label": "Keyword",
-        "type": "multiSelect",
+        "type": "checkbox",
         "description": "Filter by keywords in the dataset",
         "enabled": true
       },
@@ -571,83 +400,42 @@
       {
         "name": "proposalId",
         "width": 120,
-        "enabled": true
+        "enabled": false
       },
       {
         "name": "title",
-        "width": 210,
+        "width": 560,
         "enabled": true
       },
       {
         "name": "instrumentName",
-        "width": 130,
+        "header": "Instrument",
+        "width": 150,
         "enabled": true
       },
       {
         "name": "abstract",
         "type": "hoverContent",
-        "width": 120,
+        "width": 130,
         "enabled": true
       },
       {
         "name": "startTime",
         "type": "date",
         "format": "yyyy-MM-dd",
-        "width": 130,
+        "width": 150,
         "enabled": true,
         "sort": "desc"
       },
       {
         "name": "pi_lastname, pi_firstname",
         "enabled": true,
-        "width": 150
+        "width": 170
       },
       {
         "name": "numberOfDatasets",
         "width": 120,
         "enabled": true
-      },
-      {
-        "name": "pi_firstname",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "pi_email",
-        "width": 150,
-        "enabled": false
-      },
-      {
-        "name": "firstname",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "lastname",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "email",
-        "width": 150,
-        "enabled": false
-      },
-      {
-        "name": "endTime",
-        "type": "date",
-        "format": "yyyy-MM-dd",
-        "width": 200,
-        "enabled": false
-      },
-      {
-        "name": "parentProposalId",
-        "width": 130,
-        "enabled": false
-      },
-      {
-        "name": "type",
-        "width": 200,
-        "enabled": false
       }
     ],
     "filters": [
@@ -659,15 +447,8 @@
         "enabled": true
       },
       {
-        "key": "pi_lastname",
-        "label": "PI Last Name",
-        "type": "checkbox",
-        "description": "Filter by dataset start time",
-        "enabled": true
-      },
-      {
         "key": "startTime",
-        "label": "Start Time",
+        "label": "Start Date",
         "type": "dateRange",
         "description": "Filter by dataset start time",
         "enabled": true
@@ -676,7 +457,7 @@
   },
   "labelsLocalization": {
     "dataset": {
-      "pid": "PID",
+      "pid": "Persistent ID",
       "description": "Description",
       "principalInvestigator": "Principal Investigator",
       "keywords": "Keywords",
@@ -684,20 +465,35 @@
       "scientificMetadata": "Scientific Metadata",
       "metadataJsonView": "Metadata JsonView",
       "datasetName": "Dataset Name",
+      "proposalName": "Proposal",
+      "runNumber": "Run Number",
+      "sourceFolder": "Source Folder",
+      "startTime": "Start Date",
+      "endTime": "End Time",
+      "size": "Size",
+      "type": "Dataset Type",
+      "image": "Thumbnail",
+      "proposalId": "Proposal ID",
       "scientificMetadata.run_number.value": "Run Number",
       "scientificMetadata.start_time": "Start Time",
-      "runNumber": "Run Number",
-      "size": "Size",
-      "image": "Image",
-      "proposalId": "Proposal Id",
-      "startTime": "Start Time",
-      "endTime": "End Time"
+      "numberOfFiles": "Number of Files",
+      "contactEmail": "Contact Email",
+      "proposalIds": "Proposal",
+      "inputDatasets": "Input Datasets",
+      "sampleIds": "Sample ID",
+      "instrumentIds": "Instrument ID",
+      "creationLocation": "Creation Location"
     },
     "proposal": {
+      "proposalId": "Proposal ID",
+      "title": "Proposal Title",
+      "abstract": "Abstract",
+      "startTime": "Start Time",
+      "pi_lastname": "PI Last Name",
       "General Information": "Proposal Information",
       "Title": "Proposal Title",
       "Abstract": "Abstract",
-      "Proposal Id": "Proposal Id",
+      "Proposal ID": "Proposal ID",
       "Proposal Type": "Proposal Type",
       "Parent Proposal": "Parent Proposal",
       "Start Time": "Start Time",
@@ -706,47 +502,46 @@
       "Main Proposer": "Proposal Submitted By",
       "Principal Investigator": "Principal Investigator",
       "Metadata": "Additional Information",
-      "proposalId": "Proposal Id",
-      "startTime": "Start Date",
-      "title": "Proposal Title",
-      "abstract": "Abstract",
-      "pi_lastname": "PI Last Name",
-      "pi_firstname": "PI First Name",
-      "pi_email": "PI Email",
-      "firstname": "Proposer First Name",
-      "lastname": "Proposer Last Name",
-      "email": "Proposer Email",
-      "endTime": "End Date",
       "type": "Type",
-      "parentProposalId": "Parent Proposal Id",
       "instrumentIds": "Instrument",
-      "numberOfDatasets": "Number of Datasets"
+      "instrumentName": "Instrument",
+      "numberOfDatasets": "Number of Datasets",
+      "pi_lastname, pi_firstname": "Principal Investigator"
     }
   },
-  "dateFormat": "yyyy-MM-dd HH:mm",
   "datasetDetailComponent": {
-    "enableCustomizedComponent": false,
+    "enableCustomizedComponent": true,
+    "tileRestrictedIconVisible": true,
+    "tileRestrictedIconGroups": ["admin"],
     "customization": [
       {
+        "type": "scientificMetadata",
+        "label": "Scientific Metadata Table",
+        "viewMode": "table",
+        "col": 5,
+        "row": 6,
+        "order": 0
+      },
+      {
         "type": "regular",
-        "label": "General Information",
-        "order": 0,
+        "label": "Summary",
+        "order": 1,
         "row": 1,
-        "col": 8,
+        "col": 5,
         "fields": [
           {
-            "element": "text",
-            "source": "scientificMetadata.start_time",
+            "element": "internalLink",
+            "source": "proposalName",
             "order": 0
           },
           {
-            "element": "copy",
-            "source": "scientificMetadata.run_number.value",
+            "element": "text",
+            "source": "runNumber",
             "order": 1
           },
           {
             "element": "text",
-            "source": "creationTime",
+            "source": "datasetName",
             "order": 2
           },
           {
@@ -756,156 +551,93 @@
           },
           {
             "element": "text",
-            "source": "datasetName",
-            "order": 4
-          },
-          {
-            "element": "tag",
-            "source": "keywords",
-            "order": 5
-          }
-        ]
-      },
-      {
-        "type": "attachments",
-        "label": "Gallery",
-        "order": 1,
-        "col": 2,
-        "row": 2,
-        "options": {
-          "limit": 5,
-          "size": "medium"
-        }
-      },
-      {
-        "type": "regular",
-        "label": "Contact Information",
-        "order": 2,
-        "col": 2,
-        "row": 1,
-        "fields": [
-          {
-            "element": "text",
             "source": "principalInvestigator",
-            "order": 0
-          },
-          {
-            "element": "linky",
-            "source": "contactEmail",
-            "order": 1
-          }
-        ]
-      },
-      {
-        "type": "regular",
-        "label": "Files Information",
-        "order": 3,
-        "col": 2,
-        "row": 1,
-        "fields": [
-          {
-            "element": "text",
-            "source": "scientificMetadata.runnumber",
-            "order": 0
-          },
-          {
-            "element": "text",
-            "source": "sourceFolderHost",
-            "order": 1
-          },
-          {
-            "element": "text",
-            "source": "numberOfFiles",
-            "order": 2
-          },
-          {
-            "element": "text",
-            "source": "size",
-            "order": 3
-          },
-          {
-            "element": "text",
-            "source": "numberOfFilesArchived",
             "order": 4
           },
           {
-            "element": "text",
-            "source": "packedSize",
+            "element": "date",
+            "source": "startTime",
             "order": 5
-          }
-        ]
-      },
-      {
-        "type": "regular",
-        "label": "Related Documents",
-        "order": 4,
-        "col": 4,
-        "row": 1,
-        "fields": [
+          },
           {
-            "element": "internalLink",
-            "source": "proposalIds",
-            "order": 0
+            "element": "date",
+            "source": "endTime",
+            "order": 6
           },
           {
             "element": "internalLink",
             "source": "instrumentIds",
-            "order": 1
+            "order": 7
           },
           {
-            "element": "tag",
-            "source": "sampleIds",
-            "order": 2
-          },
-          {
-            "element": "tag",
-            "source": "inputDatasets",
-            "order": 3
-          },
-          {
-            "element": "internalLink",
-            "source": "creationLocation",
-            "order": 4
+            "element": "copy",
+            "source": "pid",
+            "order": 8
           }
         ]
       },
       {
         "type": "attachments",
-        "label": "Gallery",
-        "order": 5,
-        "col": 1,
-        "row": 1,
+        "label": "Attachments",
+        "order": 2,
+        "col": 5,
+        "row": 2,
         "options": {
-          "limit": 2,
-          "size": "small"
+          "limit": 4,
+          "size": "large"
         }
       },
       {
-        "type": "scientificMetadata",
-        "label": "Scientific Metadata Table",
-        "viewMode": "table",
+        "type": "logbook",
+        "label": "Comment Log",
         "order": 6,
-        "col": 9,
-        "row": 1
-      },
-      {
-        "type": "scientificMetadata",
-        "label": "Scientific Metadata JSON",
-        "viewMode": "json",
-        "order": 6
-      },
-      {
-        "type": "scientificMetadata",
-        "label": "Scientific Metadata Tree",
-        "viewMode": "tree",
-        "order": 6
-      },
-      {
-        "type": "datasetJsonView",
-        "label": "Dataset JsonView",
-        "order": 7,
         "col": 10,
         "row": 2
+      },
+      {
+        "type": "regular",
+        "label": "Dataset Information",
+        "authorization":["admin"],
+        "order": 2,
+        "row": 2,
+        "col": 10,
+        "fields": [
+          {
+            "element": "copy",
+            "source": "pid",
+            "order": 0
+          },
+          {
+            "element": "text",
+            "source": "datasetName",
+            "order": 1
+          },
+          {
+            "element": "text",
+            "source": "description",
+            "order": 2
+          },
+          {
+            "element": "text",
+            "source": "type",
+            "order": 3
+          },
+          {
+            "element": "text",
+            "source": "startTime",
+            "order": 4
+          },
+          {
+            "element": "text",
+            "source": "endTime",
+            "order": 5
+          },
+          {
+            "element": "tag",
+            "source": "keywords",
+            "order": 6
+          }
+        ]
       }
     ]
   },
@@ -930,8 +662,5 @@
       "publishedData": true,
       "samples": true
     }
-  },
-  "defaultTab": {
-    "proposal": "details"
   }
 }

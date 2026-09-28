@@ -1,7 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
+  Post,
   UseGuards,
   UseInterceptors,
   Query,
@@ -42,5 +44,23 @@ export class LogbooksController {
     @Query("filters") filters: string,
   ): Promise<Logbook | null> {
     return this.logbooksService.findByName(name, filters);
+  }
+
+  @UseGuards(PoliciesGuard)
+  @CheckPolicies("logbooks", (ability: AppAbility) =>
+    ability.can(Action.Read, Logbook),
+  )
+  @Post("/:name/message")
+  sendMessage(
+    @Param("name") name: string,
+    @Body()
+    data: {
+      message: string;
+      metadataPrefix?: string;
+      senderName?: string;
+      datasetPid?: string;
+    },
+  ) {
+    return this.logbooksService.sendMessage(name, data);
   }
 }

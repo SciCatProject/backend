@@ -9,7 +9,7 @@ export type RelationshipDocument = AttachmentRelationshipClass & Document;
 export class AttachmentRelationshipClass {
   @ApiProperty({
     type: String,
-    description: "ID of the entity this attachment is linked to.",
+    description: "Array of entity target IDs.",
     default: "",
   })
   @Prop({ type: String, default: "" })

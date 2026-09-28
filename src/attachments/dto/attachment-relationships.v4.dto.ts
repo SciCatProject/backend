@@ -6,7 +6,7 @@ export class AttachmentRelationshipsV4Dto {
   @IsString()
   @ApiProperty({
     type: String,
-    description: "ID of the entity this attachment is linked to.",
+    description: "Array of entity target IDs.",
   })
   targetId: string;
 

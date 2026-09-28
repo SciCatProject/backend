@@ -7,6 +7,12 @@ export class MessageContent {
   @Prop()
   body: string;
 
+  @Prop()
+  metadataPrefix?: string;
+
+  @Prop()
+  datasetPid?: string;
+
   @Prop(
     raw({
       thumbnail_url: { type: String },
