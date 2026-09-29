@@ -95,7 +95,7 @@ export class RuntimeConfigService implements OnModuleInit {
     }
 
     return;
-  
+    
     Logger.log(
       `RuntimeConfigService - [${configId}] synchronized with config file`,
       "RuntimeConfigService",
