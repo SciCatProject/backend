@@ -51,7 +51,7 @@ describe("HidePersonalInfo test", () => {
       sampleId: "sample123",
       accessGroups: ["access1@group.site", "access2@group.site"],
       datasetlifecycle: {
-        _id: "68b85b9cf830ebdccde06a0e",
+        id: "68b85b9cf830ebdccde06a0e",
       },
       scientificMetadata: {
         nestedEmails: [

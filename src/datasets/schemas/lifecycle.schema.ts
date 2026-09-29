@@ -4,7 +4,7 @@ import { Document } from "mongoose";
 
 export type LifecycleDocument = LifecycleClass & Document;
 
-@Schema()
+@Schema({ _id: false })
 export class LifecycleClass {
   @Prop({ required: false })
   id?: string;
