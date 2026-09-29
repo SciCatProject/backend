@@ -5,7 +5,7 @@
 This guide documents frontend configuration options that control various UI behaviors and features in SciCat. These settings are defined in the configuration file specified by the `FRONTEND_CONFIG_FILE` environment variable (default `src/config/frontend.config.json`).
 
 
-If every updated by outsode user, the field does nt get owerwritten
+If a field is updated by an external user, the value is not overwritten by the configuration file during startup.
 ## Configuration Options
 
 | **Configuration Options**                                       | **Type** | **Default Value**     | **Description**                                                                                                                                                                                  |
