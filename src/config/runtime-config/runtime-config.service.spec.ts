@@ -133,8 +133,7 @@ describe("RuntimeConfigService", () => {
       await service.syncConfig("frontendConfig");
 
       expect(model.updateOne).not.toHaveBeenCalled();
-      });
-    
+    });
     it("does not overwrite existing user-modified entry", async () => {
       const source = { foo: "bar" };
       configService.get.mockReturnValue(source);
