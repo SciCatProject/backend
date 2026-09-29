@@ -138,7 +138,7 @@ describe("RuntimeConfigService", () => {
       );
     });
 
-    it("overwrites entry if existing and never changed", async () => {
+    it("does not overwrite existing user-modified entry", async () => {
       const source = { foo: "bar" };
       configService.get.mockReturnValue(source);
       model.findOne.mockReturnValue({
