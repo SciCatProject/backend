@@ -327,7 +327,7 @@ const TestData = {
     dataFormat: "Upchuck pre 2017",
     datasetName: "Test raw dataset",
     datasetlifecycle: {
-      _id: "JEST_ANY",
+      id: "JEST_ANY",
       archivable: true,
       archiveRetentionTime: "JEST_ANY",
       archiveStatusMessage: "datasetCreated",
