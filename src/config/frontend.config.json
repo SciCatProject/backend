@@ -312,7 +312,8 @@
         "enabled": true
       },
       {
-        "name": "pid",
+        "name": "proposalId",
+        "order": 1,
         "type": "standard",
         "width": 130,
         "enabled": true
@@ -330,7 +331,8 @@
         "enabled": true
       },
       {
-        "name": "sourceFolder",
+        "name": "size",
+        "order": 4,
         "type": "standard",
         "width": 200,
         "enabled": false
@@ -342,8 +344,8 @@
         "enabled": false
       },
       {
-        "name": "size",
-        "width": 120,
+        "name": "numberOfFiles",
+        "order": 5,
         "type": "standard",
         "enabled": true
       },
@@ -373,16 +375,28 @@
         "width": 150
       },
       {
+        "name": "pid",
+        "order": 7,
+        "type": "standard",
+        "enabled": true
+      },
+      {
         "name": "type",
-        "width": 120,
+        "order": 8,
+        "type": "standard",
+        "enabled": true
+      },
+      {
+        "name": "image",
+        "order": 9,
         "type": "standard",
         "enabled": false
       },
       {
-        "name": "image",
-        "width": 120,
+        "name": "metadata",
+        "order": 10,
         "type": "standard",
-        "enabled": true
+        "enabled": false
       },
       {
         "name": "scientificMetadata",
@@ -518,6 +532,12 @@
         "type": "standard",
         "width": 200,
         "enabled": false
+      },
+      {
+        "name": "sourceFolder",
+        "order": 13,
+        "type": "standard",
+        "enabled": true
       }
     ],
     "filters": [
@@ -676,22 +696,40 @@
   },
   "labelsLocalization": {
     "dataset": {
-      "pid": "PID",
+      "pid": "Dataset Id",
+      "Pid": "Dataset Id",
+      "datasetName": "Dataset Name",
       "description": "Description",
-      "principalInvestigator": "Principal Investigator",
+      "type": "Dataset Record Type",
+      "Type": "Dataset Record Type",
       "keywords": "Keywords",
+      "runNumber": "Run Number",
+      "sourceFolder": "Source Folder",
+      "size": "Dataset Size",
+      "creationTime": "Record Creation Time",
+      "image": "Thumbnail",
+      "proposalId": "Proposal Id",
+      "metadata": "Metadata",
+      "ownerGroup": "Permission: Owner Group",
+      "dataStatus": "Dataset Status",
+      "principalInvestigator": "Principal Investigator",
       "creationTime": "Creation Time",
       "scientificMetadata": "Scientific Metadata",
       "metadataJsonView": "Metadata JsonView",
       "datasetName": "Dataset Name",
       "scientificMetadata.run_number.value": "Run Number",
       "scientificMetadata.start_time": "Start Time",
-      "runNumber": "Run Number",
-      "size": "Size",
-      "image": "Image",
-      "proposalId": "Proposal Id",
       "startTime": "Start Time",
-      "endTime": "End Time"
+      "endTime": "End Time",
+      "numberOfFiles": "Number of Files",
+      "proposalIds": "Proposal Ids",
+      "instrumentIds": "Instrument Ids",
+      "inputDatasets": "Parent Datasets",
+      "creationLocation": "Creation Location",
+      "sampleIds": "Sample Ids",
+      "contactEmail": "Contact Email",
+      "ownerGroup": "Owner Group",
+      "accessGroups": "Access Groups"
     },
     "proposal": {
       "General Information": "Proposal Information",
@@ -725,28 +763,28 @@
   },
   "dateFormat": "yyyy-MM-dd HH:mm",
   "datasetDetailComponent": {
-    "enableCustomizedComponent": false,
+    "enableCustomizedComponent": true,
     "customization": [
       {
         "type": "regular",
-        "label": "General Information",
+        "label": "Summary",
         "order": 0,
         "row": 1,
-        "col": 8,
+        "col": 4,
         "fields": [
           {
             "element": "text",
-            "source": "scientificMetadata.start_time",
+            "source": "proposalId",
             "order": 0
           },
           {
-            "element": "copy",
-            "source": "scientificMetadata.run_number.value",
+            "element": "text",
+            "source": "runNumber",
             "order": 1
           },
           {
             "element": "text",
-            "source": "creationTime",
+            "source": "datasetName",
             "order": 2
           },
           {
@@ -760,18 +798,18 @@
             "order": 4
           },
           {
-            "element": "tag",
-            "source": "keywords",
+            "element": "text",
+            "source": "principalInvestigator",
             "order": 5
           }
         ]
       },
       {
         "type": "attachments",
-        "label": "Gallery",
+        "label": "Attachements",
         "order": 1,
-        "col": 2,
-        "row": 2,
+        "col": 4,
+        "row": 1,
         "options": {
           "limit": 5,
           "size": "medium"
@@ -779,9 +817,54 @@
       },
       {
         "type": "regular",
-        "label": "Contact Information",
+        "label": "Dataset Information",
         "order": 2,
-        "col": 2,
+        "col": 8,
+        "row": 1,
+        "fields": [
+          {
+            "element": "copy",
+            "source": "pid",
+            "order": 0
+          },
+          {
+            "element": "text",
+            "source": "datasetName",
+            "order": 0
+          },
+          {
+            "element": "text",
+            "source": "description",
+            "order": 0
+          },
+          {
+            "element": "text",
+            "source": "type",
+            "order": 0
+          },
+          {
+            "element": "date",
+            "source": "startTime",
+            "order": 0
+          },
+          {
+            "element": "date",
+            "source": "endTime",
+            "order": 0
+          },
+          {
+            "element": "tag",
+            "source": "keywords",
+            "order": 1
+          }
+        ]
+      },
+
+      {
+        "type": "regular",
+        "label": "Contact Information",
+        "order": 3,
+        "col": 4,
         "row": 1,
         "fields": [
           {
@@ -799,13 +882,13 @@
       {
         "type": "regular",
         "label": "Files Information",
-        "order": 3,
-        "col": 2,
+        "order": 4,
+        "col": 4,
         "row": 1,
         "fields": [
           {
             "element": "text",
-            "source": "scientificMetadata.runnumber",
+            "source": "sourceFolder",
             "order": 0
           },
           {
@@ -822,24 +905,14 @@
             "element": "text",
             "source": "size",
             "order": 3
-          },
-          {
-            "element": "text",
-            "source": "numberOfFilesArchived",
-            "order": 4
-          },
-          {
-            "element": "text",
-            "source": "packedSize",
-            "order": 5
           }
         ]
       },
       {
         "type": "regular",
         "label": "Related Documents",
-        "order": 4,
-        "col": 4,
+        "order": 5,
+        "col": 8,
         "row": 1,
         "fields": [
           {
@@ -853,12 +926,12 @@
             "order": 1
           },
           {
-            "element": "tag",
+            "element": "internalLink",
             "source": "sampleIds",
             "order": 2
           },
           {
-            "element": "tag",
+            "element": "internalLink",
             "source": "inputDatasets",
             "order": 3
           },
@@ -870,42 +943,39 @@
         ]
       },
       {
-        "type": "attachments",
-        "label": "Gallery",
-        "order": 5,
-        "col": 1,
-        "row": 1,
-        "options": {
-          "limit": 2,
-          "size": "small"
-        }
-      },
-      {
         "type": "scientificMetadata",
         "label": "Scientific Metadata Table",
         "viewMode": "table",
         "order": 6,
-        "col": 9,
-        "row": 1
+        "col": 8,
+        "row": 3
       },
       {
         "type": "scientificMetadata",
         "label": "Scientific Metadata JSON",
         "viewMode": "json",
-        "order": 6
-      },
-      {
-        "type": "scientificMetadata",
-        "label": "Scientific Metadata Tree",
-        "viewMode": "tree",
-        "order": 6
-      },
-      {
-        "type": "datasetJsonView",
-        "label": "Dataset JsonView",
         "order": 7,
-        "col": 10,
-        "row": 2
+        "col": 8,
+        "row": 1
+      },
+      {
+        "type": "regular",
+        "label": "Authorization / Permissions",
+        "order": 9,
+        "col": 8,
+        "row": 1,
+        "fields": [
+          {
+            "element": "tag",
+            "source": "ownerGroup",
+            "order": 0
+          },
+          {
+            "element": "tag",
+            "source": "accessGroups",
+            "order": 1
+          }
+        ]
       }
     ]
   },
