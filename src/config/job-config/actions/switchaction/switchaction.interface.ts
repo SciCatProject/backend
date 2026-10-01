@@ -16,10 +16,7 @@ export interface SwitchJobActionOptions extends JobActionOptions {
 }
 
 export type CaseOptions =
-  | DefaultCaseOptions
-  | SwitchCaseOptions
-  | MatchCaseOptions
-  | RegexCaseOptions;
+  DefaultCaseOptions | SwitchCaseOptions | MatchCaseOptions | RegexCaseOptions;
 
 export interface DefaultCaseOptions {
   actions: JobActionOptions[];

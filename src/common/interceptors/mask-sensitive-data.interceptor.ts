@@ -7,7 +7,6 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { isEmail } from "class-validator";
 import { from, map, mergeMap, Observable } from "rxjs";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
@@ -22,7 +21,6 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
   constructor(
     private readonly configService: ConfigService,
     private userIdentitiesService: UserIdentitiesService,
-    private customEmailListValidator: CustomEmailList,
   ) {
     this.adminGroups =
       this.configService.get<AccessGroupsType>("accessGroups")?.admin;
@@ -41,7 +39,7 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
       const maskedData = data.map((item) => {
         if (this.isToMaskEmail(item, ownEmails)) {
           anyMasked = true;
-          return this.maskValue();
+          return this.maskEmailValue(item, ownEmails);
         }
         return this._maskSensitiveData(item, ownEmails, seen);
       });
@@ -54,10 +52,7 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
 
     for (const [key, value] of Object.entries(data as object)) {
       if (this.isToMaskEmail(value, ownEmails)) {
-        (data as Record<string, unknown>)[key] = this.maskValue();
-        continue;
-      } else if (this.isToMaskEmailList(value, ownEmails)) {
-        (data as Record<string, unknown>)[key] = this.maskListValue(
+        (data as Record<string, unknown>)[key] = this.maskEmailValue(
           value,
           ownEmails,
         );
@@ -83,16 +78,17 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
   }
 
   private isToMaskEmail(value: string | unknown, ownEmails: Set<string>) {
-    return typeof value === "string" && isEmail(value) && !ownEmails.has(value);
-  }
-
-  private isToMaskEmailList(value: string | unknown, ownEmails: Set<string>) {
     return (
       typeof value === "string" &&
-      this.customEmailListValidator.validate(value) &&
-      !this.customEmailListValidator
-        .splitEmails(value)
-        .every((e) => ownEmails.has(e))
+      this.toMaskEmails(value, ownEmails).length > 0
+    );
+  }
+
+  private toMaskEmails(value: string, ownEmails: Set<string>): string[] {
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const foundEmails = value.match(emailRegex) || [];
+    return foundEmails.filter(
+      (email) => !ownEmails.has(email.toLowerCase().trim()),
     );
   }
 
@@ -100,11 +96,11 @@ class MaskSensitiveDataInterceptor implements NestInterceptor {
     return "*****";
   }
 
-  private maskListValue(value: string, ownEmails: Set<string>): string {
-    return this.customEmailListValidator.joinEmails(
-      this.customEmailListValidator
-        .splitEmails(value)
-        .map((e) => (ownEmails.has(e) ? e : this.maskValue())),
+  private maskEmailValue(value: string, ownEmails: Set<string>): string {
+    const toMaskEmails = this.toMaskEmails(value, ownEmails);
+    return toMaskEmails.reduce(
+      (maskedValue, email) => maskedValue.replace(email, this.maskValue()),
+      value,
     );
   }
 

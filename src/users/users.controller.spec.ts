@@ -6,6 +6,30 @@ import { UsersService } from "./users.service";
 import { UpdateUserSettingsDto } from "./dto/update-user-settings.dto";
 import { Request } from "express";
 import { UserSettings } from "./schemas/user-settings.schema";
+import { Action } from "src/casl/action.enum";
+import { User } from "./schemas/user.schema";
+import { ReturnedUserDto } from "./dto/returned-user.dto";
+
+const mockUsers: ReturnedUserDto[] = [
+  {
+    id: "user1",
+    username: "adminUser",
+    email: "admin@test.com",
+    authStrategy: "local",
+  },
+  {
+    id: "user2",
+    username: "regularUser",
+    email: "regular@test.com",
+    authStrategy: "local",
+  },
+  {
+    id: "user3",
+    username: "anotherUser",
+    email: "another@test.com",
+    authStrategy: "oidc",
+  },
+];
 
 class UsersServiceMock {
   findByIdUserIdentity(id: string) {
@@ -22,6 +46,14 @@ class UsersServiceMock {
   ) {
     return { ...updateUserSettingsDto, _id: userId };
   }
+
+  async findAll(): Promise<ReturnedUserDto[]> {
+    return mockUsers;
+  }
+
+  async findById(id: string): Promise<ReturnedUserDto | null> {
+    return mockUsers.find((user) => user.id === id) || null;
+  }
 }
 
 const mockUserSettings = {
@@ -30,15 +62,19 @@ const mockUserSettings = {
   datasetCount: 25,
   jobCount: 25,
   externalSettings: {
-    filters: [{ LocationFilter: true }, { PidFilter: true }],
-    conditions: [{ field: "status", value: "active", operator: "equals" }],
-    columns: [],
+    fe_dataset_table_filters: [{ LocationFilter: true }, { PidFilter: true }],
+    fe_dataset_table_conditions: [
+      { field: "status", value: "active", operator: "equals" },
+    ],
+    fe_dataset_table_columns: [],
   },
 };
 
 class AuthServiceMock {}
 
-class CaslAbilityFactoryMock {}
+class CaslAbilityFactoryMock {
+  userAccess = jest.fn();
+}
 
 describe("UsersController", () => {
   let controller: UsersController;
@@ -78,13 +114,23 @@ describe("UsersController", () => {
 
     // Assert
     expect(result).toEqual(mockUserSettings);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
   });
 
@@ -95,11 +141,11 @@ describe("UsersController", () => {
     const updatedSettings = {
       ...mockUserSettings,
       externalSettings: {
-        filters: [{ PidFilter: true }],
-        conditions: [
+        fe_dataset_table_filters: [{ PidFilter: true }],
+        fe_dataset_table_conditions: [
           { field: "status", value: "inactive", operator: "equals" },
         ],
-        columns: [],
+        fe_dataset_table_columns: [],
       },
     };
 
@@ -127,14 +173,211 @@ describe("UsersController", () => {
     );
 
     expect(result).toEqual(expectedResponse);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown[]>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown[]>)
-        .length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
+  });
+
+  describe("findAll", () => {
+    let caslAbilityFactory: CaslAbilityFactory;
+
+    beforeEach(() => {
+      caslAbilityFactory = (
+        controller as unknown as { caslAbilityFactory: CaslAbilityFactory }
+      ).caslAbilityFactory;
+    });
+
+    it("should return all users when admin user has AccessAny permission", async () => {
+      const adminUserId = "user1";
+      const mockRequest: Partial<Request> = {
+        user: {
+          _id: adminUserId,
+          username: "adminUser",
+          currentGroups: ["admin"],
+        },
+      };
+
+      // Mock the ability to allow AccessAny
+      const mockAbility = {
+        can: jest.fn((action: Action, subject: typeof User) => {
+          if (action === Action.AccessAny && subject === User) {
+            return true;
+          }
+          return false;
+        }),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
+
+      const result = await controller.findAll(mockRequest as Request);
+
+      expect(result).toEqual(mockUsers);
+      expect(result.length).toBe(3);
+      expect(usersService.findAll).toHaveBeenCalled();
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
+        mockRequest.user,
+      );
+    });
+
+    it("should return only own user info when regular user has UserRead but not admin AccessAny permission", async () => {
+      const regularUserId = "user2";
+      const mockRequest: Partial<Request> = {
+        user: {
+          _id: regularUserId,
+          username: "regularUser",
+          currentGroups: ["users"],
+        },
+      };
+
+      // Mock the ability to deny AccessAny but allow UserRead
+      const mockAbility = {
+        can: jest.fn((action: Action, subject: typeof User) => {
+          if (action === Action.AccessAny && subject === User) {
+            return false;
+          }
+          if (action === Action.UserRead && subject === User) {
+            return true;
+          }
+          return false;
+        }),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
+      jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);
+
+      const result = await controller.findAll(mockRequest as Request);
+
+      expect(result).toEqual([expectedUser]);
+      expect(result.length).toBe(1);
+      expect(result[0].id).toBe(regularUserId);
+      expect(usersService.findById).toHaveBeenCalledWith(regularUserId);
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
+        mockRequest.user,
+      );
+    });
+
+    it("should return empty array when user is not found in database", async () => {
+      const nonExistentUserId = "nonExistentUser";
+      const mockRequest: Partial<Request> = {
+        user: {
+          _id: nonExistentUserId,
+          username: "ghostUser",
+          currentGroups: ["users"],
+        },
+      };
+
+      // Mock the ability to deny AccessAny
+      const mockAbility = {
+        can: jest.fn((action: Action, subject: typeof User) => {
+          if (action === Action.AccessAny && subject === User) {
+            return false;
+          }
+          return true;
+        }),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      jest.spyOn(usersService, "findById").mockResolvedValue(null);
+
+      const result = await controller.findAll(mockRequest as Request);
+
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+      expect(usersService.findById).toHaveBeenCalledWith(nonExistentUserId);
+    });
+
+    it("should call userAccess with authenticated user", async () => {
+      const userId = "user1";
+      const mockUser = {
+        _id: userId,
+        username: "testUser",
+        email: "test@test.com",
+        currentGroups: ["admin"],
+      };
+      const mockRequest: Partial<Request> = {
+        user: mockUser,
+      };
+
+      const mockAbility = {
+        can: jest.fn().mockReturnValue(true),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
+
+      await controller.findAll(mockRequest as Request);
+
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(mockUser);
+    });
+
+    it("should return users with correct DTO structure", async () => {
+      const adminUserId = "user1";
+      const mockRequest: Partial<Request> = {
+        user: {
+          _id: adminUserId,
+          username: "adminUser",
+          currentGroups: ["admin"],
+        },
+      };
+
+      const mockAbility = {
+        can: jest.fn((action: Action) => action === Action.AccessAny),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
+
+      const result = await controller.findAll(mockRequest as Request);
+
+      // Verify each user has the expected properties
+      result.forEach((user) => {
+        expect(user).toHaveProperty("id");
+        expect(user).toHaveProperty("username");
+        expect(user).toHaveProperty("email");
+        expect(user).toHaveProperty("authStrategy");
+      });
+    });
+
+    it("should not call findAll service when user lacks admin AccessAny permission", async () => {
+      const regularUserId = "user2";
+      const mockRequest: Partial<Request> = {
+        user: {
+          _id: regularUserId,
+          username: "regularUser",
+          currentGroups: ["users"],
+        },
+      };
+
+      const mockAbility = {
+        can: jest.fn((action: Action) => action !== Action.AccessAny),
+      };
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
+
+      const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
+      jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);
+      const findAllSpy = jest.spyOn(usersService, "findAll");
+
+      await controller.findAll(mockRequest as Request);
+
+      expect(findAllSpy).not.toHaveBeenCalled();
+      expect(usersService.findById).toHaveBeenCalledWith(regularUserId);
+    });
   });
 });

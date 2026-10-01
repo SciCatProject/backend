@@ -55,7 +55,64 @@ describe("Test v3 history in datasetLifecycle", () => {
     await app.close();
   });
 
-  it("Should check v3 built history", async () => {
+  it("Should check v3 built history with field including history", async () => {
+    const filter = { fields: ["history"] };
+    await request(app.getHttpServer())
+      .get("/api/v3/datasets")
+      .query({ filter: JSON.stringify(filter) })
+      .auth(token, { type: "bearer" })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        expect(res.body[0].history.length).toBe(1);
+        const lifecycle = res.body[0].history[0].datasetlifecycle;
+        expect(lifecycle.previousValue.archivable).toBe(true);
+        expect(lifecycle.currentValue.archivable).toBe(false);
+        expect(lifecycle.previousValue.retrievable).toBeDefined();
+        expect(lifecycle.currentValue.retrievable).toBeDefined();
+        expect(typeof lifecycle.previousValue._id).toBe("string");
+      });
+  });
+
+  it("Should check v3 built history with field not including history", async () => {
+    const filter = { fields: ["datasetName"] };
+    await request(app.getHttpServer())
+      .get("/api/v3/datasets")
+      .query({ filter: JSON.stringify(filter) })
+      .auth(token, { type: "bearer" })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        expect(res.body[0].datasetName).toBeDefined();
+        expect(res.body[0].history).toBeUndefined();
+      });
+  });
+
+  ["", "/fullquery"].forEach((t) => {
+    it(`Should check v3 built history without fields ${t}`, async () => {
+      await request(app.getHttpServer())
+        .get(`/api/v3/datasets${t}`)
+        .auth(token, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          expect(res.body[0].datasetName).toBeDefined();
+          expect(res.body[0].history).toBeUndefined();
+        });
+    });
+  });
+
+  it("Should check v3 built history with field including history and datasetName", async () => {
+    const filter = { fields: ["datasetName", "history"] };
+    await request(app.getHttpServer())
+      .get("/api/v3/datasets")
+      .query({ filter: JSON.stringify(filter) })
+      .auth(token, { type: "bearer" })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        expect(res.body[0].datasetName).toBeDefined();
+        expect(res.body[0].history).toBeDefined();
+      });
+  });
+
+  it("Should check v3 built history by ID", async () => {
     await request(app.getHttpServer())
       .get(`/api/v3/datasets/${encodeURIComponent(dsId)}`)
       .auth(token, { type: "bearer" })
@@ -66,12 +123,12 @@ describe("Test v3 history in datasetLifecycle", () => {
         expect(lifecycle.previousValue.archivable).toBe(true);
         expect(lifecycle.currentValue.archivable).toBe(false);
         expect(lifecycle.previousValue.retrievable).toBeDefined();
-        expect(lifecycle.currentValue.retrievable).toBeUndefined();
+        expect(lifecycle.currentValue.retrievable).toBeDefined();
         expect(typeof lifecycle.previousValue._id).toBe("string");
       });
   });
 
-  it("Should check v3 built history with field not including history", async () => {
+  it("Should check v3 built history by ID with field not including history", async () => {
     const filter = { fields: ["datasetName"] };
     await request(app.getHttpServer())
       .get(`/api/v3/datasets/${encodeURIComponent(dsId)}`)
@@ -81,19 +138,6 @@ describe("Test v3 history in datasetLifecycle", () => {
       .then((res) => {
         expect(res.body.datasetName).toBeDefined();
         expect(res.body.history).toBeUndefined();
-      });
-  });
-
-  it("Should check v3 built history with field including history", async () => {
-    const filter = { fields: ["datasetName", "history"] };
-    await request(app.getHttpServer())
-      .get(`/api/v3/datasets/${encodeURIComponent(dsId)}`)
-      .query({ filter: JSON.stringify(filter) })
-      .auth(token, { type: "bearer" })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .then((res) => {
-        expect(res.body.datasetName).toBeDefined();
-        expect(res.body.history).toBeDefined();
       });
   });
 });

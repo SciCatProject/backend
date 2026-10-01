@@ -148,6 +148,9 @@ describe("History Utility Functions", () => {
         datasetlifecycle: {
           publishedOn: new Date("2023-10-01T12:00:00Z"),
           archivable: true,
+          archiveReturnMessage: {
+            blackpearlMigration: "succeeded",
+          },
         },
         isPublished: true,
       },
@@ -196,6 +199,14 @@ describe("History Utility Functions", () => {
         currentValue: {
           publishedOn: new Date("2023-10-01T12:00:00Z").toISOString(),
           archivable: true,
+          retrievable: true,
+          publishable: false,
+          archiveRetentionTime: new Date("2031-10-01T12:00:00Z").toISOString(),
+          dateOfPublishing: new Date("2024-10-01T12:00:00Z").toISOString(),
+          isOnCentralDisk: true,
+          archiveStatusMessage: "datasetOnArchiveDisk",
+          retrieveStatusMessage: "",
+          retrieveIntegrityCheck: false,
         },
       },
       _id: "",
@@ -213,7 +224,6 @@ describe("History Utility Functions", () => {
         before: {
           isPublished: false,
           datasetlifecycle: {
-            publishedOn: undefined,
             archivable: false,
           },
         },
@@ -221,6 +231,9 @@ describe("History Utility Functions", () => {
           datasetlifecycle: {
             publishedOn: new Date("2023-10-02T12:00:00Z"),
             archivable: true,
+            archiveReturnMessage: {
+              blackpearlMigration: "succeeded",
+            },
           },
           isPublished: true,
         },
@@ -232,9 +245,7 @@ describe("History Utility Functions", () => {
         operation: "update",
         timestamp: new Date("2023-10-01T12:00:00Z"),
         before: {
-          isPublished: false,
           datasetlifecycle: {
-            publishedOn: undefined,
             archivable: false,
           },
         },
@@ -243,7 +254,6 @@ describe("History Utility Functions", () => {
             publishedOn: new Date("2023-10-01T12:00:00Z"),
             archivable: false,
           },
-          isPublished: false,
         },
       },
     ];
@@ -261,10 +271,11 @@ describe("History Utility Functions", () => {
         archiveStatusMessage: "datasetOnArchiveDisk",
         retrieveStatusMessage: "",
         retrieveIntegrityCheck: false,
+        archiveReturnMessage: {
+          blackpearlMigration: "succeeded",
+        },
       },
     };
-
-    currentDataset.$clone = () => currentDataset as DatasetDocument; // Mock the $clone method
 
     const obsoleteHistories = convertGenericHistoriesToObsoleteHistories(
       genericHistories,
@@ -281,7 +292,6 @@ describe("History Utility Functions", () => {
         },
         datasetlifecycle: {
           previousValue: {
-            publishedOn: undefined,
             archivable: false,
             retrievable: true,
             publishable: false,
@@ -297,6 +307,19 @@ describe("History Utility Functions", () => {
           currentValue: {
             publishedOn: new Date("2023-10-02T12:00:00Z").toISOString(),
             archivable: true,
+            retrievable: true,
+            publishable: false,
+            archiveRetentionTime: new Date(
+              "2031-10-01T12:00:00Z",
+            ).toISOString(),
+            dateOfPublishing: new Date("2024-10-01T12:00:00Z").toISOString(),
+            isOnCentralDisk: true,
+            archiveStatusMessage: "datasetOnArchiveDisk",
+            retrieveStatusMessage: "",
+            retrieveIntegrityCheck: false,
+            archiveReturnMessage: {
+              blackpearlMigration: "succeeded",
+            },
           },
         },
         _id: "",
@@ -304,13 +327,8 @@ describe("History Utility Functions", () => {
       {
         updatedAt: new Date("2023-10-01T12:00:00Z"),
         updatedBy: "user456",
-        isPublished: {
-          previousValue: false,
-          currentValue: false,
-        },
         datasetlifecycle: {
           previousValue: {
-            publishedOn: undefined,
             archivable: false,
             retrievable: true,
             publishable: false,
@@ -324,8 +342,17 @@ describe("History Utility Functions", () => {
             retrieveIntegrityCheck: false,
           },
           currentValue: {
-            publishedOn: new Date("2023-10-01T12:00:00Z").toISOString(),
             archivable: false,
+            retrievable: true,
+            publishable: false,
+            archiveRetentionTime: new Date(
+              "2031-10-01T12:00:00Z",
+            ).toISOString(),
+            dateOfPublishing: new Date("2024-10-01T12:00:00Z").toISOString(),
+            isOnCentralDisk: true,
+            archiveStatusMessage: "datasetOnArchiveDisk",
+            retrieveStatusMessage: "",
+            retrieveIntegrityCheck: false,
           },
         },
         _id: "",

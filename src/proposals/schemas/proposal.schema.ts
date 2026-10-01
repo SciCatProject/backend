@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Document, Schema as MongooseSchema } from "mongoose";
+import { Document } from "mongoose";
 
 import { OwnableClass } from "src/common/schemas/ownable.schema";
 import {
@@ -120,7 +120,7 @@ export class ProposalClass extends OwnableClass {
   startTime?: Date;
 
   /**
-   * The date when data collection finishes.
+   * ISO Timestamp when the proposal is planned to or has actually ended.
    */
   @Prop({
     type: Date,
@@ -129,25 +129,31 @@ export class ProposalClass extends OwnableClass {
   endTime?: Date;
 
   /**
-   * Embedded information used inside proposals to define which type of experiment has to be pursued, where (at which instrument) and when.
+   * List of measurement periods/visit scheduled for the proposal
    */
   @Prop({
     type: [MeasurementPeriodSchema],
     required: false,
+    default: [],
   })
   MeasurementPeriodList?: MeasurementPeriodClass[];
 
   /**
    * JSON object containing the proposal metadata.
    */
-  @Prop({ type: MongooseSchema.Types.Mixed, required: false, default: {} })
-  metadata?: Record<string, unknown> = {};
+  @Prop({
+    type: Object,
+    required: false,
+    default: {},
+  })
+  metadata?: Record<string, unknown>;
 
   /**
    * Parent proposal id
    */
   @Prop({
     type: String,
+    required: false,
     default: null,
     ref: "Proposal",
   })
@@ -173,7 +179,7 @@ export class ProposalClass extends OwnableClass {
   instrumentIds?: string[];
 
   /**
-   * Number of datasets associated with the proposal.
+   * Number of Datasets associated or acquired under this proposal.
    */
   @Prop({
     type: Number,
@@ -181,6 +187,15 @@ export class ProposalClass extends OwnableClass {
     required: false,
   })
   numberOfDatasets?: number;
+
+  /*
+   * Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.
+   */
+  @Prop({
+    type: [String],
+    required: false,
+  })
+  keywords: string[];
 }
 
 export const ProposalSchema = SchemaFactory.createForClass(ProposalClass);

@@ -4,16 +4,18 @@ import { PipelineStage } from "mongoose";
 import { isJsonString } from "src/common/utils";
 import { DatasetLookupKeysEnum } from "src/datasets/types/dataset-lookup";
 import { OrigDatablockLookupKeysEnum } from "src/origdatablocks/types/origdatablock-lookup";
+import { ProposalLookupKeysEnum } from "src/proposals/types/proposal-lookup";
 
 @Injectable()
-export class IncludeValidationPipe
-  implements
-    PipeTransform<string | string[], string | string[] | { relation: string }[]>
-{
+export class IncludeValidationPipe implements PipeTransform<
+  string | string[],
+  string | string[] | { relation: string }[]
+> {
   constructor(
     private lookupFields:
       | Record<DatasetLookupKeysEnum, PipelineStage.Lookup | undefined>
-      | Record<OrigDatablockLookupKeysEnum, PipelineStage.Lookup | undefined>,
+      | Record<OrigDatablockLookupKeysEnum, PipelineStage.Lookup | undefined>
+      | Record<ProposalLookupKeysEnum, PipelineStage.Lookup | undefined>,
   ) {}
   transform(
     inValue: string | string[] | { relation: string }[],

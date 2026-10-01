@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigService } from "@nestjs/config";
 import { AdminService } from "./admin.service";
+import { RuntimeConfigService } from "src/config/runtime-config/runtime-config.service";
 
 const mockConfig: Record<string, unknown> = {
   accessTokenPrefix: "Bearer ",
@@ -51,6 +51,7 @@ const mockConfig: Record<string, unknown> = {
   searchSamples: true,
   sftpHost: "login.esss.dk",
   sourceFolder: "/data/ess",
+  maxFileUploadSizeInMb: "12mb",
   maxDirectDownloadSize: 5000000000,
   maxFileSizeWarning:
     "Some files are above <maxDirectDownloadSize> and cannot be downloaded directly. These file can be downloaded via sftp host: <sftpHost> in directory: <sourceFolder>",
@@ -89,12 +90,11 @@ const mockTheme: Record<string, unknown> = {
 
 describe("AdminService", () => {
   let service: AdminService;
-  const mockConfigService = {
-    get: jest.fn((propertyPath: string) => {
+  const mockRuntimeConfigService = {
+    getConfig: jest.fn((propertyPath: string) => {
       const config = {
-        maxFileUploadSizeInMb: "12mb",
-        frontendConfig: mockConfig,
-        frontendTheme: mockTheme,
+        frontendConfig: { cid: "frontendConfig", data: mockConfig },
+        frontendTheme: { cid: "frontendTheme", data: mockTheme },
       } as Record<string, unknown>;
 
       return config[propertyPath];
@@ -106,8 +106,8 @@ describe("AdminService", () => {
       providers: [
         AdminService,
         {
-          provide: ConfigService,
-          useValue: mockConfigService,
+          provide: RuntimeConfigService,
+          useValue: mockRuntimeConfigService,
         },
       ],
     }).compile();
@@ -120,13 +120,10 @@ describe("AdminService", () => {
   });
 
   describe("getConfig", () => {
-    it("should return modified config", async () => {
+    it("should return frontend config", async () => {
       const result = await service.getConfig();
 
-      expect(result).toEqual({
-        ...mockConfig,
-        maxFileUploadSizeInMb: "12mb",
-      });
+      expect(result).toEqual(mockConfig);
     });
   });
 

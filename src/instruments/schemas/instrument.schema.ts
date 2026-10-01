@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { QueryableClass } from "../../common/schemas/queryable.schema";
@@ -33,6 +33,7 @@ export class Instrument extends QueryableClass {
   })
   pid: string;
 
+  @ApiHideProperty()
   @Prop({
     type: String,
   })

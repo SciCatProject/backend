@@ -5,7 +5,7 @@ import {
   DatasetDocument,
 } from "src/datasets/schemas/dataset.schema";
 import { computeDeltaWithOriginals } from "src/common/utils/delta.util";
-import { cloneDeep } from "lodash";
+import { omit } from "lodash";
 
 const IGNORE_FIELDS = ["updatedAt", "updatedBy", "_id"];
 
@@ -72,12 +72,34 @@ export function convertGenericHistoryToObsoleteHistory(
       continue;
     }
     if (field === "datasetlifecycle" && datasetSnapshot.datasetlifecycle) {
-      history.before[field] = {
-        ...JSON.parse(JSON.stringify(datasetSnapshot.datasetlifecycle)),
-        ...(history.before[field] as Record<string, unknown>),
+      const beforePartial = (history.before[field] || {}) as Record<
+        string,
+        unknown
+      >;
+      const afterPartial = (history.after?.[field] || {}) as Record<
+        string,
+        unknown
+      >;
+      // omit keys that are only in afterPartial, as it means they were added in this update
+      // and apply beforePartial to the resulting datasetlifecycle snapshot
+      const reconstructedBefore = {
+        ...JSON.parse(
+          JSON.stringify(
+            omit(
+              datasetSnapshot.datasetlifecycle,
+              Object.keys(afterPartial).filter(
+                (key) => !(key in beforePartial),
+              ),
+            ),
+          ),
+        ),
+        ...beforePartial,
       };
+
+      history.before[field] = reconstructedBefore;
+
       history.after![field] = JSON.parse(
-        JSON.stringify(history.after![field] as Record<string, unknown>),
+        JSON.stringify(datasetSnapshot.datasetlifecycle),
       );
     }
     result[field] = {
@@ -88,22 +110,20 @@ export function convertGenericHistoryToObsoleteHistory(
   return result;
 }
 
-// starting from the latest dataset, replay the history entries in reverse order to reconstruct the obsolete history entries
+// starting from the latest dataset, replay the history entries in reverse order to reconstruct the obsolete history entries.
+// assumes histories is sorted in descending order of updatedAt
 export function convertGenericHistoriesToObsoleteHistories(
   histories: GenericHistory[],
   currentDataset: DatasetDocument | DatasetClass,
 ): HistoryClass[] {
-  let currentDatasetCopy;
-  if ("$clone" in currentDataset) currentDatasetCopy = currentDataset.$clone();
-  else currentDatasetCopy = cloneDeep(currentDataset);
   const result: HistoryClass[] = [];
   for (const history of histories) {
     const obsoleteHistory = convertGenericHistoryToObsoleteHistory(
       history,
-      currentDatasetCopy,
+      currentDataset,
     );
     for (const key of Object.keys(history.before || {})) {
-      (currentDatasetCopy as unknown as Record<string, unknown>)[key] =
+      (currentDataset as unknown as Record<string, unknown>)[key] =
         history.before?.[key];
     }
     result.push(obsoleteHistory);

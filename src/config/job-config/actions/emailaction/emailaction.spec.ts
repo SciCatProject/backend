@@ -1,3 +1,13 @@
+/* emailaction tests
+ *
+ * This suite contains snapshot tests for the email action templates. After changing
+ * templates, run
+ *
+ *     npm run test emailaction -- -u
+ *
+ * to update __snapshots__.
+ *
+ */
 import { EmailJobAction } from "./emailaction";
 import { EmailJobActionOptions } from "./emailaction.interface";
 import { JobClass } from "../../../../jobs/schemas/job.schema";
@@ -5,22 +15,30 @@ import { MailService } from "src/common/mail.service";
 import { MailerService } from "@nestjs-modules/mailer";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { CreateJobDto } from "src/jobs/dto/create-job.dto";
+import { registerHelpers } from "../../handlebar-utils";
+import { toMatchFile } from "jest-file-snapshot";
+import path from "path";
 
+expect.extend({ toMatchFile });
 jest.mock("src/common/mail.service");
 jest.mock("@nestjs-modules/mailer");
+const snapshotDir = (...parts: string[]) =>
+  path.join(__dirname, "__snapshots__", parts.join("_") + ".snap.html");
+// initialize helpers, since app.module.ts is not loaded in this test
+registerHelpers();
 
 const mockDataset: DatasetClass = {
-  _id: "testId",
-  pid: "testPid",
-  owner: "testOwner",
+  _id: "testId/12345",
+  pid: "testPid/12345",
+  owner: "owner user",
   ownerEmail: "testOwner@email.com",
   instrumentIds: ["testInstrumentId"],
   orcidOfOwner: "https://0000.0000.0000.0001",
   contactEmail: "testContact@email.com",
   sourceFolder: "/nfs/groups/beamlines/test/123456",
   sourceFolderHost: "https://fileserver.site.com",
-  size: 1000000,
-  packedSize: 1000000,
+  size: 50 * 1024 * 1024 * 1024,
+  packedSize: 50 * 1024 * 1024 * 1024,
   numberOfFiles: 1,
   numberOfFilesArchived: 1,
   creationTime: new Date("2021-11-11T12:29:02.083Z"),
@@ -36,7 +54,7 @@ const mockDataset: DatasetClass = {
   datasetlifecycle: {
     id: "testId",
     archivable: true,
-    retrievable: false,
+    retrievable: true,
     publishable: true,
     dateOfDiskPurging: new Date("2031-11-11T12:29:02.083Z"),
     archiveRetentionTime: new Date("2031-11-11T12:29:02.083Z"),
@@ -59,20 +77,25 @@ const mockDataset: DatasetClass = {
   proposalIds: ["ABCDEF"],
   sampleIds: ["testSampleId"],
   accessGroups: [],
-  createdBy: "test user",
-  ownerGroup: "test",
-  updatedBy: "test",
-  instrumentGroup: "test",
+  createdBy: "creating user",
+  ownerGroup: "owner group",
+  updatedBy: "updating user",
+  instrumentGroup: "instrument group",
 };
 
+// Basic archive job for testing
 const mockJob: JobClass = {
   id: "jobId123",
   _id: "jobId123",
   type: "archive",
-  statusCode: "jobStarted",
-  statusMessage: "Job started",
+  statusCode: "jobSubmitted",
+  statusMessage: "Job submitted",
   jobParams: {
     datasetList: [
+      {
+        pid: mockDataset.pid,
+        files: [],
+      },
       {
         pid: mockDataset.pid,
         files: [],
@@ -89,6 +112,26 @@ const mockJob: JobClass = {
   updatedAt: new Date("2023-10-01T10:00:00Z"),
   accessGroups: [],
   isPublished: false,
+};
+
+// PSI retrieve object structure. Other facilities may differ.
+const retrieveResultObject = {
+  result: [
+    {
+      datasetId: mockDataset.pid,
+      name: `${mockDataset.pid}-1.tar`,
+      size: 40127,
+      archiveId: `/lts/${mockDataset.pid}-1.tar`,
+      url: "https://example.com/v1/publicbucket/${mockDataset.pid}-1.tar",
+    },
+    {
+      datasetId: mockDataset.pid,
+      name: `${mockDataset.pid}-2.tar`,
+      size: 40127,
+      archiveId: `/lts/${mockDataset.pid}-2.tar`,
+      url: "https://example.com/v1/publicbucket/${mockDataset.pid}-2.tar",
+    },
+  ],
 };
 
 function jobToCreateDto(job: JobClass): CreateJobDto {
@@ -270,6 +313,99 @@ describe("Email Template", () => {
 
     expect(mailService.sendMail).toHaveBeenCalled();
     const mail = (mailService.sendMail as jest.Mock).mock.calls.at(-1)[0];
-    expect(mail.html).toMatchSnapshot();
+    expect(mail.html).toMatchFile(
+      snapshotDir(
+        "job-template-simplified",
+        context.job.type,
+        mockJob.statusCode || "",
+      ),
+    );
   });
+
+  const jobTypes = ["archive", "retrieve", "public"];
+  const statusCodes = [
+    "jobSubmitted",
+    "finishedSuccessful",
+    "finishedUnsuccessful",
+  ];
+  const retrieveOptions = ["URLs", "PSI", "PSI-Ra"];
+
+  // Build list of combinations
+  const combinations: [string, string, string?][] = [];
+  for (const jobType of jobTypes) {
+    for (const statusCode of statusCodes) {
+      if (jobType === "retrieve") {
+        for (const option of retrieveOptions) {
+          combinations.push([jobType, statusCode, option]);
+        }
+      } else {
+        combinations.push([jobType, statusCode, undefined]);
+      }
+    }
+  }
+
+  it.each(combinations)(
+    "job-template.html should render correctly on %s jobs with status %s and option %s",
+    async (jobType, statusCode, retrieveOption) => {
+      const config: EmailJobActionOptions = {
+        actionType: "email",
+        to: "recipient@example.com",
+        from: "sender@example.com",
+        subject: "Job {{ job.id }}",
+        bodyTemplateFile: "src/common/email-templates/job-template.html",
+      };
+      const action = new EmailJobAction(mailService, config);
+
+      const job: JobClass = {
+        ...mockJob,
+        type: jobType,
+        statusCode: statusCode,
+        statusMessage: `Job ${statusCode}`,
+        jobParams: {
+          ...mockJob.jobParams,
+        },
+      };
+      if (jobType === "retrieve") {
+        job.jobParams.option = retrieveOption;
+        job.jobResultObject = retrieveResultObject;
+      }
+
+      const datasets: DatasetClass[] = [
+        {
+          ...mockDataset,
+          datasetlifecycle: {
+            ...mockDataset.datasetlifecycle,
+            archivable: true,
+            retrievable:
+              statusCode != "finishedUnsuccessful" && jobType == "retrieve",
+          },
+        },
+        {
+          ...mockDataset,
+          datasetlifecycle: {
+            ...mockDataset.datasetlifecycle,
+            archivable:
+              statusCode != "finishedUnsuccessful" && jobType == "archive",
+            retrievable: true,
+          },
+        },
+      ];
+
+      const context = {
+        request: jobToCreateDto(job),
+        job: job,
+        env: { SCICAT_FRONTEND_URL: "https://discovery.psi.ch" },
+        datasets: datasets,
+      };
+      console.log(JSON.stringify(context));
+      await action.perform(context);
+
+      expect(mailService.sendMail).toHaveBeenCalled();
+      const mail = (mailService.sendMail as jest.Mock).mock.calls.at(-1)[0];
+
+      expect(mail.html).toMatchFile(
+        snapshotDir("job-template", jobType, statusCode, retrieveOption || ""),
+      );
+    },
+  );
 });

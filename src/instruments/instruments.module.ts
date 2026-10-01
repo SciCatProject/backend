@@ -10,12 +10,14 @@ import { InstrumentsController } from "./instruments.controller";
 import { InstrumentsService } from "./instruments.service";
 import { Instrument, InstrumentSchema } from "./schemas/instrument.schema";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
+import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 
 @Module({
   controllers: [InstrumentsController],
   imports: [
     CaslModule,
     ConfigModule,
+    MetadataKeysModule,
     MongooseModule.forFeature([
       {
         name: GenericHistory.name,

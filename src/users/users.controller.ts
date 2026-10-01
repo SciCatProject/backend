@@ -63,7 +63,7 @@ export class UsersController {
 
   async checkUserAuthorization(
     request: Request,
-    actions: Action[],
+    action: Action,
     viewedUserId: string,
   ) {
     const authenticatedUser: JWTUser = request.user as JWTUser;
@@ -71,13 +71,12 @@ export class UsersController {
     viewedUserSchema._id = viewedUserId;
     viewedUserSchema.id = viewedUserId;
 
-    const ability =
-      this.caslAbilityFactory.userEndpointAccess(authenticatedUser);
+    const ability = this.caslAbilityFactory.userAccess(authenticatedUser);
     // const authorized = actions.map( action =>
     //   ability.can(action, viewedUserSchema)
     // ) as Array<Boolean>;
 
-    if (!actions.some((action) => ability.can(action, viewedUserSchema))) {
+    if (!ability.can(action, viewedUserSchema)) {
       throw new ForbiddenException("Access Forbidden or Unauthorized");
     }
   }
@@ -100,7 +99,37 @@ export class UsersController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserReadOwn, User),
+    ability.can(Action.UserRead, User),
+  )
+  @Get()
+  @ApiOperation({
+    summary: "Returns all users.",
+    description:
+      "Users with admin roles (ADMIN_GROUPS) can retrieve all users. Regular authenticated users can only retrieve their own information.",
+  })
+  @ApiResponse({
+    status: 200,
+    type: [ReturnedUserDto],
+    description: "List of users.",
+  })
+  async findAll(@Req() request: Request): Promise<ReturnedUserDto[]> {
+    const authenticatedUser = request.user as JWTUser;
+
+    const ability = this.caslAbilityFactory.userAccess(authenticatedUser);
+
+    if (ability.can(Action.AccessAny, User)) {
+      // Admin users can see all users
+      return this.usersService.findAll();
+    }
+
+    // Regular users can only see their own information
+    const user = await this.usersService.findById(authenticatedUser._id);
+    return user ? [user] : [];
+  }
+
+  @UseGuards(AuthenticatedPoliciesGuard)
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserUpdate, User),
   )
   @Post("/password")
   @ApiBody({ type: UpdateUserPasswordDto })
@@ -121,11 +150,7 @@ export class UsersController {
   ): Promise<passwordUpdateResponse | null> {
     const user = request.user as JWTUser;
 
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateOwn],
-      user._id,
-    );
+    await this.checkUserAuthorization(request, Action.UserUpdate, user._id);
 
     if (
       updateUserPasswordDto.newPassword !==
@@ -178,7 +203,7 @@ export class UsersController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserReadOwn, User),
+    ability.can(Action.UserRead, User),
   )
   @Get("/my/self")
   @ApiOperation({
@@ -196,7 +221,7 @@ export class UsersController {
     const authenticatedUserId: string = (request.user as JWTUser)._id;
     await this.checkUserAuthorization(
       request,
-      [Action.UserReadOwn],
+      Action.UserRead,
       (request.user as JWTUser)._id,
     );
     return this.usersService.findById(authenticatedUserId);
@@ -204,7 +229,7 @@ export class UsersController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserReadOwn, User),
+    ability.can(Action.UserRead, User),
   )
   @Get("/my/identity")
   async getMyUserIdentity(
@@ -213,7 +238,7 @@ export class UsersController {
     const authenticatedUserId: string = (request.user as JWTUser)._id;
     await this.checkUserAuthorization(
       request,
-      [Action.UserReadOwn],
+      Action.UserRead,
       authenticatedUserId,
     );
     return this.usersService.findByIdUserIdentity(authenticatedUserId);
@@ -221,42 +246,36 @@ export class UsersController {
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserReadOwn, User),
+    ability.can(Action.UserRead, User),
   )
   @Get("/my/settings")
   async getMySettings(@Req() request: Request): Promise<UserSettings | null> {
     const authenticatedUserId: string = (request.user as JWTUser)._id;
     await this.checkUserAuthorization(
       request,
-      [Action.UserReadOwn],
+      Action.UserRead,
       authenticatedUserId,
     );
     return this.usersService.findByIdUserSettings(authenticatedUserId);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserReadOwn, User) ||
-      ability.can(Action.UserReadAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
   )
   @Get("/:id")
   async findById(
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<ReturnedUserDto | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserReadAny, Action.UserReadOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserRead, id);
+
     return this.usersService.findById(id);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserUpdateAny, User),
+    ability.can(Action.AccessAny, User),
   )
   @Patch("/:id/password")
   @ApiBody({ type: AdminUpdateUserPasswordDto })
@@ -285,11 +304,8 @@ export class UsersController {
   ): Promise<passwordUpdateResponse | null> {
     const user = request.user as JWTUser;
 
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateAny],
-      user._id,
-    );
+    await this.checkUserAuthorization(request, Action.UserUpdate, user._id);
+
     if (
       updateUserPasswordDto.newPassword !==
       updateUserPasswordDto.confirmPassword
@@ -319,31 +335,22 @@ export class UsersController {
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserReadOwn, User) ||
-      ability.can(Action.UserReadAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
   )
   @Get("/:id/userIdentity")
   async getUserIdentity(
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<UserIdentity | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserReadAny, Action.UserReadOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserRead, id);
+
     return this.usersService.findByIdUserIdentity(id);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserCreateOwn, User) ||
-      ability.can(Action.UserCreateAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserCreate, User),
   )
   @Post("/:id/settings")
   async createSettings(
@@ -351,40 +358,28 @@ export class UsersController {
     @Param("id") id: string,
     @Body() createUserSettingsDto: CreateUserSettingsDto,
   ): Promise<UserSettings> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserCreateAny, Action.UserCreateOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserCreate, id);
+
     return this.usersService.createUserSettings(id, createUserSettingsDto);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserReadOwn, User) ||
-      ability.can(Action.UserReadAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
   )
   @Get("/:id/settings")
   async getSettings(
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<UserSettings | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserReadAny, Action.UserReadOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserRead, id);
+
     return this.usersService.findByIdUserSettings(id);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserUpdateOwn, User) ||
-      ability.can(Action.UserUpdateAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserUpdate, User),
   )
   @Put("/:id/settings")
   async updateSettings(
@@ -392,11 +387,8 @@ export class UsersController {
     @Param("id") id: string,
     @Body() updateUserSettingsDto: PartialUpdateUserSettingsDto,
   ): Promise<UserSettings | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateAny, Action.UserUpdateOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserUpdate, id);
+
     return this.usersService.findOneAndUpdateUserSettings(
       id,
       updateUserSettingsDto,
@@ -404,11 +396,8 @@ export class UsersController {
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserUpdateOwn, User) ||
-      ability.can(Action.UserUpdateAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserUpdate, User),
   )
   @Patch("/:id/settings")
   async patchSettings(
@@ -416,11 +405,8 @@ export class UsersController {
     @Param("id") id: string,
     @Body() updateUserSettingsDto: PartialUpdateUserSettingsDto,
   ): Promise<UserSettings | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateAny, Action.UserUpdateOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserUpdate, id);
+
     return this.usersService.findOneAndPatchUserSettings(
       id,
       updateUserSettingsDto,
@@ -428,11 +414,8 @@ export class UsersController {
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserUpdateOwn, User) ||
-      ability.can(Action.UserUpdateAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserUpdate, User),
   )
   @ApiParam({ name: "id", type: String, description: "User ID" })
   @ApiBody({
@@ -450,11 +433,8 @@ export class UsersController {
     @Param("id") id: string,
     @Body() externalSettings = {},
   ): Promise<UserSettings | null> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateAny, Action.UserUpdateOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserUpdate, id);
+
     return this.usersService.findOneAndPatchUserExternalSettings(
       id,
       externalSettings,
@@ -462,47 +442,34 @@ export class UsersController {
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies(
-    "users",
-    (ability: AppAbility) =>
-      ability.can(Action.UserDeleteOwn, User) ||
-      ability.can(Action.UserDeleteAny, User),
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserDelete, User),
   )
   @Delete("/:id/settings")
   async removeSettings(
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<unknown> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserUpdateAny, Action.UserUpdateOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserDelete, id);
+
     return this.usersService.findOneAndDeleteUserSettings(id);
   }
 
   @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) => {
-    return (
-      ability.can(Action.UserReadOwn, User) ||
-      ability.can(Action.UserReadAny, User)
-    );
-  })
+  @CheckPolicies("users", (ability: AppAbility) =>
+    ability.can(Action.UserRead, User),
+  )
   @Get("/:id/authorization/dataset/create")
   async canUserCreateDataset(
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<unknown> {
-    await this.checkUserAuthorization(
-      request,
-      [Action.UserReadAny, Action.UserReadOwn],
-      id,
-    );
+    await this.checkUserAuthorization(request, Action.UserRead, id);
 
     const viewedUser = (await this.usersService.findById2JWTUser(
       id,
     )) as JWTUser;
-    const ability = this.caslAbilityFactory.datasetEndpointAccess(viewedUser);
+    const ability = this.caslAbilityFactory.datasetAccess(viewedUser);
 
     const canCreateDataset = ability.can(Action.DatasetCreate, DatasetClass);
 

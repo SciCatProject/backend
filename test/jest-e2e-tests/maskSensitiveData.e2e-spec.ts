@@ -54,7 +54,12 @@ describe("HidePersonalInfo test", () => {
         _id: "68b85b9cf830ebdccde06a0e",
       },
       scientificMetadata: {
-        nestedEmails: [{ email: "another@example.com" }],
+        nestedEmails: [
+          {
+            email: "another@example.com",
+            emailString: `${user1email}; ${user2email} some email in text (access3@group.site)|access4@group.site`,
+          },
+        ],
       },
     };
 
@@ -71,7 +76,10 @@ describe("HidePersonalInfo test", () => {
           expect(result.body.accessGroups).toEqual(["*****"]),
           expect(result.body.scientificMetadata.nestedEmails[0].email).toEqual(
             "*****",
-          )
+          ),
+          expect(
+            result.body.scientificMetadata.nestedEmails[0].emailString,
+          ).toEqual("user1@your.site; ***** some email in text (*****)|*****")
         ),
       );
 
@@ -89,7 +97,10 @@ describe("HidePersonalInfo test", () => {
           ),
           expect(
             result.body[0].scientificMetadata.nestedEmails[0].email,
-          ).toEqual("*****")
+          ).toEqual("*****"),
+          expect(
+            result.body[0].scientificMetadata.nestedEmails[0].emailString,
+          ).toEqual("user1@your.site; ***** some email in text (*****)|*****")
         ),
       );
   });

@@ -11,10 +11,9 @@ export type TemplateJob = hb.TemplateDelegate<JobTemplateContext>;
  * tests that bypass module loading.
  */
 export function registerHelpers() {
-  Object.entries(handlebarsHelpers).forEach(([name, impl]) =>
-    hb.registerHelper(name, impl),
-  );
+  hb.registerHelper(handlebarsHelpers);
 }
+
 /**
  * Standardizes compilation of handlebars templates
  *

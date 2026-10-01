@@ -3,8 +3,13 @@
  *
  * Helpers should be registered in app.module.ts
  */
+import * as hb from "handlebars";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import { JobParams } from "src/jobs/types/job-types.enum";
+import { FormatOptions, unit } from "mathjs";
+import { HelperOptions } from "handlebars";
+import { parseBoolean } from "./utils";
+import { trim } from "lodash";
 
 /**
  * Convert json objects to HTML
@@ -40,6 +45,11 @@ export const unwrapJSON = (json: unknown): string | number => {
     );
   }
   if (typeof json === "object") {
+    // Not json, but some documents parse date strings
+    if (json instanceof Date) {
+      return (json as Date).toISOString();
+    }
+    // plain old object
     return Object.keys(json as Record<string, unknown>)
       .map((key) => {
         return (
@@ -124,6 +134,34 @@ export const urlencode = (context: string): string => {
 };
 
 /**
+ * Format a unit using mathjs.
+ *
+ * Additional formatting options can be passed as named parameters (eg changing
+ * precision from the default of 2). See
+ * [mathjs format docs](https://mathjs.org/docs/reference/functions/format.html)
+ *
+ * Example:
+ *   `{{formatUnit 52428800 "B" precision=1}}` produces `50 MiB`
+ *
+ * @param value numeric value
+ * @param baseUnit string representing the unit
+ * @param options handlebar options object; collects named parameters in `hash`
+ * @returns
+ */
+export const formatUnit = (
+  value: number,
+  baseUnit: string,
+  options: HelperOptions,
+) => {
+  const u = unit(value, baseUnit);
+  const fmtOptions: FormatOptions = {
+    precision: 2,
+    ...options.hash,
+  };
+  return u.format(fmtOptions);
+};
+
+/**
  * Base64 encode input
  * @param context Handlebars variable
  * @returns URL-encoded string
@@ -132,14 +170,33 @@ export const base64enc = (context: string): string => {
   return btoa(context);
 };
 
-export const handlebarsHelpers = {
+export function regexMatches(
+  query: string,
+  regex: string,
+  ...args: unknown[]
+): boolean {
+  args.pop() as HelperOptions; // Remove options
+  const flags = args.pop() as string | undefined;
+  return RegExp(regex, flags).test(query);
+}
+export const handlebarsHelpers: hb.HelperDeclareSpec = {
   unwrapJSON: unwrapJSON,
   keyToWord: formatCamelCase,
   eq: (a: unknown, b: unknown) => a === b,
-  matches: (query: string, regex: string) => RegExp(regex).test(query),
+  or: (...args) => args.slice(0, -1).some((arg) => parseBoolean(arg)),
+  and: (...args) => args.slice(0, -1).every((arg) => parseBoolean(arg)),
+  not: (a: unknown) => !parseBoolean(a),
+  concat: (...args: unknown[]) => args.slice(0, -1).join(""),
+  matches: regexMatches,
   default: (query: unknown, def: unknown) => query || def,
   jsonify: jsonify,
   job_v3: job_v3,
   urlencode: urlencode,
   base64enc: base64enc,
+  base64dec: atob,
+  formatUnit: formatUnit,
+  subString: (str: string | null | undefined, start: number, end?: number) =>
+    (str ?? "").substring(start, end),
+  trim: (str: string | null | undefined, chars: string) =>
+    trim(str ?? "", chars),
 };

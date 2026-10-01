@@ -11,7 +11,9 @@ import {
 } from "./interfaces/common.interface";
 import { ScientificRelation } from "./scientific-relation.enum";
 import { DatasetType } from "src/datasets/types/dataset-type.enum";
-import _ from "lodash";
+import { isPlainObject, mapValues, omit, pickBy, some } from "lodash";
+import { MetadataSourceDoc } from "src/metadata-keys/metadatakeys.service";
+import type { IJobFields } from "src/jobs/interfaces/job-filters.interface";
 
 // add Å to mathjs accepted units as equivalent to angstrom
 const isAlphaOriginal = Unit.isValidAlpha;
@@ -147,7 +149,7 @@ export const mapScientificQuery = (
 
   scientific.forEach((scientificFilter) => {
     const { lhs, relation, rhs, unit } = scientificFilter;
-    const encodedLhs = encodeURIComponentExtended(lhs).toLowerCase();
+    const encodedLhs = encodeURIComponentExtended(lhs);
     const matchKeyGeneric = `${field}.${encodedLhs}`;
     const matchKeyMeasurement = `${field}.${encodedLhs}.valueSI`;
     const matchUnit = `${field}.${encodedLhs}.unitSI`;
@@ -390,7 +392,7 @@ export const parseOrderLimits = (
   const [field, direction] = limits.order.split(":");
   if (direction === "asc" || direction === "desc") sort[field] = direction;
   limitFilters.sort = sort;
-  return _.omit(limitFilters, "order");
+  return omit(limitFilters, "order");
 };
 
 export const parseLimitFilters = (limits: ILimitsFilter | undefined) => {
@@ -413,16 +415,35 @@ export const parsePipelineSort = (sort: Record<string, "asc" | "desc">) => {
   return pipelineSort;
 };
 
-export const parsePipelineProjection = (fieldsProjection: string[]) => {
-  const pipelineProjection: Record<string, boolean> = {};
+export const normalizeProjection = (
+  fieldsProjection: Record<string, unknown>,
+): Record<string, boolean> => {
+  const normalized = mapValues(fieldsProjection, (v) => !!v);
+  return some(normalized, (v, k) => v && k !== "_id")
+    ? pickBy(normalized, (v, k) => v || k === "_id")
+    : normalized;
+};
 
-  if (!Array.isArray(fieldsProjection)) {
-    throw new HttpException("fields must be an array", HttpStatus.BAD_REQUEST);
+export const parsePipelineProjection = (
+  fieldsProjection: string[] | Record<string, unknown>,
+  includeFields: string[] = [],
+): Record<string, boolean> => {
+  let pipelineProjection: Record<string, boolean>;
+  if (isPlainObject(fieldsProjection)) {
+    pipelineProjection = normalizeProjection(
+      fieldsProjection as Record<string, unknown>,
+    );
+  } else if (Array.isArray(fieldsProjection)) {
+    pipelineProjection = Object.fromEntries(
+      fieldsProjection.map((f) => [f, true]),
+    );
+  } else {
+    throw new HttpException(
+      "Fields must be an array or a valid projection object",
+      HttpStatus.BAD_REQUEST,
+    );
   }
-  fieldsProjection.forEach((field) => {
-    pipelineProjection[field] = true;
-  });
-
+  includeFields.forEach((f) => (pipelineProjection[f] = true));
   return pipelineProjection;
 };
 
@@ -565,10 +586,11 @@ export const searchExpression = <T>(
       return value;
     }
   } else if (valueType === "Date") {
-    return {
-      $gte: new Date((value as Record<string, string | Date>).begin),
-      $lte: new Date((value as Record<string, string | Date>).end),
-    };
+    const { begin, end } = value as Record<string, string | Date>;
+    const dateRange: { $gte?: Date; $lte?: Date } = {};
+    if (begin) dateRange.$gte = new Date(begin);
+    if (end) dateRange.$lte = new Date(end);
+    return dateRange;
   } else if (valueType === "Boolean") {
     return {
       $eq: value,
@@ -598,8 +620,12 @@ export const createFullqueryFilter = <T>(
   idField: keyof T,
   fields: FilterQuery<T> = {},
 ): FilterQuery<T> => {
-  let filterQuery: FilterQuery<T> = {};
-  filterQuery["$or"] = [];
+  const accessConditions: Record<string, unknown>[] = [];
+  let filterQuery: FilterQuery<T> & {
+    ownerGroup?: object;
+    accessGroups?: object;
+    sharedWith?: object;
+  } = {};
 
   Object.keys(fields).forEach((key) => {
     if (key === "mode") {
@@ -621,14 +647,17 @@ export const createFullqueryFilter = <T>(
         ...mapScientificQuery(key, fields[key]),
       };
     } else if (key === "userGroups") {
-      filterQuery["$or"]?.push({
+      // this is applied both on accessGroups and ownerGroup
+      // (thus requiring the ORs list) being a generic user
+      // permission filter
+      accessConditions.push({
         ownerGroup: searchExpression<T>(
           model,
           "ownerGroup",
           fields[key],
         ) as object,
       });
-      filterQuery["$or"]?.push({
+      accessConditions.push({
         accessGroups: searchExpression<T>(
           model,
           "accessGroups",
@@ -636,29 +665,23 @@ export const createFullqueryFilter = <T>(
         ) as object,
       });
     } else if (key === "ownerGroup") {
-      filterQuery["$or"]?.push({
-        ownerGroup: searchExpression<T>(
-          model,
-          "ownerGroup",
-          fields[key],
-        ) as object,
-      });
+      filterQuery.ownerGroup = searchExpression<T>(
+        model,
+        "ownerGroup",
+        fields[key],
+      ) as object;
     } else if (key === "accessGroups") {
-      filterQuery["$or"]?.push({
-        accessGroups: searchExpression<T>(
-          model,
-          "accessGroups",
-          fields[key],
-        ) as object,
-      });
+      filterQuery.accessGroups = searchExpression<T>(
+        model,
+        "accessGroups",
+        fields[key],
+      ) as object;
     } else if (key === "sharedWith") {
-      filterQuery["$or"]?.push({
-        sharedWith: searchExpression<T>(
-          model,
-          "sharedWith",
-          fields[key],
-        ) as object,
-      });
+      filterQuery.sharedWith = searchExpression<T>(
+        model,
+        "sharedWith",
+        fields[key],
+      ) as object;
     } else {
       filterQuery[key as keyof FilterQuery<T>] = searchExpression<T>(
         model,
@@ -666,16 +689,31 @@ export const createFullqueryFilter = <T>(
         fields[key],
       );
     }
-  });
 
-  if (filterQuery["$or"]?.length === 0) {
-    delete filterQuery["$or"];
-  }
+    if (accessConditions.length > 0) {
+      if (filterQuery.$and) {
+        filterQuery.$and.push({ $or: accessConditions });
+      } else {
+        filterQuery.$and = [{ $or: accessConditions }];
+      }
+    }
+  });
 
   return filterQuery;
 };
 
 const pipelineHandler = {
+  handleOpensearchIdList: <Y>(
+    pipeline: PipelineStage[],
+    fields: Y,
+    key: string,
+  ) => {
+    const match = {
+      $match: { _id: { $in: fields[key as keyof Y] as string[] } },
+    };
+    return pipeline.unshift(match);
+  },
+
   handleTextSearch: <T, Y>(
     pipeline: PipelineStage[],
     model: Model<T>,
@@ -812,11 +850,14 @@ export const createFullfacetPipeline = <T, Y extends object>(
     }
 
     switch (key) {
+      case "openSearchIdList":
+        pipelineHandler.handleOpensearchIdList<Y>(pipeline, fields, key);
+        break;
       case "text":
-        pipelineHandler.handleTextSearch(pipeline, model, fields, key);
+        pipelineHandler.handleTextSearch<T, Y>(pipeline, model, fields, key);
         break;
       case idField:
-        pipelineHandler.handleIdFieldSearch(
+        pipelineHandler.handleIdFieldSearch<T, Y>(
           pipeline,
           model,
           fields,
@@ -825,17 +866,22 @@ export const createFullfacetPipeline = <T, Y extends object>(
         );
         break;
       case "mode":
-        pipelineHandler.handleModeSearch(pipeline, fields, key, idField);
+        pipelineHandler.handleModeSearch<T, Y>(pipeline, fields, key, idField);
         break;
       case "userGroups":
-        pipelineHandler.handleUserGroupSearch(pipeline, model, fields, key);
+        pipelineHandler.handleUserGroupSearch<T, Y>(
+          pipeline,
+          model,
+          fields,
+          key,
+        );
         break;
       case "scientific":
       case "sampleCharacteristics":
-        pipelineHandler.handleScientificQuery(pipeline, fields, key);
+        pipelineHandler.handleScientificQuery<Y>(pipeline, fields, key);
         break;
       default:
-        pipelineHandler.handleGenericSearch(pipeline, model, fields, key);
+        pipelineHandler.handleGenericSearch<T, Y>(pipeline, model, fields, key);
     }
   });
 
@@ -1140,6 +1186,104 @@ This last version is deprecated and will be discontinued as soon as the FE is up
 It has been maintanined for backward compatibility.\n \
 </pre>';
 
+export const opensearchIndexMappingsExample = {
+  dynamic: false,
+  properties: {
+    all_text: {
+      type: "text",
+      analyzer: "autocomplete",
+      search_analyzer: "autocomplete_search",
+      fields: {
+        wild: { type: "wildcard" },
+      },
+    },
+    isPublished: { type: "boolean" },
+    ownerGroup: { type: "keyword" },
+    accessGroups: { type: "keyword" },
+
+    pid: { type: "keyword", copy_to: "all_text" },
+    owner: { type: "keyword", copy_to: "all_text" },
+    ownerEmail: { type: "keyword", copy_to: "all_text" },
+    contactEmail: { type: "keyword", copy_to: "all_text" },
+    sourceFolder: { type: "keyword", copy_to: "all_text" },
+    type: { type: "keyword", copy_to: "all_text" },
+    keywords: { type: "keyword", copy_to: "all_text" },
+    description: { type: "keyword", copy_to: "all_text" },
+    datasetName: { type: "keyword", copy_to: "all_text" },
+    classification: { type: "keyword", copy_to: "all_text" },
+    version: { type: "keyword", copy_to: "all_text" },
+    createdBy: { type: "keyword", copy_to: "all_text" },
+    updatedBy: { type: "keyword", copy_to: "all_text" },
+    creationLocation: { type: "keyword", copy_to: "all_text" },
+    proposalIds: { type: "keyword", copy_to: "all_text" },
+    instrumentIds: { type: "keyword", copy_to: "all_text" },
+    sampleIds: { type: "keyword", copy_to: "all_text" },
+    techniques: {
+      properties: {
+        pid: { type: "keyword", copy_to: "all_text" },
+        name: { type: "keyword", copy_to: "all_text" },
+      },
+    },
+    principalInvestigators: { type: "keyword", copy_to: "all_text" },
+    creationTime: { type: "date", copy_to: "all_text" },
+    createdAt: { type: "date", copy_to: "all_text" },
+    updatedAt: { type: "date", copy_to: "all_text" },
+    numberOfFiles: { type: "long", copy_to: "all_text" },
+    runNumber: { type: "long", copy_to: "all_text" },
+    size: { type: "long", copy_to: "all_text" },
+    datasetlifecycle: {
+      properties: {
+        archiveStatusMessage: { type: "keyword", copy_to: "all_text" },
+        retrieveStatusMessage: { type: "keyword", copy_to: "all_text" },
+      },
+    },
+
+    scientificMetadata: { type: "object", enabled: false },
+    scientificMetadataText: {
+      type: "text",
+      index: false,
+      copy_to: "all_text",
+    },
+  },
+};
+
+export const opensearchIndexSettingsExample = {
+  index: {
+    max_result_window: 10000,
+    number_of_replicas: 0,
+  },
+  analysis: {
+    analyzer: {
+      autocomplete: {
+        type: "custom",
+        tokenizer: "autocomplete",
+        filter: ["word_delimiter", "lowercase"],
+      },
+      autocomplete_search: {
+        type: "custom",
+        tokenizer: "keyword",
+        filter: ["lowercase"],
+      },
+    },
+    tokenizer: {
+      autocomplete: {
+        type: "edge_ngram",
+        min_gram: 2,
+        max_gram: 64,
+        token_chars: ["letter", "digit", "symbol", "punctuation"],
+      },
+    },
+    filter: {
+      word_delimiter: {
+        type: "word_delimiter_graph",
+        split_on_case_change: false,
+        split_on_numerics: false,
+        preserve_original: true,
+        type_table: [". => ALPHA"],
+      },
+    },
+  },
+};
 export const parseBoolean = (v: unknown): boolean => {
   switch (v) {
     case true:
@@ -1220,17 +1364,33 @@ export function makeHttpException(
 }
 
 export function encodeURIComponentExtended(str: string): string {
-  let encoded = encodeURIComponent(str);
+  try {
+    let encoded = encodeURIComponent(str);
 
-  // encodeURIComponent does not encode "." automatically, so we manually replace it with "%2E" for MongoDB compatibility.
-  encoded = encoded.replace(/\./g, "%2E");
-  return encoded;
+    // encodeURIComponent does not encode "." automatically, so we manually replace it with "%2E" for MongoDB compatibility.
+    encoded = encoded.replace(/\./g, "%2E");
+    return encoded;
+  } catch (error) {
+    Logger.error(
+      `Error encoding string: ${str}. Error: ${(error as Error).message}`,
+      "encodeURIComponentExtended",
+    );
+    return str;
+  }
 }
 
 export function decodeURIComponentExtended(str: string): string {
-  let decoded = decodeURIComponent(str);
-  decoded = decoded.replace(/%2E/g, ".");
-  return decoded;
+  try {
+    let decoded = decodeURIComponent(str);
+    decoded = decoded.replace(/%2E/g, ".");
+    return decoded;
+  } catch (error) {
+    Logger.error(
+      `Error decoding string: ${str}. Error: ${(error as Error).message}`,
+      "decodeURIComponentExtended",
+    );
+    return str;
+  }
 }
 
 export function encodeScientificMetadataKeys(
@@ -1277,4 +1437,57 @@ export function decodeScientificMetadataKeys(
 
 export function decodeMetadataKeyStrings(keys: string[]): string[] {
   return keys.map((key) => decodeURIComponentExtended(key));
+}
+
+export function parseDate(dateString?: string): Date | undefined {
+  if (!dateString) return undefined;
+  const parsedDate = new Date(dateString);
+  return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+}
+
+export function createMetadataKeysInstance(
+  sourceType: string,
+  doc: {
+    ownerGroup?: string;
+    accessGroups?: string[];
+    isPublished?: boolean;
+    scientificMetadata?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+    customMetadata?: Record<string, unknown>;
+    sampleCharacteristics?: Record<string, unknown>;
+  },
+): MetadataSourceDoc {
+  return {
+    sourceType,
+    userGroups: Array.from(
+      new Set(
+        [doc.ownerGroup, ...(doc.accessGroups ?? [])].filter(
+          Boolean,
+        ) as string[],
+      ),
+    ),
+    isPublished: doc.isPublished ?? false,
+    metadata:
+      doc.scientificMetadata ??
+      doc.metadata ??
+      doc.customMetadata ??
+      doc.sampleCharacteristics ??
+      {},
+  };
+}
+
+export function addAccessMatchToPipeline<T>(
+  pipeline: PipelineStage[],
+  access: FilterQuery<T>,
+  fields: IJobFields,
+) {
+  if ("text" in fields) {
+    pipeline.splice(1, 0, {
+      $match: access,
+    });
+  } else {
+    pipeline.unshift({
+      $match: access,
+    });
+  }
 }

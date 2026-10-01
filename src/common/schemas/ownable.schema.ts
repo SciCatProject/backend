@@ -22,6 +22,7 @@ export class OwnableClass extends QueryableClass {
   @Prop({
     type: [String],
     index: true,
+    default: [],
   })
   accessGroups: string[] = [];
 

@@ -33,6 +33,12 @@ export class SampleClass extends OwnableClass {
   owner?: string;
 
   /**
+   * The name of the sample.
+   */
+  @Prop({ type: String, required: true })
+  sampleName: string;
+
+  /**
    * A description of the sample.
    */
   @Prop({ type: String, required: false })
@@ -61,6 +67,12 @@ export class SampleClass extends OwnableClass {
    */
   @Prop({ type: Object, required: false, default: {} })
   sampleCharacteristics?: Record<string, unknown> = {};
+
+  /**
+   * Version of the API used when the sample was created or last updated.
+   */
+  @Prop({ type: String, required: false })
+  version?: string;
 }
 
 export class SampleWithAttachmentsAndDatasets extends SampleClass {

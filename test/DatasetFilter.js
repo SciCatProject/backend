@@ -17,12 +17,12 @@ let accessTokenAdminIngestor = null,
   encodedDatasetPid3 = null,
   datasetPid4 = null,
   datasetDate4 = null,
-  encodedDatasetPid4 = null;
-
-let datasetPidSpecial = null,
-  encodedDatasetPidSpecial = null;
-
-let datasetPidNested = null,
+  encodedDatasetPid4 = null,
+  datasetPidAuth1 = null,
+  datasetPidAuth2 = null,
+  datasetPidSpecial = null,
+  encodedDatasetPidSpecial = null,
+  datasetPidNested = null,
   encodedDatasetPidNested = null;
 
 const RawCorrect1 = {
@@ -140,6 +140,26 @@ const RawCorrectWithNestedMetadata = {
   isPublished: false,
   ownerGroup: "group4",
   accessGroups: ["group6"],
+};
+
+const RawCorrectGroup1 = {
+  ...TestData.RawCorrect,
+  scientificMetadata: {
+    run_number: { value: 25, unit: "" },
+  },
+  ownerGroup: "group1",
+  accessGroups: [],
+  isPublished: false,
+};
+
+const RawCorrectGroup2 = {
+  ...TestData.RawCorrect,
+  scientificMetadata: {
+    run_number: { value: 30, unit: "" },
+  },
+  ownerGroup: "group2",
+  accessGroups: [],
+  isPublished: false,
 };
 
 describe("0400: DatasetFilter: Test retrieving datasets using filtering capabilities", () => {
@@ -974,7 +994,7 @@ describe("0400: DatasetFilter: Test retrieving datasets using filtering capabili
         res.body.should.have
           .property("message")
           .and.be.equal(
-            "Invalid JSON in filter: Expected double-quoted property name in JSON at position 52",
+            "Invalid JSON in filter: Expected double-quoted property name in JSON at position 52 (line 1 column 53)",
           );
       });
   });
@@ -1148,5 +1168,70 @@ describe("0400: DatasetFilter: Test retrieving datasets using filtering capabili
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
       .expect(TestData.SuccessfulDeleteStatusCode)
       .expect("Content-Type", /json/);
+  });
+
+  it("0700: adds dataset owned by group1", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(RawCorrectGroup1)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        datasetPidAuth1 = res.body["pid"];
+      });
+  });
+
+  it("0710: adds dataset owned by group2", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(RawCorrectGroup2)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        datasetPidAuth2 = res.body["pid"];
+      });
+  });
+
+  it("0720: user in group1 should only see datasets owned by group1", async () => {
+    const fields = {
+      scientific: [
+        { lhs: "run_number", relation: "GREATER_THAN", rhs: 24, unit: "" },
+      ],
+    };
+    return request(appUrl)
+      .get(
+        `/api/v3/Datasets/fullquery?fields=${encodeURIComponent(JSON.stringify(fields))}`,
+      )
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .set("Accept", "application/json")
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.an("array").to.have.lengthOf(1);
+        res.body[0]["pid"].should.be.equal(datasetPidAuth1);
+      });
+  });
+
+  it("0730: user in group1 should not see datasets owned by group2 even if the conditions match", async () => {
+    const fields = {
+      scientific: [
+        { lhs: "run_number", relation: "GREATER_THAN", rhs: 29, unit: "" },
+      ],
+    };
+    return request(appUrl)
+      .get(
+        `/api/v3/Datasets/fullquery?fields=${encodeURIComponent(JSON.stringify(fields))}`,
+      )
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .set("Accept", "application/json")
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.an("array").to.have.lengthOf(0);
+      });
   });
 });

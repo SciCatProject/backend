@@ -1,4 +1,4 @@
-FROM node:20-alpine AS dev
+FROM node:24-alpine AS dev
 
 # Prepare app directory
 WORKDIR /home/node/app
@@ -12,7 +12,7 @@ RUN mkdir /home/node/app/dist
 RUN npm install glob rimraf
 RUN npm install
 
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Prepare app directory
 WORKDIR /usr/src/app
@@ -27,7 +27,7 @@ RUN npm run build
 # Remove development dependencies
 RUN npm prune --production
 
-FROM node:20-alpine
+FROM node:24-alpine
 
 # Prepare app directory
 WORKDIR /home/node/app

@@ -1,18 +1,20 @@
+import { HttpService } from "@nestjs/axios";
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
-  Query,
+  Get,
   HttpException,
   HttpStatus,
   NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
   Req,
+  UseGuards,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   ApiBearerAuth,
   ApiBody,
@@ -22,41 +24,45 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { Request } from "express";
+import { cloneDeep } from "lodash";
+import { FilterQuery, QueryOptions } from "mongoose";
+import { firstValueFrom } from "rxjs";
+import { AttachmentsService } from "src/attachments/attachments.service";
+import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "src/casl/action.enum";
+import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
+import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
+import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import { handleAxiosRequestError } from "src/common/utils";
+import { DatasetsService } from "src/datasets/datasets.service";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { ProposalsService } from "src/proposals/proposals.service";
+import { CreatePublishedDataV4Dto } from "./dto/create-published-data.v4.dto";
 import {
-  ICount,
+  PartialUpdatePublishedDataV4Dto,
+  UpdatePublishedDataV4Dto,
+} from "./dto/update-published-data.v4.dto";
+import {
   FormPopulateData,
+  ICount,
   IPublishedDataFilters,
   IRegister,
   PublishedDataStatus,
 } from "./interfaces/published-data.interface";
-import { AllowAny } from "src/auth/decorators/allow-any.decorator";
-import { FilterQuery, QueryOptions } from "mongoose";
-import { ProposalsService } from "src/proposals/proposals.service";
-import { AttachmentsService } from "src/attachments/attachments.service";
-import { HttpService } from "@nestjs/axios";
-import { ConfigService } from "@nestjs/config";
-import { firstValueFrom } from "rxjs";
-import { handleAxiosRequestError } from "src/common/utils";
-import { DatasetClass } from "src/datasets/schemas/dataset.schema";
-import { Validator } from "jsonschema";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { Request } from "express";
-import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
-import { PartialUpdatePublishedDataV4Dto } from "./dto/update-published-data.v4.dto";
-import { CreatePublishedDataV4Dto } from "./dto/create-published-data.v4.dto";
+import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
+import { RegisteredFilterPipe } from "./pipes/registered.pipe";
 import { PublishedDataService } from "./published-data.service";
 import {
   PublishedData,
   PublishedDataDocument,
 } from "./schemas/published-data.schema";
-import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
-import { DatasetsService } from "src/datasets/datasets.service";
-import { FilterPipe } from "src/common/pipes/filter.pipe";
-import { RegisteredFilterPipe } from "./pipes/registered.pipe";
+import { ValidatorService } from "./validator.service";
+import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
 
 @ApiBearerAuth()
 @ApiTags("published data v4")
@@ -76,10 +82,15 @@ export class PublishedDataV4Controller {
     private readonly proposalsService: ProposalsService,
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
+    private validatorService: ValidatorService,
   ) {}
 
   @AllowAny()
   @Get("config")
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PublishedDataConfigDto,
+  })
   async getConfig(): Promise<Record<string, unknown> | null> {
     return this.publishedDataService.getConfig();
   }
@@ -93,6 +104,7 @@ export class PublishedDataV4Controller {
   async create(
     @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
+    await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
   }
 
@@ -117,33 +129,29 @@ export class PublishedDataV4Controller {
   })
   async findAll(
     @Req() request: Request,
-    @Query(new FilterPipe({ allowObjectFields: false }), RegisteredFilterPipe)
+    @Query(...V4_FILTER_PIPE, RegisteredFilterPipe)
     filter?: {
       filter: IPublishedDataFilters;
-      fields: string;
-      limits: string;
+      fields: FilterQuery<PublishedDataDocument>;
+      limits: ILimitsFilter;
     },
   ) {
     const publishedDataFilters: IPublishedDataFilters = filter?.filter ?? {};
     const publishedDataLimits: {
-      skip: number;
-      limit: number;
-      order: string;
-    } = JSON.parse(filter?.limits ?? "{}");
-    const publishedDataFields = JSON.parse(filter?.fields ?? "{}");
+      skip?: number;
+      limit?: number;
+      order?: string;
+    } = filter?.limits ?? {};
 
     if (!publishedDataFilters.limits) {
       publishedDataFilters.limits = publishedDataLimits;
     }
-    if (!publishedDataFilters.fields) {
-      publishedDataFilters.fields = publishedDataFields;
-    }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       publishedDataFilters.where = {
         ...publishedDataFilters.where,
         $or: [
@@ -177,22 +185,19 @@ export class PublishedDataV4Controller {
   })
   async count(
     @Req() request: Request,
-    @Query(new FilterPipe({ allowObjectFields: false }), RegisteredFilterPipe)
+    @Query(...V4_FILTER_PIPE, RegisteredFilterPipe)
     filter?: {
       filter: IPublishedDataFilters;
-      fields: string;
+      fields: FilterQuery<PublishedDataDocument>;
     },
   ) {
     const jsonFilters: IPublishedDataFilters = filter?.filter ?? {};
-    const jsonFields: FilterQuery<PublishedDataDocument> = filter?.fields
-      ? JSON.parse(filter.fields)
-      : {};
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       jsonFilters.where = {
         ...jsonFilters.where,
         $or: [
@@ -207,17 +212,15 @@ export class PublishedDataV4Controller {
       };
     }
 
-    const filters: FilterQuery<PublishedDataDocument> = {
-      where: jsonFilters.where,
-      fields: jsonFields,
-    };
-
     const options: QueryOptions = {
       limit: jsonFilters?.limits?.limit,
       skip: jsonFilters?.limits?.skip,
     };
 
-    return this.publishedDataService.countDocuments(filters, options);
+    return this.publishedDataService.countDocuments(
+      { where: jsonFilters.where },
+      options,
+    );
   }
 
   // GET /publisheddata/formpopulate
@@ -230,6 +233,9 @@ export class PublishedDataV4Controller {
     name: "pid",
     description: "Dataset pid used to fetch form data.",
     required: true,
+    type: String,
+    isArray: true,
+    explode: true,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -237,11 +243,18 @@ export class PublishedDataV4Controller {
     isArray: false,
     description: "Return form populate data",
   })
-  async formPopulate(@Query("pid") pid: string) {
+  async formPopulate(
+    @Req() request: Request,
+    @Query("pid") pid: string[] | string,
+  ) {
+    pid = Array.isArray(pid) ? pid : [pid];
     const formData: FormPopulateData = {};
-    const dataset = (await this.datasetsService.findOne({
-      where: { pid },
-    })) as unknown as DatasetClass;
+    const dataset =
+      (await this.datasetsController.checkPermissionsForDatasetExtended(
+        request,
+        pid[0],
+        Action.DatasetRead,
+      )) as unknown as DatasetClass;
 
     let proposalId;
     if (dataset) {
@@ -270,6 +283,13 @@ export class PublishedDataV4Controller {
       formData.thumbnail = attachment.thumbnail;
     }
 
+    const dto: PartialUpdatePublishedDataV4Dto = {
+      datasetPids: pid,
+      metadata: {},
+    };
+    await this.validatorService.validate(dto);
+    formData.metadata = dto.metadata;
+
     return formData;
   }
 
@@ -277,10 +297,10 @@ export class PublishedDataV4Controller {
     const filter: FilterQuery<PublishedData> = {
       doi,
     };
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
-    if (ability.cannot(Action.accessAny, PublishedData)) {
+    if (ability.cannot(Action.AccessAny, PublishedData)) {
       filter.$or = [
         { createdBy: (request.user as JWTUser)?.username },
         { status: PublishedDataStatus.REGISTERED },
@@ -331,6 +351,19 @@ export class PublishedDataV4Controller {
     return publishedData;
   }
 
+  private async validateMergedUpdate(
+    publishedData: PublishedData,
+    update: PartialUpdatePublishedDataV4Dto,
+  ): Promise<UpdatePublishedDataV4Dto> {
+    const record = (
+      publishedData as PublishedDataDocument
+    ).toObject<PublishedData>();
+    const merged: UpdatePublishedDataV4Dto = { ...record, ...update };
+    await this.validatorService.validate(merged);
+
+    return merged;
+  }
+
   // PATCH /publisheddata/:id
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
@@ -355,11 +388,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -380,10 +413,12 @@ export class PublishedDataV4Controller {
       }
     }
 
-    return this.publishedDataService.update(
-      { doi: id },
+    const merged = await this.validateMergedUpdate(
+      publishedData,
       updatePublishedDataDto,
     );
+
+    return this.publishedDataService.update({ doi: id }, merged);
   }
 
   // POST /publisheddata/:id/publish
@@ -416,7 +451,11 @@ export class PublishedDataV4Controller {
       );
     }
 
-    await this.validateMetadata(publishedData.metadata);
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
+    }
 
     // Make datasets in publishedData datasetPids array public
     const datasetPids = publishedData.datasetPids;
@@ -450,11 +489,11 @@ export class PublishedDataV4Controller {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<PublishedData | null> {
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (!canAccessAny) {
       throw new HttpException(
@@ -484,29 +523,6 @@ export class PublishedDataV4Controller {
     );
   }
 
-  async validateMetadata(metadata?: object) {
-    const validator = new Validator();
-    const metadataConfig = await this.getConfig();
-    if (!metadataConfig?.metadataSchema) {
-      throw new HttpException(
-        "Published data schema is not defined in the configuration.",
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const validationResult = validator.validate(
-      metadata,
-      metadataConfig.metadataSchema,
-    );
-
-    if (!validationResult.valid) {
-      throw new HttpException(
-        validationResult.errors.map((error) => error.stack),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
   // DELETE /publisheddata/:id
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("publisheddata", (ability: AppAbility) =>
@@ -522,11 +538,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -575,64 +591,75 @@ export class PublishedDataV4Controller {
     publishedData.registeredTime = data.registeredTime;
     publishedData.status = data.status;
 
-    await this.validateMetadata(publishedData.metadata);
-
-    const jsonData = doiRegistrationJSON(publishedData);
-
-    await Promise.all(
-      publishedData.datasetPids.map(async (pid) => {
-        await this.datasetsController.findByIdAndUpdate(request, pid, {
-          isPublished: true,
-          datasetlifecycle: { publishedOn: data.registeredTime },
-        });
-      }),
-    );
-    const registerDoiUri = this.configService.get<string>("registerDoiUri");
-
-    let doiProviderCredentials = {
-      username: "removed",
-      password: "removed",
-    };
-
-    const username = this.configService.get<string>("doiUsername");
-    const password = this.configService.get<string>("doiPassword");
-
-    if (username && password) {
-      doiProviderCredentials = {
-        username,
-        password,
-      };
+    const validationErrors =
+      await this.validatorService.validate(publishedData);
+    if (validationErrors) {
+      throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
     }
 
-    const authorization = `${doiProviderCredentials.username}:${doiProviderCredentials.password}`;
-    const registerDataciteDoiOptions = {
-      method: "POST",
-      url: `${registerDoiUri}`,
-      headers: {
-        accept: "application/vnd.api+json",
-        "content-type": "application/json",
-        authorization: `Basic ${Buffer.from(authorization).toString("base64")}`,
-      },
-      data: jsonData,
-    };
+    const mergePatchRequest = cloneDeep(request);
+    mergePatchRequest.headers["content-type"] = "application/merge-patch+json";
+    await Promise.all(
+      publishedData.datasetPids.map(async (pid) => {
+        await this.datasetsController.findByIdAndUpdate(
+          mergePatchRequest,
+          pid,
+          {
+            isPublished: true,
+            datasetlifecycle: { publishedOn: data.registeredTime },
+          },
+        );
+      }),
+    );
 
-    try {
-      await firstValueFrom(
-        this.httpService.request(registerDataciteDoiOptions),
-      );
-    } catch (err) {
-      console.log("Error in registerDataciteDoiOptions", err);
+    const registerDoiUri = this.configService.get<string>("registerDoiUri");
+    if (registerDoiUri && registerDoiUri.trim().length > 0) {
+      let doiProviderCredentials = {
+        username: "removed",
+        password: "removed",
+      };
 
-      handleAxiosRequestError(err, "PublishedDataController.register");
-      throw new HttpException(
-        `Error occurred: ${err}`,
-        HttpStatus.FAILED_DEPENDENCY,
-      );
+      const username = this.configService.get<string>("doiUsername");
+      const password = this.configService.get<string>("doiPassword");
+
+      if (username && password) {
+        doiProviderCredentials = {
+          username,
+          password,
+        };
+      }
+
+      const authorization = `${doiProviderCredentials.username}:${doiProviderCredentials.password}`;
+      const jsonData = this.doiRegistrationJSON(publishedData);
+      const registerDataciteDoiOptions = {
+        method: "POST",
+        url: `${registerDoiUri}`,
+        headers: {
+          accept: "application/vnd.api+json",
+          "content-type": "application/json",
+          authorization: `Basic ${Buffer.from(authorization).toString("base64")}`,
+        },
+        data: jsonData,
+      };
+
+      try {
+        await firstValueFrom(
+          this.httpService.request(registerDataciteDoiOptions),
+        );
+      } catch (err) {
+        console.log("Error in registerDataciteDoiOptions", err);
+
+        handleAxiosRequestError(err, "PublishedDataController.register");
+        throw new HttpException(
+          `Error occurred: ${err}`,
+          HttpStatus.FAILED_DEPENDENCY,
+        );
+      }
     }
 
     const res = await this.publishedDataService.update(
       { doi: publishedData.doi },
-      { status: PublishedDataStatus.REGISTERED },
+      { status: PublishedDataStatus.REGISTERED, registeredTime: new Date() },
     );
 
     return res;
@@ -677,11 +704,11 @@ export class PublishedDataV4Controller {
       throw new NotFoundException(`Published data with id ${id} not found.`);
     }
 
-    const ability = this.caslAbilityFactory.publishedDataInstanceAccess(
+    const ability = this.caslAbilityFactory.publishedDataAccess(
       request.user as JWTUser,
     );
 
-    const canAccessAny = ability.can(Action.accessAny, PublishedData);
+    const canAccessAny = ability.can(Action.AccessAny, PublishedData);
 
     if (canAccessAny) {
       if (
@@ -704,78 +731,91 @@ export class PublishedDataV4Controller {
 
     const OAIServerUri = this.configService.get<string>("oaiProviderRoute");
 
+    const merged = await this.validateMergedUpdate(publishedData, data);
+
     let returnValue = null;
     if (OAIServerUri) {
       returnValue = await this.publishedDataService.resyncOAIPublication(
         id,
-        { ...publishedData, ...data },
+        merged,
         OAIServerUri,
       );
     }
 
-    await this.publishedDataService.update({ doi: id }, data);
+    await this.publishedDataService.update({ doi: id }, merged);
 
     return returnValue;
   }
-}
 
-function doiRegistrationJSON(publishedData: PublishedData): object {
-  const { title, abstract, metadata, doi } = publishedData;
-  const {
-    creators,
-    contributors,
-    resourceType,
-    publisher,
-    publicationYear,
-    subjects,
-    descriptions,
-    relatedItems,
-    relatedIdentifiers,
-    language,
-    dates,
-    sizes,
-    formats,
-    geoLocations,
-    fundingReferences,
-    landingPage,
-  } = metadata || {};
+  doiRegistrationJSON(publishedData: PublishedData): object {
+    const { title, abstract, metadata, doi } = publishedData;
+    const {
+      creators,
+      contributors,
+      resourceType,
+      publisher,
+      publicationYear,
+      subjects,
+      descriptions,
+      relatedItems,
+      relatedIdentifiers,
+      language,
+      dates,
+      sizes,
+      formats,
+      rightsList,
+      geoLocations,
+      fundingReferences,
+      landingPage,
+    } = metadata ?? {};
 
-  const descriptionsArray = [
-    { description: abstract, descriptionType: "Abstract" },
-    ...((descriptions as []) || []),
-  ];
+    const landingPageBase =
+      typeof landingPage === "string" &&
+      (landingPage.startsWith("https://") || landingPage.startsWith("http://"))
+        ? landingPage
+        : `https://${landingPage}`;
+    const url = landingPage
+      ? `${landingPageBase}${encodeURIComponent(doi)}`
+      : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
 
-  const registrationData = {
-    data: {
-      type: "dois",
-      attributes: {
-        event: "publish",
-        doi: doi,
-        titles: [
-          {
-            lang: "en",
-            title: title,
-          },
-        ],
-        descriptions: descriptionsArray,
-        publicationYear: publicationYear,
-        subjects: subjects,
-        creators: creators,
-        publisher: publisher,
-        contributors: contributors,
-        types: { resourceTypeGeneral: "Dataset", resourceType: resourceType },
-        relatedItems: relatedItems,
-        relatedIdentifiers: relatedIdentifiers,
-        language: language,
-        dates: dates,
-        sizes: sizes,
-        formats: formats,
-        geoLocations: geoLocations,
-        fundingReferences: fundingReferences,
-        url: `https://${landingPage}${encodeURIComponent(doi)}`,
+    const descriptionsArray = [
+      { description: abstract, descriptionType: "Abstract", lang: "en" },
+      ...((descriptions as []) || []),
+    ];
+
+    const registrationData = {
+      data: {
+        type: "dois",
+        attributes: {
+          event: "publish",
+          doi: doi,
+          titles: [
+            {
+              lang: "en",
+              title: title,
+            },
+          ],
+          descriptions: descriptionsArray,
+          publicationYear: publicationYear,
+          subjects: subjects,
+          creators: creators,
+          publisher: publisher,
+          contributors: contributors,
+          types: { resourceTypeGeneral: "Dataset", resourceType: resourceType },
+          relatedItems: relatedItems,
+          relatedIdentifiers: relatedIdentifiers,
+          language: language,
+          dates: dates,
+          sizes: sizes,
+          formats: formats,
+          rightsList: rightsList,
+          geoLocations: geoLocations,
+          fundingReferences: fundingReferences,
+          url: url,
+        },
       },
-    },
-  };
+    };
 
-  return registrationData;
+    return registrationData;
+  }
 }

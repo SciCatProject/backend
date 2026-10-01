@@ -12,8 +12,8 @@ import { HttpModule } from "@nestjs/axios";
 import { ConfigService } from "@nestjs/config";
 import {
   ForbiddenException,
-  HttpException,
   NotFoundException,
+  PreconditionFailedException,
 } from "@nestjs/common";
 import { DatasetType } from "./types/dataset-type.enum";
 import { Request } from "express";
@@ -30,7 +30,7 @@ class DatasetsServiceMock {
 class OrigDatablocksServiceMock {}
 
 class CaslAbilityFactoryMock {
-  datasetInstanceAccess = jest.fn();
+  datasetAccess = jest.fn();
 }
 
 class LogbooksServiceMock {}
@@ -90,13 +90,22 @@ describe("DatasetsController", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw PreconditionFailed if header date <= updatedAt", async () => {
+    it("should throw PreconditionFailed if datasetsService throws it", async () => {
       const mockDataset = {
         pid: "some-pid",
         updatedAt: new Date("2023-01-02T00:00:00Z"),
         type: DatasetType.Raw,
       };
       datasetsService.findOne.mockResolvedValue(mockDataset);
+
+      caslAbilityFactory.datasetAccess.mockReturnValue({
+        can: () => true,
+      });
+      datasetsService.findByIdAndUpdate.mockImplementation(() => {
+        throw new PreconditionFailedException(
+          "Resource has been modified on server",
+        );
+      });
 
       const mockRequest = {
         user: {},
@@ -108,7 +117,12 @@ describe("DatasetsController", () => {
 
       await expect(
         controller.findByIdAndUpdate(mockRequest, "some-pid", {}),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toThrow(PreconditionFailedException);
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "some-pid",
+        expect.anything(),
+        new Date("2023-01-01T00:00:00Z"),
+      );
     });
 
     it("should throw ForbiddenException if user cannot update", async () => {
@@ -122,7 +136,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => false,
       });
 
@@ -152,7 +166,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => true,
       });
       jest
@@ -193,7 +207,7 @@ describe("DatasetsController", () => {
       jest
         .spyOn(controller, "generateDatasetInstanceForPermissions")
         .mockResolvedValue({});
-      caslAbilityFactory.datasetInstanceAccess.mockReturnValue({
+      caslAbilityFactory.datasetAccess.mockReturnValue({
         can: () => true,
       });
       jest
@@ -219,6 +233,11 @@ describe("DatasetsController", () => {
       );
 
       expect(result).toEqual(updatedDataset);
+      expect(datasetsService.findByIdAndUpdate).toHaveBeenCalledWith(
+        "some-pid",
+        expect.anything(),
+        undefined,
+      );
     });
   });
 });

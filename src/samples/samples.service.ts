@@ -1,4 +1,10 @@
-import { Injectable, Inject, Scope } from "@nestjs/common";
+import {
+  Injectable,
+  Inject,
+  Scope,
+  NotFoundException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -12,18 +18,24 @@ import {
   createFullqueryFilter,
   extractMetadataKeys,
   parseLimitFilters,
+  decodeMetadataKeyStrings,
+  createMetadataKeysInstance,
 } from "src/common/utils";
 import { CreateSampleDto } from "./dto/create-sample.dto";
 import { PartialUpdateSampleDto } from "./dto/update-sample.dto";
 import { ISampleFields } from "./interfaces/sample-filters.interface";
 import { SampleClass, SampleDocument } from "./schemas/sample.schema";
 import { CountApiResponse } from "src/common/types";
+import { OutputSampleDto } from "./dto/output-sample.dto";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
+import { withOCCFilter } from "src/datasets/utils/occ-util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class SamplesService {
   constructor(
     @InjectModel(SampleClass.name) private sampleModel: Model<SampleDocument>,
     private configService: ConfigService,
+    private metadataKeysService: MetadataKeysService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -32,13 +44,18 @@ export class SamplesService {
     const createdSample = new this.sampleModel(
       addCreatedByFields(createSampleDto, username),
     );
+    const savedSample = await createdSample.save();
 
-    return createdSample.save();
+    await this.metadataKeysService.insertManyFromSource(
+      createMetadataKeysInstance(this.sampleModel.collection.name, savedSample),
+    );
+
+    return savedSample;
   }
 
   async findAll(
     filter: IFilters<SampleDocument, ISampleFields>,
-  ): Promise<SampleClass[]> {
+  ): Promise<OutputSampleDto[]> {
     const whereFilter: FilterQuery<SampleDocument> = filter.where ?? {};
     const { limit, skip, sort } = parseLimitFilters(filter.limits);
 
@@ -67,7 +84,7 @@ export class SamplesService {
 
   async fullquery(
     filter: IFilters<SampleDocument, ISampleFields>,
-  ): Promise<SampleClass[]> {
+  ): Promise<OutputSampleDto[]> {
     const filterQuery: FilterQuery<SampleDocument> =
       createFullqueryFilter<SampleDocument>(
         this.sampleModel,
@@ -108,7 +125,15 @@ export class SamplesService {
       filters.limits = lm;
     }
 
-    const samples = await this.findAll(filters);
+    const whereFilter: FilterQuery<SampleDocument> = filters.where ?? {};
+    const { limit, skip, sort } = parseLimitFilters(filters.limits);
+
+    const samples = await this.sampleModel
+      .find(whereFilter)
+      .limit(limit)
+      .skip(skip)
+      .sort(sort)
+      .exec();
 
     const metadataKeys = extractMetadataKeys<SampleClass>(
       samples,
@@ -122,13 +147,15 @@ export class SamplesService {
       "metadataKeysReturnLimit",
     );
 
+    const decodedKeys = decodeMetadataKeyStrings(metadataKeys);
+
     if (metadataKey && metadataKey.length > 0) {
       const filterKey = metadataKey.toLowerCase();
-      return metadataKeys
+      return decodedKeys
         .filter((key) => key.toLowerCase().includes(filterKey))
         .slice(0, returnLimit);
     } else {
-      return metadataKeys.slice(0, returnLimit);
+      return decodedKeys.slice(0, returnLimit);
     }
   }
 
@@ -136,11 +163,20 @@ export class SamplesService {
     return this.sampleModel.findOne(filter).exec();
   }
 
-  async update(
+  async findOneAndUpdate(
     filter: FilterQuery<SampleDocument>,
     updateSampleDto: PartialUpdateSampleDto,
-  ): Promise<SampleClass | null> {
+    unmodifiedSince?: Date,
+  ): Promise<OutputSampleDto | null> {
     const username = (this.request.user as JWTUser).username;
+    const existingSample = await this.sampleModel.findOne(filter).exec();
+
+    if (!existingSample) {
+      throw new NotFoundException(
+        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
     const updateData = addUpdatedByField(updateSampleDto, username);
 
     const updateDataMongoose = {
@@ -149,16 +185,58 @@ export class SamplesService {
       updatedAt: new Date(),
     };
 
-    return this.sampleModel
+    const filterQuery = withOCCFilter(filter, unmodifiedSince);
+
+    const updatedSample = await this.sampleModel
       .findOneAndUpdate(
-        filter,
+        filterQuery,
         { $set: updateDataMongoose },
         { new: true, runValidators: true },
       )
       .exec();
+
+    if (!updatedSample) {
+      if (!unmodifiedSince) {
+        throw new NotFoundException(
+          `Sample not found with filter: ${JSON.stringify(filter)}`,
+        );
+      }
+      throw new PreconditionFailedException(
+        `Sample #${filter.sampleId} has been modified on the server since ${unmodifiedSince.toUTCString()}.`,
+      );
+    }
+
+    await this.metadataKeysService.replaceManyFromSource(
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        existingSample,
+      ),
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        updatedSample,
+      ),
+    );
+
+    return updatedSample;
   }
 
   async remove(filter: FilterQuery<SampleDocument>): Promise<unknown> {
-    return this.sampleModel.findOneAndDelete(filter).exec();
+    const deletedSample = await this.sampleModel
+      .findOneAndDelete(filter)
+      .exec();
+
+    if (!deletedSample) {
+      throw new NotFoundException(
+        `Sample not found with filter: ${JSON.stringify(filter)}`,
+      );
+    }
+
+    await this.metadataKeysService.deleteMany(
+      createMetadataKeysInstance(
+        this.sampleModel.collection.name,
+        deletedSample,
+      ),
+    );
+    return deletedSample;
   }
 }

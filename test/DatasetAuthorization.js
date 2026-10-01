@@ -10,7 +10,6 @@ let accessTokenAdminIngestor = null,
   accessTokenUser3 = null,
   accessTokenAdmin = null,
   accessTokenArchiveManager = null,
-
   datasetPid1 = null,
   encodedDatasetPid1 = null,
   datasetPid2 = null,
@@ -190,7 +189,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
   });
 
   it("0073: list of public datasets with pid filter should return 1", async () => {
-    const filter = { where: { pid: datasetPid1 } }
+    const filter = { where: { pid: datasetPid1 } };
     return request(appUrl)
       .get("/api/v3/Datasets")
       .set("Accept", "application/json")
@@ -204,7 +203,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
   });
 
   it("0075: list of public datasets with pid filter should return 0", async () => {
-    const filter = { where: { pid: 'nonExistingPid' } }
+    const filter = { where: { pid: "nonExistingPid" } };
     return request(appUrl)
       .get("/api/v3/Datasets")
       .set("Accept", "application/json")
@@ -524,7 +523,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
       .then((res) => {
         // Make test resilient - check that we get a valid response
         // without enforcing exactly how many datasets are returned
-        res.body.should.be.an("array");
+        res.body.should.be.an("array").and.have.lengthOf(2);
         console.log(`User 3 fullquery returned ${res.body.length} datasets`);
 
         // If datasets exist, verify they have expected properties
@@ -532,6 +531,22 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
           res.body[0].should.have.property("pid");
           res.body[0].should.have.property("type");
         }
+      });
+  });
+
+  it("0335: full query for datasets for User 3", async () => {
+    const fields = { ownerGroup: ["group2"] };
+    return request(appUrl)
+      .get(
+        `/api/v3/Datasets/fullquery?fields=${encodeURIComponent(JSON.stringify(fields))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser3}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.an("array").and.have.lengthOf(1);
+        res.body[0].ownerGroup.should.be.equal("group2");
       });
   });
 
@@ -676,7 +691,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser3}` })
       .expect("Content-Type", /json/)
-      .expect(TestData.DeleteForbiddenStatusCode)
+      .expect(TestData.DeleteForbiddenStatusCode);
   });
 
   it("0399: delete all attachments as admin returns 200", async () => {
@@ -693,9 +708,7 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
       .expect("Content-Type", /json/)
       .expect(TestData.SuccessfulDeleteStatusCode)
-      .then((res) =>
-        res.body.should.have.property("count").and.equal(2)
-      );
+      .then((res) => res.body.should.have.property("count").and.equal(2));
 
     return request(appUrl)
       .get("/api/v3/Datasets/" + encodedDatasetPid1 + "/attachments/count")
@@ -1660,5 +1673,38 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
       .then((res) => {
         res.body.should.not.have.property("pid");
       });
+  });
+
+  it("0870: add a dataset with role and access by username", async () => {
+    const user = "user6";
+    const ds = await request(appUrl)
+      .post("/api/v3/Datasets")
+      .send({
+        ...TestData.RawCorrectMin,
+        accessGroups: [TestData.Accounts[user].username],
+      })
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+    const accessTokenUser6 = await await utils.getToken(appUrl, {
+      username: user,
+      password: TestData.Accounts[user]["password"],
+    });
+    await request(appUrl)
+      .get(`/api/v3/Datasets/${encodeURIComponent(ds.body.pid)}`)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/);
+    return request(appUrl)
+      .get(`/api/v3/Datasets/${encodeURIComponent(ds.body.pid)}`)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser6}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) =>
+        res.body.should.have.property("pid").and.equal(ds.body.pid),
+      );
   });
 });

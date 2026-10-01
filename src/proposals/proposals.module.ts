@@ -12,11 +12,13 @@ import {
   GenericHistorySchema,
 } from "src/common/schemas/generic-history.schema";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
+import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 
 @Module({
   imports: [
     CaslModule,
     AttachmentsModule,
+    MetadataKeysModule,
     forwardRef(() => DatasetsModule),
     MongooseModule.forFeature([
       {

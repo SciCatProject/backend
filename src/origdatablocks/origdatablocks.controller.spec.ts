@@ -4,15 +4,17 @@ import { OrigDatablocksService } from "src/origdatablocks/origdatablocks.service
 import { DatasetsService } from "src/datasets/datasets.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { ConfigModule } from "@nestjs/config";
-import { NotFoundException, HttpException } from "@nestjs/common";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
 import { Request } from "express";
 
 class OrigDatablocksServiceMock {
   findOne = jest.fn();
-  findByIdAndUpdate = jest.fn();
+  updateOneAndUpdateDatasetSizeAndFileCount = jest.fn();
 }
 
-class DatasetsServiceMock {}
+class DatasetsServiceMock {
+  findByIdAndUpdate = jest.fn();
+}
 
 class CaslAbilityFactoryMock {}
 
@@ -34,10 +36,7 @@ describe("OrigDatablocksController", () => {
     controller = module.get<OrigDatablocksController>(OrigDatablocksController);
     origDatablocksService = module.get<OrigDatablocksService>(
       OrigDatablocksService,
-    );
-
-    // Mock internal methods
-    controller["updateDatasetSizeAndFiles"] = jest.fn();
+    ) as unknown as OrigDatablocksServiceMock;
   });
 
   it("should be defined", () => {
@@ -63,28 +62,28 @@ describe("OrigDatablocksController", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw PreconditionFailed if header date <= updatedAt", async () => {
-      origDatablocksService.findOne.mockResolvedValue({
-        ...mockDatablock,
-        updatedAt: new Date(),
-      });
-
+    it("should propagate PreconditionFailedException if header date <= updatedAt", async () => {
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
         .mockResolvedValue(mockDatablock);
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+        new PreconditionFailedException(
+          "OrigDatablock #123 has been modified on server",
+        ),
+      );
 
       await expect(
         controller.update(mockRequest, "123", mockDto),
-      ).rejects.toThrow(HttpException);
+      ).rejects.toThrow(PreconditionFailedException);
     });
 
     it("should throw NotFoundException if datablock not found after update", async () => {
-      origDatablocksService.findOne.mockResolvedValue(mockDatablock);
-      origDatablocksService.findByIdAndUpdate.mockResolvedValue(null);
-
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
         .mockResolvedValue(mockDatablock);
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockRejectedValue(
+        new NotFoundException("OrigDatablock #123 not found"),
+      );
 
       await expect(
         controller.update(mockRequest, "123", mockDto),
@@ -94,20 +93,22 @@ describe("OrigDatablocksController", () => {
     it("should return updated datablock on success", async () => {
       const updatedDatablock = { ...mockDatablock, name: "Updated Name" };
 
-      origDatablocksService.findOne.mockResolvedValue(mockDatablock);
-      origDatablocksService.findByIdAndUpdate.mockResolvedValue(
-        updatedDatablock,
-      );
-
       jest
         .spyOn(controller, "checkPermissionsForOrigDatablock")
-        .mockResolvedValue(updatedDatablock);
+        .mockResolvedValue(mockDatablock);
+      origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
+        updatedDatablock,
+      );
 
       const result = await controller.update(mockRequest, "123", mockDto);
 
       expect(result).toEqual(updatedDatablock);
-      expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-        "ds1",
+      expect(
+        origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
+      ).toHaveBeenCalledWith(
+        { _id: "123" },
+        mockDto,
+        new Date(mockRequest.headers["if-unmodified-since"] as string),
       );
     });
 
@@ -121,8 +122,10 @@ describe("OrigDatablocksController", () => {
       const updatedDatablock = { ...mockDatablock, name: "Updated Name" };
 
       beforeEach(() => {
-        origDatablocksService.findOne.mockResolvedValue(mockDatablock);
-        origDatablocksService.findByIdAndUpdate.mockResolvedValue(
+        jest
+          .spyOn(controller, "checkPermissionsForOrigDatablock")
+          .mockResolvedValue(mockDatablock);
+        origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount.mockResolvedValue(
           updatedDatablock,
         );
       });
@@ -130,16 +133,12 @@ describe("OrigDatablocksController", () => {
       it("should proceed with update if 'if-unmodified-since' header is missing", async () => {
         const mockRequest = { headers: {} } as Request; // No header
 
-        jest
-          .spyOn(controller, "checkPermissionsForOrigDatablock")
-          .mockResolvedValue(mockDatablock);
-
         const result = await controller.update(mockRequest, "123", mockDto);
 
         expect(result).toEqual(updatedDatablock);
-        expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-          "ds1",
-        );
+        expect(
+          origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
+        ).toHaveBeenCalledWith({ _id: "123" }, mockDto, undefined);
       });
 
       it("should proceed with update if 'if-unmodified-since' header is malformed", async () => {
@@ -147,16 +146,12 @@ describe("OrigDatablocksController", () => {
           headers: { "if-unmodified-since": "not-a-date" },
         } as Request; // Invalid date format
 
-        jest
-          .spyOn(controller, "checkPermissionsForOrigDatablock")
-          .mockResolvedValue(mockDatablock);
-
         const result = await controller.update(mockRequest, "123", mockDto);
 
         expect(result).toEqual(updatedDatablock);
-        expect(controller["updateDatasetSizeAndFiles"]).toHaveBeenCalledWith(
-          "ds1",
-        );
+        expect(
+          origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount,
+        ).toHaveBeenCalledWith({ _id: "123" }, mockDto, undefined);
       });
     });
   });

@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
-
   countDataset = 0,
   countRawDataset = 0,
   countDerivedDataset = 0,

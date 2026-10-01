@@ -5,7 +5,6 @@ const sandbox = require("sinon").createSandbox();
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   idOrigDatablock = null,
   pid = null,
   pidnonpublic = null,
@@ -77,6 +76,21 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       });
   });
 
+  it("0011: formpopulate should return default values for metadata", async () => {
+    return request(appUrl)
+      .get(`/api/v4/PublishedData/formpopulate?pid=${pid}`)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryValidStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("metadata");
+        res.body.metadata.should.have
+          .property("publicationYear")
+          .and.equal(new Date().getFullYear());
+      });
+  });
+
   it("0015: adds a published data", async () => {
     return request(appUrl)
       .post("/api/v4/PublishedData")
@@ -94,11 +108,67 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       });
   });
 
+  it("0016: should return results when searching published data by text", async () => {
+    const fields = { text: "published" };
+    const limits = { limit: 25, skip: 0, order: "createdAt:desc" };
+
+    return request(appUrl)
+      .get(
+        `/api/v4/PublishedData?fields=${encodeURIComponent(
+          JSON.stringify(fields),
+        )}&limits=${encodeURIComponent(JSON.stringify(limits))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => {
+        res.body.should.be.instanceof(Array);
+        res.body.length.should.be.greaterThan(0);
+
+        res.body
+          .some((item) => {
+            const title = (item.title || "").toLowerCase();
+            const abstract = (item.abstract || "").toLowerCase();
+            return (
+              title.includes("published") || abstract.includes("published")
+            );
+          })
+          .should.equal(true);
+      });
+  });
+
   it("0020: should not be able to fetch this new published data in private state anonymously", async () => {
     return request(appUrl)
       .get("/api/v4/PublishedData/" + doi)
       .set("Accept", "application/json")
       .expect(TestData.NotFoundStatusCode);
+  });
+
+  it("0023: should fetch all published data as admin ingestor with fields", async () => {
+    const limits = { skip: 0 };
+    const fields = { createdBy: { $regex: "admin", $options: "i" } };
+    return request(appUrl)
+      .get(
+        `/api/v4/PublishedData?fields=${encodeURIComponent(JSON.stringify(fields))}&limits=${encodeURIComponent(JSON.stringify(limits))}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array).and.to.have.length(1);
+      });
+  });
+
+  it("0026: should fetch all published data as unauthorized user", async () => {
+    return request(appUrl)
+      .get("/api/v4/PublishedData")
+      .set("Accept", "application/json")
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.instanceof(Array).and.to.have.length(0);
+      });
   });
 
   it("0030: should fetch this new published data as admin ingestor", async () => {
@@ -396,5 +466,106 @@ describe("1600: PublishedDataV4: Test of access to published data v4 endpoints",
       .set("Accept", "application/json")
       .expect(TestData.NotFoundStatusCode)
       .expect("Content-Type", /json/);
+  });
+
+  describe("Ajv extensions are executed on create/save", () => {
+    const strippedPublishedData = { ...publishedData, metadata: {} };
+    const expectedPublicationYear = new Date().getFullYear();
+    let id;
+
+    it("should set 'metadata.publicationYear' on create", () => {
+      return request(appUrl)
+        .post("/api/v4/PublishedData")
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+          id = encodeURIComponent(res.body.doi);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on full update", () => {
+      return request(appUrl)
+        .patch(`/api/v4/PublishedData/${id}`)
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on partial update", () => {
+      return request(appUrl)
+        .patch(`/api/v4/PublishedData/${id}`)
+        .send({ title: "New title", metadata: {} })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("title").and.equal("New title");
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on full resync", async () => {
+      await request(appUrl)
+        .post(`/api/v4/PublishedData/${id}/resync`)
+        .send(strippedPublishedData)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+
+      return request(appUrl)
+        .get(`/api/v4/PublishedData/${id}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
+
+    it("should set 'metadata.publicationYear' on partial resync", async () => {
+      await request(appUrl)
+        .post(`/api/v4/PublishedData/${id}/resync`)
+        .send({ title: "New resync title", metadata: {} })
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+
+      return request(appUrl)
+        .get(`/api/v4/PublishedData/${id}`)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("title").and.equal("New resync title");
+          res.body.should.have.property("metadata");
+          res.body.metadata.should.have
+            .property("publicationYear")
+            .and.equal(expectedPublicationYear);
+        });
+    });
   });
 });
