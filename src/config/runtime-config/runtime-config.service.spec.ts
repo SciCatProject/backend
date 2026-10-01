@@ -122,20 +122,29 @@ describe("RuntimeConfigService", () => {
       );
     });
 
-    it("overwrites entry if existing", async () => {
+    it("does not overwrite existing entry", async () => {
       const source = { foo: "bar" };
       configService.get.mockReturnValue(source);
       model.findOne.mockReturnValue({
-        lean: () => ({ cid: "frontendConfig" }),
+        lean: () => ({ cid: "frontendConfig", updatedBy: "system" }),
       });
       model.updateOne.mockResolvedValue({ acknowledged: true });
 
       await service.syncConfig("frontendConfig");
 
-      expect(model.updateOne).toHaveBeenCalledWith(
-        { cid: "frontendConfig" },
-        { data: source, updatedBy: "system" },
-      );
+      expect(model.updateOne).not.toHaveBeenCalled();
+    });
+    it("does not overwrite existing user-modified entry", async () => {
+      const source = { foo: "bar" };
+      configService.get.mockReturnValue(source);
+      model.findOne.mockReturnValue({
+        lean: () => ({ cid: "frontendConfig", updatedBy: "admin" }),
+      });
+      model.updateOne.mockResolvedValue({ acknowledged: true });
+
+      await service.syncConfig("frontendConfig");
+
+      expect(model.updateOne).toHaveBeenCalledTimes(0);
     });
   });
 

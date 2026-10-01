@@ -94,15 +94,6 @@ export class RuntimeConfigService implements OnModuleInit {
       return;
     }
 
-    // overwrite existing config with config file
-    await this.runtimeConfigModel.updateOne(
-      { cid: configId },
-      { data: sourceConfig, updatedBy: "system" },
-    );
-
-    Logger.log(
-      `RuntimeConfigService - [${configId}] synchronized with config file`,
-      "RuntimeConfigService",
-    );
+    return;
   }
 }
