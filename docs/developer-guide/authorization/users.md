@@ -7,10 +7,10 @@ This document describes the authorization model used for users and associated en
 The following actions are defined for users:
 
 - `AccessAny`
-- `UserCreate`
-- `UserRead`
-- `UserUpdate`
-- `UserDelete`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 - `UserCreateJwt`
 
 ## Permissions
@@ -35,10 +35,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `ADMIN_GROUPS` |
 | - | - | - | - |
-| `UserCreate` | - | own | any |
-| `UserRead` | - | own | any |
-| `UserUpdate` | - | own | any |
-| `UserDelete` | - | own | any |
+| `Create` | - | own | any |
+| `Read` | - | own | any |
+| `Update` | - | own | any |
+| `Delete` | - | own | any |
 | `UserCreateJwt` | - | - | any |
 
 Legend:

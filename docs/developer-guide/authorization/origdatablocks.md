@@ -7,10 +7,10 @@ This document describes the authorization model used for origdatablocks and asso
 The following actions are defined for origdatablocks:
 
 - `AccessAny`
-- `OrigdatablockCreate`
-- `OrigdatablockRead`
-- `OrigdatablockUpdate`
-- `OrigdatablockDelete`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 
 ## Permissions
 
@@ -56,10 +56,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `CREATE_DATASET_GROUPS` | `CREATE_DATASET_WITH_PID_GROUPS` | `CREATE_DATASET_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - | - |
-| `OrigdatablockCreate` | - | - | owner | owner | any | any | - |
-| `OrigdatablockRead` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
-| `OrigdatablockUpdate` | - | - | owner | owner | owner | any | - |
-| `OrigdatablockDelete` | - | - | - | - | - | - | any |
+| `Create` | - | - | owner | owner | any | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
+| `Update` | - | - | owner | owner | owner | any | - |
+| `Delete` | - | - | - | - | - | - | any |
 
 Legend:
 - public: origdatablock's `isPublished` field must be `true`
