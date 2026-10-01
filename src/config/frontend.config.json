@@ -29,16 +29,18 @@
   "loginFacilityLabel": "SciCat Vanilla",
   "loginLdapLabel": "Ldap",
   "loginLocalLabel": "Local",
-  "loginFacilityEnabled": true,
-  "loginLdapEnabled": true,
+  "loginFacilityEnabled": false,
+  "loginLdapEnabled": false,
   "loginLocalEnabled": true,
-  "fileColorEnabled": true,
+  "fileColorEnabled": false,
   "fileDownloadEnabled": true,
   "gettingStarted": null,
   "ingestManual": null,
+  "ingestorComponent" : {
+    "ingestorEnabled": true
+  },
   "jobsEnabled": true,
   "jsonMetadataEnabled": true,
-  "jupyterHubUrl": "",
   "landingPage": "doi.ess.eu/detail/",
   "lbBaseURL": "http://localhost:3000",
   "ingestorComponent": {
@@ -101,16 +103,16 @@
       "type": "form",
       "url": "https://zip.scicatproject.org/download/all",
       "target": "_blank",
-      "variables": {
+      "variables" : {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0FilesPath",
         "totalSize": "#Dataset0FilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
       "enabled": "#MaxDownloadableSize(@totalSize)",
-      "inputs": {
-        "item[]": "@pid",
-        "directory[]": "@folder",
+      "inputs" : {
+        "item[]" : "@pid",
+        "directory[]" : "@folder",
         "files[]": "@files"
       },
       "authorization": ["#datasetAccess", "#datasetPublic"]
@@ -143,7 +145,7 @@
       "authorization": ["#datasetAccess", "#datasetPublic"]
     },
     {
-      "id": "4f974f0e-4364-11ef-9c63-03d19f813f4e",
+     "id": "4f974f0e-4364-11ef-9c63-03d19f813f4e",
       "description": "This action let users download jupyter notebook properly populated with dataset pid and all files using an instance of sciwyrm",
       "order": 3,
       "label": "Notebook All (Form)",
@@ -288,10 +290,75 @@
       "target": "_blank"
     }
   ],
-  "datasetDetailsActionsEnabled": false,
-  "datasetDetailsActions": [],
-  "selectionActionsEnabled": true,
-  "selectionActions": [],
+  "datasetDetailsActionsEnabled": true,
+  "datasetDetailsActions": [
+    {
+      "id": "01",
+      "order": 1,
+      "type": "xhr",
+      "method": "PATCH",
+      "description": "Publish dataset",
+      "label": "Public",
+      "hidden": "#isPublished",
+      "mat_icon": "",
+      "url": "/api/v3/datasets/{{id}}",
+      "payload": "{\"isPublished\": true}"
+    },
+    {
+      "id": "02",
+      "order": 2,
+      "type": "xhr",
+      "method": "PATCH",
+      "description": "Unpublish published dataset",
+      "label": "Private",
+      "hidden": "#!isPublished",
+      "mat_icon": "",
+      "url": "/api/v3/datasets/{{id}}",
+      "payload": "{\"isPublished\": false}"
+    },
+    {
+      "id": "03",
+      "order": 3,
+      "type": "form",
+      "method": "GET",
+      "description": "Jupyter hub",
+      "label": "Jupyter hub",
+      "mat_icon": "",
+      "url": "https://jupyterhub.esss.lu.se/",
+      "target": "_blank"
+    }
+  ],
+  "datasetSelectionActionsEnabled": true,
+  "datasetSelectionActions": [
+    {
+      "id": "01",
+      "order": 1,
+      "type": "link",
+      "description": "Publish datasets",
+      "label": "Publish",
+      "mat_icon": "school",
+      "url": "/datasets/batch/publish"
+    },
+    {
+      "id": "02",
+      "order": 2,
+      "type": "link",
+      "description": "Share datasets",
+      "label": "Share",
+      "mat_icon": "share",
+      "url": "/datasets/batch?share=true"
+    },
+    {
+      "id": "03",
+      "order": 3,
+      "type": "link",
+      "hidden": "!archiveWorkflowEnabled",
+      "description": "Retrieve datasets",
+      "label": "Retrieve",
+      "mat_icon": "cloud_download",
+      "url": "/datasets/batch?retrieve=true"
+    }
+  ],
   "labelMaps": {
     "filters": {
       "LocationFilter": "Location",
@@ -717,6 +784,12 @@
       "scientificMetadata": "Scientific Metadata",
       "metadataJsonView": "Metadata JsonView",
       "datasetName": "Dataset Name",
+      "runNumber": "Run Number",
+      "sourceFolder": "Source Folder",
+      "size": "Size",
+      "type": "Dataset Type",
+      "image": "Thumbnail",
+      "proposalId": "Proposal Id",
       "scientificMetadata.run_number.value": "Run Number",
       "scientificMetadata.start_time": "Start Time",
       "startTime": "Start Time",
@@ -732,6 +805,11 @@
       "accessGroups": "Access Groups"
     },
     "proposal": {
+      "proposalId": "Proposal Id",
+      "title": "Proposal Title",
+      "abstract": "Abstract",
+      "startTime": "Planned Start Time",
+      "pi_lastname": "PI Last Name",
       "General Information": "Proposal Information",
       "Title": "Proposal Title",
       "Abstract": "Abstract",
@@ -770,11 +848,11 @@
         "label": "Summary",
         "order": 0,
         "row": 1,
-        "col": 4,
+        "col": 5,
         "fields": [
           {
-            "element": "text",
-            "source": "proposalId",
+            "element": "internalLink",
+            "source": "proposalIds",
             "order": 0
           },
           {
@@ -794,7 +872,7 @@
           },
           {
             "element": "text",
-            "source": "datasetName",
+            "source": "principalInvestigator",
             "order": 4
           },
           {
@@ -806,21 +884,21 @@
       },
       {
         "type": "attachments",
-        "label": "Attachements",
+        "label": "Attachments",
         "order": 1,
-        "col": 4,
+        "col": 5,
         "row": 1,
         "options": {
-          "limit": 5,
-          "size": "medium"
+          "limit": 4,
+          "size": "small"
         }
       },
       {
         "type": "regular",
         "label": "Dataset Information",
         "order": 2,
-        "col": 8,
-        "row": 1,
+        "row": 2,
+        "col": 10,
         "fields": [
           {
             "element": "copy",
@@ -830,42 +908,41 @@
           {
             "element": "text",
             "source": "datasetName",
-            "order": 0
+            "order": 1
           },
           {
             "element": "text",
             "source": "description",
-            "order": 0
+            "order": 2
           },
           {
             "element": "text",
             "source": "type",
-            "order": 0
+            "order": 3
           },
           {
-            "element": "date",
+            "element": "text",
             "source": "startTime",
-            "order": 0
+            "order": 4
           },
           {
-            "element": "date",
+            "element": "text",
             "source": "endTime",
-            "order": 0
+            "order": 5
           },
           {
             "element": "tag",
             "source": "keywords",
-            "order": 1
+            "order": 6
           }
         ]
       },
-
       {
         "type": "regular",
         "label": "Contact Information",
         "order": 3,
-        "col": 4,
-        "row": 1,
+        "col": 5,
+        "row": 3,
         "fields": [
           {
             "element": "text",
@@ -882,9 +959,9 @@
       {
         "type": "regular",
         "label": "Files Information",
-        "order": 4,
-        "col": 4,
-        "row": 1,
+        "order": 3,
+        "col": 5,
+        "row": 3,
         "fields": [
           {
             "element": "text",
@@ -911,9 +988,9 @@
       {
         "type": "regular",
         "label": "Related Documents",
-        "order": 5,
-        "col": 8,
-        "row": 1,
+        "order": 4,
+        "col": 10,
+        "row": 4,
         "fields": [
           {
             "element": "internalLink",
@@ -936,46 +1013,37 @@
             "order": 3
           },
           {
-            "element": "internalLink",
+            "element": "text",
             "source": "creationLocation",
             "order": 4
           }
         ]
       },
       {
+        "type": "attachments",
+        "label": "Gallery",
+        "order": 5,
+        "col": 10,
+        "row": 5,
+        "options": {
+         "size": "medium"
+        }
+      },
+      {
         "type": "scientificMetadata",
         "label": "Scientific Metadata Table",
         "viewMode": "table",
         "order": 6,
-        "col": 8,
-        "row": 3
+        "col": 10,
+        "row": 6
       },
       {
         "type": "scientificMetadata",
         "label": "Scientific Metadata JSON",
         "viewMode": "json",
         "order": 7,
-        "col": 8,
-        "row": 1
-      },
-      {
-        "type": "regular",
-        "label": "Authorization / Permissions",
-        "order": 9,
-        "col": 8,
-        "row": 1,
-        "fields": [
-          {
-            "element": "tag",
-            "source": "ownerGroup",
-            "order": 0
-          },
-          {
-            "element": "tag",
-            "source": "accessGroups",
-            "order": 1
-          }
-        ]
+        "col": 10,
+        "row": 7
       }
     ]
   },
