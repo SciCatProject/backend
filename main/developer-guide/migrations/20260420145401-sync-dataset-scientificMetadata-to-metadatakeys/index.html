@@ -1803,7 +1803,13 @@
 <span class="w">    </span><span class="nx">datasetId</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
 <span class="w">    </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"$metaArr.k"</span><span class="p">,</span>
 <span class="w">    </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
-<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$ifNull</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"$metaArr.v.human_name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">$cond</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="nx">$eq</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">$type</span><span class="o">:</span><span class="w"> </span><span class="s2">"$metaArr.v.human_name"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s2">"string"</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="s2">"$metaArr.v.human_name"</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nx">$setUnion</span><span class="o">:</span><span class="w"> </span><span class="p">[[</span><span class="s2">"$ownerGroup"</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$ifNull</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"$accessGroups"</span><span class="p">,</span><span class="w"> </span><span class="p">[]]</span><span class="w"> </span><span class="p">}],</span>
 <span class="w">    </span><span class="p">},</span>
