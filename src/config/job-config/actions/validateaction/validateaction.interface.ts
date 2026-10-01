@@ -7,8 +7,7 @@ export interface ValidateJobActionOptions extends JobActionOptions {
   request?: Record<string, unknown>;
 }
 
-export interface ValidateCreateJobActionOptions
-  extends ValidateJobActionOptions {
+export interface ValidateCreateJobActionOptions extends ValidateJobActionOptions {
   actionType: typeof actionType;
   request?: Record<string, unknown>;
   datasets?: Record<string, unknown>;

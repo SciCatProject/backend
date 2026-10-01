@@ -20,19 +20,19 @@ export class CreateJobDto {
    */
   @IsString()
   @IsOptional()
-  readonly ownerUser?: string;
+  ownerUser?: string;
 
   /**
    * Group that this job belongs to. Applicable only if requesting user has adequate permissions level.
    */
   @IsString()
   @IsOptional()
-  readonly ownerGroup?: string;
+  ownerGroup?: string;
 
   /**
    * Email to contact regarding this job. If the job is submitted anonymously, an email has to be provided.
    */
   @IsEmail()
   @IsOptional()
-  readonly contactEmail?: string;
+  contactEmail?: string;
 }

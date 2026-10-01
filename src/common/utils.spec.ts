@@ -1,5 +1,5 @@
 // Currently only covers converToSI
-import { convertToSI } from "./utils";
+import { convertToSI, parseBoolean, parseDate } from "./utils";
 
 describe("convertToSI", () => {
   it("should convert a known unit to SI successfully", () => {
@@ -43,5 +43,46 @@ describe("convertToSI", () => {
     const result = convertToSI(-5, "cm");
     expect(result.valueSI).toBeCloseTo(-0.05);
     expect(result.unitSI).toEqual("m");
+  });
+});
+
+describe("parseDate", () => {
+  it("should parse a valid date string", () => {
+    const dateString = "2023-01-01T00:00:00Z";
+    const result = parseDate(dateString);
+    expect(result).toBeInstanceOf(Date);
+    expect(result?.getTime()).toEqual(new Date(dateString).getTime());
+  });
+
+  it("should return undefined for an invalid date string", () => {
+    const dateString = "invalid-date";
+    const result = parseDate(dateString);
+    expect(result).toBeUndefined();
+  });
+
+  it("should return undefined for undefined input", () => {
+    const result = parseDate(undefined);
+    expect(result).toBeUndefined();
+  });
+});
+
+describe("parseBoolean", () => {
+  it("should return true for truthy values", () => {
+    expect(parseBoolean(true)).toBe(true);
+    expect(parseBoolean("true")).toBe(true);
+    expect(parseBoolean(1)).toBe(true);
+    expect(parseBoolean("1")).toBe(true);
+    expect(parseBoolean("on")).toBe(true);
+    expect(parseBoolean("yes")).toBe(true);
+  });
+
+  it("should return false for all other values", () => {
+    expect(parseBoolean(false)).toBe(false);
+    expect(parseBoolean("false")).toBe(false);
+    expect(parseBoolean(0)).toBe(false);
+    expect(parseBoolean("0")).toBe(false);
+    expect(parseBoolean("off")).toBe(false);
+    expect(parseBoolean(null)).toBe(false);
+    expect(parseBoolean(undefined)).toBe(false);
   });
 });

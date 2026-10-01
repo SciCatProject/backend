@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 
 let accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   derivedDatasetMinPid = null;
 
 describe("2600: Datasets v4 public endpoints tests", () => {

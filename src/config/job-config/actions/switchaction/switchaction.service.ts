@@ -12,9 +12,7 @@ import { ModuleRef } from "@nestjs/core";
 import { UpdateJobDto } from "src/jobs/dto/update-job.dto";
 
 @Injectable()
-export class SwitchUpdateJobActionCreator
-  implements JobActionCreator<UpdateJobDto>
-{
+export class SwitchUpdateJobActionCreator implements JobActionCreator<UpdateJobDto> {
   constructor(private moduleRef: ModuleRef) {}
 
   public create<Options extends JobActionOptions>(options: Options) {
@@ -32,9 +30,7 @@ export class SwitchUpdateJobActionCreator
 }
 
 @Injectable()
-export class SwitchCreateJobActionCreator
-  implements JobActionCreator<CreateJobDto>
-{
+export class SwitchCreateJobActionCreator implements JobActionCreator<CreateJobDto> {
   constructor(private moduleRef: ModuleRef) {}
 
   public create<Options extends JobActionOptions>(options: Options) {

@@ -26,7 +26,7 @@ const mockUser: User = {
     _id: "testId",
     id: "testId",
     externalSettings: {
-      filters: [
+      fe_dataset_table_filters: [
         { type: "LocationFilterComponent", visible: true },
         { type: "PidFilterComponent", visible: true },
         { type: "PidFilterContainsComponent", visible: false },
@@ -37,7 +37,7 @@ const mockUser: User = {
         { type: "DateRangeFilterComponent", visible: true },
         { type: "TextFilterComponent", visible: true },
       ],
-      conditions: [],
+      fe_dataset_table_conditions: [],
     },
     datasetCount: 25,
     jobCount: 25,
@@ -68,7 +68,7 @@ const mockUserSettings: UserSettings = {
   _id: "testId",
   id: "testId",
   externalSettings: {
-    filters: [
+    fe_dataset_table_filters: [
       { type: "LocationFilterComponent", visible: true },
       { type: "PidFilterComponent", visible: true },
       { type: "PidFilterContainsComponent", visible: false },
@@ -79,16 +79,48 @@ const mockUserSettings: UserSettings = {
       { type: "DateRangeFilterComponent", visible: true },
       { type: "TextFilterComponent", visible: true },
     ],
-    conditions: [],
+    fe_dataset_table_conditions: [],
   },
   datasetCount: 25,
   jobCount: 25,
   userId: "testUserId",
 };
 
+const mockUsers: User[] = [
+  {
+    _id: "user1",
+    realm: "test",
+    username: "adminUser",
+    password: "hashedPassword1",
+    email: "admin@test.com",
+    emailVerified: true,
+    authStrategy: "local",
+    userSettings: mockUserSettings,
+  },
+  {
+    _id: "user2",
+    realm: "test",
+    username: "regularUser",
+    password: "hashedPassword2",
+    email: "regular@test.com",
+    emailVerified: true,
+    authStrategy: "local",
+    userSettings: mockUserSettings,
+  },
+  {
+    _id: "user3",
+    realm: "test",
+    username: "oidcUser",
+    password: "",
+    email: "oidc@test.com",
+    emailVerified: true,
+    authStrategy: "oidc",
+    userSettings: mockUserSettings,
+  },
+];
+
 describe("UsersService", () => {
   let service: UsersService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let userModel: Model<User>;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let userIdentityModel: Model<UserIdentity>;
@@ -105,7 +137,12 @@ describe("UsersService", () => {
           useValue: {
             new: jest.fn().mockResolvedValue(mockUser),
             constructor: jest.fn().mockResolvedValue(mockUser),
-            find: jest.fn(),
+            find: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockUsers),
+            }),
+            findById: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(mockUser),
+            }),
             create: jest.fn(),
             exec: jest.fn(),
           },
@@ -152,5 +189,64 @@ describe("UsersService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("findAll", () => {
+    it("should return an array of users", async () => {
+      const result = await service.findAll();
+
+      expect(result).toEqual(mockUsers);
+      expect(result.length).toBe(3);
+      expect(userModel.find).toHaveBeenCalled();
+    });
+
+    it("should return empty array when no users exist", async () => {
+      jest.spyOn(userModel, "find").mockReturnValue({
+        exec: jest.fn().mockResolvedValue([]),
+      } as unknown as ReturnType<typeof userModel.find>);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+    });
+
+    it("should return users with expected properties", async () => {
+      const result = await service.findAll();
+
+      result.forEach((user) => {
+        expect(user).toHaveProperty("_id");
+        expect(user).toHaveProperty("username");
+        expect(user).toHaveProperty("email");
+        expect(user).toHaveProperty("authStrategy");
+      });
+    });
+
+    it("should return users with different auth strategies", async () => {
+      const result = await service.findAll();
+
+      const authStrategies = result.map((user) => user.authStrategy);
+      expect(authStrategies).toContain("local");
+      expect(authStrategies).toContain("oidc");
+    });
+  });
+
+  describe("findById", () => {
+    it("should return a user by id", async () => {
+      const result = await service.findById("testId");
+
+      expect(result).toEqual(mockUser);
+      expect(userModel.findById).toHaveBeenCalledWith("testId");
+    });
+
+    it("should return null when user is not found", async () => {
+      jest.spyOn(userModel, "findById").mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as unknown as ReturnType<typeof userModel.findById>);
+
+      const result = await service.findById("nonExistentId");
+
+      expect(result).toBeNull();
+    });
   });
 });

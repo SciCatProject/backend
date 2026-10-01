@@ -94,6 +94,18 @@ export class DataFile {
     required: false,
   })
   type?: string;
+
+  @ApiProperty({
+    type: Object,
+    required: false,
+    description:
+      "File-specific metadata. The Dataset field scientificMetadata should be preferred for aggregate metadata, as it is searchable and displayed more prominently to users.",
+  })
+  @Prop({
+    type: Object,
+    required: false,
+  })
+  metadata?: Record<string, unknown>;
 }
 
 export const DataFileSchema = SchemaFactory.createForClass(DataFile);

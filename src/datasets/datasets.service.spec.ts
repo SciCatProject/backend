@@ -4,7 +4,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
 import { InitialDatasetsService } from "src/initial-datasets/initial-datasets.service";
 import { LogbooksService } from "src/logbooks/logbooks.service";
-import { ElasticSearchService } from "src/elastic-search/elastic-search.service";
 import { DatasetsService } from "./datasets.service";
 import { DatasetClass } from "./schemas/dataset.schema";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
@@ -13,6 +12,11 @@ import { Request } from "express";
 import { CreateDatasetDto } from "./dto/create-dataset.dto";
 import { plainToInstance } from "class-transformer";
 import { ProposalsService } from "src/proposals/proposals.service";
+import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
+import { OpensearchService } from "src/opensearch/opensearch.service";
+import { REQUEST } from "@nestjs/core";
+import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
+import { Datablock } from "src/datablocks/schemas/datablock.schema";
 
 class InitialDatasetsServiceMock {}
 
@@ -20,7 +24,10 @@ class LogbooksServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
-class ElasticSearchServiceMock {}
+class MetadataKeysServiceMock {
+  insertManyFromSource = jest.fn().mockResolvedValue([]);
+  replaceManyFromSource = jest.fn().mockResolvedValue(undefined);
+}
 
 class ProposalsServiceMock {
   incrementNumberOfDatasets = jest.fn().mockResolvedValue(undefined);
@@ -92,9 +99,20 @@ const mockDataset: DatasetClass = {
   dataQualityMetrics: 1,
 };
 
+const mockDatasetModel = function (data: DatasetClass) {
+  const doc = {
+    ...data,
+    toObject: jest.fn().mockReturnValue(data),
+  };
+  return {
+    ...doc,
+    save: jest.fn().mockResolvedValue(doc),
+  };
+};
+mockDatasetModel.collection = { name: "Dataset" };
+
 describe("DatasetsService", () => {
   let service: DatasetsService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let model: Model<DatasetClass>;
 
   beforeEach(async () => {
@@ -103,13 +121,7 @@ describe("DatasetsService", () => {
         ConfigService,
         {
           provide: getModelToken("DatasetClass"),
-          useValue: function (data: DatasetClass) {
-            return {
-              ...data,
-              save: jest.fn().mockResolvedValue(data),
-              toObject: jest.fn().mockReturnValue(data),
-            };
-          },
+          useValue: mockDatasetModel,
         },
         DatasetsService,
         DatasetsAccessService,
@@ -118,9 +130,11 @@ describe("DatasetsService", () => {
           useClass: InitialDatasetsServiceMock,
         },
         { provide: LogbooksService, useClass: LogbooksServiceMock },
-        { provide: ElasticSearchService, useClass: ElasticSearchServiceMock },
+        { provide: OpensearchService, useValue: null },
+        { provide: MetadataKeysService, useClass: MetadataKeysServiceMock },
         { provide: CaslAbilityFactory, useClass: CaslAbilityFactoryMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
+        { provide: REQUEST, useValue: { user: { username: "tester" } } },
       ],
     }).compile();
 
@@ -166,5 +180,97 @@ describe("DatasetsService", () => {
     expect(
       (scientificMetadata["already%20encoded"] as { value: unknown }).value,
     ).toBe("Already Encoded");
+  });
+
+  it("should throw NotFoundException if no document is found", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it("should throw PreconditionedFailed if no patched dataset is returned (indicating a concurrent modification)", async () => {
+    const updateDto = { datasetName: "Updated Name" };
+    const unmodifiedSince = new Date("2021-11-11T12:29:02.083Z");
+    model.findOne = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockResolvedValue(mockDataset) });
+    model.findOneAndUpdate = jest
+      .fn()
+      .mockReturnValue({ exec: jest.fn().mockReturnValue(null) });
+    await expect(
+      service.findByIdAndUpdate("testId", updateDto, unmodifiedSince),
+    ).rejects.toThrow(PreconditionFailedException);
+  });
+
+  describe("updateDatasetSizeAndFiles", () => {
+    beforeEach(() => {
+      model.updateOne = jest
+        .fn()
+        .mockReturnValue({ exec: jest.fn().mockResolvedValue(undefined) });
+    });
+
+    it("should $inc by the delta between the old and new document", async () => {
+      const oldDocument = {
+        packedSize: 800,
+        dataFileList: [],
+      } as unknown as Datablock;
+      const newDocument = {
+        packedSize: 1000,
+        dataFileList: [{}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        newDocument,
+        oldDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: 200, numberOfFilesArchived: 1 } },
+      );
+    });
+
+    it("should treat a missing old document as zero, e.g. on create", async () => {
+      const newDocument = {
+        packedSize: 1000,
+        dataFileList: [{}, {}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        newDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: 1000, numberOfFilesArchived: 2 } },
+      );
+    });
+
+    it("should treat a missing new document as zero, e.g. on remove", async () => {
+      const oldDocument = {
+        packedSize: 1000,
+        dataFileList: [{}, {}],
+      } as unknown as Datablock;
+
+      await service.updateDatasetSizeAndFiles(
+        "testPid",
+        { size: "packedSize", numberOfFiles: "numberOfFilesArchived" },
+        undefined,
+        oldDocument,
+      );
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { _id: "testPid" },
+        { $inc: { packedSize: -1000, numberOfFilesArchived: -2 } },
+      );
+    });
   });
 });

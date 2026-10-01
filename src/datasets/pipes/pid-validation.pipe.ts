@@ -4,9 +4,10 @@ import { ConfigService } from "@nestjs/config";
 import { CreateDatasetDto } from "../dto/create-dataset.dto";
 
 @Injectable()
-export class PidValidationPipe
-  implements PipeTransform<CreateDatasetDto, CreateDatasetDto>
-{
+export class PidValidationPipe implements PipeTransform<
+  CreateDatasetDto,
+  CreateDatasetDto
+> {
   constructor(private configService: ConfigService) {
     this.datasetCreationValidationEnabled = this.configService.get<boolean>(
       "datasetCreationValidationEnabled",

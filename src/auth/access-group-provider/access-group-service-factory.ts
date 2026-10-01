@@ -3,6 +3,8 @@ import { AccessGroupFromStaticValuesService } from "./access-group-from-static-v
 import { AccessGroupService } from "./access-group.service";
 import { AccessGroupFromGraphQLApiService } from "./access-group-from-graphql-api-call.service";
 import { AccessGroupFromPayloadService } from "./access-group-from-payload.service";
+import { AccessGroupFromRestApiService } from "./access-group-from-rest-api-call.service";
+import { AccessGroupFromLdapService } from "./access-group-from-ldap.service";
 import { HttpService } from "@nestjs/axios";
 import { AccessGroupFromMultipleProvidersService } from "./access-group-from-multiple-providers.service";
 import { Logger } from "@nestjs/common";
@@ -11,7 +13,7 @@ import { Logger } from "@nestjs/common";
  */
 export const accessGroupServiceFactory = {
   provide: AccessGroupService,
-  useFactory: (configService: ConfigService) => {
+  useFactory: async (configService: ConfigService) => {
     Logger.debug("Service factory starting", "accessGroupServiceFactory");
     const accessGroupsStaticConfig = configService.get(
       "accessGroupsStaticConfig",
@@ -22,6 +24,11 @@ export const accessGroupServiceFactory = {
     const accessGroupsOIDCPayloadConfig = configService.get(
       "accessGroupsOIDCPayloadConfig",
     );
+    const accessGroupsLdapPayloadConfig = configService.get(
+      "accessGroupsLdapPayloadConfig",
+    );
+
+    const accessGroupsRestConfig = configService.get("accessGroupsRestConfig");
 
     const accessGroupServices: AccessGroupService[] = [];
     if (accessGroupsStaticConfig?.enabled == true) {
@@ -42,6 +49,18 @@ export const accessGroupServiceFactory = {
         new AccessGroupFromPayloadService(configService),
       );
     }
+    if (accessGroupsLdapPayloadConfig?.enabled == true) {
+      Logger.log(
+        JSON.stringify(accessGroupsLdapPayloadConfig),
+        "loading ldap processor",
+      );
+
+      accessGroupServices.push(
+        new AccessGroupFromLdapService(
+          accessGroupsLdapPayloadConfig?.accessGroupProperty,
+        ),
+      );
+    }
 
     if (accessGroupsGraphQlConfig?.enabled == true) {
       Logger.log(
@@ -49,25 +68,48 @@ export const accessGroupServiceFactory = {
         "loading graphql processor",
       );
 
-      import(accessGroupsGraphQlConfig.responseProcessorSrc).then(
-        (rpModule) => {
-          const gh = rpModule.graphHandler;
-          const responseProcessor: (
-            response: Record<string, unknown>,
-          ) => string[] = gh.responseProcessor;
-          const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
-          accessGroupServices.push(
-            new AccessGroupFromGraphQLApiService(
-              graphqlTemplateQuery,
-              accessGroupsGraphQlConfig.apiUrl,
-              {
-                Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
-              },
-              responseProcessor,
-              new HttpService(),
-            ),
-          );
-        },
+      try {
+        const rpModule = await import(
+          accessGroupsGraphQlConfig.responseProcessorSrc
+        );
+        const gh = rpModule.graphHandler;
+        const responseProcessor: (
+          response: Record<string, unknown>,
+        ) => string[] = gh.responseProcessor;
+        const graphqlTemplateQuery: string = gh.graphqlTemplateQuery;
+        accessGroupServices.push(
+          new AccessGroupFromGraphQLApiService(
+            graphqlTemplateQuery,
+            accessGroupsGraphQlConfig.apiUrl,
+            {
+              Authorization: `Bearer ${accessGroupsGraphQlConfig.token}`,
+            },
+            responseProcessor,
+            new HttpService(),
+          ),
+        );
+      } catch (error) {
+        Logger.error(
+          `Failed to load graphql response processor from "${accessGroupsGraphQlConfig.responseProcessorSrc}", skipping this access group provider: ${error}`,
+          "accessGroupServiceFactory",
+        );
+      }
+    }
+    if (accessGroupsRestConfig?.enabled == true) {
+      Logger.log(
+        JSON.stringify(accessGroupsRestConfig),
+        "loading REST API processor",
+      );
+      accessGroupServices.push(
+        new AccessGroupFromRestApiService(
+          accessGroupsRestConfig.apiUrl,
+          {
+            [accessGroupsRestConfig.authKey]:
+              accessGroupsRestConfig.token.trim(),
+          },
+          accessGroupsRestConfig.userIdField || "userId",
+          new HttpService(),
+        ),
       );
     }
 

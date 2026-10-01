@@ -35,9 +35,10 @@ type DatasetDto =
 type ValidatedDto = DatasetDto & { scientificMetadataValid?: boolean };
 
 @Injectable()
-export class ScientificMetadataValidationPipe
-  implements PipeTransform<DatasetDto, Promise<ValidatedDto>>
-{
+export class ScientificMetadataValidationPipe implements PipeTransform<
+  DatasetDto,
+  Promise<ValidatedDto>
+> {
   constructor(
     private readonly httpService: HttpService,
     private readonly datasetsService: DatasetsService,

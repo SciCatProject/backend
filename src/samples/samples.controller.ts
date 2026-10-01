@@ -11,14 +11,14 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
-  Logger,
-  InternalServerErrorException,
   ForbiddenException,
   BadRequestException,
   Req,
   Header,
   NotFoundException,
   Headers,
+  ClassSerializerInterceptor,
+  SerializeOptions,
 } from "@nestjs/common";
 import { SamplesService } from "./samples.service";
 import { CreateSampleDto } from "./dto/create-sample.dto";
@@ -59,6 +59,7 @@ import {
   filterExample,
   fullQueryDescriptionLimits,
   fullQueryExampleLimits,
+  parseDate,
   samplesFullQueryDescriptionFields,
   samplesFullQueryExampleFields,
 } from "src/common/utils";
@@ -69,7 +70,8 @@ import { CreateSubAttachmentV3Dto } from "src/attachments/dto-obsolete/create-su
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { CountApiResponse } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
+import { OutputSampleDto } from "./dto/output-sample.dto";
+import { DatasetDocument } from "src/datasets/schemas/dataset.schema";
 
 export class FindByIdAccessResponse {
   @ApiProperty({ type: Boolean })
@@ -79,6 +81,7 @@ export class FindByIdAccessResponse {
 @ApiBearerAuth()
 @ApiTags("samples")
 @Controller("samples")
+@UseInterceptors(ClassSerializerInterceptor)
 export class SamplesController {
   constructor(
     private readonly attachmentsService: AttachmentsService,
@@ -111,62 +114,11 @@ export class SamplesController {
     const sampleInstance = this.generateSampleInstanceForPermissions(sample);
 
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
+    const ability = this.caslAbilityFactory.sampleAccess(user);
 
-    try {
-      switch (group) {
-        case Action.SampleCreate:
-          return (
-            ability.can(Action.SampleCreateAny, SampleClass) ||
-            ability.can(Action.SampleCreateOwner, sampleInstance)
-          );
-        case Action.SampleRead:
-          return (
-            ability.can(Action.SampleReadAny, SampleClass) ||
-            ability.can(Action.SampleReadOneOwner, sampleInstance) ||
-            ability.can(Action.SampleReadOneAccess, sampleInstance) ||
-            ability.can(Action.SampleReadOnePublic, sampleInstance)
-          );
-        case Action.SampleUpdate:
-          return (
-            ability.can(Action.SampleUpdateAny, SampleClass) ||
-            ability.can(Action.SampleUpdateOwner, sampleInstance)
-          );
-        case Action.SampleDelete:
-          return (
-            ability.can(Action.SampleDeleteAny, SampleClass) ||
-            ability.can(Action.SampleDeleteOwner, sampleInstance)
-          );
-        case Action.SampleAttachmentCreate:
-          return (
-            ability.can(Action.SampleAttachmentCreateAny, SampleClass) ||
-            ability.can(Action.SampleAttachmentCreateOwner, sampleInstance)
-          );
-        case Action.SampleAttachmentRead:
-          return (
-            ability.can(Action.SampleAttachmentReadAny, SampleClass) ||
-            ability.can(Action.SampleAttachmentReadOwner, sampleInstance) ||
-            ability.can(Action.SampleAttachmentReadPublic, sampleInstance) ||
-            ability.can(Action.SampleAttachmentReadAccess, sampleInstance)
-          );
-        case Action.SampleAttachmentUpdate:
-          return (
-            ability.can(Action.SampleAttachmentUpdateAny, SampleClass) ||
-            ability.can(Action.SampleAttachmentUpdateOwner, sampleInstance)
-          );
-        case Action.SampleAttachmentDelete:
-          return (
-            ability.can(Action.SampleAttachmentDeleteAny, SampleClass) ||
-            ability.can(Action.SampleAttachmentDeleteOwner, sampleInstance)
-          );
+    const canDoAction = ability.can(group, sampleInstance);
 
-        default:
-          Logger.error("Permission for the action is not specified");
-          return false;
-      }
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+    return canDoAction;
   }
 
   private async checkPermissionsForSample(
@@ -174,21 +126,23 @@ export class SamplesController {
     id: string,
     group: Action,
   ) {
-    const sample = await this.samplesService.findOne({
+    const sampleDoc = await this.samplesService.findOne({
       sampleId: id,
     });
 
-    if (!sample) {
+    if (!sampleDoc) {
       throw new NotFoundException(`Sample: ${id} not found`);
     }
 
-    const canDoAction = this.permissionChecker(group, sample, request);
+    const sampleObj = sampleDoc.toObject();
+
+    const canDoAction = this.permissionChecker(group, sampleObj, request);
 
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized to this sample");
     }
 
-    return sample;
+    return sampleObj;
   }
 
   private checkPermissionsForSampleCreate(
@@ -210,49 +164,42 @@ export class SamplesController {
     mergedFilters: IFilters<SampleDocument, ISampleFields>,
   ): IFilters<SampleDocument, ISampleFields> {
     const user: JWTUser = request.user as JWTUser;
-    //mergedFilters.where = mergedFilters.where || {};
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const authorizationFilter: Record<string, any> = { where: {} };
-    if (user) {
-      const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-      const canViewAll = ability.can(Action.SampleReadAny, SampleClass);
-      if (!canViewAll) {
-        const canViewAccess = ability.can(
-          Action.SampleReadManyAccess,
-          SampleClass,
-        );
-        const canViewOwner = ability.can(
-          Action.SampleReadManyOwner,
-          SampleClass,
-        );
-        const canViewPublic = ability.can(
-          Action.SampleReadManyPublic,
-          SampleClass,
-        );
 
-        if (canViewAccess) {
-          authorizationFilter.where["$or"] = [
-            { ownerGroup: { $in: user.currentGroups } },
-            { accessGroups: { $in: user.currentGroups } },
-            { isPublished: true },
+    const ability = this.caslAbilityFactory.sampleAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, SampleClass);
+    const canView = ability.can(Action.SampleRead, SampleClass);
+
+    if (!canViewAny) {
+      mergedFilters.where = mergedFilters.where ?? {};
+      if (!user) {
+        if (mergedFilters.where["$and"]) {
+          mergedFilters.where["$and"].push({
+            isPublished: true,
+          });
+        } else {
+          mergedFilters.where["$and"] = [{ isPublished: true }];
+        }
+      } else if (canView) {
+        if (mergedFilters.where["$and"]) {
+          mergedFilters.where["$and"].push({
+            $or: [
+              { ownerGroup: { $in: user.currentGroups } },
+              { accessGroups: { $in: user.currentGroups } },
+              { isPublished: true },
+            ],
+          });
+        } else {
+          mergedFilters.where["$and"] = [
+            {
+              $or: [
+                { ownerGroup: { $in: user.currentGroups } },
+                { accessGroups: { $in: user.currentGroups } },
+                { isPublished: true },
+              ],
+            },
           ];
-        } else if (canViewOwner) {
-          authorizationFilter.where = {
-            ownerGroup: { $in: user.currentGroups },
-          };
-        } else if (canViewPublic) {
-          authorizationFilter.where.isPublished = true;
         }
       }
-    } else {
-      authorizationFilter.where.isPublished = true;
-    }
-    if (mergedFilters.where) {
-      mergedFilters.where = {
-        $and: [authorizationFilter.where, mergedFilters.where],
-      };
-    } else {
-      mergedFilters.where = authorizationFilter.where;
     }
 
     return mergedFilters;
@@ -269,6 +216,10 @@ export class SamplesController {
   )
   @HttpCode(HttpStatus.CREATED)
   @Post()
+  @SerializeOptions({
+    type: OutputSampleDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It creates a new sample.",
     description:
@@ -280,20 +231,23 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: SampleClass,
+    type: OutputSampleDto,
     description: "Create a new sample and return its representation in SciCat",
   })
   async create(
     @Req() request: Request,
     @Body() createSampleDto: CreateSampleDto,
-  ): Promise<SampleClass> {
+  ): Promise<OutputSampleDto> {
     const sampleDTO = this.checkPermissionsForSampleCreate(
       request,
       createSampleDto,
       Action.SampleCreate,
     );
 
-    return this.samplesService.create(sampleDTO);
+    const createdSample = await this.samplesService.create(sampleDTO);
+    const sampleObj = (createdSample as SampleDocument).toObject();
+
+    return sampleObj as OutputSampleDto;
   }
 
   // GET /samples
@@ -302,6 +256,10 @@ export class SamplesController {
     ability.can(Action.SampleRead, SampleClass),
   )
   @Get()
+  @SerializeOptions({
+    type: OutputSampleDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of samples",
     description:
@@ -317,17 +275,22 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: SampleClass,
+    type: OutputSampleDto,
     isArray: true,
     description: "Return the samples requested",
   })
   async findAll(
     @Req() request: Request,
     @Query("filter") filters?: string,
-  ): Promise<SampleClass[]> {
+  ): Promise<OutputSampleDto[]> {
     const sampleFilters: IFilters<SampleDocument, ISampleFields> =
       this.updateFiltersForList(request, JSON.parse(filters ?? "{}"));
-    return this.samplesService.findAll(sampleFilters);
+    const samples = await this.samplesService.findAll(sampleFilters);
+
+    const samplesObj = (samples as SampleDocument[]).map((sample) =>
+      sample.toObject(),
+    );
+    return samplesObj as OutputSampleDto[];
   }
 
   // GET /samples/count
@@ -360,28 +323,15 @@ export class SamplesController {
     const user: JWTUser = request.user as JWTUser;
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-    const canViewAll = ability.can(Action.SampleReadAny, SampleClass);
+    const ability = this.caslAbilityFactory.sampleAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, SampleClass);
+    const canView = ability.can(Action.SampleRead, SampleClass);
 
-    if (!canViewAll) {
-      const canViewAccess = ability.can(
-        Action.SampleReadManyAccess,
-        SampleClass,
-      );
-      const canViewOwner = ability.can(Action.SampleReadManyOwner, SampleClass);
-      const canViewPublic = ability.can(
-        Action.SampleReadManyPublic,
-        SampleClass,
-      );
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      } else if (canViewPublic) {
-        fields.isPublished = true;
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     return this.samplesService.count({ fields });
@@ -393,6 +343,10 @@ export class SamplesController {
     ability.can(Action.SampleRead, SampleClass),
   )
   @Get("/fullquery")
+  @SerializeOptions({
+    type: OutputSampleDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of samples matching the query provided.",
     description:
@@ -418,50 +372,41 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: SampleClass,
+    type: OutputSampleDto,
     isArray: true,
     description: "Return samples requested",
   })
   async fullquery(
     @Req() request: Request,
     @Query() filters: { fields?: string; limits?: string },
-  ): Promise<SampleClass[]> {
+  ): Promise<OutputSampleDto[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
-    if (user) {
-      const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-      const canViewAll = ability.can(Action.SampleReadAny, SampleClass);
 
-      if (!canViewAll) {
-        const canViewAccess = ability.can(
-          Action.SampleReadManyAccess,
-          SampleClass,
-        );
-        const canViewOwner = ability.can(
-          Action.SampleReadManyOwner,
-          SampleClass,
-        );
-        const canViewPublic = ability.can(
-          Action.SampleReadManyPublic,
-          SampleClass,
-        );
-        if (canViewAccess) {
-          fields.userGroups = fields.userGroups ?? [];
-          fields.userGroups.push(...user.currentGroups);
-        } else if (canViewOwner) {
-          fields.ownerGroup = fields.ownerGroup ?? [];
-          fields.ownerGroup.push(...user.currentGroups);
-        } else if (canViewPublic) {
-          fields.isPublished = true;
-        }
-      }
+    const ability = this.caslAbilityFactory.sampleAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, SampleClass);
+    const canView = ability.can(Action.SampleRead, SampleClass);
+
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters: IFilters<SampleDocument, ISampleFields> = {
       fields,
       limits,
     };
-    return this.samplesService.fullquery(parsedFilters);
+
+    const samples = await this.samplesService.fullquery(parsedFilters);
+
+    const samplesObj = (samples as SampleDocument[]).map((sample) =>
+      sample.toObject(),
+    );
+
+    return samplesObj as OutputSampleDto[];
   }
 
   // GET /samples/metadataKeys
@@ -502,37 +447,20 @@ export class SamplesController {
     @Query() filters: { fields?: string; limits?: string },
   ): Promise<string[]> {
     const user: JWTUser = request.user as JWTUser;
-
     const fields: ISampleFields = JSON.parse(filters.fields ?? "{}");
     const limits: ILimitsFilter = JSON.parse(filters.limits ?? "{}");
-    if (user) {
-      const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-      const canViewAll = ability.can(Action.SampleReadAny, SampleClass);
 
-      if (!canViewAll) {
-        const canViewAccess = ability.can(
-          Action.SampleReadManyAccess,
-          SampleClass,
-        );
-        const canViewOwner = ability.can(
-          Action.SampleReadManyOwner,
-          SampleClass,
-        );
-        const canViewPublic = ability.can(
-          Action.SampleReadManyPublic,
-          SampleClass,
-        );
-        if (canViewAccess) {
-          fields.userGroups = fields.userGroups ?? [];
-          fields.userGroups.push(...user.currentGroups);
-        } else if (canViewOwner) {
-          fields.ownerGroup = fields.ownerGroup ?? [];
-          fields.ownerGroup.push(...user.currentGroups);
-        } else if (canViewPublic) {
-          fields.isPublished = true;
-        }
-      }
+    const ability = this.caslAbilityFactory.sampleAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, SampleClass);
+    const canView = ability.can(Action.SampleRead, SampleClass);
+
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
+
     const parsedFilters: IFilters<SampleDocument, ISampleFields> = {
       fields,
       limits,
@@ -564,11 +492,11 @@ export class SamplesController {
     description: "Return sample requested",
   })
   async findOne(
+    @Req() request: Request,
     @Query("filter") queryFilters?: string,
   ): Promise<SampleWithAttachmentsAndDatasets | null> {
-    const jsonFilters: IFilters<SampleDocument, ISampleFields> = queryFilters
-      ? JSON.parse(queryFilters)
-      : {};
+    const jsonFilters: IFilters<SampleDocument, ISampleFields> =
+      this.updateFiltersForList(request, JSON.parse(queryFilters ?? "{}"));
     const whereFilters = jsonFilters.where ?? {};
 
     const sample = (
@@ -607,6 +535,10 @@ export class SamplesController {
   )
   @Get("/:id")
   @Header("content-type", "application/json")
+  @SerializeOptions({
+    type: OutputSampleDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns the sample requested.",
     description: "It returns the sample requested through the id specified.",
@@ -618,13 +550,13 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: SampleClass,
+    type: OutputSampleDto,
     description: "Return sample with id specified",
   })
   async findById(
     @Req() request: Request,
     @Param("id") id: string,
-  ): Promise<SampleClass | null> {
+  ): Promise<OutputSampleDto | null> {
     const sample = await this.checkPermissionsForSample(
       request,
       id,
@@ -675,6 +607,10 @@ export class SamplesController {
     ),
   )
   @Patch("/:id")
+  @SerializeOptions({
+    type: OutputSampleDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It updates the sample.",
     description:
@@ -691,7 +627,7 @@ export class SamplesController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: SampleClass,
+    type: OutputSampleDto,
     description:
       "Update an existing sample and return its representation in SciCat",
   })
@@ -700,17 +636,20 @@ export class SamplesController {
     @Param("id") id: string,
     @Body() updateSampleDto: PartialUpdateSampleDto,
     @Headers() headers: Record<string, string>,
-  ): Promise<SampleClass | null> {
-    const sample = await this.checkPermissionsForSample(
-      request,
-      id,
-      Action.SampleUpdate,
+  ): Promise<OutputSampleDto | null> {
+    await this.checkPermissionsForSample(request, id, Action.SampleUpdate);
+
+    const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
+
+    const updatedSample = await this.samplesService.findOneAndUpdate(
+      { sampleId: id },
+      updateSampleDto,
+      unmodifiedSince,
     );
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(sample.updatedAt, headers["if-unmodified-since"]);
+    const sampleObj = (updatedSample as SampleDocument).toObject();
 
-    return this.samplesService.update({ sampleId: id }, updateSampleDto);
+    return sampleObj as OutputSampleDto;
   }
 
   // DELETE /samples/:id
@@ -927,7 +866,7 @@ export class SamplesController {
   // GET /samples/:id/datasets
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleDatasetRead, SampleClass),
+    ability.can(Action.SampleRead, SampleClass),
   )
   @Get("/:id/datasets")
   @ApiOperation({
@@ -950,41 +889,36 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<DatasetClass[] | null> {
+    await this.checkPermissionsForSample(request, id, Action.SampleRead);
+
     const user: JWTUser = request.user as JWTUser;
-    const ability = this.caslAbilityFactory.samplesInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
     const fields: IDatasetFields = JSON.parse("{}");
 
-    if (!canViewAny) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-      const canViewPublic = ability.can(
-        Action.DatasetReadManyPublic,
-        DatasetClass,
-      );
-      if (canViewAccess) {
-        fields.userGroups = user.currentGroups ?? [];
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
+
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny) {
+      if (canView && !fields.isPublished) {
+        fields.userGroups = fields.userGroups ?? [];
         fields.userGroups.push(...user.currentGroups);
-        // fields.sharedWith = user.email;
-      } else if (canViewOwner) {
-        fields.ownerGroup = user.currentGroups ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      } else if (canViewPublic) {
+      } else {
         fields.isPublished = true;
       }
     }
 
-    const dataset = await this.datasetsService.fullquery({
+    const datasets = await this.datasetsService.fullquery({
       where: { sampleId: id },
       fields: fields,
     });
-    return dataset;
+
+    const datasetsObj = (datasets as DatasetDocument[]).map((dataset) =>
+      dataset.toObject(),
+    );
+
+    return datasetsObj;
   }
 
   // PATCH /samples/:id/datasets/:fk

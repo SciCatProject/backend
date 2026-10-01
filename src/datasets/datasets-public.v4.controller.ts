@@ -34,6 +34,11 @@ import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe"
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { getSwaggerDatasetFilterContent } from "./types/dataset-filter-content";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import {
+  ClassSerializerInterceptor,
+  SerializeOptions,
+  UseInterceptors,
+} from "@nestjs/common";
 
 @ApiExtraModels(HistoryClass, TechniqueClass, RelationshipClass)
 @ApiTags("datasets public v4")
@@ -57,6 +62,11 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public
   @AllowAny()
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of public datasets.",
     description:
@@ -271,6 +281,11 @@ export class DatasetsPublicV4Controller {
   // GET /datasets/public/:id
   @AllowAny()
   @Get("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiParam({
     name: "pid",
     description: "Id of the public dataset to return",

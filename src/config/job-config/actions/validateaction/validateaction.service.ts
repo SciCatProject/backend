@@ -26,9 +26,7 @@ export class ValidateJobActionCreator implements JobActionCreator<JobDto> {
 }
 
 @Injectable()
-export class ValidateCreateJobActionCreator
-  implements JobActionCreator<CreateJobDto>
-{
+export class ValidateCreateJobActionCreator implements JobActionCreator<CreateJobDto> {
   constructor() {}
 
   public create<Options extends JobActionOptions>(options: Options) {

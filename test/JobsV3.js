@@ -6,23 +6,22 @@ let accessTokenAdminIngestor = null,
   accessTokenAdmin = null,
   accessTokenUser51 = null,
   accessTokenUser2 = null,
-
   datasetPid1 = null,
   datasetPid2 = null,
+  datasetPid3 = null,
+  datasetPid4 = null,
   datablockId1 = null,
   datablockId2 = null,
   datablockId3 = null,
   datablockId4 = null,
   datablockId5 = null,
   origDatablock1 = null,
-
   jobId = null,
   encodedJob = null,
   encodedJobOwnedByAdmin = null,
   encodedJobOwnedByGroup5 = null,
   encodedJobOwnedByUser51 = null,
   encodedJobAnonymous = null,
-
   jobCreateDtoByAdmin = null,
   jobCreateDtoForUser51 = null,
   jobCreateDtoByUser1 = null,
@@ -42,6 +41,22 @@ const dataset2 = {
   isPublished: true,
   ownerGroup: "group5",
   accessGroups: ["group1"],
+};
+
+const dataset3 = {
+  ...TestData.RawCorrect,
+  isPublished: false,
+  ownerGroup: "group1",
+  accessGroups: [],
+};
+
+// Published dataset with no accessGroups: used to verify that published datasets
+// are excluded from the #datasetAccess group intersection (they don't block access).
+const dataset4 = {
+  ...TestData.RawCorrect,
+  isPublished: true,
+  ownerGroup: "group1",
+  accessGroups: [],
 };
 
 const jobOwnerAccess = {
@@ -121,6 +136,39 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       });
   });
 
+  it("0026: Add dataset 4 as Admin Ingestor", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(dataset4)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("ownerGroup").and.equal("group1");
+        res.body.should.have.property("isPublished").and.equal(true);
+        res.body.should.have.property("pid").and.be.string;
+        datasetPid4 = res.body["pid"];
+      });
+  });
+
+  it("0025: Add dataset 3 as Admin Ingestor", async () => {
+    return request(appUrl)
+      .post("/api/v3/Datasets")
+      .send(dataset3)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("ownerGroup").and.equal("group1");
+        res.body.should.have.property("type").and.equal("raw");
+        res.body.should.have.property("isPublished").and.equal(false);
+        res.body.should.have.property("pid").and.be.string;
+        datasetPid3 = res.body["pid"];
+      });
+  });
+
   it("0021: Add via /api/v3 a new job with invalid type, as a user from ADMIN_GROUPS, which should fail", async () => {
     const newJob = {
       type: "invalid_type",
@@ -171,7 +219,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -195,7 +243,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -209,7 +257,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
     jobCreateDtoByAdmin = {
       ...jobDatasetPublic,
       datasetList: [{ pid: datasetPid1, files: [] }],
-      jobStatusMessage: "custom_message"
+      jobStatusMessage: "custom_message",
     };
 
     return request(appUrl)
@@ -229,9 +277,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("datasetList")
           .that.deep.equals(jobCreateDtoByAdmin.datasetList);
-        res.body.should.have.property("jobParams").that.deep.equals(
-          {username: TestData.Accounts["admin"]["username"]}
-        );
+        res.body.should.have.property("jobParams").that.deep.equals({
+          username: TestData.Accounts["admin"]["username"],
+        });
         res.body.should.have
           .property("emailJobInitiator")
           .to.be.equal(TestData.Accounts["admin"]["email"]);
@@ -259,7 +307,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("contactEmail")
           .to.be.equal(TestData.Accounts["admin"]["email"]);
-        res.body.should.have.property("statusCode").to.be.equal("custom_message");
+        res.body.should.have
+          .property("statusCode")
+          .to.be.equal("custom_message");
         res.body.should.have
           .property("statusMessage")
           .to.be.equal("custom_message");
@@ -320,9 +370,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("datasetList")
           .that.deep.equals(jobCreateDtoForUser51.datasetList);
-        res.body.should.have.property("jobParams").that.deep.equals(
-          {username: TestData.Accounts["admin"]["username"]}
-        );
+        res.body.should.have.property("jobParams").that.deep.equals({
+          username: TestData.Accounts["admin"]["username"],
+        });
         encodedJobOwnedByGroup5 = encodeURIComponent(res.body["id"]);
       });
   });
@@ -331,7 +381,12 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
     jobCreateDtoForUser51 = {
       ...jobOwnerAccess,
       emailJobInitiator: "user5.1@your.site",
-      datasetList: [{ pid: datasetPid1, files: [TestData.OrigDatablockV4MinCorrect.dataFileList[0].path] }],
+      datasetList: [
+        {
+          pid: datasetPid1,
+          files: [TestData.OrigDatablockV4MinCorrect.dataFileList[0].path],
+        },
+      ],
     };
 
     await request(appUrl)
@@ -366,9 +421,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("datasetList")
           .that.deep.equals(jobCreateDtoForUser51.datasetList);
-        res.body.should.have.property("jobParams").that.deep.equals(
-          {username: TestData.Accounts["admin"]["username"]}
-        );
+        res.body.should.have.property("jobParams").that.deep.equals({
+          username: TestData.Accounts["admin"]["username"],
+        });
         encodedJobOwnedByGroup5 = encodeURIComponent(res.body["id"]);
       });
   });
@@ -377,7 +432,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
     jobCreateDtoForUser51 = {
       ...jobOwnerAccess,
       emailJobInitiator: "user5.1@your.site",
-      datasetList: [{ pid: datasetPid1, files: ['abcdef.ghi'] }],
+      datasetList: [{ pid: datasetPid1, files: ["abcdef.ghi"] }],
     };
 
     await request(appUrl)
@@ -397,7 +452,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(jobCreateDtoForUser51)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.UnprocessableEntityStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
@@ -931,14 +986,14 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.an("array").to.have.lengthOf(6);
-        res.body.forEach(result =>
-          result.should.have.contain.keys(["type", "emailJobInitiator"])
-        )
+        res.body.forEach((result) =>
+          result.should.have.contain.keys(["type", "emailJobInitiator"]),
+        );
       });
   });
 
   it("0275: Get via /api/v3 all accessible jobs as user5.1", async () => {
-    const filter = { fields: ["emailJobInitiator"] }
+    const filter = { fields: ["emailJobInitiator"] };
     return request(appUrl)
       .get(`/api/v3/Jobs/?filter=${encodeURIComponent(JSON.stringify(filter))}`)
       .set("Accept", "application/json")
@@ -947,9 +1002,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.an("array").to.have.lengthOf(6);
-        res.body.forEach(result => {
+        res.body.forEach((result) => {
           result.should.have.property("emailJobInitiator");
-          result.should.not.have.property("type")
+          result.should.not.have.property("type");
         });
       });
   });
@@ -977,30 +1032,35 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.an("array").to.have.lengthOf(3);
-        const dates = res.body.map(result => new Date(result.creationTime));
+        const dates = res.body.map((result) => new Date(result.creationTime));
         (dates[0] < dates[1] && dates[1] < dates[2]).should.be.true;
       });
   });
 
   it("0293: Fullquery via /api/v3 all jobs that were created by user5.1, as user5.1 and ordered by creationTime", async () => {
     const query = { createdBy: "user5.1" };
-    const limits = { order: "creationTime:desc" }
+    const limits = { order: "creationTime:desc" };
     return request(appUrl)
       .get(`/api/v3/Jobs/fullquery`)
       .set("Accept", "application/json")
-      .query(`fields=${encodeURIComponent(JSON.stringify(query))}&limits=${encodeURIComponent(JSON.stringify(limits))}`)
+      .query(
+        `fields=${encodeURIComponent(JSON.stringify(query))}&limits=${encodeURIComponent(JSON.stringify(limits))}`,
+      )
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.an("array").to.have.lengthOf(3);
-        const dates = res.body.map(result => new Date(result.creationTime));
+        const dates = res.body.map((result) => new Date(result.creationTime));
         (dates[0] > dates[1] && dates[1] > dates[2]).should.be.true;
       });
   });
 
   it("0296: Fullquery via /api/v3 all jobs that were created by user5.1, as user5.1 and ordered by creationTime", async () => {
-    const query = { createdBy: "user5.1", emailJobInitiator: "test@email.scicat" };
+    const query = {
+      createdBy: "user5.1",
+      emailJobInitiator: "test@email.scicat",
+    };
     return request(appUrl)
       .get(`/api/v3/Jobs/fullquery`)
       .set("Accept", "application/json")
@@ -1010,7 +1070,9 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.be.an("array").to.have.lengthOf(1);
-        res.body[0].should.have.property("emailJobInitiator").and.equal("test@email.scicat");
+        res.body[0].should.have
+          .property("emailJobInitiator")
+          .and.equal("test@email.scicat");
       });
   });
 
@@ -1046,11 +1108,15 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       });
   });
 
-  it("0315: Fullfacet via /api/v3 jobs that were created by user5.1, as a user from ADMIN_GROUPS", async () => {
-    const query = { createdBy: "user5.1", emailJobInitiator: "test@email.scicat" };
+  it("0315: Fullfacet via /api/v3 jobs that were created by user5.1, as a user from ADMIN_GROUPS with fields and facets", async () => {
+    const query = {
+      createdBy: "user5.1",
+      emailJobInitiator: "test@email.scicat",
+    };
     return request(appUrl)
       .get(`/api/v3/Jobs/fullfacet`)
       .query("fields=" + encodeURIComponent(JSON.stringify(query)))
+      .query("facets=" + encodeURIComponent(JSON.stringify([])))
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdmin}` })
       .expect(TestData.SuccessfulGetStatusCode)
@@ -1059,6 +1125,25 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.be
           .an("array")
           .that.deep.contains({ all: [{ totalSets: 1 }] });
+      });
+  });
+
+  it("0318: Fullfacet via /api/v3 jobs with text search and access filters as user5.1", async () => {
+    return request(appUrl)
+      .get(`/api/v3/Jobs/fullfacet`)
+      .query(
+        "fields=" +
+          encodeURIComponent(JSON.stringify({ text: "owner_access" })),
+      )
+      .query("facets=" + encodeURIComponent(JSON.stringify([])))
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be
+          .an("array")
+          .that.deep.contains({ all: [{ totalSets: 6 }] });
       });
   });
 
@@ -1143,15 +1228,37 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal(
-            "Invalid new job. User owning the job should match user logged in.",
-          );
+          .and.be.equal("Invalid new job. Owner group should be specified.");
+      });
+  });
+
+  it("0365: Add via /api/v3 an owner_access job with datasets from different owner groups, which should fail", async () => {
+    const newJob = {
+      ...jobOwnerAccess,
+      datasetList: [
+        { pid: datasetPid1, files: [] },
+        { pid: datasetPid3, files: [] },
+      ],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.AccessForbiddenStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal("Invalid new job. Owner group should be specified.");
       });
   });
 
@@ -1245,12 +1352,43 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
       });
   });
 
+  it("0415: Add via /api/v3 a dataset_access job as user5.1 with a locked published dataset and an owned non-published dataset, which should succeed because published datasets are excluded from the group intersection", async () => {
+    // dataset4: published, ownerGroup=group1, accessGroups=[] — "locked" published dataset
+    // dataset1: non-published, ownerGroup=group5, accessGroups=[group1] — user5.1 owns via group5
+    // Old behaviour (published included in intersection):
+    //   intersection([group1], [group5, group1], [group5]) = [] → no ownerGroup → 422
+    // New behaviour (published excluded):
+    //   intersection([group5, group1], [group5]) = [group5] → ownerGroup=group5 → 201
+    const newJob = {
+      ...jobDatasetAccess,
+      datasetList: [
+        { pid: datasetPid4, files: [] },
+        { pid: datasetPid1, files: [] },
+      ],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("id");
+        res.body.should.have.property("type").and.be.string;
+        res.body.should.have
+          .property("datasetList")
+          .that.deep.equals(newJob.datasetList);
+      });
+  });
+
   it("0420: Add via /api/v3 a new job for user5.1, as user5.1 in #datasetAccess auth", async () => {
     const newJob = {
       ...jobDatasetAccess,
       jobParams: {
         param: "ok",
-        username: TestData.Accounts["user5.1"]["username"]
+        username: TestData.Accounts["user5.1"]["username"],
       },
       datasetList: [{ pid: datasetPid1, files: [] }],
     };
@@ -1311,7 +1449,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
     jobCreateDtoByAdmin = {
       ...jobDatasetPublic,
       datasetList: [{ pid: datasetPid1, files: [] }],
-      jobStatusMessage: "custom_message"
+      jobStatusMessage: "custom_message",
     };
 
     return request(appUrl)
@@ -1331,15 +1469,84 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("datasetList")
           .that.deep.equals(jobCreateDtoByAdmin.datasetList);
-        res.body.should.have.property("jobParams").that.deep.equals(
-          {username: TestData.Accounts["adminIngestor"]["username"]}
-        );
+        res.body.should.have.property("jobParams").that.deep.equals({
+          username: TestData.Accounts["adminIngestor"]["username"],
+        });
         res.body.should.have
           .property("emailJobInitiator")
           .to.be.equal(TestData.Accounts["adminIngestor"]["email"]);
         res.body.should.not.have.property("ownerUser");
         res.body.should.not.have.property("executionTime");
         encodedJobOwnedByAdmin = encodeURIComponent(res.body["id"]);
+      });
+  });
+
+  it("0450: Add via /api/v3 a new job for user5.1, as user5.1 in #datasetAccess auth with wrong identity", async () => {
+    const user5 = TestData.Accounts["user5.1"]["username"];
+    const newJob = {
+      ...jobDatasetAccess,
+      jobParams: {
+        param: "ok",
+        username: user5,
+      },
+      datasetList: [{ pid: datasetPid1, files: [] }],
+    };
+
+    const userIdentity = await db
+      .collection("UserIdentity")
+      .findOne({ "profile.username": user5 });
+    userIdentity.profile.accessGroups = ["someOtherGroup"];
+    delete userIdentity._id;
+    userIdentity.created = new Date();
+    const userIdentity2 = await db
+      .collection("UserIdentity")
+      .insertOne(userIdentity);
+    await db
+      .collection("UserIdentity")
+      .countDocuments({ "profile.username": user5 })
+      .then((count) => {
+        count.should.equal(2);
+      });
+
+    try {
+      await request(appUrl)
+        .post("/api/v3/Jobs")
+        .send(newJob)
+        .set("Accept", "application/json")
+        .set({ Authorization: `Bearer ${accessTokenUser51}` })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    } finally {
+      await db
+        .collection("UserIdentity")
+        .deleteOne({ _id: userIdentity2.insertedId });
+    }
+  });
+
+  it("0460: Add a new job as auth user with all published datasets", async () => {
+    jobCreateDtoByAnonymous = {
+      ...jobDatasetAccess,
+      emailJobInitiator: "user2@your.site",
+      datasetList: [{ pid: datasetPid2, files: [] }],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(jobCreateDtoByAnonymous)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser2}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("id");
+        res.body.should.have.property("type").and.be.string;
+        res.body.should.have
+          .property("jobStatusMessage")
+          .to.be.equal("jobSubmitted");
+        res.body.should.have
+          .property("emailJobInitiator")
+          .to.be.equal(jobCreateDtoByAnonymous.emailJobInitiator);
+        encodedJobAnonymous = encodeURIComponent(res.body["id"]);
       });
   });
 

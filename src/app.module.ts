@@ -22,7 +22,7 @@ import { JobsModule } from "./jobs/jobs.module";
 import { InstrumentsModule } from "./instruments/instruments.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { join } from "path";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import { handlebarsHelpers } from "./common/handlebars-helpers";
 import { CommonModule } from "./common/common.module";
 import { RabbitMQModule } from "./common/rabbitmq/rabbitmq.module";
@@ -34,7 +34,6 @@ import { JobConfigModule } from "./config/job-config/jobconfig.module";
 import { CoreJobActionCreators } from "./config/job-config/actions/corejobactioncreators.module";
 import { HttpModule, HttpService } from "@nestjs/axios";
 import { MSGraphMailTransport } from "./common/graph-mail";
-import { TransportType } from "@nestjs-modules/mailer/dist/interfaces/mailer-options.interface";
 import { MetricsModule } from "./metrics/metrics.module";
 import {
   GenericHistory,
@@ -42,6 +41,12 @@ import {
 } from "./common/schemas/generic-history.schema";
 import { HistoryModule } from "./history/history.module";
 import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-sensitive-data.interceptor";
+import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.module";
+import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
+import { OidcClientModule } from "./common/openid-client/openid-client.module";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { SseModule } from "./serverSentEvent/sse.module";
+import type { MailerOptions } from "@nestjs-modules/mailer";
 
 @Module({
   imports: [
@@ -51,6 +56,8 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
       cache: true,
     }),
     AuthModule,
+    SseModule,
+    OidcClientModule,
     CaslModule,
     AttachmentsModule,
     CommonModule,
@@ -68,6 +75,8 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
     DatasetsModule,
     InitialDatasetsModule,
     InstrumentsModule,
+    MetadataKeysModule,
+    RuntimeConfigModule,
     JobsModule,
     LogbooksModule,
     EventEmitterModule.forRoot(),
@@ -81,7 +90,7 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
         configService: ConfigService,
         httpService: HttpService,
       ) => {
-        let transport: TransportType;
+        let transport: MailerOptions["transport"];
         const transportType = configService
           .get<string>("email.type")
           ?.toLowerCase();
@@ -121,6 +130,7 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
           transport: transport,
           defaults: {
             from: configService.get<string>("email.from"),
+            replyTo: configService.get<string>("email.replyTo"),
           },
           template: {
             dir: join(__dirname, "./common/email-templates"),
@@ -159,6 +169,15 @@ import { MaskSensitiveDataInterceptorModule } from "./common/interceptors/mask-s
       MaskSensitiveDataInterceptorModule,
       (env: NodeJS.ProcessEnv) => env.MASK_PERSONAL_INFO === "yes",
     ),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: "login",
+          ttl: 1000,
+          limit: 1,
+        },
+      ],
+    }),
   ],
   controllers: [],
   providers: [

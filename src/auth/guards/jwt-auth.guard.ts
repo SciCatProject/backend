@@ -1,4 +1,8 @@
-import { ExecutionContext, Injectable } from "@nestjs/common";
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
 
@@ -22,6 +26,8 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     err: unknown,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any,
+    info: any,
   ) {
     // const allowAny = this.reflector.get<string[]>(
     //   "allow-any",
@@ -30,6 +36,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
     if (user) {
       return user;
+    }
+
+    if (!err && info?.name === "TokenExpiredError") {
+      throw new UnauthorizedException("SESSION_EXPIRED");
     }
     // if (allowAny) {
     //   return null;

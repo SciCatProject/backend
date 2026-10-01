@@ -3,9 +3,10 @@ import { BadRequestException } from "@nestjs/common/exceptions";
 import { isJsonString } from "src/common/utils";
 
 @Injectable()
-export class IncludeValidationPipe
-  implements PipeTransform<string | string[], string | string[]>
-{
+export class IncludeValidationPipe implements PipeTransform<
+  string | string[],
+  string | string[]
+> {
   transform(inValue: string | string[]): string[] | string {
     if (!inValue) {
       return inValue;

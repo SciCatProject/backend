@@ -2,13 +2,7 @@ import { Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { InjectModel } from "@nestjs/mongoose";
 import { Request } from "express";
-import {
-  FilterQuery,
-  Model,
-  PipelineStage,
-  QueryOptions,
-  UpdateQuery,
-} from "mongoose";
+import { FilterQuery, Model, PipelineStage, UpdateQuery } from "mongoose";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import {
   IFacets,
@@ -16,7 +10,11 @@ import {
   ILimitsFilter,
 } from "src/common/interfaces/common.interface";
 import { JobLookupKeysEnum, JOB_LOOKUP_FIELDS } from "./types/job-lookup";
-import { parsePipelineProjection } from "src/common/utils";
+import {
+  parsePipelineProjection,
+  parsePipelineSort,
+  addAccessMatchToPipeline,
+} from "src/common/utils";
 import {
   addCreatedByFields,
   addUpdatedByField,
@@ -25,10 +23,7 @@ import {
   parseLimitFilters,
 } from "src/common/utils";
 import { UpdateJobDto } from "./dto/update-job.dto";
-import {
-  PartialOutputJobDto,
-  PartialIntermediateOutputJobDto,
-} from "./dto/output-job-v4.dto";
+import { PartialIntermediateOutputJobDto } from "./dto/output-job-v4.dto";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IJobFields } from "./interfaces/job-filters.interface";
 import { ConfigService } from "@nestjs/config";
@@ -70,25 +65,23 @@ export class JobsService {
 
   async findByFilters(
     fields: FilterQuery<JobDocument> | undefined,
-    order?: string,
+    limits?: ILimitsFilter,
+    access?: FilterQuery<JobDocument>,
   ): Promise<JobClass[]> {
-    const filters: FilterQuery<JobDocument> =
+    const baseFilter: FilterQuery<JobDocument> =
       createFullqueryFilter<JobDocument>(this.jobModel, "id", fields ?? {});
-    const sort = parseLimitFilters({ order } as ILimitsFilter).sort;
-    return this.jobModel.find(filters).sort(sort).exec();
-  }
-
-  applyFilterLimits(
-    jobs: PartialOutputJobDto[],
-    limits: ILimitsFilter | undefined,
-  ): PartialOutputJobDto[] {
-    if (limits?.skip) {
-      jobs = jobs.slice(limits.skip);
-    }
-    if (limits?.limit) {
-      jobs = jobs.slice(0, limits.limit);
-    }
-    return jobs;
+    const { limit, skip, sort } = parseLimitFilters(limits);
+    const filters = access
+      ? {
+          $and: [baseFilter, access],
+        }
+      : baseFilter;
+    return this.jobModel
+      .find(filters)
+      .sort(sort)
+      .limit(limit)
+      .skip(skip)
+      .exec();
   }
 
   addLookupFields(
@@ -136,6 +129,7 @@ export class JobsService {
 
   async findJobComplete(
     filter: FilterQuery<JobDocument>,
+    access?: FilterQuery<JobDocument>,
   ): Promise<PartialIntermediateOutputJobDto[]> {
     const whereFilter = filter.where ?? {};
     let fieldsProjection: string[] | undefined;
@@ -167,9 +161,17 @@ export class JobsService {
       });
     }
 
-    const sort = filter.sort ?? parseLimitFilters(filter.order).sort;
-    if (sort && !isEmpty(sort)) pipeline.push({ $sort: sort });
+    const limits = parseLimitFilters(filter.limits);
+    if (!isEmpty(limits.sort)) {
+      const sort = parsePipelineSort(limits.sort);
+      pipeline.push({ $sort: sort });
+    } else {
+      pipeline.push({ $sort: { createdAt: 1 } });
+    }
+    if (limits?.limit) pipeline.push({ $limit: limits.limit });
+    if (limits?.skip) pipeline.push({ $skip: limits.skip });
 
+    if (!isEmpty(access)) pipeline.unshift({ $match: access });
     const data = await this.jobModel
       .aggregate<PartialIntermediateOutputJobDto>(pipeline)
       .exec();
@@ -191,18 +193,9 @@ export class JobsService {
       .exec();
   }
 
-  async fullquery(
-    filter: IFilters<JobDocument, FilterQuery<JobDocument>>,
-  ): Promise<JobClass[] | null> {
-    const filterQuery: FilterQuery<JobDocument> =
-      createFullqueryFilter<JobDocument>(this.jobModel, "id", filter.fields);
-    const modifiers: QueryOptions = parseLimitFilters(filter.limits);
-
-    return await this.jobModel.find(filterQuery, null, modifiers).exec();
-  }
-
   async fullfacet(
     filters: IFacets<IJobFields>,
+    access: FilterQuery<JobDocument>,
   ): Promise<Record<string, unknown>[]> {
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
@@ -211,7 +204,7 @@ export class JobsService {
       JobDocument,
       IJobFields
     >(this.jobModel, "id", fields, facets);
-
+    addAccessMatchToPipeline(pipeline, access, fields);
     return await this.jobModel.aggregate(pipeline).exec();
   }
 

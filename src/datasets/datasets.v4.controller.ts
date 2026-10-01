@@ -19,6 +19,8 @@ import {
   UseGuards,
   UseInterceptors,
   UsePipes,
+  ClassSerializerInterceptor,
+  SerializeOptions,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -42,7 +44,7 @@ import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { UTCTimeInterceptor } from "src/common/interceptors/utc-time.interceptor";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
-import { IsRecord, IsValueUnitObject } from "../common/utils";
+import { IsRecord, IsValueUnitObject, parseDate } from "../common/utils";
 import { DatasetsService } from "./datasets.service";
 import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.interceptor";
 import {
@@ -88,7 +90,6 @@ import { HistoryClass } from "./schemas/history.schema";
 import { LifecycleClass } from "./schemas/lifecycle.schema";
 import { RelationshipClass } from "./schemas/relationship.schema";
 import { TechniqueClass } from "./schemas/technique.schema";
-import { checkUnmodifiedSince } from "src/common/utils/check-unmodified-since";
 
 @ApiBearerAuth()
 @ApiExtraModels(
@@ -153,58 +154,9 @@ export class DatasetsV4Controller {
     const datasetInstance =
       await this.generateDatasetInstanceForPermissions(dataset);
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canDoAction = ability.can(group, datasetInstance);
 
-    let canDoAction = false;
-
-    if (group == Action.DatasetRead) {
-      canDoAction =
-        ability.can(Action.DatasetReadAny, DatasetClass) ||
-        ability.can(Action.DatasetReadOneOwner, datasetInstance) ||
-        ability.can(Action.DatasetReadOneAccess, datasetInstance) ||
-        ability.can(Action.DatasetReadOnePublic, datasetInstance);
-    } else if (group == Action.DatasetCreate) {
-      canDoAction =
-        ability.can(Action.DatasetCreateAny, DatasetClass) ||
-        ability.can(Action.DatasetCreateOwnerNoPid, datasetInstance) ||
-        ability.can(Action.DatasetCreateOwnerWithPid, datasetInstance);
-    } else if (group == Action.DatasetUpdate) {
-      canDoAction =
-        ability.can(Action.DatasetUpdateAny, DatasetClass) ||
-        ability.can(Action.DatasetUpdateOwner, datasetInstance) ||
-        ability.can(Action.DatasetLifecycleUpdate, datasetInstance);
-    } else if (group == Action.DatasetLifecycleUpdate) {
-      canDoAction =
-        ability.can(Action.DatasetUpdateAny, DatasetClass) ||
-        ability.can(Action.DatasetUpdateOwner, datasetInstance) ||
-        ability.can(Action.DatasetLifecycleUpdateAny, datasetInstance);
-    } else if (group == Action.DatasetDelete) {
-      canDoAction =
-        ability.can(Action.DatasetDeleteAny, DatasetClass) ||
-        ability.can(Action.DatasetDeleteOwner, datasetInstance);
-    } else if (group == Action.DatasetAttachmentRead) {
-      canDoAction =
-        ability.can(Action.DatasetAttachmentReadAny, DatasetClass) ||
-        ability.can(Action.DatasetAttachmentReadOwner, datasetInstance) ||
-        ability.can(Action.DatasetAttachmentReadAccess, datasetInstance) ||
-        ability.can(Action.DatasetAttachmentReadPublic, datasetInstance);
-    } else if (group == Action.DatasetOrigdatablockRead) {
-      canDoAction =
-        ability.can(Action.DatasetOrigdatablockReadAny, DatasetClass) ||
-        ability.can(Action.DatasetOrigdatablockReadOwner, datasetInstance) ||
-        ability.can(Action.DatasetOrigdatablockReadAccess, datasetInstance) ||
-        ability.can(Action.DatasetOrigdatablockReadPublic, datasetInstance);
-    } else if (group == Action.DatasetDatablockRead) {
-      canDoAction =
-        ability.can(Action.DatasetOrigdatablockReadAny, DatasetClass) ||
-        ability.can(Action.DatasetDatablockReadOwner, datasetInstance) ||
-        ability.can(Action.DatasetDatablockReadAccess, datasetInstance) ||
-        ability.can(Action.DatasetDatablockReadPublic, datasetInstance);
-    } else if (group == Action.DatasetLogbookRead) {
-      canDoAction =
-        ability.can(Action.DatasetLogbookReadAny, DatasetClass) ||
-        ability.can(Action.DatasetLogbookReadOwner, datasetInstance);
-    }
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized access");
     }
@@ -216,46 +168,35 @@ export class DatasetsV4Controller {
     user: JWTUser,
     filter: IDatasetFiltersV4<DatasetDocument, IDatasetFields>,
   ): IDatasetFiltersV4<DatasetDocument, IDatasetFields> {
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
-    const canViewOwner = ability.can(Action.DatasetReadManyOwner, DatasetClass);
-    const canViewAccess = ability.can(
-      Action.DatasetReadManyAccess,
-      DatasetClass,
-    );
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!filter.where) {
-      filter.where = {};
-    }
-
-    if (!canViewAny) {
-      if (canViewAccess) {
-        if (filter.where["$and"]) {
-          filter.where["$and"].push({
+    if (!user) {
+      // In API v4 unauthorized users must use the public endpoints
+      throw new ForbiddenException("Unauthorized access");
+    } else if (!canViewAny && canView) {
+      filter.where = filter.where ?? {};
+      if (filter.where["$and"]) {
+        filter.where["$and"].push({
+          $or: [
+            { ownerGroup: { $in: user.currentGroups } },
+            { accessGroups: { $in: user.currentGroups } },
+            { sharedWith: { $in: [user.email] } },
+            { isPublished: true },
+          ],
+        });
+      } else {
+        filter.where["$and"] = [
+          {
             $or: [
               { ownerGroup: { $in: user.currentGroups } },
               { accessGroups: { $in: user.currentGroups } },
               { sharedWith: { $in: [user.email] } },
               { isPublished: true },
             ],
-          });
-        } else {
-          filter.where["$and"] = [
-            {
-              $or: [
-                { ownerGroup: { $in: user.currentGroups } },
-                { accessGroups: { $in: user.currentGroups } },
-                { sharedWith: { $in: [user.email] } },
-                { isPublished: true },
-              ],
-            },
-          ];
-        }
-      } else if (canViewOwner) {
-        filter.where = {
-          ...filter.where,
-          ownerGroup: { $in: user.currentGroups },
-        };
+          },
+        ];
       }
     }
 
@@ -315,6 +256,11 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Post()
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary:
       "It creates a new dataset. Type should be raw, derived or any of the customized types available in your instance",
@@ -416,6 +362,11 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It returns a list of datasets.",
     description:
@@ -487,26 +438,15 @@ export class DatasetsV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!canViewAny && !fields.isPublished) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-
-      if (canViewAccess) {
-        fields.userGroups = fields.userGroups ?? [];
-        fields.userGroups.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup = fields.ownerGroup ?? [];
-        fields.ownerGroup.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters: IFacets<IDatasetFields> = {
@@ -559,24 +499,15 @@ export class DatasetsV4Controller {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
 
-    const ability = this.caslAbilityFactory.datasetInstanceAccess(user);
-    const canViewAny = ability.can(Action.DatasetReadAny, DatasetClass);
+    const ability = this.caslAbilityFactory.datasetAccess(user);
+    const canViewAny = ability.can(Action.AccessAny, DatasetClass);
+    const canView = ability.can(Action.DatasetRead, DatasetClass);
 
-    if (!canViewAny && !fields.isPublished) {
-      const canViewAccess = ability.can(
-        Action.DatasetReadManyAccess,
-        DatasetClass,
-      );
-      const canViewOwner = ability.can(
-        Action.DatasetReadManyOwner,
-        DatasetClass,
-      );
-
-      if (canViewAccess) {
-        fields.userGroups?.push(...user.currentGroups);
-      } else if (canViewOwner) {
-        fields.ownerGroup?.push(...user.currentGroups);
-      }
+    if (!user) {
+      fields.isPublished = true;
+    } else if (!canViewAny && canView && !fields.isPublished) {
+      fields.userGroups = fields.userGroups ?? [];
+      fields.userGroups.push(...user.currentGroups);
     }
 
     const parsedFilters: IFilters<DatasetDocument, IDatasetFields> = {
@@ -699,6 +630,11 @@ export class DatasetsV4Controller {
     ability.can(Action.DatasetRead, DatasetClass),
   )
   @Get("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: OutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiParam({
     name: "pid",
     description: "Id of the dataset to return",
@@ -754,6 +690,11 @@ export class DatasetsV4Controller {
   )
   @UsePipes(ScientificMetadataValidationPipe)
   @Patch("/:pid")
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({
+    type: PartialOutputDatasetDto,
+    excludeExtraneousValues: false,
+  })
   @ApiOperation({
     summary: "It partially updates the dataset.",
     description: `It updates the dataset through the pid specified. It updates only the specified fields.
@@ -769,7 +710,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     description: "Id of the dataset to modify",
     type: String,
   })
-  @ApiConsumes("application/merge-patch+json", "application/json")
+  @ApiConsumes("application/json", "application/merge-patch+json")
   @ApiBody({
     description:
       "Fields that needs to be updated in the dataset. Only the fields that needs to be updated have to be passed in.",
@@ -800,12 +741,6 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       Action.DatasetUpdate,
     );
 
-    //checks if the resource is unmodified since clients timestamp
-    checkUnmodifiedSince(
-      foundDataset.updatedAt,
-      request.headers["if-unmodified-since"],
-    );
-
     if (foundDataset && IsRecord(updateDatasetDto) && IsRecord(foundDataset)) {
       const mismatchedPaths = this.findInvalidValueUnitUpdates(
         updateDatasetDto,
@@ -825,9 +760,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundDataset, updateDatasetDto)
         : updateDatasetDto;
+    const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     const updatedDataset = await this.datasetsService.findByIdAndUpdate(
       pid,
       updateDatasetDtoForService,
+      unmodifiedSince,
     );
     return updatedDataset;
   }

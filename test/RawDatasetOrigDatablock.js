@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
-
   datasetPid = null,
   origDatablockId1 = null,
   origDatablockId2 = null,
@@ -264,7 +263,7 @@ describe("2000: RawDatasetOrigDatablock: Test OrigDatablocks and their relation 
         datasetId: datasetPid2,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     const filter = {
       where: {
@@ -280,7 +279,7 @@ describe("2000: RawDatasetOrigDatablock: Test OrigDatablocks and their relation 
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne?filter=" +
-        encodeURIComponent(JSON.stringify(filter))
+          encodeURIComponent(JSON.stringify(filter)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })

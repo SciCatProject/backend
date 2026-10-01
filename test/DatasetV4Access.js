@@ -8,7 +8,6 @@ let user1Token = null,
   user3Token = null,
   accessTokenArchiveManager = null,
   accessTokenAdminIngestor = null,
-
   derivedDatasetMinPid = null,
   proposalId = null,
   instrumentId = null,
@@ -134,7 +133,7 @@ describe("2700: Datasets v4 access tests", () => {
         datasetId: datasetId2,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     await request(appUrl)
       .post("/api/v3/datablocks")
@@ -144,7 +143,7 @@ describe("2700: Datasets v4 access tests", () => {
         ownerGroup: TestData.Accounts.user1.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     await request(appUrl)
       .post("/api/v4/datasets")

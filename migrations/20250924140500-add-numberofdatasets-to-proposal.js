@@ -1,9 +1,7 @@
 module.exports = {
   async up(db, client) {
-    
-    const proposals = await db.collection("Proposal").find({}).toArray();
 
-    for (const proposal of proposals) {
+    for await (const proposal of db.collection("Proposal").find({})) {
       
       const datasetCount = await db
         .collection("Dataset")

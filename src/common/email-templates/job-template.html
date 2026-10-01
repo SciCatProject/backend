@@ -1,155 +1,300 @@
+{{!--
+Main template for job status email notifications.
+
+Env variables:
+- SCICAT_FRONTEND_URL: Scicat base URL. If set, the email will contain links
+
+It supports the following job statusCodes:
+- jobSubmitted - newly created job
+- finishedSuccessful - job finished successfully
+- jobError|finished.* - Any other finished status is treated as an jobError
+- Other codes give a neutral message
+
+The following inline partials are defined for inclusion below:
+--}}
+{{~#*inline "jobLink" ~}}
+{{!-- block partial; wraps the contents with an html link to the job --}}
+{{#if env.SCICAT_FRONTEND_URL ~}}
+  <a href="{{env.SCICAT_FRONTEND_URL}}/user/jobs/{{{urlencode job.id}}}">{{> @partial-block}}</a>
+{{~ else ~}}
+  {{@partial-block}}
+{{~/if}}
+{{/inline~}}
+
+{{~#*inline "dataset-table"}}
+{{!-- Outputs a table of datasets --}}
+<table id="dataset-details">
+  <tr style="background-color:lightblue">
+      <th>PID</th>
+      <th>Name</th>
+      {{#unless (eq job.type "public")}}
+      <th>Owner Group</th>
+      {{/unless}}
+      <th>Source Folder</th>
+      <th>Size</th>
+      {{#unless (eq job.type "public")}}
+      <th>Archivable</th>
+      <th>Retrievable</th>
+      {{/unless}}
+  </tr>
+  {{#each datasets}}
+  <tr>
+      <td><a href="{{env.SCICAT_FRONTEND_URL}}/datasets/{{urlencode pid}}">{{pid}}</a></td>
+      <td>{{datasetName}}</td>
+      {{#unless (eq ../job.type "public")}}
+      <td>{{ownerGroup}}</td>
+      {{/unless}}
+      <td>{{sourceFolder}}</td>
+      <td>{{formatUnit size "B" }}</td>
+      {{#unless (eq ../job.type "public")}}
+      <td class="archivable-{{datasetlifecycle.archivable}}">{{datasetlifecycle.archivable}}</td>
+      <td class="retrievable-{{datasetlifecycle.retrievable}}">{{datasetlifecycle.retrievable}}</td>
+      {{/unless}}
+  </tr>
+  {{/each}}
+</table>
+{{/inline ~}}
+
+{{~#*inline "retrieve-table"}}
+{{!-- Outputs a table of download URLs. Assumes PSI jobResultObject layout. --}}
+<table id="retrieve-details">
+  <tr style="background-color:lightblue">
+      <th>PID</th>
+      <th>Name</th>
+      {{#unless (eq job.type "public")}}
+      <th>Owner Group</th>
+      {{/unless}}
+      {{#if (eq job.jobParams.option "URLs")}}
+      <th>Sourcefolder</th>
+      <th>Download parts (size)</th>
+      {{else if (eq ../jobParams.option "PSI-RA")}}
+      <th>PSI-RA folder</th>
+      <th>Size</th>
+      {{else}}
+      <th>Sourcefolder</th>
+      <th>Size</th>
+      {{/if}}
+  </tr>
+  {{#each datasets}}
+  <tr>
+      <td><a href="{{env.SCICAT_FRONTEND_URL}}/datasets/{{urlencode pid}}">{{pid}}</a></td>
+      <td>{{datasetName}}</td>
+      {{#unless (eq ../../job.type "public")}}
+      <td>{{ownerGroup}}</td>
+      {{/unless}}
+      {{#if (eq ../job.jobParams.option "URLs")}}
+      <td>{{sourceFolder}}</td>
+      <td>
+          <ol>
+              {{#each ../job.jobResultObject.result}}
+              {{#if (eq datasetId ../pid)}}
+              <li><a href="{{url}}" download="{{name}}">Download</a> ({{formatUnit size "B"}})</li>
+              {{/if}}
+              {{/each}}
+          </ol>
+      </td>
+      {{else if (eq ../job.jobParams.option "PSI-RA")}}
+      <td>/das/work/{{subString ownerGroup 0 3}}/retrieve/{{ownerGroup}}/{{trim sourceFolder "/"}}/</td>
+      <td>{{formatUnit size "B"}}</td>
+      {{else}}
+      <td>{{sourceFolder}}</td>
+      <td>{{formatUnit size "B"}}</td>
+      {{/if}}
+  </tr>
+  {{/each}}
+</table>
+{{/inline ~}}
+
 <html>
+
 <head>
-    <style type="text/css">
-        table {
-				border-collapse: collapse;
-				border-spacing: 10px;
-			}
-            .key{
-                font-weight: bold;
-                color: #666;
-                vertical-align: top;
-                margin-top: 0;
-            }
-            tr{
-                border-top: 1px solid #eee;
-            }
-            td{
-                padding: 0.5em;
-            }
-			body {
-				font-family: Helvetica, sans-serif;
-				background: #f0f0f0;
-				margin: 1em;
-			}
-			h2 {
-				color: #6c9e00;
-				font-weight: normal;
-				font-family: "Segoe UI", sans-serif;
-                margin-top: 0;
-			}
-			.container {
-				margin: auto;
-				max-width: 50em;
-				background: white;
-				padding: 2em;
-				box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2),
-					0px 2px 2px 0px rgba(0, 0, 0, 0.14),
-					0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-			}
-			.footer {
-				font-size: 0.8em;
-				color: #666;
-				font-style: italic;
-				padding-top: 2em;
-			}
-			.link {
-				text-decoration: none;
-				color: #de9300;
-			}
-			.link:hover {
-				color: #fea901;
-			}
-            .logo{
-                float: right;
-            }
+  <style type="text/css">
+    table {
+      border-collapse: collapse;
+      border-spacing: 10px;
+      table-layout: fixed;
+      width: 100%;
+    }
 
-        .error {
-            color: #9e1a1a;
-        }
-    </style>
+    .key {
+      font-weight: bold;
+      color: #666;
+      vertical-align: top;
+      margin-top: 0;
+    }
+
+    tr {
+      border-top: 1px solid #eee;
+    }
+
+    td, th {
+      max-width: 400px;
+      padding: 0.5em;
+      border-collapse: collapse;
+      border: 0px!important;
+      overflow-wrap: anywhere;
+      text-align: left;
+    }
+
+    body {
+      font-family: Helvetica, sans-serif;
+      background: #f0f0f0;
+      margin: 1em;
+    }
+
+    h2 {
+      color: #6c9e00;
+      font-weight: normal;
+      font-family: "Segoe UI", sans-serif;
+      margin-top: 0;
+    }
+
+    ol {
+      margin-left: 0em;
+      padding-left: 0em;
+      list-style-type: none;
+    }
+
+    .container {
+      margin: auto;
+      min-width: 800px;
+      background: white;
+      padding: 1em;
+      box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2),
+        0px 2px 2px 0px rgba(0, 0, 0, 0.14),
+        0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+    }
+
+    .footer {
+      font-size: 0.8em;
+      color: #666;
+      font-style: italic;
+      padding-top: 2em;
+    }
+
+    .link {
+      text-decoration: none;
+      color: #de9300;
+    }
+
+    .link:hover {
+      color: #fea901;
+    }
+
+    .logo {
+      float: right;
+    }
+
+    .error {
+      color: #9e1a1a;
+    }
+
+    {{#if (eq job.type "retrieve") }}
+    .retrievable-false {
+      color: #9e1a1a;
+      font-weight: bold;
+    }
+    tr:has(.retrievable-false) {
+      background-color: #fadada;
+    }
+    {{/if}}
+    {{#if (eq job.type "archive") }}
+    .archivable-false {
+      color: #9e1a1a;
+      font-weight: bold;
+    }
+    tr:has(.archivable-false) {
+      background-color: #fadada;
+    }
+    {{/if}}
+  </style>
 </head>
-<body>
-    <div class="container">
-        <h2>{{subject}}</h2>
-        <!-- Template for job submission comfirmation -->
-        {{#with jobSubmissionNotification}}
-        <div>
-            Your {{jobType}} job has been submitted and will be processed as soon as possible.<br>
-            You will be notified by email as soon as the job is completed.<br>
-            Job id: {{jobId}}
-        </div>
-        {{#if jobData}}
-        <p><b>Job will be perfomed on the following dataset(s):</b></p>
-        <table>
-            {{#each jobData}}
-            {{#each this}}
-            <tr {{#if (eq @key "pid")}} style="background-color: lightblue;"{{/if}}>
-                <td class="key">
-                    {{keyToWord @key}}
-                </td>
-                <td>{{unwrapJSON @this}}</td>
-            </tr>
-            {{/each}}
-            {{/each}}
-        </table>
-        {{/if}}
-        <p>{{additionalMsg}}</p>
-        {{/with}}
 
-        <!-- Template for finished job  Notification -->
-        {{#with jobFinishedNotification}}
-        <div>
-            Your {{jobType}} job with id {{ jobId }} is now finished.<br>
-            {{#if jobStatusMessage}}
-            The returned job status is: <b>{{jobStatusMessage}}</b>.<br>
-            {{/if}}
-            {{#if failure}}
-            <p class="error">The job resulted in an error message. Please look at the details below.</p>
-            {{/if}}
-            {{#if jobResultObject}}
-            <p><b>The returned Job result details are:</b></p>
-            <table>
-                {{#each jobResultObject}}
-                <tr>
-                    <td>
-                        {{keyToWord @key}}
-                    </td>
-                    <td>{{unwrapJSON @this}}</td>
-                </tr>
-                {{/each}}
-            </table>
-            {{/if}}
-            {{#with datasets}}
-                {{#if bad}}
-                <p><b>Our system was unable to perform the requested action on following dataset(s):</b></p>
-                <table>
-                    {{#each bad}}
-                    {{#each this}}
-                    <tr {{#if (eq @key "pid")}} style="background-color: lightblue;"{{/if}}>
-                        <td class="key">
-                            {{keyToWord @key}}
-                        </td>
-                        <td>{{unwrapJSON @this}}</td>
-                    </tr>
-                    {{/each}}
-                    {{/each}}
-                </table>
-                {{/if}}
-                {{#if good}}
-                <p><b>The following datasets were successfully processed:</b></p>
-                <table>
-                    {{#each good}}
-                    {{#each this}}
-                    <tr {{#if (eq @key "pid")}} style="background-color: lightblue;"{{/if}}>
-                        <td class="key">
-                           {{keyToWord @key}}
-                        </td>
-                        <td>{{unwrapJSON @this}}</td>
-                    </tr>
-                    {{/each}}
-                    {{/each}}
-                </table>
-                {{/if}}
-            {{/with}}
-        </div>
-        <p>{{additionalMsg}}</p>
-        {{/with}}
-        <div class="footer">
-            This email was automatically generated by
-            <a class="link" href="{{domainName}}">SciCat</a>. You cannot
-            reply to it
-        </div>
+<body>
+  <div class="container">
+
+  {{! Newly created job }}
+  {{#if (eq job.statusCode "jobSubmitted") }}
+    <h2>Your {{job.type}} job was submitted successfully</h2>
+
+    <div>
+      <p>Your {{#> jobLink }}{{job.type}}{{/jobLink}} job has been submitted and will be processed as soon as possible.<br>
+      You will be notified by email as soon as the job is completed.</p>
+
+      <p>Job id: {{#> jobLink }}{{job.id}}{{/jobLink}}</p>
+      {{#if (matches env.SCICAT_FRONTEND_URL "discovery.psi.ch") }}
+      <p>You can find the current running jobs <a href="https://metabase.psi.ch/public/dashboard/40ace253-1c45-4d8f-9b98-8f3cda2488c7">here</a>; it updates on page refresh.</p>
+      {{/if}}
     </div>
+    {{#if datasets}}
+    <p><b>Job will be performed on the following dataset(s):</b></p>
+    {{> dataset-table}}
+    {{/if}}
+    {{#if (eq job.type "public")}}
+    <p>This job is created automatically when you made a publication or requested to download some dataset(s).</p>
+    {{/if}}
+
+  {{ else if (matches job.statusCode "^finished") }}
+    {{#if (eq job.statusCode "finishedSuccessful") }}
+    <h2>Your {{job.type}} job has completed successfully</h2>
+    {{else}}
+    <h2>Your {{job.type}} job has encountered an error</h2>
+    {{/if}}
+
+    <div>
+      <p>Your {{#> jobLink }}{{job.type}}{{/jobLink}} job is now finished.</p>
+      <p>Job id: {{#> jobLink }}{{job.id}}{{/jobLink}}</p>
+      {{#unless (eq job.statusCode "finishedSuccessful")}}
+      <p>Job status: '{{job.statusMessage}}'</p>
+      {{/unless}}
+    </div>
+    {{#if datasets}}
+    <p><b>The following datasets were processed during the job:</b></p>
+    {{#if (and (eq job.type "retrieve") (eq job.statusCode "finishedSuccessful")) }}
+    {{> retrieve-table}}
+    {{else}}
+    {{> dataset-table}}
+    {{/if}}
+    {{/if}}
+
+    {{#unless (eq job.statusCode "finishedSuccessful") }}
+    <p>Check the dataset details for information on which datasets were not processed successfully.</p>
+    {{/unless}}
+
+    {{#if (and (eq job.type "retrieve") (eq job.statusCode "finishedSuccessful")) }}
+      {{#if (eq job.jobParams.option "URLs")}}
+      <p>You can now download the data by clicking on the download icon in the <b>Download parts</b> column of the
+          table. The data is potentially spread over several tar files, which you then must untar on your destination system.
+          The data will be available for download for the next 7 days. <br>
+          <b>Anyone with these URLs will be able to download the data.{{#unless (eq job.type "public")}} Do not forward them to people who should not see the data.{{/unless}}</b>
+      </p>
+      {{else if (eq job.jobParams.option "PSI")}}
+      <p>You can now use the command 'datasetRetriever' to move the retrieved datasets to their final destination.
+          For details see <a href="https://data-catalog-services.pages.psi.ch/ingestorManual/#retrieve">manual</a>
+      </p>
+      {{else if (eq job.jobParams.option "PSI-RA")}}
+      <p>You can now find the retrieved datasets on the Ra cluster in the folder shown in the <b>PSI-RA folder</b> column of the table.</p>
+      {{else}}
+      <!-- No message for retrieval option '{{job.jobParams.option}}'.-->
+      {{/if}}
+
+    {{/if}}
+  {{ else }}{{! Default case for other status codes }}
+    <h2>Your {{job.type}} job now has status '{{job.statusMessage}}'</h2>
+
+    <div>
+      <p>Your {{#> jobLink }}{{job.type}}{{/jobLink}} job has been updated.</p>
+      <p>Job id: {{#> jobLink }}{{job.id}}{{/jobLink}}</p>
+      <p>Job status: '{{job.statusMessage}}'</p>
+    </div>
+  {{/if}}
+
+    <div class="footer">
+      This email was automatically generated by
+      <a class="link" href="{{default env.SCICAT_FRONTEND_URL "https://www.scicatproject.org"}}">SciCat</a>.
+      Times are GMT. If you require any assistance, please reply to this email. To ensure your message reaches the correct team, please click "Reply" to this email rather than composing a new message.
+    </div>
+  </div>
 </body>
+
 </html>

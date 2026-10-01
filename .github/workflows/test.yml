@@ -1,12 +1,12 @@
 name: Test
 env:
-  NODE_VERSION: 20.x
+  NODE_VERSION: 24.x
 
 on:
   pull_request:
     branches:
       - master
-      - release-*
+      - release*
 
 jobs:
   install-and-cache:
@@ -15,16 +15,16 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Cache node_modules
         id: cached-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
@@ -40,15 +40,15 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Cache node_modules
         id: cached-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
@@ -62,16 +62,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore node_modules
         id: cached-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
@@ -85,16 +85,16 @@ jobs:
     needs: [install-and-cache]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore node_modules
         id: cached-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
@@ -103,40 +103,45 @@ jobs:
         run: npm run build
 
   api_tests:
-    name: API tests with ElasticSearch enabled - ${{ matrix.elasticsearch_enabled }}
+    name: API tests with OpenSearch enabled - ${{ matrix.opensearch_enabled }}
     needs: [install-and-cache]
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        elasticsearch_enabled: ["yes", "no"]
+        opensearch_enabled: ["yes", "no"]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Restore node_modules
         id: cached-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules
           key: node-modules-${{ hashFiles('package-lock.json') }}-${{ env.NODE_VERSION }}
 
       - name: API tests
         env:
-          ELASTICSEARCH_ENABLED: ${{ matrix.elasticsearch_enabled }}
-          CLUSTER_NAME: es-cluster
-          ES_PASSWORD: duo-password
-          MEM_LIMIT: 4G
-          STACK_VERSION: 8.8.2
+          COMPOSE_PROFILES: ${{ matrix.opensearch_enabled == 'yes' && 'opensearch' || ''}}
+          OPENSEARCH_ENABLED: ${{ matrix.opensearch_enabled }}
+          OIDC_ISSUER: http://localhost:8080/local-test
+          OIDC_CLIENT_ID: scicat-client-test
+          OIDC_CLIENT_SECRET: secret
+          OIDC_SCOPE: openid profile email
+          OIDC_ADDITIONAL_AUTHORIZED_PARTIES: additional-authorized-client-test-1, additional-authorized-client-test-2
+
         # Start mongo container and app before running api tests
         run: |
+          jq '.settings.index.refresh_interval = "100ms"' \
+            opensearchConfig.example.json > opensearchConfig.json
           cp CI/ESS/docker-compose.api.yaml docker-compose.yaml
-          docker compose up --build -d
-          npm run test:api
+          docker compose up --build -d --wait
+          OPENSEARCH_ENABLED=${{ matrix.opensearch_enabled }} npm run test:api
