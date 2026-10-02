@@ -6,13 +6,14 @@ import { Request } from "express";
 import { ProposalClass } from "./schemas/proposal.schema";
 import { CreateProposalV4Dto } from "./dto/create-proposal.v4.dto";
 import {
-  OutputProposalV4Dto,
-  PartialOutputProposalV4Dto,
-} from "./dto/output-proposal.v4.dto";
-import {
   PartialUpdateProposalV4Dto,
   UpdateProposalV4Dto,
 } from "./dto/update-proposal.dto";
+import { Action } from "src/casl/action.enum";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CountApiResponse, FullFacetResponse } from "src/common/types";
+import { MongoError } from "mongodb";
+import * as jmp from "json-merge-patch";
 import { Action } from "src/casl/action.enum";
 import { AppAbility } from "src/casl/casl-ability.factory";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -147,9 +148,8 @@ describe("ProposalsV4Controller", () => {
 
   describe("generateProposalInstanceForPermissions", () => {
     it("should create proposal instance from ProposalClass", async () => {
-      const instance = await controller.generateProposalInstanceForPermissions(
-        mockProposal,
-      );
+      const instance =
+        await controller.generateProposalInstanceForPermissions(mockProposal);
 
       expect(instance).toBeInstanceOf(ProposalClass);
       expect(instance.proposalId).toBe(mockProposal.proposalId);
@@ -175,9 +175,10 @@ describe("ProposalsV4Controller", () => {
         proposalId: "partial-proposal",
       } as unknown as CreateProposalV4Dto;
 
-      const instance = await controller.generateProposalInstanceForPermissions(
-        partialProposal,
-      );
+      const instance =
+        await controller.generateProposalInstanceForPermissions(
+          partialProposal,
+        );
 
       expect(instance.proposalId).toBe("partial-proposal");
       expect(instance.ownerGroup).toBe("");
@@ -386,7 +387,9 @@ describe("ProposalsV4Controller", () => {
       const request = mockRequest(mockAdminUser) as Request;
       const result = await controller.create(request, mockCreateProposalDto);
 
-      expect(proposalsService.createV4).toHaveBeenCalledWith(mockCreateProposalDto);
+      expect(proposalsService.createV4).toHaveBeenCalledWith(
+        mockCreateProposalDto,
+      );
       expect(result).toEqual(createdProposal);
     });
 
@@ -606,7 +609,10 @@ describe("ProposalsV4Controller", () => {
       proposalsService.fullfacetV4.mockResolvedValue(facets);
 
       const request = mockRequest(mockAdminUser) as Request;
-      const filters = { facets: JSON.stringify(["type", "ownerGroup"]), fields: "{}" };
+      const filters = {
+        facets: JSON.stringify(["type", "ownerGroup"]),
+        fields: "{}",
+      };
       const result = await controller.fullfacet(request, filters);
 
       expect(proposalsService.fullfacetV4).toHaveBeenCalled();
@@ -659,9 +665,9 @@ describe("ProposalsV4Controller", () => {
     it("should throw ForbiddenException for unauthenticated user", async () => {
       const request = { user: null } as unknown as Request;
 
-      await expect(
-        controller.fullfacet(request, {}),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.fullfacet(request, {})).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -815,7 +821,11 @@ describe("ProposalsV4Controller", () => {
       proposalsService.findOneCompleteV4.mockResolvedValue(mockProposal);
 
       const request = mockRequest(mockAdminUser) as Request;
-      const result = await controller.findById(request, "proposal-1", undefined);
+      const result = await controller.findById(
+        request,
+        "proposal-1",
+        undefined,
+      );
 
       // When include is undefined, the controller converts it using:
       // const includeArray = Array.isArray(include) ? include : include && Array(include);
