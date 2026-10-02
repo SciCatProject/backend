@@ -89,6 +89,7 @@ Below you can find the example configuration, but for more advanced customizatio
 |                        | **fields**              | List of fields to display within the section. It should contain an array of objects, each with `element`, `source`, and `order` fields. |                                                                                          | `{"fields": [{"element": "text", "source": "datasetName", "order": 0}]}` |
 |                        | - **element**           | Defines the type of data to display in the row (e.g., text, copy, tag, linky, date, internalLink).                                      | - `element`: Field type (e.g., `text`, `copy`, `tag`, `linky`, `date`, `internalLink`)   | `"element": "text" `                                                     |
 |                        | - **source**            | Specifies the dataset property to display, and it must match a field in the `OutputDatasetDto`, or to be _instrumentName_ .                                        | - `source`: Dataset property name                                                        | `"source": "datasetName"`                                                |
+|                        | - **internalLinkLabel** | **Optional**, `internalLink` only. Property of the linked proposal, instrument or sample shown instead of its id. Requires the matching relation in `datasetDetailsTabsInclude.details`, see [Internal link labels](#internal-link-labels). | - `internalLinkLabel`: Property name of the linked document (e.g. `title`, `name`)     | `"internalLinkLabel": "title"`                                          |
 |                        | - **order**             | Controls the display order of the field in the fields.                                                                                  | - `order`: Integer, defines the sequence of fields in the UI. Lower values appear first. | `"order": 1`                                                             |
 | **attachments**        | **label**               | Custom label for the section that can be configured.                                                                                    | - `label`: Custom title for the attachments section (e.g., "Gallery")                    | `"label": "Scientific Metadata"`                                         |
 |                        | **order**               | Controls the display order of the attachments section in the UI.                                                                        | - `order`: Integer, determines sequence within the template.                             | `"order": 1`                                                             |
@@ -129,7 +130,7 @@ Below you can find the example configuration, but for more advanced customizatio
 
     ![alt text](./screenshots/regular-tag.png)
 
-  - internalLink: Converts the value into a clickable link for internal navigation. Supported fields: `instrumentIds`, `proposalIds`, `sampleIds`, and `inputDatasets`.
+  - internalLink: Converts the value into a clickable link for internal navigation. Supported fields: `instrumentIds`, `proposalIds`, `sampleIds`, and `inputDatasets`. Links show ids unless `internalLinkLabel` is set, see [Internal link labels](#internal-link-labels).
 
     ![alt text](./screenshots/regular-internalLink.png)
 
@@ -149,3 +150,42 @@ Below you can find the example configuration, but for more advanced customizatio
 
 - **datasetJsonView:** Displays the dataset as a JSON document as addition.
 - **attachments:** Displays the attachments associated with the dataset. You can configure options like display size and limit the number of items.
+
+---
+
+## Internal link labels
+
+By default an `internalLink` field shows the ids it links to. Set `internalLinkLabel` to show a property of the linked document instead, e.g. the proposal title or the instrument name:
+
+```json
+{
+  "element": "internalLink",
+  "source": "proposalIds",
+  "internalLinkLabel": "title",
+  "order": 0
+},
+{
+  "element": "internalLink",
+  "source": "instrumentIds",
+  "internalLinkLabel": "name",
+  "order": 1
+}
+```
+
+The label is read from the related documents loaded together with the dataset, so the matching relation has to be listed in `datasetDetailsTabsInclude.details` of the frontend config:
+
+| `source`        | Required value in `datasetDetailsTabsInclude.details` | Linked document matched by |
+| --------------- | ----------------------------------------------------- | -------------------------- |
+| `proposalIds`   | `proposals`                                           | `proposalId`               |
+| `instrumentIds` | `instruments`                                         | `pid`                      |
+| `sampleIds`     | `samples`                                             | `sampleId`                 |
+
+```json
+"datasetDetailsTabsInclude": {
+  "details": ["proposals", "instruments", "samples", "attachments"]
+}
+```
+
+With this configuration, opening the Details tab requests `GET /api/v4/datasets/{pid}?include=proposals&include=instruments&include=samples&include=attachments`, and the backend joins each included relation to the dataset with a MongoDB `$lookup` stage, so the proposals, instruments and samples come back in the same response. If a relation is not included, or a linked document cannot be found, the id is shown instead. `inputDatasets` links always show ids.
+
+Keep `attachments` in the list when the layout has an `attachments` section, it is the default value for `details`.
