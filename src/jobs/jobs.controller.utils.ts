@@ -25,7 +25,6 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
 import { Logger } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
-import { ProposalsService } from "src/proposals/proposals.service";
 import {
   JobConfig,
   validateActions,
@@ -43,7 +42,16 @@ import {
 } from "./dto/output-job-v4.dto";
 import { toObject } from "src/config/job-config/actions/actionutils";
 import { loadDatasets } from "src/config/job-config/actions/actionutils";
-import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import {
+  DatasetClass,
+  DatasetDocument,
+} from "src/datasets/schemas/dataset.schema";
+import { DatasetLookupKeysEnum } from "src/datasets/types/dataset-lookup";
+import {
+  IDatasetFields,
+  IDatasetFiltersV4,
+} from "src/datasets/interfaces/dataset-filters.interface";
+import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { accessibleBy } from "@casl/mongoose";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
@@ -61,7 +69,6 @@ export class JobsControllerUtils {
     private readonly origDatablocksService: OrigDatablocksService,
     private caslAbilityFactory: CaslAbilityFactory,
     private readonly usersService: UsersService,
-    private readonly proposalsService: ProposalsService,
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
   ) {
@@ -483,24 +490,37 @@ export class JobsControllerUtils {
         "User email is not available, cannot create job with #datasetAccessAndProposalPI authorization.",
       );
     const normalize = (e: string) => e.trim().toLowerCase();
-    const datasets = await this.datasetsService.findAll({
+    const filter = {
       where: { pid: { $in: datasetList.map((x) => x.pid) } },
-      fields: { pid: 1, proposalIds: 1 },
-    });
+      fields: ["pid", "proposalIds"],
+      include: [
+        {
+          relation: DatasetLookupKeysEnum.proposals,
+          scope: { fields: ["proposalId", "pi_email"] },
+        },
+      ],
+      limits: { limit: datasetList.length },
+    } as unknown as IDatasetFiltersV4<DatasetDocument, IDatasetFields>;
+    // applyDefaults=false: proposals must not be filtered by the user's access
+    const datasets = (await this.datasetsService.findAllComplete(
+      filter,
+      false,
+    )) as (Pick<DatasetClass, "pid" | "proposalIds"> & {
+      proposals: Pick<ProposalClass, "proposalId" | "pi_email">[];
+    })[];
     if (datasets.some((d) => !d.proposalIds?.length))
       throw new ForbiddenException(
         "Not all datasets are linked to a proposal, cannot create job.",
       );
-    const proposalIds = [
-      ...new Set(datasets.flatMap((d) => d.proposalIds ?? [])),
-    ];
-    const proposals = await this.proposalsService.findAll({
-      where: { proposalId: { $in: proposalIds } },
-    });
     const userEmail = normalize(email);
     if (
-      proposals.length < proposalIds.length ||
-      proposals.some((p) => !p.pi_email || normalize(p.pi_email) !== userEmail)
+      datasets.some(
+        (d) =>
+          d.proposals.length < new Set(d.proposalIds).size ||
+          d.proposals.some(
+            (p) => !p.pi_email || normalize(p.pi_email) !== userEmail,
+          ),
+      )
     )
       throw new ForbiddenException(
         "User is not the principal investigator of all proposals linked to the datasets, cannot create job.",
