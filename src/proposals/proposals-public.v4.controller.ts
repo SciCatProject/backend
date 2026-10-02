@@ -93,7 +93,7 @@ export class ProposalsPublicV4Controller {
     )
     queryFilter: string,
   ) {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
     this.addPublicFilter(parsedFilter);
     const proposals =
       await this.proposalsService.findAllCompleteV4(parsedFilter);
@@ -120,12 +120,12 @@ export class ProposalsPublicV4Controller {
   async fullfacet(
     @Query() filters: { fields?: string; facets?: string },
   ): Promise<Record<string, unknown>[]> {
-    const fields: IProposalFieldsV4 = JSON.parse(filters.fields ?? "{}");
+    const fields: IProposalFieldsV4 = JSON.parse(filters.fields || "{}");
     fields.isPublished = true;
 
     const parsedFilters: IFacets<IProposalFieldsV4> = {
       fields: fields,
-      facets: JSON.parse(filters.facets ?? "[]"),
+      facets: JSON.parse(filters.facets || "[]"),
     };
 
     return this.proposalsService.fullfacetV4(parsedFilters);
@@ -174,7 +174,7 @@ export class ProposalsPublicV4Controller {
     )
     queryFilter?: string,
   ) {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
     this.addPublicFilter(parsedFilter);
     return this.proposalsService.countV4(parsedFilter);
   }
@@ -215,7 +215,7 @@ export class ProposalsPublicV4Controller {
     )
     queryFilter: string,
   ): Promise<OutputProposalV4Dto | null> {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
     this.addPublicFilter(parsedFilter);
     return this.proposalsService.findOneCompleteV4(parsedFilter);
   }
