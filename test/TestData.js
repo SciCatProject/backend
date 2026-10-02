@@ -1490,6 +1490,50 @@ const TestData = {
       },
     },
   },
+
+  ProposalCorrectMinV4: {
+    proposalId: "20170266-v4",
+    email: "proposer@uni.edu",
+    title: "A minimal test proposal v4",
+    ownerGroup: "proposalingestor",
+    accessGroups: [],
+  },
+
+  ProposalCorrectCompleteV4: {
+    proposalId: "20170267-v4",
+    email: "proposer@uni.edu",
+    firstname: "Test",
+    lastname: "User",
+    pi_email: "pi@uni.edu",
+    pi_firstname: "Principal",
+    pi_lastname: "Investigator",
+    title: "A complete test proposal v4",
+    abstract: "Abstract of test proposal v4",
+    ownerGroup: "proposalingestor",
+    accessGroups: ["proposalgroup1"],
+    type: "Default Proposal",
+    keywords: ["keyword1", "keyword2"],
+    instrumentIds: ["instrument1", "instrument2"],
+    isPublished: false,
+    MeasurementPeriodList: [
+      {
+        instrument: "ESS3-1",
+        start: "2017-07-24T13:56:30.000Z",
+        end: "2017-07-25T13:56:30.000Z",
+        comment: "Some comment",
+      },
+    ],
+    metadata: { customField: "customValue" },
+  },
+
+  ProposalCorrectPublishedV4: {
+    proposalId: "20170268-v4",
+    email: "proposer@uni.edu",
+    title: "A published test proposal v4",
+    ownerGroup: "proposalingestor",
+    accessGroups: [],
+    isPublished: true,
+  },
 };
 
 const isEqualWithAny = (actual, expected) =>
