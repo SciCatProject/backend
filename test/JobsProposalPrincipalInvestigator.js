@@ -45,11 +45,14 @@ const createJob = (job, token) => {
   return token ? req.set({ Authorization: `Bearer ${token}` }) : req;
 };
 
+const cleanup = () =>
+  Promise.all(
+    ["Dataset", "Proposal", "Job"].map((c) => db.collection(c).deleteMany({})),
+  );
+
 describe("1155: Jobs: Test New Job Model Authorization for pi_access jobs type", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposal").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await cleanup();
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -69,10 +72,8 @@ describe("1155: Jobs: Test New Job Model Authorization for pi_access jobs type",
     });
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposal").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await cleanup();
   });
 
   it("0010: Add proposals and datasets as Admin Ingestor", async () => {
