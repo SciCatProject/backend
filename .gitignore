@@ -56,3 +56,6 @@ lerna-debug.log*
 /mongodb_data
 test-data/*
 .vscode*
+
+# ENV files
+.env*

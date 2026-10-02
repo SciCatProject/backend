@@ -142,14 +142,16 @@ export class ProposalsV4Controller {
     user: JWTUser,
     filter: IProposalFiltersV4<ProposalDocument, IProposalFieldsV4>,
   ): IProposalFiltersV4<ProposalDocument, IProposalFieldsV4> {
+    if (!user) {
+      // In API v4 unauthorized users must use the public endpoints
+      throw new ForbiddenException("Unauthorized access");
+    }
+    
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
     const canView = ability.can(Action.ProposalRead, ProposalClass);
 
-    if (!user) {
-      // In API v4 unauthorized users must use the public endpoints
-      throw new ForbiddenException("Unauthorized access");
-    } else if (!canViewAny && canView) {
+    if (!canViewAny && canView) {
       filter.where = filter.where ?? {};
       if (filter.where["$and"]) {
         filter.where["$and"].push({
@@ -322,7 +324,7 @@ export class ProposalsV4Controller {
     )
     queryFilter: string,
   ): Promise<PartialOutputProposalV4Dto[]> {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
     const mergedFilters = this.addAccessBasedFilters(
       request.user as JWTUser,
       parsedFilter,
@@ -363,7 +365,7 @@ export class ProposalsV4Controller {
       throw new ForbiddenException("Unauthorized access");
     }
 
-    const fields: IProposalFieldsV4 = JSON.parse(filters.fields ?? "{}");
+    const fields: IProposalFieldsV4 = JSON.parse(filters.fields || "{}");
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
@@ -376,7 +378,7 @@ export class ProposalsV4Controller {
 
     const parsedFilters: IFacets<IProposalFieldsV4> = {
       fields: fields,
-      facets: JSON.parse(filters.facets ?? "[]"),
+      facets: JSON.parse(filters.facets || "[]"),
     };
 
     return this.proposalsService.fullfacetV4(parsedFilters);
@@ -422,7 +424,7 @@ export class ProposalsV4Controller {
     )
     queryFilter: string,
   ): Promise<OutputProposalV4Dto | null> {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
 
     const mergedFilters = this.addAccessBasedFilters(
       request.user as JWTUser,
@@ -479,7 +481,7 @@ export class ProposalsV4Controller {
     )
     queryFilter?: string,
   ) {
-    const parsedFilter = JSON.parse(queryFilter ?? "{}");
+    const parsedFilter = JSON.parse(queryFilter || "{}");
 
     const finalFilters = this.addAccessBasedFilters(
       request.user as JWTUser,

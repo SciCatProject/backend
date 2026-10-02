@@ -165,7 +165,7 @@ describe("ProposalsV4Controller", () => {
 
       expect(instance).toBeInstanceOf(ProposalClass);
       expect(instance.proposalId).toBe(mockCreateProposalDto.proposalId);
-      expect(instance.ownerGroup).toBe("");
+      expect(instance.ownerGroup).toBe(mockCreateProposalDto.ownerGroup);
       expect(instance.accessGroups).toEqual([]);
       expect(instance.isPublished).toBe(false);
     });
