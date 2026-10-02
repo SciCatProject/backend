@@ -130,7 +130,7 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     );
     if (jobConfigCreateAuth === CreateJobAuth.DatasetOwner && !isAdmin)
       datasetsFilter.where.ownerGroup = { $in: jobUserCurrentGroups ?? [] };
-    if (jobConfigCreateAuth === CreateJobAuth.DatasetAccess) {
+    if (jobConfigCreateAuth.startsWith(CreateJobAuth.DatasetAccess)) {
       datasetsFilter.where.$or = [
         { isPublished: true },
         { ownerGroup: { $in: jobUserCurrentGroups ?? [] } },
@@ -142,7 +142,7 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     if (datasets.length !== datasetList.length) return undefined;
     if (datasets.length === 0) return undefined;
     if (
-      jobConfigCreateAuth === CreateJobAuth.DatasetAccess &&
+      jobConfigCreateAuth.startsWith(CreateJobAuth.DatasetAccess) &&
       datasets.every((dataset) => dataset?.isPublished)
     )
       return jobUserCurrentGroups?.[0];

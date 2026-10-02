@@ -25,6 +25,7 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { AccessGroupsType } from "src/config/configuration";
 import { Logger } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
+import { ProposalsService } from "src/proposals/proposals.service";
 import {
   JobConfig,
   validateActions,
@@ -60,6 +61,7 @@ export class JobsControllerUtils {
     private readonly origDatablocksService: OrigDatablocksService,
     private caslAbilityFactory: CaslAbilityFactory,
     private readonly usersService: UsersService,
+    private readonly proposalsService: ProposalsService,
     private configService: ConfigService,
     private jobConfigService: JobConfigService,
   ) {
@@ -429,7 +431,9 @@ export class JobsControllerUtils {
     const requestUserGroups = [...baseGroups];
     if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
       datasetsWhere.where.isPublished = true;
-    else if (jobConfiguration.create.auth === CreateJobAuth.DatasetAccess) {
+    else if (
+      jobConfiguration.create.auth.startsWith(CreateJobAuth.DatasetAccess)
+    ) {
       if (requestUserGroups.length === 0)
         datasetsWhere.where.isPublished = true;
       else
@@ -455,6 +459,51 @@ export class JobsControllerUtils {
     if (numberOfDatasetsWithAccess.count < datasetList.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
+      );
+    if (
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccessAndProposalPI
+    ) {
+      const piEmail = isPrivilegedUser
+        ? (jobUser?.email ?? jobCreateDto.contactEmail)
+        : user?.email;
+      await this.checkDatasetAccessAndProposalPI(datasetList, piEmail);
+    }
+  }
+
+  /**
+   * Check that every dataset is linked to at least one proposal and that
+   * all the linked proposals have pi_email matching the given email
+   */
+  private async checkDatasetAccessAndProposalPI(
+    datasetList: DatasetListDto[],
+    email: string | undefined,
+  ) {
+    if (!email)
+      throw new ForbiddenException(
+        "User email is not available, cannot create job with #datasetAccessAndProposalPI authorization.",
+      );
+    const normalize = (e: string) => e.trim().toLowerCase();
+    const datasets = await this.datasetsService.findAll({
+      where: { pid: { $in: datasetList.map((x) => x.pid) } },
+      fields: { pid: 1, proposalIds: 1 },
+    });
+    if (datasets.some((d) => !d.proposalIds?.length))
+      throw new ForbiddenException(
+        "Not all datasets are linked to a proposal, cannot create job.",
+      );
+    const proposalIds = [
+      ...new Set(datasets.flatMap((d) => d.proposalIds ?? [])),
+    ];
+    const proposals = await this.proposalsService.findAll({
+      where: { proposalId: { $in: proposalIds } },
+    });
+    const userEmail = normalize(email);
+    if (
+      proposals.length < proposalIds.length ||
+      proposals.some((p) => !p.pi_email || normalize(p.pi_email) !== userEmail)
+    )
+      throw new ForbiddenException(
+        "User is not the principal investigator of all proposals linked to the datasets, cannot create job.",
       );
   }
 
