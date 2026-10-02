@@ -9,7 +9,6 @@ import { DatasetsModule } from "src/datasets/datasets.module";
 import { PoliciesModule } from "src/policies/policies.module";
 import { OrigDatablocksModule } from "src/origdatablocks/origdatablocks.module";
 import { UsersModule } from "src/users/users.module";
-import { ProposalsModule } from "src/proposals/proposals.module";
 import { JobConfigService } from "../config/job-config/jobconfig.service";
 import { CoreJobActionCreators } from "../config/job-config/actions/corejobactioncreators.module";
 import { EmailJobActionCreator } from "src/config/job-config/actions/emailaction/emailaction.service";
@@ -24,7 +23,6 @@ import { ConfigModule } from "@nestjs/config";
     CoreJobActionCreators,
     DatasetsModule,
     UsersModule,
-    ProposalsModule,
     CaslModule,
     MongooseModule.forFeatureAsync([
       {
