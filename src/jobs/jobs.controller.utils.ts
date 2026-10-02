@@ -439,7 +439,8 @@ export class JobsControllerUtils {
     if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
       datasetsWhere.where.isPublished = true;
     else if (
-      jobConfiguration.create.auth.startsWith(CreateJobAuth.DatasetAccess)
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccess ||
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccessAndProposalPI
     ) {
       if (requestUserGroups.length === 0)
         datasetsWhere.where.isPublished = true;
