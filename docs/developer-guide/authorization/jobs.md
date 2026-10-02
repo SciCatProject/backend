@@ -25,7 +25,7 @@ Unauthenticated users do not have read access to jobs.
 An authenticated user may read jobs if their username matches the job's `ownerUser` of that job or if they are a member of the job's `ownerGroup`.
 
 They are permitted to create jobs of a certain job type if the corresponding create.auth field is configured to:
-- Any wildcard except `#jobAdmin` (`#all`, `#datasetPublic`, `#authenticated`, `#datasetAccess`, `#datasetOwner`)
+- Any wildcard except `#jobAdmin` (`#all`, `#datasetPublic`, `#authenticated`, `#datasetAccess`, `#datasetOwner`, `#datasetAccessAndProposalPI`)
 - A group `@g` that the user is a member of
 - The user's exact username
 
