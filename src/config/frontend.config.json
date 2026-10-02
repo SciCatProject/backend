@@ -3,6 +3,9 @@
     "nonAuthenticatedUser": "DATASETS",
     "authenticatedUser": "PROPOSALS"
   },
+  "datasetDetailsTabsInclude": {
+    "details": ["proposals", "instruments", "samples", "attachments"]
+  },
   "statusBannerMessage": "",
   "statusBannerCode": "INFO",
   "realTimeUpdatesEnabled": false,
@@ -918,10 +921,12 @@
           {
             "element": "internalLink",
             "source": "proposalIds",
+            "internalLinkLabel": "title",
             "order": 0
           },
           {
             "element": "internalLink",
+            "internalLinkLabel": "name",
             "source": "instrumentIds",
             "order": 1
           },
