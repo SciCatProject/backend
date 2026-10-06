@@ -1775,6 +1775,18 @@
 <td>Show/hide the ProposalId property even when the proposal no longer exists</td>
 </tr>
 <tr>
+<td><strong><code>datasetDetailsTabsInclude</code></strong></td>
+<td>object</td>
+<td></td>
+<td>Related documents loaded together with the dataset on the dataset details page. Only the Details tab is configurable, the other tabs always load what they need.</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;<code>details</code></td>
+<td>array</td>
+<td><code>["proposals", "instruments", "samples", "attachments"]</code></td>
+<td>Related documents included when the Details tab is opened. Each value is sent as <code>include</code> to <code>GET /api/v4/datasets/{pid}</code> and joined to the dataset with a MongoDB <code>$lookup</code>. Allowed values: <code>proposals</code>, <code>instruments</code>, <code>samples</code>, <code>attachments</code>, <code>datablocks</code>, <code>origdatablocks</code>, <code>all</code> (<code>origdatablocks</code> is loaded page by page from the origdatablocks files endpoint instead of a lookup, <code>all</code> means every value). Keep <code>attachments</code> when the Details layout has an <code>attachments</code> section. Add <code>proposals</code>, <code>instruments</code> and/or <code>samples</code> to show their names instead of ids on <code>internalLink</code> fields (see <a href="../dynamic-dataset-detail-component/#internal-link-labels">Dynamic Dataset Detail Component</a>).</td>
+</tr>
+<tr>
 <td><code>notificationInterceptorEnabled</code></td>
 <td>boolean</td>
 <td><code>true</code></td>
