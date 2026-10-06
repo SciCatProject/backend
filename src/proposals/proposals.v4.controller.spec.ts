@@ -14,19 +14,6 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CountApiResponse, FullFacetResponse } from "src/common/types";
 import { MongoError } from "mongodb";
 import * as jmp from "json-merge-patch";
-import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import {
-  CountApiResponse,
-  FullFacetFilters,
-  FullFacetResponse,
-  IsValidResponse,
-} from "src/common/types";
-import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
-import { MongoError } from "mongodb";
-import * as jmp from "json-merge-patch";
 import {
   ConflictException,
   ForbiddenException,
@@ -562,7 +549,7 @@ describe("ProposalsV4Controller", () => {
 
       const request = mockRequest(mockRegularUser) as Request;
       const filter = JSON.stringify({ where: { proposalId: "proposal-1" } });
-      const result = await controller.findAll(request, filter);
+      await controller.findAll(request, filter);
 
       // Verify the filter was modified with access constraints
       const calledWith = proposalsService.findAllCompleteV4.mock.calls[0][0];
@@ -740,7 +727,7 @@ describe("ProposalsV4Controller", () => {
         where: { proposalId: "proposal-1" },
         include: [ProposalLookupKeysEnumV4.samples],
       });
-      const result = await controller.findOne(request, filter);
+      await controller.findOne(request, filter);
 
       const calledWith = proposalsService.findOneCompleteV4.mock.calls[0][0];
       expect(calledWith.include).toContain(ProposalLookupKeysEnumV4.samples);
@@ -846,7 +833,7 @@ describe("ProposalsV4Controller", () => {
       proposalsService.findOneCompleteV4.mockResolvedValue(mockProposal);
 
       const request = mockRequest(mockAdminUser) as Request;
-      const result = await controller.findById(
+      await controller.findById(
         request,
         "proposal-1",
         ProposalLookupKeysEnumV4.samples,
@@ -958,11 +945,7 @@ describe("ProposalsV4Controller", () => {
       const request = mockRequestWithHeaders(mockAdminUser, {
         "content-type": "application/merge-patch+json",
       }) as Request;
-      const result = await controller.findByIdAndUpdate(
-        request,
-        "proposal-1",
-        updateDto,
-      );
+      await controller.findByIdAndUpdate(request, "proposal-1", updateDto);
 
       const expectedUpdate = jmp.apply(mockProposal, updateDto);
       expect(proposalsService.findOneAndUpdateV4).toHaveBeenCalledWith(
