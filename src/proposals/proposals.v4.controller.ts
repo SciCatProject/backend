@@ -146,7 +146,7 @@ export class ProposalsV4Controller {
       // In API v4 unauthorized users must use the public endpoints
       throw new ForbiddenException("Unauthorized access");
     }
-    
+
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
     const canView = ability.can(Action.ProposalRead, ProposalClass);
