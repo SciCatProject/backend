@@ -79,6 +79,38 @@ describe("3000: Proposals v4 tests", () => {
           res.body.should.have.property("valid").and.equal(true);
         });
     });
+
+    it("3000:0103: should reject proposal with invalid email format", async () => {
+      const invalidEmailProposal = {
+        ...ProposalCorrectMinV4,
+        email: "not-an-email",
+      };
+      return request(appUrl)
+        .post("/api/v4/proposals/isValid")
+        .send(invalidEmailProposal)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("valid").and.equal(false);
+        });
+    });
+
+    it("3000:0104: should reject proposal with missing required fields", async () => {
+      const incompleteProposal = {
+        proposalId: "incomplete-v4",
+        title: "Missing required fields",
+      };
+      return request(appUrl)
+        .post("/api/v4/proposals/isValid")
+        .send(incompleteProposal)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("valid").and.equal(false);
+        });
+    });
   });
 
   describe("Proposals v4 create tests", () => {
@@ -160,6 +192,49 @@ describe("3000: Proposals v4 tests", () => {
           proposalId2 = res.body.proposalId;
         });
     });
+
+    it("3000:0204: should reject proposal with invalid email format", async () => {
+      const invalidEmailProposal = {
+        ...ProposalCorrectMinV4,
+        proposalId: `invalid-email-${uuidv4()}`,
+        email: "not-an-email",
+      };
+      return request(appUrl)
+        .post("/api/v4/proposals")
+        .send(invalidEmailProposal)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.BadRequestStatusCode);
+    });
+
+    it("3000:0205: should create proposal with all optional fields", async () => {
+      const uniqueProposalId = `${ProposalCorrectCompleteV4.proposalId}-all-optional-${uuidv4()}`;
+      const proposalWithAllFields = {
+        ...ProposalCorrectCompleteV4,
+        proposalId: uniqueProposalId,
+        firstname: "TestFirst",
+        lastname: "TestLast",
+        pi_firstname: "PIFirst",
+        pi_lastname: "PILast",
+        instrumentIds: ["instrument1", "instrument2"],
+        type: "Default Proposal",
+        isPublished: false,
+        metadata: { customField: "customValue", anotherField: "anotherValue" },
+      };
+
+      return request(appUrl)
+        .post("/api/v4/proposals")
+        .send(proposalWithAllFields)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
+          res.body.should.have.property("firstname").and.equal("TestFirst");
+          res.body.should.have.property("lastname").and.equal("TestLast");
+          res.body.should.have.property("metadata").and.deep.equal(proposalWithAllFields.metadata);
+          proposalId3 = res.body.proposalId;
+        });
+    });
   });
 
   describe("Proposals v4 findAll tests", () => {
@@ -215,6 +290,51 @@ describe("3000: Proposals v4 tests", () => {
           res.body.should.have.lengthOf.at.most(1);
         });
     });
+
+    it("3000:0304: should list proposals with sorting", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            order: ["createdAt DESC"],
+          }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          if (res.body.length > 1) {
+            const dates = res.body.map((p) => new Date(p.createdAt));
+            for (let i = 1; i < dates.length; i++) {
+              dates[i - 1].should.be.at.least(dates[i]);
+            }
+          }
+        });
+    });
+
+    it("3000:0305: should list proposals with field selection", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            fields: { proposalId: true, title: true },
+          }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          if (res.body.length > 0) {
+            res.body[0].should.have.property("proposalId");
+            res.body[0].should.have.property("title");
+            res.body[0].should.not.have.property("email");
+          }
+        });
+    });
   });
 
   describe("Proposals v4 findOne tests", () => {
@@ -259,6 +379,22 @@ describe("3000: Proposals v4 tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have.property("proposalId").and.equal(proposalId2);
+        });
+    });
+
+    it("3000:0403: should findOne with complex filter", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/findOne")
+        .query({
+          filter: JSON.stringify({
+            where: { ownerGroup: "proposalingestor" },
+          }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("ownerGroup").and.equal("proposalingestor");
         });
     });
   });
@@ -323,6 +459,24 @@ describe("3000: Proposals v4 tests", () => {
           assert(Array.isArray(res.body));
         });
     });
+
+    it("3000:0602: should get fullfacet with all facet types", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/fullfacet")
+        .query({
+          filters: JSON.stringify({
+            facets: ["ownerGroup", "type", "keywords", "isPublished"],
+            fields: {},
+          }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          res.body.should.have.lengthOf.at.least(1);
+        });
+    });
   });
 
   describe("Proposals v4 findById tests", () => {
@@ -363,6 +517,29 @@ describe("3000: Proposals v4 tests", () => {
         .get("/api/v4/proposals/nonexistent-proposal")
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode);
+    });
+
+    it("3000:0704: should handle special characters in proposalId", async () => {
+      const specialProposalId = `test-proposal_with.special-chars-${uuidv4()}`;
+      const specialProposal = {
+        ...ProposalCorrectMinV4,
+        proposalId: specialProposalId,
+      };
+
+      await request(appUrl)
+        .post("/api/v4/proposals")
+        .send(specialProposal)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
+
+      return request(appUrl)
+        .get("/api/v4/proposals/" + encodeURIComponent(specialProposalId))
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("proposalId").and.equal(specialProposalId);
+        });
     });
   });
 
@@ -418,6 +595,66 @@ describe("3000: Proposals v4 tests", () => {
             .and.equal(updatedProposal.title);
         });
     });
+
+    it("3000:0804: should patch nested MeasurementPeriodList", async () => {
+      const newMeasurementPeriod = {
+        instrument: "ESS3-3",
+        start: "2025-01-01T10:00:00.000Z",
+        end: "2025-01-02T10:00:00.000Z",
+        comment: "New measurement period",
+      };
+      return request(appUrl)
+        .patch("/api/v4/proposals/" + encodeURIComponent(proposalId2))
+        .set("content-type", "application/merge-patch+json")
+        .send({
+          MeasurementPeriodList: [newMeasurementPeriod],
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have
+            .property("MeasurementPeriodList")
+            .and.be.an("array")
+            .and.have.lengthOf(1);
+          res.body.MeasurementPeriodList[0].should.have
+            .property("instrument")
+            .and.equal(newMeasurementPeriod.instrument);
+        });
+    });
+
+    it("3000:0805: should reject PATCH with invalid field update", async () => {
+      return request(appUrl)
+        .patch("/api/v4/proposals/" + encodeURIComponent(proposalId2))
+        .send({ email: "invalid-email-format" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.BadRequestStatusCode);
+    });
+
+    it("3000:0806: should PUT with partial data preserve unchanged fields", async () => {
+      const { proposalId, ...updatedProposal } = {
+        ...ProposalCorrectMinV4,
+        title: "Put update title v4 partial",
+      };
+
+      await request(appUrl)
+        .put("/api/v4/proposals/" + encodeURIComponent(proposalId1))
+        .send(updatedProposal)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulPostStatusCode);
+
+      return request(appUrl)
+        .get("/api/v4/proposals/" + encodeURIComponent(proposalId1))
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("proposalId").and.equal(proposalId1);
+          res.body.should.have.property("title").and.equal(updatedProposal.title);
+          res.body.should.have.property("email").and.equal(ProposalCorrectMinV4.email);
+          res.body.should.have.property("ownerGroup").and.equal(ProposalCorrectMinV4.ownerGroup);
+        });
+    });
   });
 
   describe("Proposals v4 delete tests", () => {
@@ -471,6 +708,13 @@ describe("3000: Proposals v4 tests", () => {
       return request(appUrl)
         .get("/api/v4/proposals/" + encodeURIComponent(proposalId2))
         .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.NotFoundStatusCode);
+    });
+
+    it("3000:0906: should not delete non-existent proposal", async () => {
+      return request(appUrl)
+        .delete("/api/v4/proposals/nonexistent-proposal-v4")
+        .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode);
     });
   });
