@@ -127,6 +127,98 @@ describe("3100: Proposals v4 public tests", () => {
           res.body.should.have.lengthOf.at.most(1);
         });
     });
+
+    it("3100:0103: should reject malformed filter JSON", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: 'not-valid-json{',
+        })
+        .expect(TestData.BadRequestStatusCode);
+    });
+
+    it("3100:0104: should handle empty filter object", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({}),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+        });
+    });
+
+    it("3100:0105: should list proposals with sorting", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            order: ["title ASC"],
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          if (res.body.length > 1) {
+            for (let i = 1; i < res.body.length; i++) {
+              res.body[i - 1].title.should.be.at.most(res.body[i].title);
+            }
+          }
+        });
+    });
+
+    it("3100:0106: should list proposals with field selection", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            fields: { proposalId: true, title: true },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          if (res.body.length > 0) {
+            res.body[0].should.have.property("proposalId");
+            res.body[0].should.have.property("title");
+            res.body[0].should.not.have.property("email");
+          }
+        });
+    });
+
+    it("3100:0107: should handle very large limit values", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            limits: { limit: 9999, skip: 0 },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+        });
+    });
+
+    it("3100:0108: should handle negative skip/limit values", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: {},
+            limits: { limit: -1, skip: -5 },
+          }),
+        })
+        .expect(TestData.BadRequestStatusCode);
+    });
   });
 
   describe("Proposals v4 public count tests", () => {
@@ -157,6 +249,39 @@ describe("3100: Proposals v4 public tests", () => {
           res.body.count.should.be.at.least(2);
         });
     });
+
+    it("3100:0202: should count with complex filter", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public/count")
+        .query({
+          filter: JSON.stringify({
+            where: {
+              ownerGroup: "proposalingestor",
+              title: { $regex: "public", $options: "i" },
+            },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+        });
+    });
+
+    it("3100:0203: should count with empty filter", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public/count")
+        .query({
+          filter: JSON.stringify({}),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("count");
+          res.body.count.should.be.a("number");
+        });
+    });
   });
 
   describe("Proposals v4 public fullfacet tests", () => {
@@ -183,6 +308,39 @@ describe("3100: Proposals v4 public tests", () => {
           filters: JSON.stringify({
             facets: ["keywords"],
             fields: { isPublished: true },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+        });
+    });
+
+    it("3100:0302: should get fullfacet with all facet types", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public/fullfacet")
+        .query({
+          filters: JSON.stringify({
+            facets: ["ownerGroup", "type", "keywords", "isPublished", "email"],
+            fields: {},
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          res.body.should.have.lengthOf.at.least(1);
+        });
+    });
+
+    it("3100:0303: should handle empty facet request", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public/fullfacet")
+        .query({
+          filters: JSON.stringify({
+            facets: [],
+            fields: {},
           }),
         })
         .expect(TestData.SuccessfulGetStatusCode)
@@ -226,6 +384,25 @@ describe("3100: Proposals v4 public tests", () => {
           res.body.should.have
             .property("proposalId")
             .and.equal(proposalIdPublished2);
+        });
+    });
+
+    it("3100:0402: should findOne with complex filter", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public/findOne")
+        .query({
+          filter: JSON.stringify({
+            where: {
+              ownerGroup: "proposalingestor",
+              type: "Default Proposal",
+            },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("ownerGroup").and.equal("proposalingestor");
+          res.body.should.have.property("type").and.equal("Default Proposal");
         });
     });
   });
@@ -295,6 +472,28 @@ describe("3100: Proposals v4 public tests", () => {
         .get("/api/v4/proposals/public/nonexistent-public-proposal")
         .expect(TestData.NotFoundStatusCode);
     });
+
+    it("3100:0504: should handle special characters in proposalId", async () => {
+      const specialProposalId = `test-public_with.special-chars-${uuidv4()}`;
+      const specialProposal = {
+        ...ProposalCorrectPublishedV4_1,
+        proposalId: specialProposalId,
+      };
+
+      await request(appUrl)
+        .post("/api/v4/proposals")
+        .send(specialProposal)
+        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
+
+      return request(appUrl)
+        .get("/api/v4/proposals/public/" + encodeURIComponent(specialProposalId))
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("proposalId").and.equal(specialProposalId);
+        });
+    });
   });
 
   describe("Proposals v4 public edge cases", () => {
@@ -337,6 +536,57 @@ describe("3100: Proposals v4 public tests", () => {
         .query({
           filter: JSON.stringify({
             where: { keywords: { $in: ["public"] } },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+        });
+    });
+
+    it("3100:0603: should filter by date range", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: {
+              createdAt: {
+                $gte: "2020-01-01T00:00:00.000Z",
+                $lte: "2026-12-31T23:59:59.000Z",
+              },
+            },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+        });
+    });
+
+    it("3100:0604: should handle empty result set", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: { proposalId: "nonexistent-proposal-id-that-does-not-exist" },
+          }),
+        })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          assert(Array.isArray(res.body));
+          res.body.should.have.lengthOf(0);
+        });
+    });
+
+    it("3100:0605: should handle unicode in filter values", async () => {
+      return request(appUrl)
+        .get("/api/v4/proposals/public")
+        .query({
+          filter: JSON.stringify({
+            where: { title: { $regex: "测试", $options: "i" } },
           }),
         })
         .expect(TestData.SuccessfulGetStatusCode)
