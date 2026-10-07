@@ -330,7 +330,11 @@ describe("3000: Proposals v4 tests", () => {
         .query({
           filter: JSON.stringify({
             where: {},
-            order: ["createdAt DESC"],
+            limits: {
+              sort: {
+                createdAt: "desc",
+              },
+            },
           }),
         })
         .auth(accessTokenAdminIngestor, { type: "bearer" })

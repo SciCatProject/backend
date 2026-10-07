@@ -4,7 +4,8 @@ const { TestData } = require("./TestData");
 const { v4: uuidv4 } = require("uuid");
 const assert = require("node:assert");
 
-let accessTokenProposalAdmin = null,
+let accessTokenProposalIngestor = null,
+  accessTokenArchiveManager = null,
   proposalIdPublished1 = null,
   proposalIdPublished2 = null;
 
@@ -33,9 +34,14 @@ describe("3100: Proposals v4 public tests", () => {
   before(async () => {
     db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
 
-    accessTokenProposalAdmin = await utils.getToken(appUrl, {
-      username: "proposaladmin",
-      password: TestData.Accounts["proposaladmin"]["password"],
+    accessTokenProposalIngestor = await utils.getToken(appUrl, {
+      username: "proposalIngestor",
+      password: TestData.Accounts["proposalIngestor"]["password"],
+    });
+
+    accessTokenArchiveManager = await utils.getToken(appUrl, {
+      username: "archiveManager",
+      password: TestData.Accounts["archiveManager"]["password"],
     });
 
     // Create some published proposals for testing
@@ -47,7 +53,7 @@ describe("3100: Proposals v4 public tests", () => {
     const response1 = await request(appUrl)
       .post("/api/v4/proposals")
       .send(proposalToCreate1)
-      .auth(accessTokenProposalAdmin, { type: "bearer" })
+      .auth(accessTokenProposalIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode);
     proposalIdPublished1 = response1.body.proposalId;
 
@@ -59,7 +65,7 @@ describe("3100: Proposals v4 public tests", () => {
     const response2 = await request(appUrl)
       .post("/api/v4/proposals")
       .send(proposalToCreate2)
-      .auth(accessTokenProposalAdmin, { type: "bearer" })
+      .auth(accessTokenProposalIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode);
     proposalIdPublished2 = response2.body.proposalId;
   });
@@ -69,13 +75,13 @@ describe("3100: Proposals v4 public tests", () => {
     if (proposalIdPublished1) {
       await request(appUrl)
         .delete("/api/v4/proposals/" + encodeURIComponent(proposalIdPublished1))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode);
     }
     if (proposalIdPublished2) {
       await request(appUrl)
         .delete("/api/v4/proposals/" + encodeURIComponent(proposalIdPublished2))
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode);
     }
     db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
@@ -455,7 +461,7 @@ describe("3100: Proposals v4 public tests", () => {
       await request(appUrl)
         .post("/api/v4/proposals")
         .send(unpublishedProposal)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenProposalIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
 
       // Try to get it via public endpoint - should not be found
@@ -483,7 +489,7 @@ describe("3100: Proposals v4 public tests", () => {
       await request(appUrl)
         .post("/api/v4/proposals")
         .send(specialProposal)
-        .auth(accessTokenProposalAdmin, { type: "bearer" })
+        .auth(accessTokenProposalIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode);
 
       return request(appUrl)

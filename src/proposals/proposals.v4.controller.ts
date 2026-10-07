@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -589,6 +590,10 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Param("proposalId") proposalId: string,
     @Body() updateProposalDto: PartialUpdateProposalV4Dto,
   ): Promise<OutputProposalV4Dto | null> {
+    if (Object.keys(updateProposalDto).length === 0) {
+      throw new BadRequestException("Update body cannot be empty");
+    }
+
     const foundProposal = await this.proposalsService.findOne({
       where: { proposalId: proposalId },
     });
