@@ -25,7 +25,9 @@ export class OutputJobV3Dto {
    * The email of the person initiating the job request.
    */
   @Expose()
-  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key))
+  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key), {
+    toClassOnly: true,
+  })
   emailJobInitiator?: string;
 
   /**
@@ -38,42 +40,53 @@ export class OutputJobV3Dto {
    * Time when job is created. Format according to chapter 5.6 internet date/time format in RFC 3339. This is handled automatically by mongoose with timestamps flag.
    */
   @Expose()
-  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key))
+  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key), {
+    toClassOnly: true,
+  })
   creationTime: Date;
 
   /**
    * Time when job should be executed. If not specified then the Job will be executed asap. Format according to chapter 5.6 internet date/time format in RFC 3339.
    */
   @Expose()
-  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key))
+  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key), {
+    toClassOnly: true,
+  })
   executionTime?: Date;
 
   /**
    * Object of key-value pairs defining job input parameters, e.g. 'destinationPath' for retrieve jobs or 'tapeCopies' for archive jobs.
    */
   @Expose()
-  @Transform(({ obj }) => {
-    return {
-      username: _.get(obj, jobV3toV4FieldMap["jobParams.username"]),
-      ..._.omitBy(obj?.jobParams, (_, key) =>
-        Object.values(jobV3toV4FieldMap).includes(`jobParams.${key}`),
-      ),
-    };
-  })
+  @Transform(
+    ({ obj }) => {
+      return {
+        username: _.get(obj, jobV3toV4FieldMap["jobParams.username"]),
+        ..._.omitBy(obj?.jobParams, (_, key) =>
+          Object.values(jobV3toV4FieldMap).includes(`jobParams.${key}`),
+        ),
+      };
+    },
+    { toClassOnly: true },
+  )
   jobParams: Record<string, unknown>;
 
   /**
    * Defines current status of job lifecycle.
    */
   @Expose()
-  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key))
+  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key), {
+    toClassOnly: true,
+  })
   jobStatusMessage?: string;
 
   /**
    * Array of objects with keys: pid, files. The value for the pid key defines the dataset ID, the value for the files key is an array of file names. This array is either an empty array, implying that all files within the dataset are selected, or an explicit list of dataset-relative file paths, which should be selected.
    */
   @Expose()
-  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key))
+  @Transform(({ obj, key }) => mapJobV3toV4Field(obj, key), {
+    toClassOnly: true,
+  })
   datasetList: DatasetListDto[];
 
   /**

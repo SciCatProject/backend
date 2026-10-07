@@ -10,10 +10,10 @@ function getDeep<T, U>(
   fieldsMap: Partial<Record<keyof U & string, string>>,
 ): T[keyof T] | unknown | null {
   if (!source) return null;
-  if (!fieldsMap[key]) return get(source, key);
-  if (get(source, key)) return get(source, key);
-  if (!fieldsMap[key].includes("[]")) return get(source, fieldsMap[key]);
-  const keysList = fieldsMap[key].split("[]");
+  const path = fieldsMap[key];
+  if (!path) return get(source, key);
+  if (!path.includes("[]")) return get(source, path);
+  const keysList = path.split("[]");
   const initialValue = get(source, trim(keysList[0], "."));
   if (!initialValue) return;
   return keysList.slice(1).reduce((acc, currKey) => {

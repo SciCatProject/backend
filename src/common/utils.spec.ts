@@ -1,5 +1,5 @@
 // Currently only covers converToSI
-import { convertToSI, parseDate } from "./utils";
+import { convertToSI, parseBoolean, parseDate } from "./utils";
 
 describe("convertToSI", () => {
   it("should convert a known unit to SI successfully", () => {
@@ -63,5 +63,26 @@ describe("parseDate", () => {
   it("should return undefined for undefined input", () => {
     const result = parseDate(undefined);
     expect(result).toBeUndefined();
+  });
+});
+
+describe("parseBoolean", () => {
+  it("should return true for truthy values", () => {
+    expect(parseBoolean(true)).toBe(true);
+    expect(parseBoolean("true")).toBe(true);
+    expect(parseBoolean(1)).toBe(true);
+    expect(parseBoolean("1")).toBe(true);
+    expect(parseBoolean("on")).toBe(true);
+    expect(parseBoolean("yes")).toBe(true);
+  });
+
+  it("should return false for all other values", () => {
+    expect(parseBoolean(false)).toBe(false);
+    expect(parseBoolean("false")).toBe(false);
+    expect(parseBoolean(0)).toBe(false);
+    expect(parseBoolean("0")).toBe(false);
+    expect(parseBoolean("off")).toBe(false);
+    expect(parseBoolean(null)).toBe(false);
+    expect(parseBoolean(undefined)).toBe(false);
   });
 });
