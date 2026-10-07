@@ -1580,7 +1580,7 @@ Unauthenticated users do not have read access to jobs.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
 <p>An authenticated user may read jobs if their username matches the job's <code>ownerUser</code> of that job or if they are a member of the job's <code>ownerGroup</code>.</p>
 <p>They are permitted to create jobs of a certain job type if the corresponding create.auth field is configured to:
-- Any wildcard except <code>#jobAdmin</code> (<code>#all</code>, <code>#datasetPublic</code>, <code>#authenticated</code>, <code>#datasetAccess</code>, <code>#datasetOwner</code>)
+- Any wildcard except <code>#jobAdmin</code> (<code>#all</code>, <code>#datasetPublic</code>, <code>#authenticated</code>, <code>#datasetAccess</code>, <code>#datasetOwner</code>, <code>#datasetAccessAndProposalPI</code>)
 - A group <code>@g</code> that the user is a member of
 - The user's exact username</p>
 <p>They are permitted to update jobs of a certain type it the corresponding update.auth field is configured to:
