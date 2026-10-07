@@ -22,6 +22,8 @@
     "start:prod": "node dist/main",
     "start:test": "dotenv -o -e test/config/.env -e test/config/.env.override -- npm run start",
     "lint": "eslint \"src/**/*.ts\"",
+    "lint:ts": "eslint \"src/**/*.ts\"",
+    "lint:ts:fix": "eslint \"src/**/*.ts\" --fix",
     "lint:fix": "eslint \"src/**/*.ts\"  \"test/**/*.js\" --fix",
     "test": "jest",
     "test:watch": "jest --watch --maxWorkers=25%",
