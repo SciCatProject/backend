@@ -1243,7 +1243,6 @@ describe("2500: Datasets v4 tests", () => {
     });
 
     it("0601: should be able to update dataset", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { type, ...updatedDataset } = {
         ...TestData.DerivedCorrectMinV4,
         datasetName: "Updated dataset name",
