@@ -19,6 +19,7 @@ import { ReturnedUserDto } from "src/users/dto/returned-user.dto";
 import { CreateUserSettingsDto } from "src/users/dto/create-user-settings.dto";
 import { OidcClientService } from "../common/openid-client/openid-client.service";
 import { OidcAuthService } from "src/common/openid-client/openid-auth.service";
+import { JWTUser } from "./interfaces/jwt-user.interface";
 
 @Injectable()
 export class AuthService {
@@ -94,6 +95,11 @@ export class AuthService {
     };
   }
 
+  createSseTicket(user: JWTUser): string {
+    const expiresIn = this.configService.get<number>("sseTicketExpiresIn");
+    return this.jwtService.sign({ ...user, purpose: "sse" }, { expiresIn });
+  }
+
   async logout(req: Request) {
     const logoutURL = this.configService.get<string>("logoutURL") || "";
     const expressSessionSecret = this.configService.get<string>(
@@ -103,7 +109,7 @@ export class AuthService {
     const logoutResult = await this.additionalLogoutTasks(req, logoutURL);
 
     if (expressSessionSecret) {
-      req.logout(async (err) => {
+      req.logout((err) => {
         if (err) {
           // we should provide a message
           Logger.error("Logout error: ", err);

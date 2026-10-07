@@ -15,21 +15,21 @@ function loginWithPassword(appUrl, user) {
         }
       });
   });
-};
+}
 
-exports.getToken = async function (appUrl, user) {  
+exports.getToken = async function (appUrl, user) {
   const responseBody = await loginWithPassword(appUrl, user);
   return responseBody.id;
 };
 
 exports.getIdAndToken = async function (appUrl, user) {
   const responseBody = await loginWithPassword(appUrl, user);
-  return { userId: responseBody.userId, token: responseBody.id }
+  return { userId: responseBody.userId, token: responseBody.id };
 };
 
 exports.getTokenAndEmail = async function (appUrl, user) {
   const responseBody = await loginWithPassword(appUrl, user);
-  return { token: responseBody.id, userEmail: responseBody.user.email}
+  return { token: responseBody.id, userEmail: responseBody.user.email };
 };
 
 exports.getTokenAD = function (appUrl, user, cb) {

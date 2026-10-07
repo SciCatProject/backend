@@ -13,6 +13,13 @@ export class UpdateSampleDto extends OwnableDto {
   readonly owner?: string;
 
   /**
+   * The name of the sample.
+   */
+  @IsString()
+  @IsOptional()
+  readonly sampleName?: string;
+
+  /**
    * A description of the sample.
    */
   @IsString()

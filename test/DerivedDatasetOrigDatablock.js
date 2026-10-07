@@ -5,7 +5,6 @@ const { TestData } = require("./TestData");
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
   accessTokenUser1 = null,
-
   datasetPid = null,
   origDatablockId1 = null,
   origDatablockId2 = null;
@@ -119,14 +118,10 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .then((res) => {
         res.body.should.have
           .property("size")
-          .and.equal(
-            TestData.OrigDataBlockCorrect1.size
-          );
+          .and.equal(TestData.OrigDataBlockCorrect1.size);
         res.body.should.have
           .property("numberOfFiles")
-          .and.equal(
-            TestData.OrigDataBlockCorrect1.dataFileList.length
-          );
+          .and.equal(TestData.OrigDataBlockCorrect1.dataFileList.length);
       });
   });
 
@@ -168,9 +163,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
-      .then((res) =>
-        res.body.count.should.be.equal(2)
-      );
+      .then((res) => res.body.count.should.be.equal(2));
   });
 
   it("0080: The new dataset should be the sum of the size of the origDatablocks", async () => {
@@ -185,13 +178,13 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
           .property("size")
           .and.equal(
             TestData.OrigDataBlockCorrect1.size +
-            TestData.OrigDataBlockCorrect2.size,
+              TestData.OrigDataBlockCorrect2.size,
           );
         res.body.should.have
           .property("numberOfFiles")
           .and.equal(
             TestData.OrigDataBlockCorrect1.dataFileList.length +
-            TestData.OrigDataBlockCorrect2.dataFileList.length,
+              TestData.OrigDataBlockCorrect2.dataFileList.length,
           );
       });
   });
@@ -215,9 +208,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne?filter=" +
-        encodeURIComponent(JSON.stringify(filter)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(filter)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -258,7 +251,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
         datasetId: datasetPid2,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
+      .expect(TestData.EntryCreatedStatusCode);
 
     const filter = {
       where: {
@@ -274,7 +267,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/Datasets/findOne?filter=" +
-        encodeURIComponent(JSON.stringify(filter))
+          encodeURIComponent(JSON.stringify(filter)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -299,9 +292,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/OrigDatablocks/fullQuery?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -324,9 +317,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/OrigDatablocks/fullQuery?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -349,9 +342,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/OrigDatablocks/fullQuery?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -374,9 +367,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/OrigDatablocks/fullQuery?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -396,9 +389,9 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
     return request(appUrl)
       .get(
         "/api/v3/OrigDatablocks/fullQuery/files?fields=" +
-        encodeURIComponent(JSON.stringify(fields)) +
-        "&limits=" +
-        encodeURIComponent(JSON.stringify(limits)),
+          encodeURIComponent(JSON.stringify(fields)) +
+          "&limits=" +
+          encodeURIComponent(JSON.stringify(limits)),
       )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
@@ -413,17 +406,18 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
 
   it("150: Should patch second origdatablock", async () => {
     await request(appUrl)
-      .patch(`/api/v3/Datasets/${datasetPid}/origdatablocks/${origDatablockId2}`)
+      .patch(
+        `/api/v3/Datasets/${datasetPid}/origdatablocks/${origDatablockId2}`,
+      )
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .send({ size: 123, dataFileList: [TestData.OrigDataBlockCorrect2.dataFileList[0]] })
+      .send({
+        size: 123,
+        dataFileList: [TestData.OrigDataBlockCorrect2.dataFileList[0]],
+      })
       .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/)
-      .then((res) =>
-        res.body.should.have
-          .property("size")
-          .and.equal(123)
-      );
+      .then((res) => res.body.should.have.property("size").and.equal(123));
     return request(appUrl)
       .get("/api/v3/Datasets/" + datasetPid)
       .set("Accept", "application/json")
@@ -511,7 +505,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
     const datasetPid2 = encodeURIComponent(dataset2.body["pid"]);
 
     await request(appUrl)
@@ -520,7 +514,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
 
     await request(appUrl)
       .post(`/api/v3/datasets/${datasetPid2}/origdatablocks`)
@@ -528,7 +522,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
+      .expect("Content-Type", /json/);
 
     await request(appUrl)
       .get(`/api/v3/Datasets/${datasetPid2}`)
@@ -547,9 +541,7 @@ describe("0800: DerivedDatasetOrigDatablock: Test OrigDatablocks and their relat
       .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
       .expect(TestData.SuccessfulDeleteStatusCode)
       .expect("Content-Type", /json/)
-      .then((res) =>
-        res.body.should.have.property("count").and.equal(2)
-      );
+      .then((res) => res.body.should.have.property("count").and.equal(2));
 
     await request(appUrl)
       .get(`/api/v3/Datasets/${datasetPid2}`)

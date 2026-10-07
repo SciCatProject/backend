@@ -62,16 +62,18 @@ const mockUserSettings = {
   datasetCount: 25,
   jobCount: 25,
   externalSettings: {
-    filters: [{ LocationFilter: true }, { PidFilter: true }],
-    conditions: [{ field: "status", value: "active", operator: "equals" }],
-    columns: [],
+    fe_dataset_table_filters: [{ LocationFilter: true }, { PidFilter: true }],
+    fe_dataset_table_conditions: [
+      { field: "status", value: "active", operator: "equals" },
+    ],
+    fe_dataset_table_columns: [],
   },
 };
 
 class AuthServiceMock {}
 
 class CaslAbilityFactoryMock {
-  userEndpointAccess = jest.fn();
+  userAccess = jest.fn();
 }
 
 describe("UsersController", () => {
@@ -112,13 +114,23 @@ describe("UsersController", () => {
 
     // Assert
     expect(result).toEqual(mockUserSettings);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown
+        >
+      ).length,
     ).toBeGreaterThan(0);
   });
 
@@ -129,11 +141,11 @@ describe("UsersController", () => {
     const updatedSettings = {
       ...mockUserSettings,
       externalSettings: {
-        filters: [{ PidFilter: true }],
-        conditions: [
+        fe_dataset_table_filters: [{ PidFilter: true }],
+        fe_dataset_table_conditions: [
           { field: "status", value: "inactive", operator: "equals" },
         ],
-        columns: [],
+        fe_dataset_table_columns: [],
       },
     };
 
@@ -161,14 +173,23 @@ describe("UsersController", () => {
     );
 
     expect(result).toEqual(expectedResponse);
-    expect(result?.externalSettings?.filters).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_filters).toBeDefined();
     expect(
-      (result?.externalSettings?.filters as Record<string, unknown[]>).length,
+      (
+        result?.externalSettings?.fe_dataset_table_filters as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
-    expect(result?.externalSettings?.conditions).toBeDefined();
+    expect(result?.externalSettings?.fe_dataset_table_conditions).toBeDefined();
     expect(
-      (result?.externalSettings?.conditions as Record<string, unknown[]>)
-        .length,
+      (
+        result?.externalSettings?.fe_dataset_table_conditions as Record<
+          string,
+          unknown[]
+        >
+      ).length,
     ).toBe(1);
   });
 
@@ -181,7 +202,7 @@ describe("UsersController", () => {
       ).caslAbilityFactory;
     });
 
-    it("should return all users when admin user has UserListAll permission", async () => {
+    it("should return all users when admin user has AccessAny permission", async () => {
       const adminUserId = "user1";
       const mockRequest: Partial<Request> = {
         user: {
@@ -191,18 +212,16 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to allow UserListAll
+      // Mock the ability to allow AccessAny
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return true;
           }
           return false;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
@@ -211,12 +230,12 @@ describe("UsersController", () => {
       expect(result).toEqual(mockUsers);
       expect(result.length).toBe(3);
       expect(usersService.findAll).toHaveBeenCalled();
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
         mockRequest.user,
       );
     });
 
-    it("should return only own user info when regular user has UserListOwn but not UserListAll permission", async () => {
+    it("should return only own user info when regular user has UserRead but not admin AccessAny permission", async () => {
       const regularUserId = "user2";
       const mockRequest: Partial<Request> = {
         user: {
@@ -226,21 +245,19 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to deny UserListAll but allow UserListOwn
+      // Mock the ability to deny AccessAny but allow UserRead
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return false;
           }
-          if (action === Action.UserListOwn && subject === User) {
+          if (action === Action.UserRead && subject === User) {
             return true;
           }
           return false;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
       jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);
@@ -251,7 +268,7 @@ describe("UsersController", () => {
       expect(result.length).toBe(1);
       expect(result[0].id).toBe(regularUserId);
       expect(usersService.findById).toHaveBeenCalledWith(regularUserId);
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(
         mockRequest.user,
       );
     });
@@ -266,18 +283,16 @@ describe("UsersController", () => {
         },
       };
 
-      // Mock the ability to deny UserListAll
+      // Mock the ability to deny AccessAny
       const mockAbility = {
         can: jest.fn((action: Action, subject: typeof User) => {
-          if (action === Action.UserListAll && subject === User) {
+          if (action === Action.AccessAny && subject === User) {
             return false;
           }
           return true;
         }),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findById").mockResolvedValue(null);
 
@@ -288,7 +303,7 @@ describe("UsersController", () => {
       expect(usersService.findById).toHaveBeenCalledWith(nonExistentUserId);
     });
 
-    it("should call userEndpointAccess with authenticated user", async () => {
+    it("should call userAccess with authenticated user", async () => {
       const userId = "user1";
       const mockUser = {
         _id: userId,
@@ -303,17 +318,13 @@ describe("UsersController", () => {
       const mockAbility = {
         can: jest.fn().mockReturnValue(true),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
       await controller.findAll(mockRequest as Request);
 
-      expect(caslAbilityFactory.userEndpointAccess).toHaveBeenCalledWith(
-        mockUser,
-      );
+      expect(caslAbilityFactory.userAccess).toHaveBeenCalledWith(mockUser);
     });
 
     it("should return users with correct DTO structure", async () => {
@@ -327,11 +338,9 @@ describe("UsersController", () => {
       };
 
       const mockAbility = {
-        can: jest.fn((action: Action) => action === Action.UserListAll),
+        can: jest.fn((action: Action) => action === Action.AccessAny),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       jest.spyOn(usersService, "findAll").mockResolvedValue(mockUsers);
 
@@ -346,7 +355,7 @@ describe("UsersController", () => {
       });
     });
 
-    it("should not call findAll service when user lacks UserListAll permission", async () => {
+    it("should not call findAll service when user lacks admin AccessAny permission", async () => {
       const regularUserId = "user2";
       const mockRequest: Partial<Request> = {
         user: {
@@ -357,11 +366,9 @@ describe("UsersController", () => {
       };
 
       const mockAbility = {
-        can: jest.fn((action: Action) => action !== Action.UserListAll),
+        can: jest.fn((action: Action) => action !== Action.AccessAny),
       };
-      (caslAbilityFactory.userEndpointAccess as jest.Mock).mockReturnValue(
-        mockAbility,
-      );
+      (caslAbilityFactory.userAccess as jest.Mock).mockReturnValue(mockAbility);
 
       const expectedUser = mockUsers.find((u) => u.id === regularUserId)!;
       jest.spyOn(usersService, "findById").mockResolvedValue(expectedUser);

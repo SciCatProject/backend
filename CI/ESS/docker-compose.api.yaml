@@ -1,32 +1,107 @@
 services:
+  mock-oauth:
+    image: ghcr.io/navikt/mock-oauth2-server:latest
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      JSON_CONFIG: |
+        {
+          "interactiveLogin": false,
+          "httpServer": "NettyWrapper",
+          "tokenCallbacks": [
+            {
+              "issuerId": "local-test",
+              "tokenExpiry": 3600,
+              "requestMappings": [
+                {
+                  "requestParam": "client_id",
+                  "match": "scicat-client-test",
+                  "claims": {
+                    "sub": "test-username",
+                    "preferred_username": "test-username",
+                    "email": "test@test.com",
+                    "aud": "scicat-client-test",
+                    "azp": "scicat-client-test"
+                  }
+                },
+                {
+                  "requestParam": "client_id",
+                  "match": "additional-authorized-client-test-1",
+                  "claims": {
+                    "sub": "test-username",
+                    "preferred_username": "test-username",
+                    "email": "test@test.com",
+                    "aud": "scicat-client-test",
+                    "azp": "additional-authorized-client-test-1"
+                  }
+                },
+                {
+                  "requestParam": "client_id",
+                  "match": "additional-authorized-client-test-2",
+                  "claims": {
+                    "sub": "test-username",
+                    "preferred_username": "test-username",
+                    "email": "test@test.com",
+                    "aud": "scicat-client-test",
+                    "azp": "additional-authorized-client-test-2"
+                  }
+                },
+                {
+                  "requestParam": "client_id",
+                  "match": "untrusted-client-test",
+                  "claims": {
+                    "sub": "test-username",
+                    "preferred_username": "test-username",
+                    "email": "test@test.com",
+                    "aud": "untrusted-client-test",
+                    "azp": "untrusted-client-test"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8080/local-test/.well-known/openid-configuration"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s  
+      
   mongodb:
     image: mongo:latest
     volumes:
-      - mongodb_data:/bitnami
+      - "mongodb_data:/data/db"
     ports:
       - "27017:27017"
-  es01:
+  opensearch:
     profiles:
-      - elasticsearch
+      - opensearch
     depends_on:
       - mongodb
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    image: opensearchproject/opensearch:3.5.0
     ports:
       - "9200:9200"
     environment:
-      - node.name=es01
-      - ES_JAVA_OPTS=-Xms2g -Xmx2g
-      - cluster.name=${CLUSTER_NAME}
-      - cluster.initial_master_nodes=es01
-      - ELASTIC_PASSWORD=${ES_PASSWORD}
+      - node.name=opensearch
+      - discovery.type=single-node
+      - cluster.name=os-test-cluster
       - bootstrap.memory_lock=true
-    mem_limit: ${MEM_LIMIT}
+      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Scicat_default_password_2026
+    mem_limit: 4G
     ulimits:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk -u admin:Scicat_default_password_2026 https://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 volumes:
   mongodb_data:
     driver: local
-  es01:
-    driver: local
+

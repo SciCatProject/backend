@@ -22,7 +22,7 @@ import { JobsModule } from "./jobs/jobs.module";
 import { InstrumentsModule } from "./instruments/instruments.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { join } from "path";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import { handlebarsHelpers } from "./common/handlebars-helpers";
 import { CommonModule } from "./common/common.module";
 import { RabbitMQModule } from "./common/rabbitmq/rabbitmq.module";
@@ -34,7 +34,6 @@ import { JobConfigModule } from "./config/job-config/jobconfig.module";
 import { CoreJobActionCreators } from "./config/job-config/actions/corejobactioncreators.module";
 import { HttpModule, HttpService } from "@nestjs/axios";
 import { MSGraphMailTransport } from "./common/graph-mail";
-import { TransportType } from "@nestjs-modules/mailer/dist/interfaces/mailer-options.interface";
 import { MetricsModule } from "./metrics/metrics.module";
 import {
   GenericHistory,
@@ -46,6 +45,8 @@ import { RuntimeConfigModule } from "./config/runtime-config/runtime-config.modu
 import { MetadataKeysModule } from "./metadata-keys/metadatakeys.module";
 import { OidcClientModule } from "./common/openid-client/openid-client.module";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { SseModule } from "./serverSentEvent/sse.module";
+import type { MailerOptions } from "@nestjs-modules/mailer";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
       cache: true,
     }),
     AuthModule,
+    SseModule,
     OidcClientModule,
     CaslModule,
     AttachmentsModule,
@@ -88,7 +90,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
         configService: ConfigService,
         httpService: HttpService,
       ) => {
-        let transport: TransportType;
+        let transport: MailerOptions["transport"];
         const transportType = configService
           .get<string>("email.type")
           ?.toLowerCase();

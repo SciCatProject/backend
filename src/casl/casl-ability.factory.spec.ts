@@ -1,8 +1,133 @@
 import { ConfigService } from "@nestjs/config";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import configuration from "src/config/configuration";
+import { JobConfigService } from "src/config/job-config/jobconfig.service";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { Action } from "./action.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
+import { AttachmentAbility } from "./abilities/attachments.ability";
+import { DatablockAbility } from "./abilities/datablocks.ability";
+import { DatasetAbility } from "./abilities/datasets.ability";
+import { HistoryAbility } from "./abilities/history.ability";
+import { InstrumentAbility } from "./abilities/instruments.ability";
+import { JobAbility } from "./abilities/jobs.ability";
+import { LogbookAbility } from "./abilities/logbooks.ability";
+import { MetadataKeyAbility } from "./abilities/metadata-keys.ability";
+import { OpensearchAbility } from "./abilities/opensearch.ability";
+import { OrigDatablockAbility } from "./abilities/origdatablocks.ability";
+import { PolicyAbility } from "./abilities/policies.ability";
+import { ProposalAbility } from "./abilities/proposals.ability";
+import { PublishedDataAbility } from "./abilities/published-data.ability";
+import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
+import { SampleAbility } from "./abilities/samples.ability";
+import { SseAbility } from "./abilities/sse.ability";
+import { UserAbility } from "./abilities/users.ability";
 
 describe("CaslAbilityFactory", () => {
   it("should be defined", () => {
-    expect(new CaslAbilityFactory(new ConfigService())).toBeDefined();
+    const configService = new ConfigService();
+    expect(
+      new CaslAbilityFactory(
+        new AttachmentAbility(configService),
+        new DatablockAbility(configService),
+        new DatasetAbility(configService),
+        new HistoryAbility(configService),
+        new InstrumentAbility(configService),
+        new JobAbility(
+          configService,
+          new JobConfigService({}, {}, configService),
+        ),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
+        new OrigDatablockAbility(configService),
+        new PolicyAbility(configService),
+        new ProposalAbility(configService),
+        new PublishedDataAbility(configService),
+        new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
+        new UserAbility(configService),
+      ),
+    ).toBeDefined();
+  });
+
+  describe("DatasetLifecycleUpdate permission", () => {
+    const buildFactory = (updateDatasetLifecycle: unknown) => {
+      const configService = {
+        get: (key: string) =>
+          key === "accessGroups"
+            ? {
+                admin: [],
+                delete: [],
+                createDataset: [],
+                createDatasetWithPid: [],
+                createDatasetPrivileged: [],
+                updateDatasetLifecycle,
+              }
+            : undefined,
+      } as unknown as ConfigService;
+      return new CaslAbilityFactory(
+        new AttachmentAbility(configService),
+        new DatablockAbility(configService),
+        new DatasetAbility(configService),
+        new HistoryAbility(configService),
+        new InstrumentAbility(configService),
+        new JobAbility(configService, {
+          allJobConfigs: {},
+        } as unknown as JobConfigService),
+        new LogbookAbility(),
+        new MetadataKeyAbility(configService),
+        new OpensearchAbility(configService),
+        new OrigDatablockAbility(configService),
+        new PolicyAbility(configService),
+        new ProposalAbility(configService),
+        new PublishedDataAbility(configService),
+        new RuntimeConfigAbility(configService),
+        new SampleAbility(configService),
+        new SseAbility(configService),
+        new UserAbility(configService),
+      );
+    };
+
+    const userInSubstringGroup: JWTUser = {
+      _id: "uid",
+      username: "user",
+      email: "user@example.com",
+      currentGroups: ["lifecycle"],
+    };
+
+    const userInExactGroup: JWTUser = {
+      ...userInSubstringGroup,
+      currentGroups: ["lifecycle-managers"],
+    };
+
+    it("parses UPDATE_DATASET_LIFECYCLE_GROUPS into an array so group checks use exact matching", () => {
+      process.env.UPDATE_DATASET_LIFECYCLE_GROUPS = "lifecycle-managers";
+      const { accessGroups } = configuration();
+      delete process.env.UPDATE_DATASET_LIFECYCLE_GROUPS;
+
+      const factory = buildFactory(accessGroups?.updateDatasetLifecycle);
+      const ability = factory.endpointAccess("datasets", userInSubstringGroup);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+    });
+
+    it("grants DatasetLifecycleUpdate to a user in an exactly matching group", () => {
+      const factory = buildFactory(["lifecycle-managers"]);
+      const ability = factory.endpointAccess("datasets", userInExactGroup);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        true,
+      );
+    });
+
+    it("denies DatasetLifecycleUpdate to a user whose group does not match any configured group", () => {
+      const factory = buildFactory(["lifecycle-managers"]);
+      const ability = factory.endpointAccess("datasets", userInSubstringGroup);
+      expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
+        false,
+      );
+    });
   });
 });

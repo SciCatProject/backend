@@ -5,9 +5,9 @@ import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
-import { PublishedDataStatus } from "./interfaces/published-data.interface";
 import { PublishedDataController } from "./published-data.controller";
 import { PublishedDataService } from "./published-data.service";
+import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 
 class AttachmentsServiceMock {}
 
@@ -21,6 +21,8 @@ class PublishedDataServiceMock {}
 
 class CaslAbilityFactoryMock {}
 
+class DatasetsV4ControllerMock {}
+
 describe("PublishedDataController", () => {
   let controller: PublishedDataController;
 
@@ -31,6 +33,7 @@ describe("PublishedDataController", () => {
         ConfigService,
         { provide: AttachmentsService, useClass: AttachmentsServiceMock },
         { provide: DatasetsService, useClass: DatasetsServiceMock },
+        { provide: DatasetsV4Controller, useClass: DatasetsV4ControllerMock },
         { provide: HttpService, useClass: HttpServiceMock },
         { provide: ProposalsService, useClass: ProposalsServiceMock },
         { provide: PublishedDataService, useClass: PublishedDataServiceMock },
@@ -38,26 +41,12 @@ describe("PublishedDataController", () => {
       ],
     }).compile();
 
-    controller = module.get<PublishedDataController>(PublishedDataController);
+    controller = await module.resolve<PublishedDataController>(
+      PublishedDataController,
+    );
   });
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
-  });
-
-  it("should result in PublishedDataStatus.REGISTERED", () => {
-    expect(controller.convertObsoleteStatusToCurrent("registered")).toEqual(
-      PublishedDataStatus.REGISTERED,
-    );
-  });
-  it("should result in PublishedDataStatus.PRIVATE", () => {
-    expect(
-      controller.convertObsoleteStatusToCurrent("pending_registration"),
-    ).toEqual(PublishedDataStatus.PRIVATE);
-  });
-  it("should result in PublishedDataStatus.PRIVATE", () => {
-    expect(controller.convertObsoleteStatusToCurrent("invalid_status")).toEqual(
-      PublishedDataStatus.PRIVATE,
-    );
   });
 });

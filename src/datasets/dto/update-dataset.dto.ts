@@ -23,7 +23,6 @@ import {
 import { TechniqueClass } from "../schemas/technique.schema";
 import { Transform, Type } from "class-transformer";
 import { CreateTechniqueDto } from "./create-technique.dto";
-import { RelationshipClass } from "../schemas/relationship.schema";
 import { CreateRelationshipDto } from "./create-relationship.dto";
 import { LifecycleClass } from "../schemas/lifecycle.schema";
 import { HistoryClass } from "../schemas/history.schema";
@@ -106,7 +105,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly size?: number = 0;
+  readonly size?: number;
 
   @ApiProperty({
     type: Number,
@@ -117,7 +116,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly packedSize?: number = 0;
+  readonly packedSize?: number;
 
   @ApiProperty({
     type: Number,
@@ -128,7 +127,7 @@ export class UpdateDatasetDto extends OwnableDto {
   })
   @IsOptional()
   @IsInt()
-  readonly numberOfFiles?: number = 0;
+  readonly numberOfFiles?: number;
 
   @ApiProperty({
     type: Number,
@@ -164,7 +163,7 @@ export class UpdateDatasetDto extends OwnableDto {
     required: false,
     isArray: true,
     description:
-      "Array of tags associated with the meaning or contents of this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
+      "Array of metadata entries associated with this dataset. Values should ideally come from defined vocabularies, taxonomies, ontologies or knowledge graphs.",
   })
   @IsOptional()
   @IsString({
@@ -249,17 +248,18 @@ export class UpdateDatasetDto extends OwnableDto {
 
   // it needs to be discussed if this fields is managed by the user or by the system
   @ApiProperty({
-    type: RelationshipClass,
+    type: CreateRelationshipDto,
     required: false,
     isArray: true,
     default: [],
-    description: "Stores the relationships with other datasets.",
+    description: `Array of relationships with other entities (possibly external to the catalog).
+      Inspired by DataCite's relatedIdentifier schema: https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/`,
   })
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateRelationshipDto)
-  readonly relationships?: RelationshipClass[];
+  readonly relationships?: CreateRelationshipDto[];
 
   @ApiProperty({
     type: LifecycleClass,

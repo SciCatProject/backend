@@ -33,6 +33,12 @@ export class SampleClass extends OwnableClass {
   owner?: string;
 
   /**
+   * The name of the sample.
+   */
+  @Prop({ type: String, required: true })
+  sampleName: string;
+
+  /**
    * A description of the sample.
    */
   @Prop({ type: String, required: false })

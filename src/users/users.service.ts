@@ -142,13 +142,15 @@ export class UsersService implements OnModuleInit {
           };
           const createdRole = await this.rolesService.findOrCreate(createRole);
           if (createdRole && userIds) {
-            userIds.forEach(async (userId) => {
-              const createUserRole: CreateUserRoleDto = {
-                userId: userId,
-                roleId: createdRole._id,
-              };
-              await this.rolesService.findOrCreateUserRole(createUserRole);
-            });
+            await Promise.all(
+              userIds.map(async (userId) => {
+                const createUserRole: CreateUserRoleDto = {
+                  userId: userId,
+                  roleId: createdRole._id,
+                };
+                await this.rolesService.findOrCreateUserRole(createUserRole);
+              }),
+            );
           }
         }
       }
@@ -410,9 +412,7 @@ export class UsersService implements OnModuleInit {
       ...jwtProperties,
     };
     const expiresInValue = signAndVerifyOptions.expiresIn as
-      | string
-      | number
-      | undefined;
+      string | number | undefined;
     if (expiresInValue === "never") {
       signAndVerifyOptions.expiresIn = (this.configService.get<string>(
         "jwt.neverExpires",

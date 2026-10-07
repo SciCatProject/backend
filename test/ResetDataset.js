@@ -4,7 +4,6 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenArchiveManager = null,
-
   pid = null,
   foundId1 = null,
   foundId2 = null;
@@ -147,7 +146,7 @@ const testArchiveId2 =
   "oneCopyBig/p10029/raw/2018/01/23/20.500.11935/07e8a14c-f496-42fe-b4b4-9ff410616xxx_1_2018-01-23-03-11-34.tar";
 
 describe("2100: ResetDataset: Create Dataset and its Datablocks, then reset Datablocks and embedded Datasetlifecycle status", () => {
-  before(async() => {
+  before(async () => {
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
       password: TestData.Accounts["adminIngestor"]["password"],

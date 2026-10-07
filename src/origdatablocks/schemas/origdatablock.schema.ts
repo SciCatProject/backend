@@ -74,3 +74,4 @@ export class OrigDatablock extends OwnableClass {
 export const OrigDatablockSchema = SchemaFactory.createForClass(OrigDatablock);
 
 OrigDatablockSchema.index({ "$**": "text" });
+OrigDatablockSchema.index({ datasetId: 1 });

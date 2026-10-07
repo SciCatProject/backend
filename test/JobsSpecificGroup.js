@@ -10,11 +10,9 @@ let accessTokenAdminIngestor = null,
   accessTokenUser51 = null,
   accessTokenUser52 = null,
   accessTokenAdmin = null,
-
   datasetPid1 = null,
   datasetPid2 = null,
   datasetPid3 = null,
-
   jobId1 = null,
   encodedJobOwnedByAdmin = null,
   jobId2 = null,
@@ -552,7 +550,7 @@ describe("1180: Jobs: Test New Job Model Authorization for group_access type: co
       .send(newJob)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenUser51}` })
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.not.have.property("id");

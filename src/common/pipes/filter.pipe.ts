@@ -153,7 +153,8 @@ export class WherePipe<T = unknown> extends FilterPipeAbstract<T> {
         },
       },
       valueFn: (val: unknown) => {
-        if (typeof val !== "string") return val;
+        if (typeof val !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(val))
+          return val;
         const dateFromString = new Date(val);
         return isNaN(dateFromString.getTime()) ? val : dateFromString;
       },

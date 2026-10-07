@@ -3,6 +3,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsBoolean,
+  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -56,12 +57,13 @@ export class OutputMetadataKeyDto extends QueryableClass {
   sourceType: string;
 
   @ApiProperty({
-    type: String,
+    type: Number,
     required: true,
-    description: "Unique identifier of the source item this key is linked to.",
+    description:
+      "Tracks how many sources are using this metadata key. Managed internally.",
   })
-  @IsString()
-  sourceId: string;
+  @IsNumber()
+  usageCount: number;
 
   @ApiProperty({
     type: Boolean,

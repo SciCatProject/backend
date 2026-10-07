@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -43,7 +43,7 @@ jobs:
       - name: Download the Swagger schema
         run: curl -o ./swagger-schema.json http://localhost:3000/explorer-json
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: swagger-schema-${{ github.sha }}
           path: ./swagger-schema.json
@@ -58,9 +58,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: swagger-schema-${{ github.sha }}
           path: .
@@ -81,7 +81,7 @@ jobs:
             fi
             )
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'push'
         with:
           name: sdk-${{ matrix.generator }}-${{ github.sha }}
@@ -93,6 +93,6 @@ jobs:
       - generate-and-upload-sdk
     if: github.event_name != 'push'
     steps:
-      - uses: geekyeggo/delete-artifact@v5
+      - uses: geekyeggo/delete-artifact@v6
         with:
           name: swagger-*

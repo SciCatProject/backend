@@ -3,9 +3,11 @@ import {
   HttpStatus,
   HttpException,
   ForbiddenException,
+  UnauthorizedException,
+  UnprocessableEntityException,
 } from "@nestjs/common";
 import { Request } from "express";
-import { FilterQuery } from "mongoose";
+import { Condition, FilterQuery } from "mongoose";
 import * as jmp from "json-merge-patch";
 import { JobsService } from "./jobs.service";
 import { CreateJobDto } from "./dto/create-job.dto";
@@ -13,7 +15,7 @@ import { UpdateJobDto } from "./dto/update-job.dto";
 import { DatasetListDto } from "./dto/dataset-list.dto";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
-import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
+import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -40,11 +42,26 @@ import {
 } from "./dto/output-job-v4.dto";
 import { toObject } from "src/config/job-config/actions/actionutils";
 import { loadDatasets } from "src/config/job-config/actions/actionutils";
+import {
+  DatasetClass,
+  DatasetDocument,
+} from "src/datasets/schemas/dataset.schema";
+import { DatasetLookupKeysEnum } from "src/datasets/types/dataset-lookup";
+import {
+  IDatasetFields,
+  IDatasetFiltersV4,
+} from "src/datasets/interfaces/dataset-filters.interface";
+import { ProposalClass } from "src/proposals/schemas/proposal.schema";
+import { accessibleBy } from "@casl/mongoose";
+import { validate } from "class-validator";
+import { plainToInstance } from "class-transformer";
 
 @Injectable()
 export class JobsControllerUtils {
   jobDatasetAuthorization: Array<string> = [];
   private accessGroups;
+  adminGroups: Set<string> = new Set<string>();
+  createJobPrivilegedGroups: Set<string> = new Set<string>();
 
   constructor(
     private readonly jobsService: JobsService,
@@ -60,6 +77,10 @@ export class JobsControllerUtils {
     );
     this.accessGroups =
       this.configService.get<AccessGroupsType>("accessGroups");
+    this.adminGroups = new Set(this.accessGroups?.admin ?? []);
+    this.createJobPrivilegedGroups = new Set(
+      this.accessGroups?.createJobPrivileged ?? [],
+    );
   }
 
   /**
@@ -72,63 +93,33 @@ export class JobsControllerUtils {
       JobParams.DatasetList
     ] as Array<DatasetListDto>;
     // check that datasetList is a non empty array
-    if (!Array.isArray(datasetList)) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: "Invalid dataset list",
-        },
-        HttpStatus.BAD_REQUEST,
+    if (!Array.isArray(datasetList))
+      throw new UnprocessableEntityException("Invalid dataset list.");
+    if (datasetList.length == 0)
+      throw new UnprocessableEntityException(
+        "List of passed datasets is empty.",
       );
-    }
-    if (datasetList.length == 0) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: "List of passed datasets is empty.",
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
     // check that datasetList is of type DatasetListDto[]
-    const datasetListDtos: DatasetListDto[] = datasetList.map((item) => {
-      return Object.assign(new DatasetListDto(), item);
-    });
-    const allowedKeys = [JobParams.Pid, JobParams.Files] as string[];
-    for (const datasetListDto of datasetListDtos) {
-      const keys = Object.keys(datasetListDto);
-      if (
-        keys.length !== 2 ||
-        !keys.every((key) => allowedKeys.includes(key))
-      ) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message:
-              "Dataset list is expected to contain sets of pid and files.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (typeof datasetListDto[JobParams.Pid] !== "string") {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "In datasetList each 'pid' field should be a string.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (!Array.isArray(datasetListDto[JobParams.Files])) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "In datasetList each 'files' field should be an array.",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+    const datasetListDtos: DatasetListDto[] = plainToInstance(
+      DatasetListDto,
+      datasetList,
+    );
+    const nestedErrors = await Promise.all(
+      datasetListDtos.map((dto) =>
+        validate(dto, { whitelist: true, forbidNonWhitelisted: true }),
+      ),
+    );
+    const validateErrors = nestedErrors.flat();
+    if (validateErrors.length > 0) {
+      const minimalErrors = validateErrors.map(({ property, constraints }) => ({
+        property,
+        constraints,
+      }));
+      throw new UnprocessableEntityException({
+        message: "Invalid dataset list.",
+        error: JSON.stringify(minimalErrors),
+      });
     }
 
     // check that all requested pids exist
@@ -143,33 +134,22 @@ export class JobsControllerUtils {
    * Check that the dataset pids are valid
    */
   async checkDatasetPids(datasetList: DatasetListDto[]): Promise<void> {
-    interface condition {
-      where: {
-        pid: { $in: string[] };
-      };
-    }
-
     const datasetIds = datasetList.map((x) => x.pid);
-    const filter: condition = {
+    const filter: FilterQuery<DatasetClass> = {
       where: {
         pid: { $in: datasetIds },
       },
+      fields: ["pid"],
     };
 
-    const findDatasetsById = await this.datasetsService.findAll(filter);
-    const findIds = findDatasetsById.map(({ pid }) => pid);
-    const nonExistIds = datasetIds.filter((x) => !findIds.includes(x));
+    const datasets = await this.datasetsService.findAll(filter);
+    const findIds = new Set(datasets.map(({ pid }) => pid));
+    const nonExistIds = datasetIds.filter((x) => !findIds.has(x));
 
-    if (nonExistIds.length != 0) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: `Datasets with pid ${nonExistIds} do not exist.`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return;
+    if (nonExistIds.length == 0) return;
+    throw new UnprocessableEntityException(
+      `Datasets with pid ${nonExistIds} do not exist.`,
+    );
   }
 
   /**
@@ -178,74 +158,36 @@ export class JobsControllerUtils {
   async checkDatasetFiles(datasetList: DatasetListDto[]): Promise<void> {
     const datasetsToCheck = datasetList.filter((x) => x.files.length > 0);
     const ids = datasetsToCheck.map((x) => x.pid);
-    if (ids.length > 0) {
-      const filter = {
-        fields: {
-          pid: true,
-          datasetId: true,
-          dataFileList: true,
-        },
-        where: {
-          pid: {
-            $in: ids,
-          },
-        },
-      };
-      // Indexing originDataBlock with pid and create set of files for each dataset
-      const datasets = await this.datasetsService.findAll(filter);
-      // Include origdatablocks
-      let datasetOrigDatablocks: OrigDatablock[] = [];
-      await Promise.all(
-        datasets.map(async (dataset) => {
-          datasetOrigDatablocks = await this.origDatablocksService.findAll({
-            where: { datasetId: dataset.pid },
-          });
-        }),
-      );
-      const result: Record<string, Set<string>> = datasets.reduce(
-        (acc: Record<string, Set<string>>, dataset) => {
-          // Using Set make searching more efficient
-          const files = datasetOrigDatablocks.reduce((acc, block) => {
-            block.dataFileList.forEach((file) => {
-              acc.add(file.path);
-            });
-            return acc;
-          }, new Set<string>());
-          acc[dataset.pid] = files;
-          return acc;
-        },
-        {},
-      );
-      // Get a list of requested files that were not found
-      const checkResults = datasetsToCheck.reduce(
-        (acc: { pid: string; nonExistFiles: string[] }[], x) => {
-          const pid = x.pid;
-          const referenceFiles = result[pid];
-          const nonExistFiles = x.files.filter((f) => !referenceFiles.has(f));
-          if (nonExistFiles.length > 0) {
-            acc.push({ pid, nonExistFiles });
-          }
-          return acc;
-        },
-        [],
-      );
-      if (checkResults.length > 0) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "At least one requested file could not be found.",
-            error: JSON.stringify(
-              checkResults.map(({ pid, nonExistFiles }) => ({
-                pid,
-                nonExistFiles,
-              })),
-            ),
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    }
-    return;
+    if (ids.length == 0) return;
+    // Indexing originDataBlock with pid and create set of files for each dataset
+    const datasetOrigDatablocks: OrigDatablock[] =
+      await this.origDatablocksService.findAll({
+        where: { datasetId: { $in: ids } },
+        fields: ["datasetId", "dataFileList.path"],
+      });
+
+    const origsMappedByDatasetId = datasetOrigDatablocks.reduce(
+      (acc, orig) => {
+        const set = (acc[orig.datasetId] ??= new Set<string>());
+        orig.dataFileList.forEach((file) => set.add(file.path));
+        return acc;
+      },
+      {} as Record<string, Set<string>>,
+    );
+    // Get a list of requested files that were not found
+    const checkResults = datasetsToCheck
+      .map(({ pid, files }) => {
+        const referenceFiles = origsMappedByDatasetId[pid] ?? new Set<string>();
+        const nonExistFiles = files.filter((f) => !referenceFiles.has(f));
+        return { pid, nonExistFiles };
+      })
+      .filter((result) => result.nonExistFiles.length > 0);
+
+    if (checkResults.length == 0) return;
+    throw new UnprocessableEntityException({
+      message: "At least one requested file could not be found.",
+      error: JSON.stringify(checkResults),
+    });
   }
 
   /**
@@ -261,6 +203,53 @@ export class JobsControllerUtils {
     jobInstance.ownerGroup = job.ownerGroup;
     jobInstance.ownerUser = job.ownerUser;
     return jobInstance;
+  }
+
+  isAlwaysFalseQuery(query: unknown): boolean {
+    if (!query || typeof query !== "object") return false;
+
+    const expr = (query as { $expr?: { $eq?: unknown } }).$expr;
+    const eq = expr?.$eq;
+
+    // This function tests for the following expression
+    // { $expr: { $eq: [0, 1] } }
+    // which is generated by accessibleBy() casl function when no rules match
+    // and the user does not have any access at all.
+    // This expression is always false
+    //
+    // the following test checks for this expression where the order of 0 and 1 is not important
+    return (
+      Array.isArray(eq) && eq.length === 2 && eq.includes(0) && eq.includes(1)
+    );
+  }
+
+  isEmptyObject(query: unknown): query is Record<string, unknown> {
+    return (
+      !!query && typeof query === "object" && Object.keys(query).length === 0
+    );
+  }
+
+  /**
+   * Build read access filter for mongodb
+   */
+  readAccessFilter(user: JWTUser) {
+    const abilities = this.caslAbilityFactory.jobAccess(user);
+    const query = accessibleBy(abilities, Action.JobRead).ofType(JobClass);
+
+    // No access at all:
+    // Return an "always false" query as returned by accessibleBy() casl function
+    // when the user does not have permission
+    if (this.isAlwaysFalseQuery(query)) {
+      return { $expr: { $eq: [0, 1] } };
+    }
+
+    // Unrestricted access
+    // Coded in accessbileBy as an empty object( {} )
+    if (this.isEmptyObject(query)) {
+      return {};
+    }
+
+    return query;
   }
 
   /**
@@ -281,24 +270,17 @@ export class JobsControllerUtils {
     return jobConfig;
   };
 
-  /**
-   * Checking if user is allowed to create job according to auth field of job configuration
-   */
-  async instanceAuthorizationJobCreate(
+  private initJobInstance(
     jobCreateDto: CreateJobDto,
-    user: JWTUser,
-  ): Promise<JobClass> {
-    // NOTE: We need JobClass instance because casl module works only on that.
-    // If other fields are needed can be added later.
+    jobConfiguration: JobConfig,
+    datasetList: DatasetListDto[],
+  ): JobClass {
     const jobInstance = new JobClass();
-    const jobConfiguration = this.getJobTypeConfiguration(jobCreateDto.type);
     jobInstance._id = "";
     jobInstance.accessGroups = [];
     jobInstance.type = jobCreateDto.type;
-    if (jobCreateDto.contactEmail) {
+    if (jobCreateDto.contactEmail)
       jobInstance.contactEmail = jobCreateDto.contactEmail;
-    }
-    // check if jobStatusMessage was provided via v3 and remove it from jobParams
     const { jobStatusMessage, ...cleanJobParams } = jobCreateDto.jobParams;
     jobInstance.jobParams = jobStatusMessage
       ? cleanJobParams
@@ -312,274 +294,238 @@ export class JobsControllerUtils {
     jobInstance.statusMessage =
       (jobStatusMessage as string) ||
       this.configService.get<string>("jobDefaultStatusMessage")!;
+    if (JobParams.DatasetList in jobCreateDto.jobParams)
+      jobInstance.jobParams[JobParams.DatasetList] = datasetList;
+    if (jobCreateDto.ownerGroup)
+      jobInstance.ownerGroup = jobCreateDto.ownerGroup;
+    return jobInstance;
+  }
 
-    // validate datasetList, if it exists in jobParams
-    let datasetList: DatasetListDto[] = [];
-    let datasetsNoAccess = 0;
-    if (JobParams.DatasetList in jobCreateDto.jobParams) {
-      datasetList = await this.validateDatasetList(jobCreateDto.jobParams);
-      jobInstance.jobParams = {
-        ...jobInstance.jobParams,
-        [JobParams.DatasetList]: datasetList,
-      };
-    }
-    let jobUser: JWTUser | null = null;
-    if (user) {
-      // the request comes from a user who is logged in.
+  private isAdminUser(user: JWTUser | null): boolean {
+    return !!(user && user.currentGroups.some((g) => this.adminGroups.has(g)));
+  }
+
+  private isJobCreationPrivilegedUser(user: JWTUser | null): boolean {
+    return !!(
+      user &&
+      user.currentGroups.some((g) => this.createJobPrivilegedGroups.has(g))
+    );
+  }
+
+  private isPrivilegedUser(user: JWTUser | null): boolean {
+    return this.isAdminUser(user) || this.isJobCreationPrivilegedUser(user);
+  }
+
+  /**
+   * Checking if user is allowed to create job according to auth field of job configuration
+   */
+  async instanceAuthorizationJobCreate(
+    jobCreateDto: CreateJobDto,
+    user: JWTUser,
+  ): Promise<JobClass> {
+    // NOTE: We need JobClass instance because casl module works only on that.
+    // If other fields are needed can be added later.
+    const jobConfiguration = this.getJobTypeConfiguration(jobCreateDto.type);
+    const datasetList =
+      JobParams.DatasetList in jobCreateDto.jobParams
+        ? await this.validateDatasetList(jobCreateDto.jobParams)
+        : [];
+    const jobInstance = this.initJobInstance(
+      jobCreateDto,
+      jobConfiguration,
+      datasetList,
+    );
+    const jobUser = await this.processJobUser(user, jobCreateDto, jobInstance);
+    await this.checkDatasetsAccess(
+      jobConfiguration,
+      jobCreateDto,
+      datasetList,
+      user,
+      jobUser,
+    );
+    if (!user && jobCreateDto.ownerGroup)
+      throw new ForbiddenException(
+        "Invalid new job. Unauthenticated user cannot initiate a job owned by another user.",
+      );
+    const ability = this.caslAbilityFactory.jobAccess(user);
+    const canCreate = ability.can(Action.JobCreate, jobInstance);
+    if (!canCreate)
+      throw new ForbiddenException("Unauthorized to create this job.");
+    return jobInstance;
+  }
+
+  private async processJobUser(
+    user: JWTUser,
+    jobCreateDto: CreateJobDto,
+    jobInstance: JobClass,
+  ) {
+    if (!user) return null;
+    let jobUser: JWTUser | null = user;
+    const userGroups = new Set(user?.currentGroups ?? []);
+    if (this.isPrivilegedUser(user)) {
       if (
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g)) ||
-        user.currentGroups.some((g) =>
-          this.accessGroups?.createJobPrivileged.includes(g),
-        )
+        !jobCreateDto.ownerGroup &&
+        !jobCreateDto.ownerUser &&
+        !jobCreateDto.contactEmail
       ) {
-        // admin users and users  in CREATE_JOB_PRIVILEGED group
-        if (jobCreateDto.ownerUser) {
-          if (user.username != jobCreateDto.ownerUser) {
-            jobUser = await this.usersService.findByUsername2JWTUser(
-              jobCreateDto.ownerUser,
-            );
-            if (jobUser === null) {
-              Logger.log(
-                "Owner user was not found, using current user instead.",
-                "instanceAuthorizationJobCreate",
-              );
-            }
-            jobInstance.ownerUser =
-              (jobUser?.username as string) ?? user.username;
-          } else {
-            jobInstance.ownerUser = user.username;
-          }
-        }
-        if (jobCreateDto.ownerGroup) {
-          // TODO?: ensure that the provided ownerGroup exists
-          jobInstance.ownerGroup = jobCreateDto.ownerGroup;
-        }
-        if (
-          !jobCreateDto.ownerGroup &&
-          !jobCreateDto.ownerUser &&
-          !jobCreateDto.contactEmail
-        ) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              message:
-                "Contact email should be specified for an anonymous job.",
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        // prioritize jobCreateDto.contactEmail for anonymous users
-        jobInstance.contactEmail =
-          jobCreateDto.contactEmail ?? (jobUser?.email as string) ?? user.email;
-      } else {
-        // check if we have ownerGroup
-        if (!jobCreateDto.ownerGroup) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              message: `Invalid new job. Owner group should be specified.`,
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        // check that job user matches the user placing the request, if job user is specified
-        if (jobCreateDto.ownerUser && jobCreateDto.ownerUser != user.username) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              message: `Invalid new job. User owning the job should match user logged in.`,
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        jobInstance.ownerUser = user.username;
-        jobInstance.contactEmail = jobCreateDto.contactEmail ?? user.email;
-        // check that ownerGroup is one of the user groups
-        if (!user.currentGroups.includes(jobCreateDto.ownerGroup)) {
-          throw new HttpException(
-            {
-              status: HttpStatus.BAD_REQUEST,
-              message: `Invalid new job. User needs to belong to job owner group.`,
-            },
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        jobInstance.ownerGroup = jobCreateDto.ownerGroup;
+        throw new UnprocessableEntityException(
+          "Contact email should be specified for an anonymous job.",
+        );
       }
+      // admin users and users  in CREATE_JOB_PRIVILEGED group can specify any ownerUser
+      if (jobCreateDto.ownerUser && jobCreateDto.ownerUser !== user.username) {
+        jobUser = await this.usersService.findByUsername2JWTUser(
+          jobCreateDto.ownerUser,
+        );
+        if (jobUser === null)
+          Logger.log(
+            "Owner user was not found, using current user instead.",
+            "instanceAuthorizationJobCreate",
+          );
+        jobInstance.ownerUser = (jobUser?.username as string) ?? user.username;
+      } else if (jobCreateDto.ownerUser) {
+        jobInstance.ownerUser = user.username;
+      } else jobUser = null;
+    } else {
+      // non-privileged users can only specify ownerUser as themselves and ownerGroup that they belong to
+      if (!jobCreateDto.ownerGroup)
+        throw new ForbiddenException(
+          "Invalid new job. Owner group should be specified.",
+        );
+      if (jobCreateDto.ownerUser && jobCreateDto.ownerUser !== user.username)
+        throw new ForbiddenException(
+          "Invalid new job. User owning the job should match user logged in.",
+        );
+      if (!userGroups.has(jobCreateDto.ownerGroup))
+        throw new ForbiddenException(
+          "Invalid new job. User needs to belong to job owner group.",
+        );
+      jobInstance.ownerUser = user.username;
     }
+    jobInstance.contactEmail =
+      jobInstance.contactEmail ?? jobUser?.email ?? user.email;
+    return jobUser;
+  }
 
-    if (
+  private async checkDatasetsAccess(
+    jobConfiguration: JobConfig,
+    jobCreateDto: CreateJobDto,
+    datasetList: DatasetListDto[],
+    user: JWTUser,
+    jobUser: JWTUser | null,
+  ) {
+    if (this.isAdminUser(user)) return;
+    if (!(
       jobConfiguration.create.auth &&
       Object.values(this.jobDatasetAuthorization).includes(
         jobConfiguration.create.auth,
       )
-    ) {
-      // check that jobParams are passed for #dataset jobs
-      if (!(JobParams.DatasetList in jobCreateDto.jobParams)) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            message: "Dataset ids list was not provided in jobParams",
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      // verify that the user meet the requested permissions on the datasets listed
-      // build the condition
-      type FieldFilter = { $eq?: string; $in?: string[] };
-      type BasicCondition = { [field: string]: FieldFilter | boolean };
-
-      type LogicalCondition =
-        | { $and: BasicCondition[] }
-        | { $or: BasicCondition[] };
-
-      interface datasetsWhere {
-        where: {
-          pid: { $in: string[] };
-          isPublished?: boolean;
-          ownerGroup?: FieldFilter;
-          $or?: (BasicCondition | LogicalCondition)[];
-        };
-      }
-
-      const datasetIds = datasetList.map((x) => x.pid);
-      const datasetsWhere: datasetsWhere = {
-        where: {
-          pid: { $in: datasetIds },
-        },
-      };
-      if (jobConfiguration.create.auth === "#datasetPublic") {
-        datasetsWhere["where"]["isPublished"] = true;
-      } else if (jobConfiguration.create.auth === "#datasetAccess") {
-        // jobAdmin creates job for someone and ownerUser not specified, only ownerGroup or
-        // user creating the job and ownerUser are the same or
-        // ownerUser specified in the DTO is part of ownerGroup specified in the DTO
-        if (
-          (!jobUser && jobInstance.ownerGroup) ||
-          (jobUser && user.username === jobUser.username) ||
-          (jobUser && jobUser.currentGroups.includes(jobInstance.ownerGroup))
-        ) {
-          datasetsWhere["where"]["$or"] = [
-            { ownerGroup: { $eq: jobInstance.ownerGroup } },
-            { accessGroups: { $eq: jobInstance.ownerGroup } },
-            { isPublished: true },
-          ];
-        } else if (jobUser && !jobInstance.ownerGroup) {
-          // job for user with no ownerGroup specified
-          datasetsWhere["where"]["$or"] = [
-            { ownerGroup: { $in: jobUser.currentGroups } },
-            { accessGroups: { $in: jobUser.currentGroups } },
-            { isPublished: true },
-          ];
-        }
-        // job for different user and group
-        else if (
-          jobUser &&
-          !jobUser.currentGroups.includes(jobInstance.ownerGroup)
-        ) {
-          // check that both the user and group have access to datasets
-          datasetsWhere["where"]["$or"] = [
-            {
-              $and: [
-                { ownerGroup: { $eq: jobInstance.ownerGroup } },
-                { ownerGroup: { $in: jobUser.currentGroups } },
-              ],
-            },
-            {
-              $and: [
-                { accessGroups: { $eq: jobInstance.ownerGroup } },
-                { accessGroups: { $in: jobUser.currentGroups } },
-              ],
-            },
-            { isPublished: true },
-          ];
-        } else {
-          // job for anonymous user
-          datasetsWhere["where"]["isPublished"] = true;
-        }
-      } else if (jobConfiguration.create.auth === "#datasetOwner") {
-        if (
-          !user ||
-          (!user.currentGroups.some((g) =>
-            this.accessGroups?.admin.includes(g),
-          ) &&
-            !jobCreateDto.ownerGroup &&
-            !jobCreateDto.ownerUser)
-        ) {
-          throw new HttpException(
-            {
-              status: HttpStatus.UNAUTHORIZED,
-              message: "User not authenticated",
-            },
-            HttpStatus.UNAUTHORIZED,
-          );
-        }
-
-        if (
-          (!jobUser && jobInstance.ownerGroup) ||
-          (jobUser && user.username === jobUser.username) ||
-          (jobUser && jobUser.currentGroups.includes(jobInstance.ownerGroup))
-        ) {
-          datasetsWhere["where"]["ownerGroup"] = {
-            $eq: jobInstance.ownerGroup,
-          };
-        } else if (jobUser && !jobInstance.ownerGroup) {
-          // job for user with no ownerGroup specified
-          datasetsWhere["where"]["ownerGroup"] = { $in: jobUser.currentGroups };
-        } else if (
-          // job for different user and group
-          jobUser &&
-          !jobUser.currentGroups.includes(jobInstance.ownerGroup)
-        ) {
-          // check that both the user and group have access to datasets
-          datasetsWhere["where"]["$or"] = [
-            {
-              $and: [
-                { ownerGroup: { $eq: jobInstance.ownerGroup } },
-                { ownerGroup: { $in: jobUser.currentGroups } },
-              ],
-            },
-          ];
-        } else {
-          // job for anonymous user is always faulty, because job id cannot be empty
-          datasetsWhere["where"]["$or"] = [{ _id: { $in: [] } }];
-        }
-      }
-      const numberOfDatasetsWithAccess =
-        await this.datasetsService.count(datasetsWhere);
-      datasetsNoAccess = datasetIds.length - numberOfDatasetsWithAccess.count;
-    }
-
-    if (!user && jobCreateDto.ownerGroup) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          message: `Invalid new job. Unauthenticated user cannot initiate a job owned by another user.`,
-        },
-        HttpStatus.BAD_REQUEST,
+    ))
+      return;
+    if (!jobCreateDto.jobParams[JobParams.DatasetList])
+      throw new UnprocessableEntityException(
+        "Dataset ids list was not provided in jobParams",
       );
+    const datasetsWhere: { where: Condition<DatasetClass> } = {
+      where: {
+        pid: { $in: datasetList.map((x) => x.pid) },
+      },
+    };
+    const isPrivilegedUser = this.isPrivilegedUser(user);
+    const baseGroups = isPrivilegedUser
+      ? (jobUser?.currentGroups ?? [])
+      : (user?.currentGroups ?? []);
+    const requestUserGroups = [...baseGroups];
+    if (jobConfiguration.create.auth === CreateJobAuth.DatasetPublic)
+      datasetsWhere.where.isPublished = true;
+    else if (
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccess ||
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccessAndProposalPI
+    ) {
+      if (requestUserGroups.length === 0)
+        datasetsWhere.where.isPublished = true;
+      else
+        datasetsWhere.where.$or = [
+          { ownerGroup: { $in: requestUserGroups } },
+          { accessGroups: { $in: requestUserGroups } },
+          { isPublished: true },
+        ];
+    } else if (jobConfiguration.create.auth === CreateJobAuth.DatasetOwner) {
+      if (!user) throw new UnauthorizedException("User not authenticated");
+      if (isPrivilegedUser)
+        requestUserGroups.push(jobCreateDto.ownerGroup as string);
+      if (requestUserGroups.length === 0)
+        throw new ForbiddenException(
+          "User does not belong to any group, cannot create job with #datasetOwner authorization.",
+        );
+      datasetsWhere.where.ownerGroup = { $in: requestUserGroups };
+    } else {
+      datasetsWhere.where.isPublished = true;
     }
-
-    // instantiate the casl matrix for the user
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      user,
-      jobConfiguration,
-    );
-    // check if the user can create this job
-    const canCreate =
-      (ability.can(Action.JobCreateAny, JobClass) &&
-        user.currentGroups.some((g) => this.accessGroups?.admin.includes(g))) ||
-      (ability.can(Action.JobCreateAny, JobClass) && datasetsNoAccess == 0) ||
-      ability.can(Action.JobCreateOwner, jobInstance) ||
-      (ability.can(Action.JobCreateConfiguration, jobInstance) &&
-        datasetsNoAccess == 0 &&
-        jobConfiguration.create.auth != CreateJobAuth.JobAdmin);
-
-    if (!canCreate) {
-      throw new ForbiddenException("Unauthorized to create this job.");
+    const numberOfDatasetsWithAccess =
+      await this.datasetsService.count(datasetsWhere);
+    if (numberOfDatasetsWithAccess.count < datasetList.length)
+      throw new ForbiddenException(
+        "User does not have access to all datasets, cannot create job.",
+      );
+    if (
+      jobConfiguration.create.auth === CreateJobAuth.DatasetAccessAndProposalPI
+    ) {
+      const piEmail = isPrivilegedUser
+        ? (jobUser?.email ?? jobCreateDto.contactEmail)
+        : user?.email;
+      await this.checkDatasetAccessAndProposalPI(datasetList, piEmail);
     }
+  }
 
-    return jobInstance;
+  /**
+   * Check that every dataset is linked to at least one proposal and that
+   * all the linked proposals have pi_email matching the given email
+   */
+  private async checkDatasetAccessAndProposalPI(
+    datasetList: DatasetListDto[],
+    email: string | undefined,
+  ) {
+    if (!email)
+      throw new ForbiddenException(
+        "User email is not available, cannot create job with #datasetAccessAndProposalPI authorization.",
+      );
+    const normalize = (e: string) => e.trim().toLowerCase();
+    const filter = {
+      where: { pid: { $in: datasetList.map((x) => x.pid) } },
+      fields: ["pid", "proposalIds"],
+      include: [
+        {
+          relation: DatasetLookupKeysEnum.proposals,
+          scope: { fields: ["proposalId", "pi_email"] },
+        },
+      ],
+      limits: { limit: datasetList.length },
+    } as unknown as IDatasetFiltersV4<DatasetDocument, IDatasetFields>;
+    // applyDefaults=false: proposals must not be filtered by the user's access
+    const datasets = (await this.datasetsService.findAllComplete(
+      filter,
+      false,
+    )) as (Pick<DatasetClass, "pid" | "proposalIds"> & {
+      proposals: Pick<ProposalClass, "proposalId" | "pi_email">[];
+    })[];
+    if (datasets.some((d) => !d.proposalIds?.length))
+      throw new ForbiddenException(
+        "Not all datasets are linked to a proposal, cannot create job.",
+      );
+    const userEmail = normalize(email);
+    if (
+      datasets.some(
+        (d) =>
+          d.proposals.length < new Set(d.proposalIds).size ||
+          d.proposals.some(
+            (p) => !p.pi_email || normalize(p.pi_email) !== userEmail,
+          ),
+      )
+    )
+      throw new ForbiddenException(
+        "User is not the principal investigator of all proposals linked to the datasets, cannot create job.",
+      );
   }
 
   /**
@@ -661,16 +607,9 @@ export class JobsControllerUtils {
     const currentJobInstance =
       await this.generateJobInstanceForPermissions(currentJob);
     const jobConfig = this.getJobTypeConfiguration(currentJob.type);
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      request.user as JWTUser,
-      jobConfig,
-    );
+    const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
     // check if the user can update this job
-    const canUpdate =
-      ability.can(Action.JobUpdateAny, JobClass) ||
-      ability.can(Action.JobUpdateOwner, currentJobInstance) ||
-      (ability.can(Action.JobUpdateConfiguration, currentJobInstance) &&
-        jobConfig.update.auth != UpdateJobAuth.JobAdmin);
+    const canUpdate = ability.can(Action.JobUpdate, currentJobInstance);
     if (!canUpdate) {
       throw new ForbiddenException("Unauthorized to update this job.");
     }
@@ -721,9 +660,7 @@ export class JobsControllerUtils {
         fields: JSON.parse(filters.fields ?? ("{}" as string)),
         limits: JSON.parse(filters.limits ?? ("{}" as string)),
       };
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
 
       return (await this.jobsService.findByFilters(
         parsedFilter.fields,
@@ -754,9 +691,7 @@ export class JobsControllerUtils {
         fields: fields,
         facets: JSON.parse(filters.facets ?? ("[]" as string)),
       };
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
       return await this.jobsService.fullfacet(facetFilters, jobsAccess);
     } catch (e) {
       throw new HttpException(
@@ -787,16 +722,10 @@ export class JobsControllerUtils {
     }
     const currentJobInstance =
       await this.generateJobInstanceForPermissions(job);
-    const jobConfiguration = this.getJobTypeConfiguration(
-      currentJobInstance.type,
-    );
-    const ability = this.caslAbilityFactory.jobsInstanceAccess(
-      request.user as JWTUser,
-      jobConfiguration,
-    );
-    const canRead =
-      ability.can(Action.JobReadAny, JobClass) ||
-      ability.can(Action.JobReadAccess, currentJobInstance);
+
+    const ability = this.caslAbilityFactory.jobAccess(request.user as JWTUser);
+    const canRead = ability.can(Action.JobRead, currentJobInstance);
+
     if (!canRead) {
       throw new ForbiddenException("Unauthorized to get this job.");
     }
@@ -822,8 +751,7 @@ export class JobsControllerUtils {
    */
   removeFields<
     T extends PartialIntermediateOutputJobDto | JobClass =
-      | PartialIntermediateOutputJobDto
-      | JobClass,
+      PartialIntermediateOutputJobDto | JobClass,
   >(filter: FilterQuery<JobDocument>, job: T): PartialOutputJobDto {
     if (filter.fields && filter.fields.length > 0) {
       for (const field of mandatoryFields as (keyof T)[]) {
@@ -867,9 +795,7 @@ export class JobsControllerUtils {
   ): Promise<PartialOutputJobDto[]> {
     try {
       const parsedFilter = JSON.parse(filter ?? "{}");
-      const jobsAccess = this.caslAbilityFactory.jobsMongoQueryReadAccess(
-        request.user as JWTUser,
-      );
+      const jobsAccess = this.readAccessFilter(request.user as JWTUser);
       const jobs = await this.jobsService.findJobComplete(
         parsedFilter,
         jobsAccess,

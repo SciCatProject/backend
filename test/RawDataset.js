@@ -127,7 +127,11 @@ describe("1900: RawDataset: Raw Datasets", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("valid").and.equal(false);
-        res.body.should.have.property("error").and.equal("principalInvestigator must be a string; creationLocation must be a string");
+        res.body.should.have
+          .property("error")
+          .and.equal(
+            "principalInvestigator must be a string; creationLocation must be a string",
+          );
       });
   });
 
@@ -250,25 +254,20 @@ describe("1900: RawDataset: Raw Datasets", () => {
       },
     };
 
-    return (
-      request(appUrl)
-        // eslint-disable-next-line prettier/prettier
-        .get(
-          `/api/v3/Datasets/findOne?filter=${encodeURIComponent(
-            JSON.stringify(filter),
-          )}`,
-        )
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          res.body.should.have
-            .property("pid")
-            .and.equal(decodeURIComponent(pid));
-          isEqualWithAny(res.body, TestData.RawCorrectGet).should.be.true;
-        })
-    );
+    return request(appUrl)
+      .get(
+        `/api/v3/Datasets/findOne?filter=${encodeURIComponent(
+          JSON.stringify(filter),
+        )}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("pid").and.equal(decodeURIComponent(pid));
+        isEqualWithAny(res.body, TestData.RawCorrectGet).should.be.true;
+      });
   });
 
   it("0120: should contain an array of facets", async () => {
@@ -276,22 +275,19 @@ describe("1900: RawDataset: Raw Datasets", () => {
       ownerGroup: ["p11114"],
     };
 
-    return (
-      request(appUrl)
-        // eslint-disable-next-line prettier/prettier
-        .get(
-          `/api/v3/datasets/fullfacet?filter=${encodeURIComponent(
-            JSON.stringify(filter),
-          )}`,
-        )
-        .set("Accept", "application/json")
-        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          res.body.should.be.an("array");
-        })
-    );
+    return request(appUrl)
+      .get(
+        `/api/v3/datasets/fullfacet?filter=${encodeURIComponent(
+          JSON.stringify(filter),
+        )}`,
+      )
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.be.an("array");
+      });
   });
 
   it("0124: adds a new proposal for pattching in the existing dataset", async () => {
@@ -381,7 +377,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
       fields: ["pid", "datasetName"],
       include: [
         { relation: "instruments" },
-        { relation: "proposals", scope: { fields: ["abstract"] } }
+        { relation: "proposals", scope: { fields: ["abstract"] } },
       ],
     };
 
@@ -400,7 +396,8 @@ describe("1900: RawDataset: Raw Datasets", () => {
         firstDataset.should.have.property("proposals").and.have.length(1);
         firstDataset.should.not.have.property("description");
         firstDataset.proposals[0].should.not.have.property("title");
-        firstDataset.proposals[0].should.have.property("abstract")
+        firstDataset.proposals[0].should.have
+          .property("abstract")
           .and.be.equal(TestData.ProposalCorrectComplete["abstract"]);
         firstDataset.should.not.have.property("datablocks");
       });
@@ -412,7 +409,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
       fields: { pid: 1, datasetName: true, description: 0 },
       include: [
         { relation: "instruments" },
-        { relation: "proposals", scope: { fields: { abstract: 1 } } }
+        { relation: "proposals", scope: { fields: { abstract: 1 } } },
       ],
     };
 
@@ -431,7 +428,8 @@ describe("1900: RawDataset: Raw Datasets", () => {
         firstDataset.should.have.property("proposals").and.have.length(1);
         firstDataset.should.not.have.property("description");
         firstDataset.proposals[0].should.not.have.property("title");
-        firstDataset.proposals[0].should.have.property("abstract")
+        firstDataset.proposals[0].should.have
+          .property("abstract")
           .and.be.equal(TestData.ProposalCorrectComplete["abstract"]);
         firstDataset.should.not.have.property("datablocks");
       });
@@ -442,7 +440,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
       where: { pid: decodeURIComponent(pid) },
       include: [
         { relation: "instruments" },
-        { relation: "proposals", scope: { fields: ["abstract"] } }
+        { relation: "proposals", scope: { fields: ["abstract"] } },
       ],
     };
 
@@ -459,7 +457,8 @@ describe("1900: RawDataset: Raw Datasets", () => {
         firstDataset.should.have.property("instruments");
         firstDataset.should.have.property("proposals").and.have.length(1);
         firstDataset.proposals[0].should.not.have.property("title");
-        firstDataset.proposals[0].should.have.property("abstract")
+        firstDataset.proposals[0].should.have
+          .property("abstract")
           .and.be.equal(TestData.ProposalCorrectComplete["abstract"]);
         firstDataset.should.not.have.property("datablocks");
       });
@@ -469,7 +468,7 @@ describe("1900: RawDataset: Raw Datasets", () => {
     const filter = {
       include: [
         { relation: "instruments" },
-        { relation: "proposals", scope: { fields: ["abstract"] } }
+        { relation: "proposals", scope: { fields: ["abstract"] } },
       ],
     };
 
@@ -486,7 +485,8 @@ describe("1900: RawDataset: Raw Datasets", () => {
         firstDataset.should.have.property("instruments");
         firstDataset.should.have.property("proposals").and.have.length(1);
         firstDataset.proposals[0].should.not.have.property("title");
-        firstDataset.proposals[0].should.have.property("abstract")
+        firstDataset.proposals[0].should.have
+          .property("abstract")
           .and.be.equal(TestData.ProposalCorrectComplete["abstract"]);
         firstDataset.should.not.have.property("datablocks");
       });
@@ -511,9 +511,11 @@ describe("1900: RawDataset: Raw Datasets", () => {
         firstDataset.should.have.property("pid");
         firstDataset.should.have.property("instruments");
         firstDataset.should.have.property("proposals").and.have.length(1);
-        firstDataset.proposals[0].should.have.property("title")
+        firstDataset.proposals[0].should.have
+          .property("title")
           .and.be.equal(TestData.ProposalCorrectComplete["title"]);
-        firstDataset.proposals[0].should.have.property("abstract")
+        firstDataset.proposals[0].should.have
+          .property("abstract")
           .and.be.equal(TestData.ProposalCorrectComplete["abstract"]);
         firstDataset.should.not.have.property("datablocks");
       });

@@ -6,7 +6,8 @@ let accessTokenAdminIngestor = null,
   userIdUser1 = null,
   accessTokenUser1 = null,
   userIdUser2 = null,
-  accessTokenUser2 = null;
+  accessTokenUser2 = null,
+  adminIngestorUserId = null;
 
 describe("2350: Users: Login with functional accounts", () => {
   it("0010: Admin ingestor login fails with incorrect credentials", async () => {
@@ -34,6 +35,7 @@ describe("2350: Users: Login with functional accounts", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("user").and.be.instanceof(Object);
+        adminIngestorUserId = res.body.userId;
       });
   });
 });
@@ -208,7 +210,30 @@ describe("2370: Change password", () => {
       });
   });
 
-  it("0050: admin should fail to change password for user when new and confirmation passwords do not match", async () => {
+  it("0050: anonymous user should not be able to access admin password change endpoint", async () => {
+    return request(appUrl)
+      .patch(`/api/v3/users/${adminIngestorUserId}/password`)
+      .send({
+        newPassword: "compromisedPassword",
+        confirmPassword: "compromisedPassword",
+      })
+      .set("Accept", "application/json")
+      .expect(TestData.UnauthorizedStatusCode);
+  });
+
+  it("0060: authenticated user should not be able to access admin password change endpoint", async () => {
+    return request(appUrl)
+      .patch(`/api/v3/users/${adminIngestorUserId}/password`)
+      .send({
+        newPassword: "compromisedPassword",
+        confirmPassword: "compromisedPassword",
+      })
+      .set({ Authorization: `Bearer ${accessTokenUser1}` })
+      .set("Accept", "application/json")
+      .expect(TestData.AccessForbiddenStatusCode);
+  });
+
+  it("0070: admin should fail to change password for user when new and confirmation passwords do not match", async () => {
     return request(appUrl)
       .patch(`/api/v3/users/${userIdUser1}/password`)
       .send({
@@ -226,7 +251,7 @@ describe("2370: Change password", () => {
       });
   });
 
-  it("0060: admin should be able to change user password", async () => {
+  it("0080: admin should be able to change user password", async () => {
     return request(appUrl)
       .patch(`/api/v3/users/${userIdUser1}/password`)
       .send({
@@ -244,7 +269,7 @@ describe("2370: Change password", () => {
       });
   });
 
-  it("0070: admin should fail to change oidc user password", async () => {
+  it("0090: admin should fail to change oidc user password", async () => {
     return request(appUrl)
       .patch(`/api/v3/users/${userIdUser2}/password`)
       .send({
@@ -259,6 +284,27 @@ describe("2370: Change password", () => {
           "message",
           "Only local users passwords can be changed by admin",
         );
+      });
+  });
+
+  it("0100: Request with expired token should return SESSION_EXPIRED", async () => {
+    const response = await request(appUrl)
+      .post(`/api/v3/users/${adminIngestorUserId}/jwt`)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .send({ expiresIn: "-5" });
+
+    const expiredAccessToken = response.body.jwt;
+    return request(appUrl)
+      .post("/api/v3/datasets")
+      .set("Accept", "application/json")
+      .set({
+        Authorization: `Bearer ${expiredAccessToken}`,
+      })
+      .send({})
+      .expect(401)
+      .then((res) => {
+        res.body.message.should.equal("SESSION_EXPIRED");
       });
   });
 });

@@ -4,7 +4,11 @@ import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { SamplesController } from "./samples.controller";
 import { SamplesService } from "./samples.service";
-import { NotFoundException, HttpException } from "@nestjs/common";
+import {
+  NotFoundException,
+  HttpException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { Request } from "express";
 import { SampleClass } from "./schemas/sample.schema";
 import { PartialUpdateSampleDto } from "./dto/update-sample.dto";
@@ -17,7 +21,7 @@ class CaslAbilityFactoryMock {}
 
 class SamplesServiceMock {
   findOne = jest.fn();
-  update = jest.fn();
+  findOneAndUpdate = jest.fn();
 }
 
 describe("SamplesController", () => {
@@ -61,7 +65,9 @@ describe("SamplesController", () => {
       };
 
       samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOneAndUpdate = jest
+        .fn()
+        .mockResolvedValue(updatedSample);
 
       jest
         .spyOn(
@@ -87,7 +93,7 @@ describe("SamplesController", () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it("should throw PreconditionFailed if header date is older than updatedAt", async () => {
+    it("should throw PreconditionFailed if samples service throws it", async () => {
       const sample = {
         _id: sampleId,
         updatedAt: new Date("2023-01-01"),
@@ -100,7 +106,11 @@ describe("SamplesController", () => {
           "checkPermissionsForSample" as keyof SamplesController,
         )
         .mockResolvedValue(sample);
-
+      samplesService.findOneAndUpdate = jest.fn().mockImplementation(() => {
+        throw new PreconditionFailedException(
+          "Resource has been modified on the server since the date provided in header.",
+        );
+      });
       const headers = {
         "if-unmodified-since": new Date("2022-01-01").toUTCString(),
       };
@@ -120,7 +130,9 @@ describe("SamplesController", () => {
       };
 
       samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOneAndUpdate = jest
+        .fn()
+        .mockResolvedValue(updatedSample);
 
       jest
         .spyOn(
@@ -152,7 +164,9 @@ describe("SamplesController", () => {
       };
 
       samplesService.findOne = jest.fn().mockResolvedValue(sample);
-      samplesService.update = jest.fn().mockResolvedValue(updatedSample);
+      samplesService.findOneAndUpdate = jest
+        .fn()
+        .mockResolvedValue(updatedSample);
 
       jest
         .spyOn(
