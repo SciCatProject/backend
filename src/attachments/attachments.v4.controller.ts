@@ -76,12 +76,12 @@ import { SamplesService } from "src/samples/samples.service";
 @Controller({ path: "attachments", version: "4" })
 export class AttachmentsV4Controller {
   constructor(
+    private caslAbilityFactory: CaslAbilityFactory,
     private attachmentsService: AttachmentsService,
     private datasetsService: DatasetsService,
     private proposalService: ProposalsService,
     private publishedDataService: PublishedDataService,
     private sampleService: SamplesService,
-    private caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
   private addPublicFilter(

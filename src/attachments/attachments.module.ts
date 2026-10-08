@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { CaslModule } from "src/casl/casl.module";
@@ -20,10 +20,10 @@ import { SamplesModule } from "src/samples/samples.module";
   imports: [
     CaslModule,
     ConfigModule,
-    DatasetsModule,
-    ProposalsModule,
-    PublishedDataModule,
-    SamplesModule,
+    forwardRef(() => DatasetsModule),
+    forwardRef(() => ProposalsModule),
+    forwardRef(() => PublishedDataModule),
+    forwardRef(() => SamplesModule),
     MongooseModule.forFeature([
       {
         name: GenericHistory.name,
@@ -55,8 +55,8 @@ import { SamplesModule } from "src/samples/samples.module";
       },
     ]),
   ],
+  exports: [AttachmentsService],
   controllers: [AttachmentsV4Controller],
   providers: [AttachmentsService, AttachmentsV4Service],
-  exports: [AttachmentsService],
 })
 export class AttachmentsModule {}
