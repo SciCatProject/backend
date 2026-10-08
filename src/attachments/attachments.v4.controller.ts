@@ -60,6 +60,7 @@ import {
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
 import { AttachmentRelationTargetType } from "./types/relationship-filter.enum";
 import { parseDate } from "src/common/utils";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataService } from "src/published-data/published-data.service";
@@ -104,6 +105,20 @@ export class AttachmentsV4Controller {
     attachmentInstance.isPublished = attachment.isPublished || false;
 
     return attachmentInstance;
+  }
+
+  private generateDatasetInstanceForPermissions(
+    dataset: DatasetClass,
+  ): DatasetClass {
+    const datasetInstance = new DatasetClass();
+    datasetInstance._id = dataset.pid || "";
+    datasetInstance.pid = dataset.pid || "";
+    datasetInstance.ownerGroup = dataset.ownerGroup;
+    datasetInstance.accessGroups = dataset.accessGroups || [];
+    datasetInstance.sharedWith = dataset.sharedWith;
+    datasetInstance.isPublished = dataset.isPublished || false;
+
+    return datasetInstance;
   }
 
   private permissionChecker(
@@ -159,7 +174,12 @@ export class AttachmentsV4Controller {
             throw new NotFoundException(
               `Dataset ${relation.targetId} not found for linking an attachment`,
             );
-          } else if (!ability.can(group, dataset)) {
+          } else if (
+            !ability.can(
+              group,
+              this.generateDatasetInstanceForPermissions(dataset),
+            )
+          ) {
             throw new ForbiddenException(
               `Unauthorized to create an attachment to dataset ${relation.targetId}`,
             );
