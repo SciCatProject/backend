@@ -152,7 +152,7 @@ export class AttachmentsV4Controller {
       switch (relation.targetType) {
         case AttachmentRelationTargetType.Dataset:
           const dataset = await this.datasetsService.findOne({
-            pid: relation.targetId,
+            where: { pid: relation.targetId },
           });
           const ability = this.caslAbilityFactory.datasetAccess(user);
           if (!dataset) {
@@ -168,7 +168,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.Proposal:
           const proposal = await this.proposalService.findOne({
-            proposalId: relation.targetId,
+            where: { proposalId: relation.targetId },
           });
           if (!proposal) {
             throw new NotFoundException(
@@ -179,7 +179,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.PublishedData:
           const publishedData = await this.publishedDataService.findOne({
-            doi: relation.targetId,
+            where: { doi: relation.targetId },
           });
           if (!publishedData) {
             throw new NotFoundException(
@@ -190,7 +190,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.Sample:
           const sample = await this.sampleService.findOne({
-            sampleId: relation.targetId,
+            where: { sampleId: relation.targetId },
           });
           if (!sample) {
             throw new NotFoundException(
