@@ -9,7 +9,10 @@ let accessTokenAdminIngestor = null,
   accessTokenUser2 = null,
   accessTokenUser3 = null,
   accessTokenArchiveManager = null,
-  createdAttachmentId = null;
+  createdAttachmentId = null,
+  datasetId = null,
+  sampleId = null,
+  relationshipsCorrect = null;
 
 describe("Attachments v4 tests", () => {
   before(async () => {
@@ -41,27 +44,49 @@ describe("Attachments v4 tests", () => {
       .send({
         ...TestData.RawCorrectV4,
         ownerGroup: TestData.Accounts.user1.role,
-        pid: "testId1",
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode);
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        datasetId = res.body.pid;
+      });
 
     await request(appUrl)
       .post("/api/v3/Samples")
       .send({
         ...TestData.SampleCorrect,
         ownerGroup: TestData.Accounts.user1.role,
-        sampleId: "testId2",
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode);
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        sampleId = res.body.sampleId;
+      });
+    
+    relationshipsCorrect = [
+      {
+        targetId: datasetId,
+        targetType: "dataset",
+        relationType: "is attached to",
+      },
+      {
+        targetId: sampleId,
+        targetType: "sample",
+        relationType: "is attached to",
+      },
+    ];
   });
 
   describe("Validation tests", () => {
     it("0100: should not be able to validate attachment if not logged in", async () => {
+      
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
-        .send(TestData.AttachmentCorrectMinV4)
+        .send({
+          ...TestData.AttachmentCorrectMinV4,
+          relationships: relationshipsCorrect,
+        })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -69,7 +94,10 @@ describe("Attachments v4 tests", () => {
     it("0105: check if minimal attachment is valid", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
-        .send(TestData.AttachmentCorrectMinV4)
+        .send({
+          ...TestData.AttachmentCorrectMinV4,
+          relationships: relationshipsCorrect,
+        })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
@@ -81,7 +109,10 @@ describe("Attachments v4 tests", () => {
     it("0110: check if custom attachment is valid", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
-        .send(TestData.AttachmentCorrectV4)
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
+        })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
@@ -93,7 +124,10 @@ describe("Attachments v4 tests", () => {
     it("0115: check if invalid attachment is valid", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
-        .send(TestData.AttachmentWrongV4)
+        .send({
+          ...TestData.AttachmentWrongV4,
+          relationships: relationshipsCorrect,
+        })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
@@ -110,6 +144,7 @@ describe("Attachments v4 tests", () => {
     it("0200: should create a new attachment", async () => {
       const attachment = {
         ...TestData.AttachmentCorrectV4,
+        relationships: relationshipsCorrect,
         aid: uuidv4(),
       };
 
@@ -147,7 +182,7 @@ describe("Attachments v4 tests", () => {
 
     it("0400: should update attachment with PUT endpoint", async () => {
       const updatePayload = {
-        ...TestData.AttachmentCorrectV4,
+        ...attachment,
         caption: "Updated caption text updated",
       };
 
@@ -169,14 +204,19 @@ describe("Attachments v4 tests", () => {
         thumbnail: "Updated thumbnail URL",
         relationships: [
           {
-            targetId: "testId1-modified",
+            targetId: datasetId,
             targetType: "dataset",
-            relationType: "is attached to",
+            relationType: "is modified to",
           },
           {
-            targetId: "testId2-modified",
+            targetId: datasetId,
+            targetType: "dataset",
+            relationType: "is modified to",
+          },
+          {
+            targetId: sampleId,
             targetType: "sample",
-            relationType: "is attached to",
+            relationType: "is modified to",
           },
         ],
       };
@@ -202,16 +242,7 @@ describe("Attachments v4 tests", () => {
 
     it("0410: should update attachment partially with nested properties with PATCH endpoint", async () => {
       const updatePayload = {
-        relationships: [
-          {
-            targetId: "testId1-modified-twice",
-            targetType: "sample",
-          },
-          {
-            targetId: "testId2-modified-twice",
-            targetType: "sample",
-          },
-        ],
+        relationships: relationshipsCorrect,
       };
 
       return request(appUrl)
@@ -227,12 +258,12 @@ describe("Attachments v4 tests", () => {
           res.body.thumbnail.should.equal("Updated thumbnail URL");
           res.body.relationships.should.deep.equal([
             {
-              targetId: "testId1-modified-twice",
-              targetType: "sample",
+              targetId: datasetId,
+              targetType: "dataset",
               relationType: "is attached to",
             },
             {
-              targetId: "testId2-modified-twice",
+              targetId: sampleId,
               targetType: "sample",
               relationType: "is attached to",
             },
@@ -260,9 +291,11 @@ describe("Attachments v4 tests", () => {
     let privateAttachmentId = null;
     const publicAttachment = {
       ...TestData.AttachmentCorrectV4,
+      relationships: relationshipsCorrect,
     };
     const privateAttachment = {
       ...TestData.AttachmentCorrectV4,
+      relationships: relationshipsCorrect,
       isPublished: false,
     };
 
@@ -404,6 +437,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           isPublished: true,
           ownerGroup: "ess",
@@ -417,6 +451,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           isPublished: false,
           ownerGroup: TestData.Accounts["user2"].role,
@@ -430,6 +465,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           isPublished: false,
           ownerGroup: TestData.Accounts["user1"].role,
@@ -456,7 +492,11 @@ describe("Attachments v4 tests", () => {
     it("0700: user2 (group2) cannot create attachment", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
-        .send({ ...TestData.AttachmentCorrectV4, aid: uuidv4() })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
+          aid: uuidv4()
+        })
         .auth(accessTokenUser2, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -537,6 +577,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           isPublished: false,
           ownerGroup: "notGroup1",
@@ -561,6 +602,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           ownerGroup: TestData.Accounts["user1"].role,
         })
@@ -579,6 +621,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           ownerGroup: TestData.Accounts["user3"].role,
         })
@@ -612,6 +655,7 @@ describe("Attachments v4 tests", () => {
         .put(`/api/v4/attachments/${encodeURIComponent(attachmentId)}`)
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           ownerGroup: TestData.Accounts["user1"].role,
           caption: "updated by user1",
         })
@@ -676,6 +720,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           ownerGroup: TestData.Accounts["user3"].role,
         })
@@ -694,6 +739,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           ownerGroup: TestData.Accounts["user1"].role,
         })
@@ -732,6 +778,7 @@ describe("Attachments v4 tests", () => {
         .put(`/api/v4/attachments/${encodeURIComponent(attachmentId)}`)
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           ownerGroup: TestData.Accounts["user3"].role,
           caption: "updated by user3",
         })
@@ -785,6 +832,7 @@ describe("Attachments v4 tests", () => {
         .post("/api/v4/attachments")
         .send({
           ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           isPublished: false,
         })
@@ -796,7 +844,11 @@ describe("Attachments v4 tests", () => {
     it("0950: archiveManager (DELETE_GROUPS) cannot create attachment", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
-        .send({ ...TestData.AttachmentCorrectV4, aid: uuidv4() })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
+          aid: uuidv4(),
+        })
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -805,7 +857,11 @@ describe("Attachments v4 tests", () => {
     it("0965: archiveManager (DELETE_GROUPS) cannot update attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(publicAttachmentId)}`)
-        .send({ ...TestData.AttachmentCorrectV4, caption: "unauthorized" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          relationships: relationshipsCorrect,
+          caption: "unauthorized",
+        })
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -835,7 +891,11 @@ describe("Attachments v4 tests", () => {
       it("0510: should fail one request with HTTP 412 when two requests try to update the same attachment", async () => {
         const res = await request(appUrl)
           .post("/api/v4/attachments")
-          .send({ ...TestData.AttachmentCorrectV4, aid: uuidv4() })
+          .send({
+            ...TestData.AttachmentCorrectV4,
+            relationships: relationshipsCorrect,
+            aid: uuidv4(),
+          })
           .auth(accessTokenAdminIngestor, { type: "bearer" })
           .expect(TestData.EntryCreatedStatusCode);
         const aid = encodeURIComponent(res.body.aid);
@@ -878,6 +938,7 @@ describe("Attachments v4 tests", () => {
       it("1000: should create attachment with minimal data", async () => {
         const minimalAttachment = {
           ...TestData.AttachmentCorrectMinV4,
+          relationships: relationshipsCorrect,
           aid: uuidv4(),
           caption: "Minimal attachment for history tracking",
           thumbnail: "data/abc123",
