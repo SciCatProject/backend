@@ -562,3 +562,62 @@ describe("1600: Proposal: Optimistic concurrency control tests", () => {
     }
   });
 });
+
+describe("1700: Proposal: include scope limits tests", () => {
+  const proposalId = faker.string.numeric(8);
+
+  const getSampleNames = (limits, fields) =>
+    request(appUrl)
+      .get("/api/v3/proposals")
+      .query({
+        filters: JSON.stringify({
+          where: { proposalId },
+          include: [{ relation: "samples", scope: { limits, fields } }],
+        }),
+      })
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.SuccessfulGetStatusCode)
+      .then((res) => res.body[0].samples.map((s) => s.sampleName));
+
+  before(async () => {
+    accessTokenAdminIngestor = await utils.getToken(appUrl, {
+      username: "adminIngestor",
+      password: TestData.Accounts["adminIngestor"]["password"],
+    });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({ ...TestData.ProposalCorrectMin, proposalId })
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    for (const sampleName of ["sample a", "sample b"]) {
+      await request(appUrl)
+        .post("/api/v3/Samples")
+        .send({ ...TestData.SampleCorrect, sampleName, proposalId })
+        .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+        .expect(TestData.EntryCreatedStatusCode);
+    }
+  });
+
+  after(async () => {
+    await db.collection("Sample").deleteMany({ proposalId });
+    await db.collection("Proposal").deleteMany({ proposalId });
+  });
+
+  it("0100: should sort included relations before limit", async () => {
+    const names = await getSampleNames({
+      limit: 1,
+      sort: { sampleName: "desc" },
+    });
+    names.should.deep.equal(["sample b"]);
+  });
+
+  it("0110: should sort included relations before skip", async () => {
+    const names = await getSampleNames({
+      skip: 1,
+      sort: { sampleName: "desc" },
+    });
+    names.should.deep.equal(["sample a"]);
+  });
+});
