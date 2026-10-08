@@ -35,6 +35,26 @@ describe("Attachments v4 tests", () => {
       username: "archiveManager",
       password: TestData.Accounts["archiveManager"].password,
     });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.user1.role,
+        pid: "testId1",
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode);
+
+    await request(appUrl)
+      .post("/api/v3/Samples")
+      .send({
+        ...TestData.SampleCorrect,
+        ownerGroup: TestData.Accounts.user1.role,
+        sampleId: "testId2",
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode);
   });
 
   describe("Validation tests", () => {
