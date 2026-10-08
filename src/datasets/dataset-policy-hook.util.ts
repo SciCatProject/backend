@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { PoliciesService } from "src/policies/policies.service";
+import type { PoliciesService } from "src/policies/policies.service";
 import { DatasetClass } from "./schemas/dataset.schema";
 
 // The Dataset model factory injects the request-scoped PoliciesService, so Nest
