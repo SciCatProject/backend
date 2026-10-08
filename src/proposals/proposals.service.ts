@@ -93,6 +93,13 @@ export class ProposalsService {
 
       const includePipeline = [];
       if (scope?.where) includePipeline.push({ $match: scope.where });
+
+      const limits = parseOrderLimits(scope?.limits);
+      if (limits?.sort) {
+        const sort = parsePipelineSort(limits.sort);
+        includePipeline.push({ $sort: sort });
+      }
+
       if (scope?.fields)
         includePipeline.push({
           $project: parsePipelineProjection(
@@ -103,12 +110,6 @@ export class ProposalsService {
         includePipeline.push({ $skip: scope.limits.skip });
       if (scope?.limits?.limit)
         includePipeline.push({ $limit: scope.limits.limit });
-
-      const limits = parseOrderLimits(scope?.limits);
-      if (limits?.sort) {
-        const sort = parsePipelineSort(limits.sort);
-        includePipeline.push({ $sort: sort });
-      }
 
       if (includePipeline.length > 0)
         fieldValue.$lookup.pipeline = (
