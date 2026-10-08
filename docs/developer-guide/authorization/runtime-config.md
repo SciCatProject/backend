@@ -6,8 +6,8 @@ This document describes the authorization model used for runtime config and asso
 
 The following actions are defined for runtime config:
 
-- `RuntimeConfigRead`
-- `RuntimeConfigUpdate`
+- `Read`
+- `Update`
 
 ## Permissions
 
@@ -31,8 +31,8 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `ADMIN_GROUPS` |
 | - | - | - | - |
-| `RuntimeConfigRead` | any | any | any |
-| `RuntimeConfigUpdate` | - | - | any |
+| `Read` | any | any | any |
+| `Update` | - | - | any |
 
 Legend:
 - any: unrestricted access
