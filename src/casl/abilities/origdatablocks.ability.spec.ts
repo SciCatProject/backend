@@ -1,95 +1,27 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { OrigDatablockAbility } from "./origdatablocks.ability";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
+import {
+  ConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  authenticatedUser2,
+  adminUser,
+  deleteUser,
+  createDatasetUser1,
+  createDatasetUser2,
+  createDatasetWithPidUser1,
+  createDatasetWithPidUser2,
+  createDatasetPrivilegedUser1,
+  createDatasetPrivilegedUser2,
+  publicOrigdatablock,
+  ownedOrigdatablock,
+} from "./test-data.util";
 
 describe("OrigDatablockAbility", () => {
   let abilityBuilder: OrigDatablockAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser1 = {
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const authenticatedUser2 = {
-    currentGroups: ["group2"],
-  } as unknown as JWTUser;
-
-  const createDatasetUser1 = {
-    currentGroups: ["group1", "createDataset"],
-  } as unknown as JWTUser;
-
-  const createDatasetUser2 = {
-    currentGroups: ["group2", "createDataset"],
-  } as unknown as JWTUser;
-
-  const createDatasetWithPidUser1 = {
-    currentGroups: ["group1", "createDatasetWithPid"],
-  } as unknown as JWTUser;
-
-  const createDatasetWithPidUser2 = {
-    currentGroups: ["group2", "createDatasetWithPid"],
-  } as unknown as JWTUser;
-
-  const createDatasetPrivilegedUser1 = {
-    currentGroups: ["group1", "createDatasetPrivileged"],
-  } as unknown as JWTUser;
-
-  const createDatasetPrivilegedUser2 = {
-    currentGroups: ["group2", "createDatasetPrivileged"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
-
-  const deleteUser = {
-    currentGroups: ["delete"],
-  } as unknown as JWTUser;
-
-  const publicOrigdatablock = new OrigDatablock();
-  publicOrigdatablock.ownerGroup = "group1";
-  publicOrigdatablock.isPublished = true;
-
-  const ownedOrigdatablock = new OrigDatablock();
-  ownedOrigdatablock.ownerGroup = "group1";
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

@@ -1,115 +1,26 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
-import { JobConfig } from "src/config/job-config/jobconfig.interface";
-import { CreateJobAuth, UpdateJobAuth } from "src/jobs/types/jobs-auth.enum";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { JobAbility } from "./jobs.ability";
 import { JobClass } from "src/jobs/schemas/job.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
-
-class JobConfigServiceMock {
-  public get allJobConfigs(): Readonly<Record<string, JobConfig>> {
-    return {
-      public: {
-        jobType: "public",
-        create: { auth: CreateJobAuth.All },
-        update: { auth: UpdateJobAuth.All },
-      } as unknown as JobConfig,
-      owned: {
-        jobType: "owned",
-        create: { auth: CreateJobAuth.Authenticated },
-        update: { auth: UpdateJobAuth.JobOwnerGroup },
-      } as unknown as JobConfig,
-      privileged: {
-        jobType: "privileged",
-        create: { auth: CreateJobAuth.JobAdmin },
-        update: { auth: UpdateJobAuth.JobAdmin },
-      } as unknown as JobConfig,
-    };
-  }
-}
+import {
+  ConfigServiceMock,
+  JobConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  authenticatedUser2,
+  adminUser,
+  createJobPrivilegedUser,
+  updateJobPrivilegedUser,
+  deleteJobUser,
+  publicJob,
+  ownedJob,
+  privilegedJob,
+} from "./test-data.util";
 
 describe("JobAbility", () => {
   let abilityBuilder: JobAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser1 = {
-    username: "user1",
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const authenticatedUser2 = {
-    username: "user2",
-    currentGroups: ["group2"],
-  } as unknown as JWTUser;
-
-  const createJobPrivilegedUser = {
-    username: "jobAdmin",
-    currentGroups: ["jobAdminGroup", "createJobPrivileged"],
-  } as unknown as JWTUser;
-
-  const updateJobPrivilegedUser = {
-    username: "jobAdmin",
-    currentGroups: ["jobAdminGroup", "updateJobPrivileged"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
-
-  const deleteJobUser = {
-    currentGroups: ["deleteJob"],
-  } as unknown as JWTUser;
-
-  const publicJob = new JobClass();
-  publicJob.type = "public";
-  publicJob.ownerUser = "anonymous";
-
-  const ownedJob = new JobClass();
-  ownedJob.type = "owned";
-  ownedJob.ownerUser = "user1";
-  ownedJob.ownerGroup = "group1";
-
-  const privilegedJob = new JobClass();
-  privilegedJob.type = "privileged";
-  privilegedJob.ownerUser = "jobAdmin";
-  privilegedJob.ownerGroup = "jobAdminGroup";
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

@@ -1,105 +1,29 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { DatasetAbility } from "./datasets.ability";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
+import {
+  ConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  authenticatedUser2,
+  adminUser,
+  deleteUser,
+  createDatasetUser1,
+  createDatasetUser2,
+  createDatasetWithPidUser1,
+  createDatasetWithPidUser2,
+  createDatasetPrivilegedUser1,
+  createDatasetPrivilegedUser2,
+  updateDatasetLifecycleUser,
+  publicDataset,
+  ownedDataset,
+  ownedDatasetPid,
+} from "./test-data.util";
 
 describe("DatasetAbility", () => {
   let abilityBuilder: DatasetAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser1 = {
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const authenticatedUser2 = {
-    currentGroups: ["group2"],
-  } as unknown as JWTUser;
-
-  const createDatasetUser1 = {
-    currentGroups: ["group1", "createDataset"],
-  } as unknown as JWTUser;
-
-  const createDatasetUser2 = {
-    currentGroups: ["group2", "createDataset"],
-  } as unknown as JWTUser;
-
-  const createDatasetWithPidUser1 = {
-    currentGroups: ["group1", "createDatasetWithPid"],
-  } as unknown as JWTUser;
-
-  const createDatasetWithPidUser2 = {
-    currentGroups: ["group2", "createDatasetWithPid"],
-  } as unknown as JWTUser;
-
-  const createDatasetPrivilegedUser1 = {
-    currentGroups: ["group1", "createDatasetPrivileged"],
-  } as unknown as JWTUser;
-
-  const createDatasetPrivilegedUser2 = {
-    currentGroups: ["group2", "createDatasetPrivileged"],
-  } as unknown as JWTUser;
-
-  const updateDatasetLifecycleUser = {
-    currentGroups: ["updateDatasetLifecycle"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
-
-  const deleteUser = {
-    currentGroups: ["delete"],
-  } as unknown as JWTUser;
-
-  const publicDataset = new DatasetClass();
-  publicDataset.pid = "";
-  publicDataset.ownerGroup = "group1";
-  publicDataset.isPublished = true;
-
-  const ownedDataset = new DatasetClass();
-  ownedDataset.pid = "";
-  ownedDataset.ownerGroup = "group1";
-
-  const ownedDatasetPid = new DatasetClass();
-  ownedDatasetPid.pid = "123456789";
-  ownedDatasetPid.ownerGroup = "group1";
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

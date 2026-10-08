@@ -1,7 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { HistoryAbility } from "./history.ability";
 import { GenericHistory } from "src/common/schemas/generic-history.schema";
@@ -13,84 +11,23 @@ import { Policy } from "src/policies/schemas/policy.schema";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import { SampleClass } from "src/samples/schemas/sample.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
+import {
+  ConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  adminUser,
+  historyAttachmentUser,
+  historyDatablockUser,
+  historyDatasetUser,
+  historyInstrumentUser,
+  historyPolicyUser,
+  historyProposalUser,
+  historyPublishedDataUser,
+  historySampleUser,
+} from "./test-data.util";
 
 describe("HistoryAbility", () => {
   let abilityBuilder: HistoryAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser = {
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const historyAttachmentUser = {
-    currentGroups: ["historyAttachment"],
-  } as unknown as JWTUser;
-
-  const historyDatablockUser = {
-    currentGroups: ["historyDatablock"],
-  } as unknown as JWTUser;
-
-  const historyDatasetUser = {
-    currentGroups: ["historyDataset"],
-  } as unknown as JWTUser;
-
-  const historyInstrumentUser = {
-    currentGroups: ["historyInstrument"],
-  } as unknown as JWTUser;
-
-  const historyPolicyUser = {
-    currentGroups: ["historyPolicy"],
-  } as unknown as JWTUser;
-
-  const historyProposalUser = {
-    currentGroups: ["historyProposal"],
-  } as unknown as JWTUser;
-
-  const historyPublishedDataUser = {
-    currentGroups: ["historyPublishedData"],
-  } as unknown as JWTUser;
-
-  const historySampleUser = {
-    currentGroups: ["historySample"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -126,7 +63,7 @@ describe("HistoryAbility", () => {
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users", () => {
-      const ability = abilityBuilder.buildAbility(authenticatedUser);
+      const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, GenericHistory)).toBe(false);
       expect(ability.can(Action.HistoryRead, GenericHistory)).toBe(false);

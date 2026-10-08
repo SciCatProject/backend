@@ -1,87 +1,25 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { SampleAbility } from "./samples.ability";
 import { SampleClass } from "src/samples/schemas/sample.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
+import {
+  ConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  authenticatedUser2,
+  adminUser,
+  deleteUser,
+  sampleUser1,
+  sampleUser2,
+  samplePrivilegedUser1,
+  samplePrivilegedUser2,
+  publicSample,
+  ownedSample,
+} from "./test-data.util";
 
 describe("SampleAbility", () => {
   let abilityBuilder: SampleAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser1 = {
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const authenticatedUser2 = {
-    currentGroups: ["group2"],
-  } as unknown as JWTUser;
-
-  const sampleUser1 = {
-    currentGroups: ["group1", "sample"],
-  } as unknown as JWTUser;
-
-  const sampleUser2 = {
-    currentGroups: ["group2", "sample"],
-  } as unknown as JWTUser;
-
-  const samplePrivilegedUser1 = {
-    currentGroups: ["group1", "samplePrivileged"],
-  } as unknown as JWTUser;
-
-  const samplePrivilegedUser2 = {
-    currentGroups: ["group2", "samplePrivileged"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
-
-  const deleteUser = {
-    currentGroups: ["delete"],
-  } as unknown as JWTUser;
-
-  const publicSample = new SampleClass();
-  publicSample.ownerGroup = "group1";
-  publicSample.isPublished = true;
-
-  const ownedSample = new SampleClass();
-  ownedSample.ownerGroup = "group1";
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

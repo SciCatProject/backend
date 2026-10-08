@@ -1,56 +1,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { AccessGroupsType } from "src/config/configuration";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Action } from "../action.enum";
 import { RuntimeConfigAbility } from "./runtime-config.ability";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
-
-class ConfigServiceMock {
-  get = jest.fn((key: string) => {
-    if (key === "accessGroups") {
-      return {
-        admin: ["admin"],
-        delete: ["delete"],
-        attachment: ["attachment"],
-        attachmentPrivileged: ["attachmentPrivileged"],
-        createDataset: ["createDataset"],
-        createDatasetWithPid: ["createDatasetWithPid"],
-        createDatasetPrivileged: ["createDatasetPrivileged"],
-        updateDatasetLifecycle: ["updateDatasetLifecycle"],
-        historyAttachments: ["historyAttachment"],
-        historyDatablocks: ["historyDatablock"],
-        historyDataset: ["historyDataset"],
-        historyInstrument: ["historyInstrument"],
-        historyPolicies: ["historyPolicy"],
-        historyProposal: ["historyProposal"],
-        historyPublishedData: ["historyPublishedData"],
-        historySample: ["historySample"],
-        createJobPrivileged: ["createJobPrivileged"],
-        updateJobPrivileged: ["updateJobPrivileged"],
-        deleteJob: ["deleteJob"],
-        policy: ["policy"],
-        proposal: ["proposal"],
-        sample: ["sample"],
-        samplePrivileged: ["samplePrivileged"],
-      } as AccessGroupsType;
-    }
-    return null;
-  });
-}
+import {
+  ConfigServiceMock,
+  unauthenticatedUser,
+  authenticatedUser1,
+  adminUser,
+} from "./test-data.util";
 
 describe("RuntimeConfigAbility", () => {
   let abilityBuilder: RuntimeConfigAbility;
-
-  const unauthenticatedUser = null;
-
-  const authenticatedUser = {
-    currentGroups: ["group1"],
-  } as unknown as JWTUser;
-
-  const adminUser = {
-    currentGroups: ["admin"],
-  } as unknown as JWTUser;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -80,7 +41,7 @@ describe("RuntimeConfigAbility", () => {
 
   describe("Authenticated permissions", () => {
     it("should give correct rights to authenticated users", () => {
-      const ability = abilityBuilder.buildAbility(authenticatedUser);
+      const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.RuntimeConfigRead, RuntimeConfig)).toBe(true);
       expect(ability.can(Action.RuntimeConfigUpdate, RuntimeConfig)).toBe(
