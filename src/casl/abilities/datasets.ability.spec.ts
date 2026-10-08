@@ -45,22 +45,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         false,
@@ -154,22 +154,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         false,
@@ -259,22 +259,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         false,
@@ -368,22 +368,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         true,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -473,22 +473,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -582,22 +582,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetWithPidUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(true);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(true);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         true,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -687,22 +687,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetWithPidUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -796,22 +796,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser1);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(true);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(true);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         true,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -901,22 +901,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser2);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(true);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(true);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -1010,22 +1010,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(updateDatasetLifecycleUser);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         true,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         false,
@@ -1119,22 +1119,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(true);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(true);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(true);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         true,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(false);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         true,
@@ -1226,22 +1226,22 @@ describe("DatasetAbility", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
       expect(ability.can(Action.AccessAny, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetCreate, ownedDatasetPid)).toBe(false);
-      expect(ability.can(Action.DatasetRead, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetRead, publicDataset)).toBe(true);
-      expect(ability.can(Action.DatasetRead, ownedDataset)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, DatasetClass)).toBe(false);
-      expect(ability.can(Action.DatasetUpdate, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Create, ownedDatasetPid)).toBe(false);
+      expect(ability.can(Action.Read, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Read, publicDataset)).toBe(true);
+      expect(ability.can(Action.Read, ownedDataset)).toBe(false);
+      expect(ability.can(Action.Update, DatasetClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedDataset)).toBe(false);
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );
       expect(ability.can(Action.DatasetLifecycleUpdate, ownedDataset)).toBe(
         false,
       );
-      expect(ability.can(Action.DatasetDelete, DatasetClass)).toBe(true);
-      expect(ability.can(Action.DatasetDelete, ownedDataset)).toBe(true);
+      expect(ability.can(Action.Delete, DatasetClass)).toBe(true);
+      expect(ability.can(Action.Delete, ownedDataset)).toBe(true);
 
       expect(ability.can(Action.DatasetAttachmentCreate, DatasetClass)).toBe(
         false,

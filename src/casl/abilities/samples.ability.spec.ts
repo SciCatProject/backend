@@ -41,15 +41,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedSample)).toBe(false);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(false);
+      expect(ability.can(Action.Update, SampleClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         false,
@@ -80,15 +80,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedSample)).toBe(false);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(true);
+      expect(ability.can(Action.Update, SampleClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         false,
@@ -117,15 +117,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedSample)).toBe(false);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(false);
+      expect(ability.can(Action.Update, SampleClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         false,
@@ -156,15 +156,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(sampleUser1);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedSample)).toBe(true);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(true);
+      expect(ability.can(Action.Update, SampleClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedSample)).toBe(true);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         true,
@@ -193,15 +193,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(sampleUser2);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedSample)).toBe(false);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(false);
+      expect(ability.can(Action.Update, SampleClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         true,
@@ -232,15 +232,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(samplePrivilegedUser1);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedSample)).toBe(true);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(true);
+      expect(ability.can(Action.Update, SampleClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedSample)).toBe(true);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         true,
@@ -269,15 +269,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(samplePrivilegedUser2);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedSample)).toBe(true);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(false);
+      expect(ability.can(Action.Update, SampleClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         true,
@@ -308,15 +308,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(true);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(false);
+      expect(ability.can(Action.Create, SampleClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedSample)).toBe(true);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(true);
+      expect(ability.can(Action.Update, SampleClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedSample)).toBe(true);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(false);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         true,
@@ -347,15 +347,15 @@ describe("SampleAbility", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
       expect(ability.can(Action.AccessAny, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleCreate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleRead, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleRead, publicSample)).toBe(true);
-      expect(ability.can(Action.SampleRead, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, SampleClass)).toBe(false);
-      expect(ability.can(Action.SampleUpdate, ownedSample)).toBe(false);
-      expect(ability.can(Action.SampleDelete, SampleClass)).toBe(true);
-      expect(ability.can(Action.SampleDelete, ownedSample)).toBe(true);
+      expect(ability.can(Action.Create, SampleClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedSample)).toBe(false);
+      expect(ability.can(Action.Read, SampleClass)).toBe(true);
+      expect(ability.can(Action.Read, publicSample)).toBe(true);
+      expect(ability.can(Action.Read, ownedSample)).toBe(false);
+      expect(ability.can(Action.Update, SampleClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedSample)).toBe(false);
+      expect(ability.can(Action.Delete, SampleClass)).toBe(true);
+      expect(ability.can(Action.Delete, ownedSample)).toBe(true);
 
       expect(ability.can(Action.SampleAttachmentCreate, SampleClass)).toBe(
         false,

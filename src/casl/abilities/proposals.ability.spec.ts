@@ -39,15 +39,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         false,
@@ -94,15 +94,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         false,
@@ -147,15 +147,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         false,
@@ -202,15 +202,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(proposalUser1);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         true,
@@ -251,15 +251,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(proposalUser2);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         true,
@@ -302,15 +302,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(true);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(false);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         true,
@@ -353,15 +353,15 @@ describe("ProposalAbility", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
       expect(ability.can(Action.AccessAny, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalCreate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalRead, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalRead, publicProposal)).toBe(true);
-      expect(ability.can(Action.ProposalRead, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ProposalClass)).toBe(false);
-      expect(ability.can(Action.ProposalUpdate, ownedProposal)).toBe(false);
-      expect(ability.can(Action.ProposalDelete, ProposalClass)).toBe(true);
-      expect(ability.can(Action.ProposalDelete, ownedProposal)).toBe(true);
+      expect(ability.can(Action.Create, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Create, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Read, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Read, publicProposal)).toBe(true);
+      expect(ability.can(Action.Read, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Update, ProposalClass)).toBe(false);
+      expect(ability.can(Action.Update, ownedProposal)).toBe(false);
+      expect(ability.can(Action.Delete, ProposalClass)).toBe(true);
+      expect(ability.can(Action.Delete, ownedProposal)).toBe(true);
 
       expect(ability.can(Action.ProposalAttachmentCreate, ProposalClass)).toBe(
         false,

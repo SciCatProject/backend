@@ -41,15 +41,15 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(false);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(false);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
     });
   });
 
@@ -58,30 +58,30 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(false);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(false);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
     });
 
     it("should give correct rights to authenticated users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(false);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(false);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
     });
   });
 
@@ -90,30 +90,30 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(attachmentUser1);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
     });
 
     it("should give correct rights to ATTACHMENT_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(attachmentUser2);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
     });
   });
 
@@ -122,30 +122,30 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(attachmentPrivilegedUser1);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
     });
 
     it("should give correct rights to ATTACHMENT_PRIVILEGED_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(attachmentPrivilegedUser2);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
     });
   });
 
@@ -154,15 +154,15 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
     });
   });
 
@@ -171,15 +171,15 @@ describe("AttachmentAbility", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentCreate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentRead, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, publicAttachment)).toBe(true);
-      expect(ability.can(Action.AttachmentRead, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, Attachment)).toBe(false);
-      expect(ability.can(Action.AttachmentUpdate, ownedAttachment)).toBe(false);
-      expect(ability.can(Action.AttachmentDelete, Attachment)).toBe(true);
-      expect(ability.can(Action.AttachmentDelete, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Create, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(false);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
     });
   });
 });

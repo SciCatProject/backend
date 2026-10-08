@@ -42,19 +42,19 @@ describe("JobAbility", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(false);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(false);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Read, JobClass)).toBe(false);
+      expect(ability.can(Action.Read, publicJob)).toBe(false);
+      expect(ability.can(Action.Read, ownedJob)).toBe(false);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(false);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
   });
 
@@ -62,37 +62,37 @@ describe("JobAbility", () => {
     it("should give correct rights to authenticated users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(true);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(false);
+      expect(ability.can(Action.Read, ownedJob)).toBe(true);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(true);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
 
     it("should give correct rights to authenticated users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser2);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(true);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(false);
+      expect(ability.can(Action.Read, ownedJob)).toBe(false);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(false);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
   });
 
@@ -100,19 +100,19 @@ describe("JobAbility", () => {
     it("should give correct rights to CREATE_JOB_PRIVILEGED_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(createJobPrivilegedUser);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(false);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(true);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(true);
+      expect(ability.can(Action.Read, ownedJob)).toBe(true);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Update, JobClass)).toBe(false);
+      expect(ability.can(Action.Update, publicJob)).toBe(false);
+      expect(ability.can(Action.Update, ownedJob)).toBe(false);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
   });
 
@@ -120,19 +120,19 @@ describe("JobAbility", () => {
     it("should give correct rights to UPDATE_JOB_PRIVILEGED_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(updateJobPrivilegedUser);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(false);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(false);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, publicJob)).toBe(false);
+      expect(ability.can(Action.Create, ownedJob)).toBe(false);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(true);
+      expect(ability.can(Action.Read, ownedJob)).toBe(true);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(true);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
   });
 
@@ -140,19 +140,19 @@ describe("JobAbility", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(true);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(true);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(false);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(true);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(true);
+      expect(ability.can(Action.Read, ownedJob)).toBe(true);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(true);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(true);
+      expect(ability.can(Action.Delete, JobClass)).toBe(false);
     });
   });
 
@@ -160,19 +160,19 @@ describe("JobAbility", () => {
     it("should give correct rights to DELETE_JOB_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(deleteJobUser);
 
-      expect(ability.can(Action.JobCreate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobCreate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, ownedJob)).toBe(true);
-      expect(ability.can(Action.JobCreate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, JobClass)).toBe(true);
-      expect(ability.can(Action.JobRead, publicJob)).toBe(false);
-      expect(ability.can(Action.JobRead, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobRead, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, JobClass)).toBe(true);
-      expect(ability.can(Action.JobUpdate, publicJob)).toBe(true);
-      expect(ability.can(Action.JobUpdate, ownedJob)).toBe(false);
-      expect(ability.can(Action.JobUpdate, privilegedJob)).toBe(false);
-      expect(ability.can(Action.JobDelete, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, JobClass)).toBe(true);
+      expect(ability.can(Action.Create, publicJob)).toBe(true);
+      expect(ability.can(Action.Create, ownedJob)).toBe(true);
+      expect(ability.can(Action.Create, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Read, JobClass)).toBe(true);
+      expect(ability.can(Action.Read, publicJob)).toBe(false);
+      expect(ability.can(Action.Read, ownedJob)).toBe(false);
+      expect(ability.can(Action.Read, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Update, JobClass)).toBe(true);
+      expect(ability.can(Action.Update, publicJob)).toBe(true);
+      expect(ability.can(Action.Update, ownedJob)).toBe(false);
+      expect(ability.can(Action.Update, privilegedJob)).toBe(false);
+      expect(ability.can(Action.Delete, JobClass)).toBe(true);
     });
   });
 });

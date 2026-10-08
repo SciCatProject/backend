@@ -33,7 +33,7 @@ describe("SseAbility", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
       expect(ability.can(Action.AccessAny, SseClass)).toBe(false);
-      expect(ability.can(Action.SseRead, SseClass)).toBe(false);
+      expect(ability.can(Action.Read, SseClass)).toBe(false);
     });
   });
 
@@ -42,7 +42,7 @@ describe("SseAbility", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
       expect(ability.can(Action.AccessAny, SseClass)).toBe(false);
-      expect(ability.can(Action.SseRead, SseClass)).toBe(true);
+      expect(ability.can(Action.Read, SseClass)).toBe(true);
     });
   });
 
@@ -51,7 +51,7 @@ describe("SseAbility", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
       expect(ability.can(Action.AccessAny, SseClass)).toBe(true);
-      expect(ability.can(Action.SseRead, SseClass)).toBe(true);
+      expect(ability.can(Action.Read, SseClass)).toBe(true);
     });
   });
 });

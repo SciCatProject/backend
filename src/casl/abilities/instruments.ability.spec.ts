@@ -33,10 +33,10 @@ describe("InstrumentAbility", () => {
     it("should give correct rights to unauthenticated users", () => {
       const ability = abilityBuilder.buildAbility(unauthenticatedUser);
 
-      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
+      expect(ability.can(Action.Create, Instrument)).toBe(false);
+      expect(ability.can(Action.Read, Instrument)).toBe(true);
+      expect(ability.can(Action.Update, Instrument)).toBe(false);
+      expect(ability.can(Action.Delete, Instrument)).toBe(false);
     });
   });
 
@@ -44,10 +44,10 @@ describe("InstrumentAbility", () => {
     it("should give correct rights to authenticated users", () => {
       const ability = abilityBuilder.buildAbility(authenticatedUser1);
 
-      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
+      expect(ability.can(Action.Create, Instrument)).toBe(false);
+      expect(ability.can(Action.Read, Instrument)).toBe(true);
+      expect(ability.can(Action.Update, Instrument)).toBe(false);
+      expect(ability.can(Action.Delete, Instrument)).toBe(false);
     });
   });
 
@@ -55,10 +55,10 @@ describe("InstrumentAbility", () => {
     it("should give correct rights to ADMIN_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(adminUser);
 
-      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(false);
+      expect(ability.can(Action.Create, Instrument)).toBe(true);
+      expect(ability.can(Action.Read, Instrument)).toBe(true);
+      expect(ability.can(Action.Update, Instrument)).toBe(true);
+      expect(ability.can(Action.Delete, Instrument)).toBe(false);
     });
   });
 
@@ -66,10 +66,10 @@ describe("InstrumentAbility", () => {
     it("should give correct rights to DELETE_GROUPS users", () => {
       const ability = abilityBuilder.buildAbility(deleteUser);
 
-      expect(ability.can(Action.InstrumentCreate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentRead, Instrument)).toBe(true);
-      expect(ability.can(Action.InstrumentUpdate, Instrument)).toBe(false);
-      expect(ability.can(Action.InstrumentDelete, Instrument)).toBe(true);
+      expect(ability.can(Action.Create, Instrument)).toBe(false);
+      expect(ability.can(Action.Read, Instrument)).toBe(true);
+      expect(ability.can(Action.Update, Instrument)).toBe(false);
+      expect(ability.can(Action.Delete, Instrument)).toBe(true);
     });
   });
 });
