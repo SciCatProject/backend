@@ -8,7 +8,7 @@ let accessTokenArchiveManager = null,
 
 describe("2600: Datasets v4 public endpoints tests", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

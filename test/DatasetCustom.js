@@ -14,7 +14,7 @@ let accessTokenAdminIngestor = null,
 
 describe("2400: CustomDataset: Custom Type Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
       password: TestData.Accounts["adminIngestor"]["password"],

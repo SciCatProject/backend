@@ -15,9 +15,9 @@ let accessTokenAdminIngestor = null,
 
 describe("2500: Datasets v4 tests", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposal").deleteMany({});
-    db.collection("Instrument").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
+    await db.collection("Instrument").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

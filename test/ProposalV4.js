@@ -19,7 +19,7 @@ const ProposalCorrectCompleteV4 = TestData.ProposalCorrectCompleteV4;
 
 describe("3000: Proposals v4 tests", () => {
   before(async () => {
-    db.collection("Proposal").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -44,7 +44,7 @@ describe("3000: Proposals v4 tests", () => {
 
   after(async () => {
     // Clean up created proposals
-    db.collection("Proposal").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
   });
 
   describe("Proposals v4 validation tests", () => {

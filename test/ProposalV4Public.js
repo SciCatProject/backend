@@ -32,7 +32,7 @@ const ProposalCorrectPublishedV4_2 = {
 
 describe("3100: Proposals v4 public tests", () => {
   before(async () => {
-    db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
+    await db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
 
     accessTokenProposalIngestor = await utils.getToken(appUrl, {
       username: "proposalIngestor",
@@ -84,7 +84,7 @@ describe("3100: Proposals v4 public tests", () => {
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode);
     }
-    db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
+    await db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
   });
 
   describe("Proposals v4 public findAll tests", () => {

@@ -12,8 +12,8 @@ let accessTokenAdminIngestor = null,
 
 describe("Datablocks", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

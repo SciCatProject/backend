@@ -13,7 +13,7 @@ let accessTokenAdminIngestor = null,
 
 describe("0700: DerivedDataset: Derived Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

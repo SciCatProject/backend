@@ -40,7 +40,7 @@ const dataset3 = {
 
 describe("0300: DatasetAuthorization: Test access to dataset", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

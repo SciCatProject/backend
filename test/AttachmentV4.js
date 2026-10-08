@@ -13,7 +13,7 @@ let accessTokenAdminIngestor = null,
 
 describe("Attachments v4 tests", () => {
   before(async () => {
-    db.collection("Attachment").deleteMany({});
+    await db.collection("Attachment").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
