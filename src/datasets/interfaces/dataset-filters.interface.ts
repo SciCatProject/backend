@@ -63,9 +63,12 @@ export type IDatasetScopesV3 =
   | IFilters<AttachmentDocument, IAttachmentFields>
   | IFilters<SampleDocument, ISampleFields>;
 
+export type IDatasetRelationRequired = boolean | "all";
+
 export interface IDatasetRelationV4<T = IDatasetScopesV4> {
   relation: DatasetLookupKeysEnum;
   scope: T;
+  required?: IDatasetRelationRequired;
 }
 
 export type IDatasetFiltersV4<T, Y = null> = IFiltersV4<

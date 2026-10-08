@@ -55,6 +55,7 @@ import {
   IDatasetFiltersV4,
   IDatasetOpenSearchPipeline,
   IDatasetRelation,
+  IDatasetRelationRequired,
   IDatasetScopes,
 } from "./interfaces/dataset-filters.interface";
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
@@ -108,7 +109,7 @@ export class DatasetsService {
     const relationsAndScopes =
       this.extractRelationsAndScopes(datasetLookupFields);
 
-    const scopes = relationsAndScopes.scopes;
+    const { scopes, required } = relationsAndScopes;
     const addedRelations: string[] = [];
     for (const field of relationsAndScopes.relations) {
       const fieldValue = structuredClone(DATASET_LOOKUP_FIELDS[field]);
@@ -133,10 +134,14 @@ export class DatasetsService {
         includePipeline.push({
           $project: parsePipelineProjection(scope.fields as string[]),
         });
-      if (scope?.limits?.skip)
-        includePipeline.push({ $skip: scope.limits.skip });
-      if (scope?.limits?.limit)
-        includePipeline.push({ $limit: scope.limits.limit });
+      // required checks every matching document, so its skip and limit are
+      // applied to the looked up array afterwards
+      if (!required[field]) {
+        if (scope?.limits?.skip)
+          includePipeline.push({ $skip: scope.limits.skip });
+        if (scope?.limits?.limit)
+          includePipeline.push({ $limit: scope.limits.limit });
+      }
 
       if (includePipeline.length > 0)
         fieldValue.$lookup.pipeline = (
@@ -144,9 +149,53 @@ export class DatasetsService {
         ).concat(includePipeline);
 
       pipeline.push(fieldValue);
+      if (required[field]) {
+        pipeline.push(
+          this.requiredRelationMatch(field, fieldValue, required[field]),
+        );
+        const { skip, limit } = limits ?? {};
+        if (skip || limit)
+          pipeline.push({
+            $addFields: {
+              [field]: {
+                $slice: [
+                  `$${field}`,
+                  skip ?? 0,
+                  limit || { $max: [{ $size: `$${field}` }, 1] },
+                ],
+              },
+            },
+          });
+      }
       addedRelations.push(field);
     }
     return addedRelations;
+  }
+
+  private requiredRelationMatch(
+    field: DatasetLookupKeysEnum,
+    lookup: PipelineStage.Lookup,
+    required: IDatasetRelationRequired,
+  ): PipelineStage.Match {
+    if (required !== "all") return { $match: { [field]: { $ne: [] } } };
+    // the ids stored on the dataset, passed in the lookup let,
+    // e.g. { proposalIds: { $ifNull: ["$proposalIds", []] } }
+    const localIds = Object.values(lookup.$lookup.let ?? {})[0];
+    return {
+      $match: {
+        $expr: {
+          $and: [
+            { $gt: [{ $size: `$${field}` }, 0] },
+            {
+              $eq: [
+                { $size: `$${field}` },
+                { $size: { $setUnion: [localIds, []] } },
+              ],
+            },
+          ],
+        },
+      },
+    };
   }
 
   private extractRelationsAndScopes(
@@ -154,12 +203,16 @@ export class DatasetsService {
       (DatasetLookupKeysEnum | IDatasetRelation)[] | undefined,
   ) {
     const scopes = {} as Record<DatasetLookupKeysEnum, IDatasetScopes>;
+    const required = {} as Partial<
+      Record<DatasetLookupKeysEnum, IDatasetRelationRequired>
+    >;
     const fieldsList: DatasetLookupKeysEnum[] = [];
     let isAll = false;
     datasetLookupFields?.forEach((f) => {
       if (typeof f === "object" && "relation" in f) {
         fieldsList.push(f.relation);
         scopes[f.relation] = f.scope;
+        required[f.relation] = f.required;
         isAll = f.relation === DatasetLookupKeysEnum.all;
         return;
       }
@@ -172,7 +225,7 @@ export class DatasetsService {
           (field) => field !== DatasetLookupKeysEnum.all,
         ) as DatasetLookupKeysEnum[])
       : fieldsList;
-    return { scopes, relations };
+    return { scopes, required, relations };
   }
 
   async create(createDatasetDto: CreateDatasetDto): Promise<DatasetDocument> {
