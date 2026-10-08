@@ -10,6 +10,10 @@ let accessTokenAdminIngestor = null,
   datablockId = null,
   datablockId2 = null;
 
+// Dataset definitions for testing
+const dataset1 = { ...TestData.RawCorrect, datasetName: "Test raw dataset 1" };
+const dataset2 = { ...TestData.RawCorrect, datasetName: "Test raw dataset 2" };
+
 describe("Datablocks", () => {
   before(async () => {
     await db.collection("Dataset").deleteMany({});
@@ -34,7 +38,7 @@ describe("Datablocks", () => {
   it("0010: creates first raw dataset", async () => {
     await request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.RawCorrect)
+      .send(dataset1)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -47,7 +51,7 @@ describe("Datablocks", () => {
   it("0011: creates second raw dataset and stores identifiers", async () => {
     return request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.RawCorrect)
+      .send(dataset2)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
