@@ -1404,10 +1404,11 @@
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
 <p>The following actions are defined for attachments:</p>
 <ul>
-<li><code>AttachmentCreate</code></li>
-<li><code>AttachmentRead</code></li>
-<li><code>AttachmentUpdate</code></li>
-<li><code>AttachmentDelete</code></li>
+<li><code>AccessAny</code></li>
+<li><code>Create</code></li>
+<li><code>Read</code></li>
+<li><code>Update</code></li>
+<li><code>Delete</code></li>
 </ul>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
@@ -1443,7 +1444,7 @@ They may update and delete attachments if the <code>ownerGroup</code> matches on
 </thead>
 <tbody>
 <tr>
-<td><code>AttachmentCreate</code></td>
+<td><code>Create</code></td>
 <td>-</td>
 <td>-</td>
 <td>owner</td>
@@ -1452,7 +1453,7 @@ They may update and delete attachments if the <code>ownerGroup</code> matches on
 <td>-</td>
 </tr>
 <tr>
-<td><code>AttachmentRead</code></td>
+<td><code>Read</code></td>
 <td>public</td>
 <td>public/owner/access</td>
 <td>public/owner/access</td>
@@ -1461,7 +1462,7 @@ They may update and delete attachments if the <code>ownerGroup</code> matches on
 <td>public/owner/access</td>
 </tr>
 <tr>
-<td><code>AttachmentUpdate</code></td>
+<td><code>Update</code></td>
 <td>-</td>
 <td>-</td>
 <td>owner</td>
@@ -1470,7 +1471,7 @@ They may update and delete attachments if the <code>ownerGroup</code> matches on
 <td>-</td>
 </tr>
 <tr>
-<td><code>AttachmentDelete</code></td>
+<td><code>Delete</code></td>
 <td>-</td>
 <td>-</td>
 <td>owner</td>

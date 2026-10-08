@@ -1602,8 +1602,8 @@ request.</p>
 <h2 id="authorization">Authorization<a class="headerlink" href="#authorization" title="Permanent link">¶</a></h2>
 <p>Two independent checks apply.</p>
 <p><strong>At connection time</strong>, CASL decides who may open a stream at all. Any
-authenticated user has <code>sse_read</code>; members of <code>ADMIN_GROUPS</code> additionally get
-<code>access_any</code>, which gates the connections endpoint.</p>
+authenticated user has <code>Read</code> permissions; members of <code>ADMIN_GROUPS</code> additionally get
+<code>AccessAny</code>, which gates the connections endpoint.</p>
 <p><strong>Per event</strong>, <code>SseService</code> filters every message against every connected user
 before sending it. A user receives a document only if one of these holds:</p>
 <ul>

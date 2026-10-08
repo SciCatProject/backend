@@ -1611,10 +1611,11 @@
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
 <p>The following actions are defined for datasets:</p>
 <ul>
-<li><code>DatasetCreate</code></li>
-<li><code>DatasetRead</code></li>
-<li><code>DatasetUpdate</code></li>
-<li><code>DatasetDelete</code></li>
+<li><code>AccessAny</code></li>
+<li><code>Create</code></li>
+<li><code>Read</code></li>
+<li><code>Update</code></li>
+<li><code>Delete</code></li>
 <li><code>DatasetLifecycleUpdate</code></li>
 <li><code>DatasetAttachmentCreate</code></li>
 <li><code>DatasetAttachmentRead</code></li>
@@ -1630,7 +1631,7 @@
 <li><code>DatasetDatablockDelete</code></li>
 <li><code>DatasetLogbookRead</code></li>
 </ul>
-<p>The first four actions are the major actions used on most endpoints. <code>DatasetLifecycleUpdate</code> is used for a special update endpoint with strict control on the request content.
+<p>The first five actions are the major actions used on most endpoints. <code>DatasetLifecycleUpdate</code> is used for a special update endpoint with strict control on the request content.
 The other actions are used for specific endpoints giving access to linked resources from a given dataset, and exist mostly for compatibility with API v3.</p>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
@@ -1678,7 +1679,7 @@ They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any da
 </thead>
 <tbody>
 <tr>
-<td><code>DatasetCreate</code></td>
+<td><code>Create</code></td>
 <td>-</td>
 <td>-</td>
 <td>owner, no <code>pid</code></td>
@@ -1689,7 +1690,7 @@ They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any da
 <td>-</td>
 </tr>
 <tr>
-<td><code>DatasetRead</code></td>
+<td><code>Read</code></td>
 <td>public</td>
 <td>public/owner/access</td>
 <td>public/owner/access</td>
@@ -1700,7 +1701,7 @@ They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any da
 <td>public/owner/access</td>
 </tr>
 <tr>
-<td><code>DatasetUpdate</code></td>
+<td><code>Update</code></td>
 <td>-</td>
 <td>-</td>
 <td>owner</td>
@@ -1711,7 +1712,7 @@ They may use the <code>/datasets/:id/datasetlifecycle</code> endpoint for any da
 <td>-</td>
 </tr>
 <tr>
-<td><code>DatasetDelete</code></td>
+<td><code>Delete</code></td>
 <td>-</td>
 <td>-</td>
 <td>-</td>

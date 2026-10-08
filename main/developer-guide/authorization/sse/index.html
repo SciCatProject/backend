@@ -1523,8 +1523,8 @@
 <h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">¶</a></h2>
 <p>The following actions are defined for server-sent events:</p>
 <ul>
-<li><code>SseRead</code></li>
 <li><code>AccessAny</code></li>
+<li><code>Read</code></li>
 </ul>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">¶</a></h2>
 <p>Permissions are granted cumulatively to users based on their group association. The following permission levels are granted to users:</p>
@@ -1547,15 +1547,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>SseRead</code></td>
-<td>-</td>
-<td>own</td>
-<td>any</td>
-</tr>
-<tr>
 <td><code>AccessAny</code></td>
 <td>-</td>
 <td>-</td>
+<td>any</td>
+</tr>
+<tr>
+<td><code>Read</code></td>
+<td>-</td>
+<td>own</td>
 <td>any</td>
 </tr>
 </tbody>
@@ -1567,10 +1567,10 @@
 </ul>
 <h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">¶</a></h2>
 <p>The definition is implemented in the casl module under <code>/src/casl/abilities/sse.ability.ts</code> and accessible elsewhere via <code>CaslAbilityFactory.sseAccess</code>. This one function is used to build one casl ability for endpoint and instance authorization: When a user receives permission for an action under some instance-level condition, they should implicitly pass endpoint authorization.</p>
-<p>Unlike other subjects, the casl ability alone does not express the full model. <code>SseRead</code> is granted unconditionally to every authenticated user, so endpoint authorization admits anyone logged in. The document-level restriction shown as <code>own</code> above is enforced separately in <code>SseService.emit</code>, which tests each outgoing document against each connected user before delivering it. Group membership is evaluated against the user captured when the connection opened, so changes take effect on the next connection rather than immediately.</p>
+<p>Unlike other subjects, the casl ability alone does not express the full model. <code>Read</code> is granted unconditionally to every authenticated user, so endpoint authorization admits anyone logged in. The document-level restriction shown as <code>own</code> above is enforced separately in <code>SseService.emit</code>, which tests each outgoing document against each connected user before delivering it. Group membership is evaluated against the user captured when the connection opened, so changes take effect on the next connection rather than immediately.</p>
 <p><code>SseClass</code> is an empty marker class rather than a schema. Server-sent events have no persisted document, so it exists only to give casl a subject to attach grants to.</p>
 <h2 id="authentication-notes">Authentication Notes<a class="headerlink" href="#authentication-notes" title="Permanent link">¶</a></h2>
-<p>The stream endpoint authenticates differently from the rest of the API. <code>EventSource</code> cannot set request headers, so <code>GET /events/stream</code> accepts a ticket as a query parameter instead of a bearer token. The ticket is a JWT carrying <code>purpose: "sse"</code>, minted by <code>POST /events/ticket</code>, which is itself guarded by <code>SseRead</code>. Authorization is therefore evaluated twice against the same rules, once when the ticket is issued and again when the stream is opened.</p>
+<p>The stream endpoint authenticates differently from the rest of the API. <code>EventSource</code> cannot set request headers, so <code>GET /events/stream</code> accepts a ticket as a query parameter instead of a bearer token. The ticket is a JWT carrying <code>purpose: "sse"</code>, minted by <code>POST /events/ticket</code>, which is itself guarded by <code>Read</code>. Authorization is therefore evaluated twice against the same rules, once when the ticket is issued and again when the stream is opened.</p>
 <p><code>JwtStrategy.validate</code> rejects a ticket presented on any other route, and rejects a normal bearer token on the stream route. The first direction is a security property: a credential in a URL reaches access logs and browser history, so it must be useless elsewhere. The second is a consistency choice that makes the ticket the only way to open a stream.</p>
 
 
