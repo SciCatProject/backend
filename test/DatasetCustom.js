@@ -13,8 +13,91 @@ let accessTokenAdminIngestor = null,
   datasetScientificPid = null;
 
 // Dataset definitions for testing
-const customDatasetMin = { ...TestData.CustomDatasetCorrectMin, datasetName: "DatasetCustom 1" };
-const customDatasetFull = { ...TestData.CustomDatasetCorrect, datasetName: "DatasetCustom 2" };
+const customDatasetMin = {
+  ...TestData.CustomDatasetCorrectMin,
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 1"
+};
+const customDatasetFull = {
+  ...TestData.CustomDatasetCorrect,
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 2"
+};
+
+// Base datasets for explicit PID tests
+const customDatasetExplicitPidBase = {
+  ...TestData.CustomDatasetCorrect,
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 3"
+};
+
+// Static variant datasets
+const customDatasetWithUnsupportedType = {
+  ...TestData.CustomDatasetCorrect,
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 4",
+  type: "unsupportedType"
+};
+
+const customDatasetWithoutSizeFields = (() => {
+  const { size, numberOfFiles, ...rest } = TestData.CustomDatasetCorrect;
+  return {
+    ...rest,
+    datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 5"
+  };
+})();
+
+const customDatasetWithSize = {
+  ...TestData.CustomDatasetCorrect,
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 6",
+  size: 12345,
+  numberOfFiles: 6
+};
+
+// Scientific metadata validation datasets (raw datasets)
+const rawDatasetScientificValid = {
+  ...TestData.RawCorrectMin,
+  datasetName: TestData.RawCorrect.datasetName + " - DatasetCustom 7",
+  scientificMetadata: {
+    title: "Test Scientific Metadata",
+    description: "This is a test scientific metadata field.",
+  }
+};
+
+const rawDatasetScientificInvalidMetadata = {
+  ...TestData.RawCorrectMin,
+  datasetName: TestData.RawCorrect.datasetName + " - DatasetCustom 8",
+  scientificMetadata: {
+    title: false,
+  },
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema"
+};
+
+const rawDatasetScientificValidAll = {
+  ...TestData.RawCorrectMin,
+  datasetName: TestData.RawCorrect.datasetName + " - DatasetCustom 9",
+  scientificMetadata: {
+    title: "Test Scientific Metadata",
+    description: "This is a test scientific metadata field.",
+  },
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema"
+};
+
+const rawDatasetScientificInvalidSchemaUrl = {
+  ...TestData.RawCorrectMin,
+  datasetName: TestData.RawCorrect.datasetName + " - DatasetCustom 10",
+  scientificMetadata: {
+    title: "Test Scientific Metadata",
+    description: "This is a test scientific metadata field.",
+  },
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema/invalid"
+};
+
+const rawDatasetScientificInvalidSchema = {
+  ...TestData.RawCorrectMin,
+  datasetName: TestData.RawCorrect.datasetName + " - DatasetCustom 11",
+  scientificMetadata: {
+    title: "Test Scientific Metadata",
+    description: "This is a test scientific metadata field.",
+  },
+  scientificMetadataSchema: "https://www.scicatproject.org/"
+};
 
 describe("2400: CustomDataset: Custom Type Datasets", () => {
   before(async () => {
@@ -109,7 +192,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0130: should be able to add new custom dataset with explicit pid", async () => {
     const customDatasetWithExplicitPID = {
-      ...customDatasetFull,
+      ...customDatasetExplicitPidBase,
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
     return request(appUrl)
@@ -133,7 +216,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0135: should not be able to add new custom dataset with user that is not in create dataset list", async () => {
     const customDatasetWithExplicitPID = {
-      ...customDatasetFull,
+      ...customDatasetExplicitPidBase,
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
 
@@ -148,7 +231,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0140: should not be able to add new custom dataset with group that is not part of allowed groups", async () => {
     const customDatasetWithExplicitPID = {
-      ...customDatasetFull,
+      ...customDatasetExplicitPidBase,
       pid: TestData.PidPrefix + "/" + uuidv4(),
       ownerGroup: "group1",
     };
@@ -163,7 +246,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0145: should not be able to add new custom dataset with correct group but explicit PID that does not pass validation", async () => {
     const customDatasetWithExplicitPID = {
-      ...customDatasetFull,
+      ...customDatasetExplicitPidBase,
       ownerGroup: "group2",
       pid: "strange-pid",
     };
@@ -178,7 +261,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0150: should be able to add new custom dataset with group that is part of allowed groups and correct explicit PID", async () => {
     const customDatasetWithExplicitPID = {
-      ...customDatasetFull,
+      ...customDatasetExplicitPidBase,
       ownerGroup: "group2",
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
@@ -243,11 +326,6 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   });
 
   it("0175: should not be able to add a dataset with a type not supported in datasetTypes.json", async () => {
-    const customDatasetWithUnsupportedType = {
-      ...customDatasetFull,
-      pid: TestData.PidPrefix + "/" + uuidv4(),
-      type: "unsupportedType",
-    };
     return request(appUrl)
       .post("/api/v3/Datasets")
       .send(customDatasetWithUnsupportedType)
@@ -474,62 +552,46 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   });
 
   describe("Datasets v3 scientificMetadata validation", () => {
-    let RawCorrectMinScientific = {
-      ...TestData.RawCorrectMin,
-      scientificMetadata: {
-        title: "Test Scientific Metadata",
-        description: "This is a test scientific metadata field.",
-      },
-    };
-
     it("0800: adds a new minimal raw dataset with scientificMetadata and no scientificMetadataSchema", async () => {
       return request(appUrl)
         .post("/api/v3/datasets")
-        .send(RawCorrectMinScientific)
+        .send(rawDatasetScientificValid)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have
             .property("owner")
-            .and.be.string(RawCorrectMinScientific.owner);
+            .and.be.string(rawDatasetScientificValid.owner);
           res.body.should.have.property("type").and.equal("raw");
           res.body.should.have.property("pid").and.be.a("string");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificValid.scientificMetadata);
           res.body.should.not.have.property("scientificMetadataSchema");
           res.body.should.not.have.property("scientificMetadataValid");
         });
     });
 
     it("0801: adds a new minimal raw dataset with valid scientificMetadataSchema url and invalid scientificMetadata", async () => {
-      RawCorrectMinScientific = {
-        ...TestData.RawCorrectMin,
-        scientificMetadata: {
-          title: false,
-        },
-        scientificMetadataSchema: "https://json-schema.org/draft-07/schema",
-      };
-
       return request(appUrl)
         .post("/api/v3/datasets")
-        .send(RawCorrectMinScientific)
+        .send(rawDatasetScientificInvalidMetadata)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have
             .property("owner")
-            .and.be.string(RawCorrectMinScientific.owner);
+            .and.be.string(rawDatasetScientificInvalidMetadata.owner);
           res.body.should.have.property("type").and.equal("raw");
           res.body.should.have.property("pid").and.be.a("string");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificInvalidMetadata.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificInvalidMetadata.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -537,33 +599,24 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     });
 
     it("0802: adds a new minimal raw dataset with valid scientificMetadataSchema url and valid scientificMetadata", async () => {
-      RawCorrectMinScientific = {
-        ...TestData.RawCorrectMin,
-        scientificMetadata: {
-          title: "Test Scientific Metadata",
-          description: "This is a test scientific metadata field.",
-        },
-        scientificMetadataSchema: "https://json-schema.org/draft-07/schema",
-      };
-
       return request(appUrl)
         .post("/api/v3/datasets")
-        .send(RawCorrectMinScientific)
+        .send(rawDatasetScientificValidAll)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have
             .property("owner")
-            .and.be.string(RawCorrectMinScientific.owner);
+            .and.be.string(rawDatasetScientificValidAll.owner);
           res.body.should.have.property("type").and.equal("raw");
           res.body.should.have.property("pid").and.be.a("string");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificValidAll.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificValidAll.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(true);
@@ -589,10 +642,10 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
             .and.be.equal(updateDto.datasetName);
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificValidAll.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificValidAll.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(true);
@@ -620,7 +673,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
             .that.deep.equals(updateDto.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificValidAll.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -650,19 +703,9 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     });
 
     it("0806: adds a new minimal raw dataset with invalid scientificMetadataSchema url", async () => {
-      RawCorrectMinScientific = {
-        ...TestData.RawCorrectMin,
-        scientificMetadata: {
-          title: "Test Scientific Metadata",
-          description: "This is a test scientific metadata field.",
-        },
-        scientificMetadataSchema:
-          "https://json-schema.org/draft-07/schema/invalid",
-      };
-
       return request(appUrl)
         .post("/api/v3/datasets")
-        .send(RawCorrectMinScientific)
+        .send(rawDatasetScientificInvalidSchemaUrl)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
@@ -670,10 +713,10 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
           res.body.should.have.property("pid");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificInvalidSchemaUrl.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificInvalidSchemaUrl.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -681,18 +724,9 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     });
 
     it("0807: adds a new minimal raw dataset with invalid scientificMetadataSchema", async () => {
-      RawCorrectMinScientific = {
-        ...TestData.RawCorrectMin,
-        scientificMetadata: {
-          title: "Test Scientific Metadata",
-          description: "This is a test scientific metadata field.",
-        },
-        scientificMetadataSchema: "https://www.scicatproject.org/",
-      };
-
       return request(appUrl)
         .post("/api/v3/datasets")
-        .send(RawCorrectMinScientific)
+        .send(rawDatasetScientificInvalidSchema)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
@@ -700,10 +734,10 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
           res.body.should.have.property("pid");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(RawCorrectMinScientific.scientificMetadata);
+            .that.deep.equals(rawDatasetScientificInvalidSchema.scientificMetadata);
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(RawCorrectMinScientific.scientificMetadataSchema);
+            .and.equal(rawDatasetScientificInvalidSchema.scientificMetadataSchema);
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -715,9 +749,6 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     let sizeFieldsPid = null;
 
     it("0895: adds a new custom dataset without size, packedSize, numberOfFiles or numberOfFilesArchived and defaults them to 0", async () => {
-      const { size, numberOfFiles, ...customDatasetWithoutSizeFields } =
-        customDatasetFull;
-
       return request(appUrl)
         .post("/api/v3/Datasets")
         .send(customDatasetWithoutSizeFields)
@@ -741,12 +772,6 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     });
 
     it("0900: adds a new custom dataset with explicit size and numberOfFiles", async () => {
-      const customDatasetWithSize = {
-        ...customDatasetFull,
-        size: 12345,
-        numberOfFiles: 6,
-      };
-
       return request(appUrl)
         .post("/api/v3/Datasets")
         .send(customDatasetWithSize)
