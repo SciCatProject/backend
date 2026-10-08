@@ -31,16 +31,21 @@ describe("Datablocks", () => {
     });
   });
 
-  it("0010: adds a datablock to an existing dataset", async () => {
+  it("0010: creates first raw dataset", async () => {
     await request(appUrl)
       .post("/api/v3/Datasets")
       .send(TestData.RawCorrect)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/);
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("pid").and.be.a("string");
+      });
+  });
 
-    await request(appUrl)
+  it("0011: creates second raw dataset and stores identifiers", async () => {
+    return request(appUrl)
       .post("/api/v3/Datasets")
       .send(TestData.RawCorrect)
       .set("Accept", "application/json")
@@ -52,7 +57,9 @@ describe("Datablocks", () => {
         datasetId = res.body["pid"];
         ownerGroup = res.body["ownerGroup"];
       });
+  });
 
+  it("0012: adds a datablock to the second dataset", async () => {
     return request(appUrl)
       .post(`/api/v3/datablocks`)
       .send({ ...TestData.DataBlockCorrect, datasetId, ownerGroup })
