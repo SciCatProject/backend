@@ -12,6 +12,10 @@ let accessTokenAdminIngestor = null,
   explicitPid = null,
   datasetScientificPid = null;
 
+// Dataset definitions for testing
+const customDatasetMin = { ...TestData.CustomDatasetCorrectMin, datasetName: "DatasetCustom 1" };
+const customDatasetFull = { ...TestData.CustomDatasetCorrect, datasetName: "DatasetCustom 2" };
+
 describe("2400: CustomDataset: Custom Type Datasets", () => {
   before(async () => {
     await db.collection("Dataset").deleteMany({});
@@ -56,7 +60,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   it("0100: check if valid custom dataset is valid", async () => {
     return request(appUrl)
       .post("/api/v3/Datasets/isValid")
-      .send(TestData.CustomDatasetCorrect)
+      .send(customDatasetFull)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryValidStatusCode)
@@ -69,7 +73,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   it("0110: adds a new minimal custom dataset", async () => {
     return request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.CustomDatasetCorrectMin)
+      .send(customDatasetMin)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -85,7 +89,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
   it("0120: adds a new custom dataset", async () => {
     return request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.CustomDatasetCorrect)
+      .send(customDatasetFull)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -93,7 +97,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
       .then((res) => {
         res.body.should.have
           .property("owner")
-          .and.be.equal(TestData.CustomDatasetCorrect.owner);
+          .and.be.equal(customDatasetFull.owner);
         res.body.should.have.property("type").and.be.equal("custom");
         res.body.should.have.property("pid").and.be.string;
         res.body.should.have.property("proposalId").and.be.string;
@@ -105,7 +109,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0130: should be able to add new custom dataset with explicit pid", async () => {
     const customDatasetWithExplicitPID = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
     return request(appUrl)
@@ -129,7 +133,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0135: should not be able to add new custom dataset with user that is not in create dataset list", async () => {
     const customDatasetWithExplicitPID = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
 
@@ -144,7 +148,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0140: should not be able to add new custom dataset with group that is not part of allowed groups", async () => {
     const customDatasetWithExplicitPID = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       pid: TestData.PidPrefix + "/" + uuidv4(),
       ownerGroup: "group1",
     };
@@ -159,7 +163,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0145: should not be able to add new custom dataset with correct group but explicit PID that does not pass validation", async () => {
     const customDatasetWithExplicitPID = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       ownerGroup: "group2",
       pid: "strange-pid",
     };
@@ -174,7 +178,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0150: should be able to add new custom dataset with group that is part of allowed groups and correct explicit PID", async () => {
     const customDatasetWithExplicitPID = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       ownerGroup: "group2",
       pid: TestData.PidPrefix + "/" + uuidv4(),
     };
@@ -240,7 +244,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
   it("0175: should not be able to add a dataset with a type not supported in datasetTypes.json", async () => {
     const customDatasetWithUnsupportedType = {
-      ...TestData.CustomDatasetCorrect,
+      ...customDatasetFull,
       pid: TestData.PidPrefix + "/" + uuidv4(),
       type: "unsupportedType",
     };
@@ -262,7 +266,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     const createRes = await request(appUrl)
       .post("/api/v3/Datasets")
       .send({
-        ...TestData.CustomDatasetCorrect,
+        ...customDatasetFull,
         pid: TestData.PidPrefix + "/" + uuidv4(),
       })
       .set("Accept", "application/json")
@@ -320,7 +324,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
     const createRes = await request(appUrl)
       .post("/api/v3/Datasets")
       .send({
-        ...TestData.CustomDatasetCorrect,
+        ...customDatasetFull,
         pid: TestData.PidPrefix + "/" + uuidv4(),
       })
       .set("Accept", "application/json")
@@ -712,7 +716,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
     it("0895: adds a new custom dataset without size, packedSize, numberOfFiles or numberOfFilesArchived and defaults them to 0", async () => {
       const { size, numberOfFiles, ...customDatasetWithoutSizeFields } =
-        TestData.CustomDatasetCorrect;
+        customDatasetFull;
 
       return request(appUrl)
         .post("/api/v3/Datasets")
@@ -738,7 +742,7 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
 
     it("0900: adds a new custom dataset with explicit size and numberOfFiles", async () => {
       const customDatasetWithSize = {
-        ...TestData.CustomDatasetCorrect,
+        ...customDatasetFull,
         size: 12345,
         numberOfFiles: 6,
       };
