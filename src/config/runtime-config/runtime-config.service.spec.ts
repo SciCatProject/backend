@@ -122,29 +122,42 @@ describe("RuntimeConfigService", () => {
       );
     });
 
-    it("does not overwrite existing entry", async () => {
+    it("overwrites existing entry when reload is enabled", async () => {
       const source = { foo: "bar" };
-      configService.get.mockReturnValue(source);
+
+      configService.get.mockImplementation((key: string) => {
+        if (key === "configSyncToDb.reload") return true;
+        return source;
+      });
+
       model.findOne.mockReturnValue({
-        lean: () => ({ cid: "frontendConfig", updatedBy: "system" }),
+        lean: () => ({ cid: "frontendConfig" }),
       });
       model.updateOne.mockResolvedValue({ acknowledged: true });
+
+      await service.syncConfig("frontendConfig");
+
+      expect(model.updateOne).toHaveBeenCalledWith(
+        { cid: "frontendConfig" },
+        { data: source, updatedBy: "system" },
+      );
+    });
+
+    it("preserves existing entry when reload is disabled", async () => {
+      const source = { foo: "bar" };
+
+      configService.get.mockImplementation((key: string) => {
+        if (key === "configSyncToDb.reload") return false;
+        return source;
+      });
+
+      model.findOne.mockReturnValue({
+        lean: () => ({ cid: "frontendConfig" }),
+      });
 
       await service.syncConfig("frontendConfig");
 
       expect(model.updateOne).not.toHaveBeenCalled();
-    });
-    it("does not overwrite existing user-modified entry", async () => {
-      const source = { foo: "bar" };
-      configService.get.mockReturnValue(source);
-      model.findOne.mockReturnValue({
-        lean: () => ({ cid: "frontendConfig", updatedBy: "admin" }),
-      });
-      model.updateOne.mockResolvedValue({ acknowledged: true });
-
-      await service.syncConfig("frontendConfig");
-
-      expect(model.updateOne).toHaveBeenCalledTimes(0);
     });
   });
 

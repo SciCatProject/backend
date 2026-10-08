@@ -4,8 +4,13 @@
 
 This guide documents frontend configuration options that control various UI behaviors and features in SciCat. These settings are defined in the configuration file specified by the `FRONTEND_CONFIG_FILE` environment variable (default `src/config/frontend.config.json`).
 
+### Runtime configuration synchronization
 
-If a field is updated by an external user, the value is not overwritten by the configuration file during startup.
+The `CONFIG_SYNC_TO_DB_RELOAD` environment variable controls whether an existing runtime configuration is synchronised from the configuration file during startup.
+
+- `true` (default): synchronise the configuration file to the database.
+- `false`: keep the existing configuration stored in the database across restarts.
+
 ## Configuration Options
 
 | **Configuration Options**                                       | **Type** | **Default Value**     | **Description**                                                                                                                                                                                  |
