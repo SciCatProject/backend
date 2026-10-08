@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { AccessGroupsType } from "src/config/configuration";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { JobConfig } from "src/config/job-config/jobconfig.interface";
