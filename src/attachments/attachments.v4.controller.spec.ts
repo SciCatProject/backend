@@ -12,6 +12,15 @@ import * as jmp from "json-merge-patch";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
 import { Request } from "express";
+import { DatasetsService } from "src/datasets/datasets.service";
+import { ProposalsService } from "src/proposals/proposals.service";
+import { PublishedDataService } from "src/published-data/published-data.service";
+import { SamplesService } from "src/samples/samples.service";
+
+class DatasetsServiceMock {}
+class ProposalsServiceMock {}
+class PublishedDataServiceMock {}
+class SamplesServiceMock {}
 
 describe("AttachmentsController - findOneAndUpdate", () => {
   let controller: AttachmentsV4Controller;
@@ -58,6 +67,22 @@ describe("AttachmentsController - findOneAndUpdate", () => {
         {
           provide: CaslAbilityFactory,
           useValue: mockCaslAbilityFactory,
+        },
+        {
+          provide: DatasetsService,
+          useValue: DatasetsServiceMock,
+        },
+        {
+          provide: ProposalsService,
+          useValue: ProposalsServiceMock,
+        },
+        {
+          provide: PublishedDataService,
+          useValue: PublishedDataServiceMock,
+        },
+        {
+          provide: SamplesService,
+          useValue: SamplesServiceMock,
         },
         PoliciesGuard,
       ],

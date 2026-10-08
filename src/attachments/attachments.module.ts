@@ -11,11 +11,19 @@ import { AttachmentsV4Controller } from "./attachments.v4.controller";
 import { AttachmentsV4Service } from "./attachments.v4.service";
 import { Attachment, AttachmentSchema } from "./schemas/attachment.schema";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
+import { DatasetsModule } from "src/datasets/datasets.module";
+import { ProposalsModule } from "src/proposals/proposals.module";
+import { PublishedDataModule } from "src/published-data/published-data.module";
+import { SamplesModule } from "src/samples/samples.module";
 
 @Module({
   imports: [
     CaslModule,
     ConfigModule,
+    DatasetsModule,
+    ProposalsModule,
+    PublishedDataModule,
+    SamplesModule,
     MongooseModule.forFeature([
       {
         name: GenericHistory.name,
