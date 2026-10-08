@@ -117,7 +117,7 @@ export class DatasetsService {
       fieldValue.$lookup.as = field;
       const scope = scopes[field];
 
-      if (applyDefaults)
+      if (applyDefaults || required[field])
         this.datasetsAccessService.addRelationFieldAccess(fieldValue);
 
       const includePipeline = [];

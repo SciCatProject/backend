@@ -2410,5 +2410,21 @@ describe("2500: Datasets v4 tests", () => {
             .should.deep.equal([proposalB]);
         });
     });
+
+    it("1110: should not match required relations the user cannot access on v3", async () => {
+      return request(appUrl)
+        .get("/api/v3/datasets")
+        .query({
+          filter: JSON.stringify({
+            where: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] } },
+            ...proposalsInclude(true, {}),
+          }),
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
+        });
+    });
   });
 });
