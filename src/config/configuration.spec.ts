@@ -97,4 +97,12 @@ describe("configuration", () => {
 
     expect(config.configSyncToDb.reload).toBe(false);
   });
+
+  it("should enable config reload when CONFIG_SYNC_TO_DB_RELOAD is empty", () => {
+    process.env.CONFIG_SYNC_TO_DB_RELOAD = "";
+
+    const config = configuration();
+
+    expect(config.configSyncToDb.reload).toBe(true);
+  });
 });
