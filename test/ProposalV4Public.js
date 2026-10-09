@@ -32,7 +32,9 @@ const ProposalCorrectPublishedV4_2 = {
 
 describe("3100: Proposals v4 public tests", () => {
   before(async () => {
-    await db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
+    await db
+      .collection("Proposal")
+      .deleteMany({ proposalId: /^public-proposal-/ });
 
     accessTokenProposalIngestor = await utils.getToken(appUrl, {
       username: "proposalIngestor",
@@ -84,7 +86,9 @@ describe("3100: Proposals v4 public tests", () => {
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode);
     }
-    await db.collection("Proposal").deleteMany({ proposalId: /^public-proposal-/ });
+    await db
+      .collection("Proposal")
+      .deleteMany({ proposalId: /^public-proposal-/ });
   });
 
   describe("Proposals v4 public findAll tests", () => {
@@ -138,7 +142,7 @@ describe("3100: Proposals v4 public tests", () => {
       return request(appUrl)
         .get("/api/v4/proposals/public")
         .query({
-          filter: 'not-valid-json{',
+          filter: "not-valid-json{",
         })
         .expect(TestData.BadRequestStatusCode);
     });
@@ -410,7 +414,9 @@ describe("3100: Proposals v4 public tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("ownerGroup").and.equal("proposalingestor");
+          res.body.should.have
+            .property("ownerGroup")
+            .and.equal("proposalingestor");
           res.body.should.have.property("type").and.equal("Default Proposal");
         });
     });
@@ -496,11 +502,15 @@ describe("3100: Proposals v4 public tests", () => {
         .expect(TestData.EntryCreatedStatusCode);
 
       return request(appUrl)
-        .get("/api/v4/proposals/public/" + encodeURIComponent(specialProposalId))
+        .get(
+          "/api/v4/proposals/public/" + encodeURIComponent(specialProposalId),
+        )
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(specialProposalId);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(specialProposalId);
         });
     });
   });
@@ -580,7 +590,9 @@ describe("3100: Proposals v4 public tests", () => {
         .get("/api/v4/proposals/public")
         .query({
           filter: JSON.stringify({
-            where: { proposalId: "nonexistent-proposal-id-that-does-not-exist" },
+            where: {
+              proposalId: "nonexistent-proposal-id-that-does-not-exist",
+            },
           }),
         })
         .expect(TestData.SuccessfulGetStatusCode)

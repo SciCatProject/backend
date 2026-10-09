@@ -15,31 +15,32 @@ let accessTokenAdminIngestor = null,
 // Dataset definitions for testing
 const customDatasetMin = {
   ...TestData.CustomDatasetCorrectMin,
-  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 1"
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 1",
 };
 const customDatasetFull = {
   ...TestData.CustomDatasetCorrect,
-  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 2"
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 2",
 };
 
 // Base datasets for explicit PID tests
 const customDatasetExplicitPidBase = {
   ...TestData.CustomDatasetCorrect,
-  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 3"
+  datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 3",
 };
 
 // Static variant datasets
 const customDatasetWithUnsupportedType = {
   ...TestData.CustomDatasetCorrect,
   datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 4",
-  type: "unsupportedType"
+  type: "unsupportedType",
 };
 
 const customDatasetWithoutSizeFields = (() => {
   const { size, numberOfFiles, ...rest } = TestData.CustomDatasetCorrect;
   return {
     ...rest,
-    datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 5"
+    datasetName:
+      TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 5",
   };
 })();
 
@@ -47,7 +48,7 @@ const customDatasetWithSize = {
   ...TestData.CustomDatasetCorrect,
   datasetName: TestData.CustomDatasetCorrect.datasetName + " - DatasetCustom 6",
   size: 12345,
-  numberOfFiles: 6
+  numberOfFiles: 6,
 };
 
 // Scientific metadata validation datasets (raw datasets)
@@ -57,7 +58,7 @@ const rawDatasetScientificValid = {
   scientificMetadata: {
     title: "Test Scientific Metadata",
     description: "This is a test scientific metadata field.",
-  }
+  },
 };
 
 const rawDatasetScientificInvalidMetadata = {
@@ -66,7 +67,7 @@ const rawDatasetScientificInvalidMetadata = {
   scientificMetadata: {
     title: false,
   },
-  scientificMetadataSchema: "https://json-schema.org/draft-07/schema"
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema",
 };
 
 const rawDatasetScientificValidAll = {
@@ -76,7 +77,7 @@ const rawDatasetScientificValidAll = {
     title: "Test Scientific Metadata",
     description: "This is a test scientific metadata field.",
   },
-  scientificMetadataSchema: "https://json-schema.org/draft-07/schema"
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema",
 };
 
 const rawDatasetScientificInvalidSchemaUrl = {
@@ -86,7 +87,7 @@ const rawDatasetScientificInvalidSchemaUrl = {
     title: "Test Scientific Metadata",
     description: "This is a test scientific metadata field.",
   },
-  scientificMetadataSchema: "https://json-schema.org/draft-07/schema/invalid"
+  scientificMetadataSchema: "https://json-schema.org/draft-07/schema/invalid",
 };
 
 const rawDatasetScientificInvalidSchema = {
@@ -96,7 +97,7 @@ const rawDatasetScientificInvalidSchema = {
     title: "Test Scientific Metadata",
     description: "This is a test scientific metadata field.",
   },
-  scientificMetadataSchema: "https://www.scicatproject.org/"
+  scientificMetadataSchema: "https://www.scicatproject.org/",
 };
 
 describe("2400: CustomDataset: Custom Type Datasets", () => {
@@ -588,10 +589,14 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
           res.body.should.have.property("pid").and.be.a("string");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(rawDatasetScientificInvalidMetadata.scientificMetadata);
+            .that.deep.equals(
+              rawDatasetScientificInvalidMetadata.scientificMetadata,
+            );
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(rawDatasetScientificInvalidMetadata.scientificMetadataSchema);
+            .and.equal(
+              rawDatasetScientificInvalidMetadata.scientificMetadataSchema,
+            );
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -713,10 +718,14 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
           res.body.should.have.property("pid");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(rawDatasetScientificInvalidSchemaUrl.scientificMetadata);
+            .that.deep.equals(
+              rawDatasetScientificInvalidSchemaUrl.scientificMetadata,
+            );
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(rawDatasetScientificInvalidSchemaUrl.scientificMetadataSchema);
+            .and.equal(
+              rawDatasetScientificInvalidSchemaUrl.scientificMetadataSchema,
+            );
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);
@@ -734,10 +743,14 @@ describe("2400: CustomDataset: Custom Type Datasets", () => {
           res.body.should.have.property("pid");
           res.body.should.have
             .property("scientificMetadata")
-            .that.deep.equals(rawDatasetScientificInvalidSchema.scientificMetadata);
+            .that.deep.equals(
+              rawDatasetScientificInvalidSchema.scientificMetadata,
+            );
           res.body.should.have
             .property("scientificMetadataSchema")
-            .and.equal(rawDatasetScientificInvalidSchema.scientificMetadataSchema);
+            .and.equal(
+              rawDatasetScientificInvalidSchema.scientificMetadataSchema,
+            );
           res.body.should.have
             .property("scientificMetadataValid")
             .and.be.equal(false);

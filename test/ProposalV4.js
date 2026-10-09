@@ -228,10 +228,14 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(uniqueProposalId);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(uniqueProposalId);
           res.body.should.have.property("firstname").and.equal("TestFirst");
           res.body.should.have.property("lastname").and.equal("TestLast");
-          res.body.should.have.property("metadata").and.deep.equal(proposalWithAllFields.metadata);
+          res.body.should.have
+            .property("metadata")
+            .and.deep.equal(proposalWithAllFields.metadata);
           proposalId3 = res.body.proposalId;
         });
     });
@@ -461,7 +465,9 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("ownerGroup").and.equal("proposalingestor");
+          res.body.should.have
+            .property("ownerGroup")
+            .and.equal("proposalingestor");
         });
     });
   });
@@ -642,7 +648,9 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(specialProposalId);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(specialProposalId);
         });
     });
 
@@ -667,9 +675,15 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("proposalId").and.equal(unicodeProposalId);
-          res.body.should.have.property("title").and.equal(unicodeProposal.title);
-          res.body.should.have.property("abstract").and.equal(unicodeProposal.abstract);
+          res.body.should.have
+            .property("proposalId")
+            .and.equal(unicodeProposalId);
+          res.body.should.have
+            .property("title")
+            .and.equal(unicodeProposal.title);
+          res.body.should.have
+            .property("abstract")
+            .and.equal(unicodeProposal.abstract);
         });
     });
   });
@@ -781,9 +795,15 @@ describe("3000: Proposals v4 tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.have.property("proposalId").and.equal(proposalId1);
-          res.body.should.have.property("title").and.equal(updatedProposal.title);
-          res.body.should.have.property("email").and.equal(ProposalCorrectMinV4.email);
-          res.body.should.have.property("ownerGroup").and.equal(ProposalCorrectMinV4.ownerGroup);
+          res.body.should.have
+            .property("title")
+            .and.equal(updatedProposal.title);
+          res.body.should.have
+            .property("email")
+            .and.equal(ProposalCorrectMinV4.email);
+          res.body.should.have
+            .property("ownerGroup")
+            .and.equal(ProposalCorrectMinV4.ownerGroup);
         });
     });
 
@@ -804,7 +824,9 @@ describe("3000: Proposals v4 tests", () => {
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
-          res.body.should.have.property("title").and.equal("Patched title only");
+          res.body.should.have
+            .property("title")
+            .and.equal("Patched title only");
           res.body.should.have
             .property("MeasurementPeriodList")
             .and.be.an("array")
