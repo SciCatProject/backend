@@ -11,13 +11,19 @@ let accessTokenAdminIngestor = null,
   datablockId2 = null;
 
 // Dataset definitions for testing
-const dataset1 = { ...TestData.RawCorrect, datasetName: "Test raw dataset 1" };
-const dataset2 = { ...TestData.RawCorrect, datasetName: "Test raw dataset 2" };
+const dataset1 = {
+  ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " - Datablock 1",
+};
+const dataset2 = {
+  ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " - Datablock 2",
+};
 
 describe("Datablocks", () => {
   before(async () => {
-    await db.collection("Dataset").deleteMany({});
-    await db.collection("Datablock").deleteMany({});
+    await global.db.collection("Dataset").deleteMany({});
+    await global.db.collection("Datablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -558,5 +564,13 @@ describe("Datablocks", () => {
         console.log(`Warning: Cleanup failed: ${error.message}`);
       }
     });
+  });
+
+  after(async () => {
+    // Remove dependent records first, then datasets. History is not deleted
+    // automatically when the tracked documents are removed.
+    await global.db.collection("Datablock").deleteMany({});
+    await global.db.collection("Dataset").deleteMany({});
+    await global.db.collection("History").deleteMany({});
   });
 });

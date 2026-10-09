@@ -1,21 +1,43 @@
-//NOTE: Here we load and initialize some global variables that are used throughout the tests
+"use strict";
 
 require("dotenv").config();
-var chaiHttp;
-var chai;
 
+const supertest = require("supertest");
 const { MongoClient } = require("mongodb");
-const client = new MongoClient(process.env.MONGODB_URI);
 
-async function loadChai() {
-  chaiHttp = await import("chai-http");
-  await import("chai").then((result) => {
-    chai = result.use(chaiHttp);
-  });
-  await client.connect();
+if (!process.env.MONGODB_URI) {
+  throw new Error("MONGODB_URI is not configured");
 }
 
-loadChai();
+const client = new MongoClient(process.env.MONGODB_URI);
+
 global.appUrl = "http://localhost:3000";
-global.request = require("supertest");
-global.db = client.db();
+global.request = supertest;
+
+module.exports = {
+  mochaHooks: {
+    async beforeAll() {
+      await client.connect();
+
+      // Uses the database specified in MONGODB_URI.
+      global.db = client.db();
+
+      const [chaiModule, chaiHttpModule] = await Promise.all([
+        import("chai"),
+        import("chai-http"),
+      ]);
+
+      const chai = chaiModule.default || chaiModule;
+      const chaiHttp = chaiHttpModule.default || chaiHttpModule;
+
+      global.chai = chai.use(chaiHttp);
+
+      console.log(`Test MongoDB connected: ${global.db.databaseName}`);
+    },
+
+    async afterAll() {
+      await client.close();
+      delete global.db;
+    },
+  },
+};
