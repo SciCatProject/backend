@@ -36,7 +36,7 @@ export class DatablockAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.DatablockRead, Datablock, ifPublished);
+    can(Action.Read, Datablock, ifPublished);
 
     if (!user) {
       return build({
@@ -51,11 +51,11 @@ export class DatablockAbility {
     /**
      * Authenticated user
      */
-    can(Action.DatablockRead, Datablock, ifOwner);
-    can(Action.DatablockRead, Datablock, ifAccess);
-    can(Action.DatablockRead, Datablock, ifPublished);
+    can(Action.Read, Datablock, ifOwner);
+    can(Action.Read, Datablock, ifAccess);
+    can(Action.Read, Datablock, ifPublished);
 
-    can(Action.DatablockUpdate, Datablock, ifOwner);
+    can(Action.Update, Datablock, ifOwner);
 
     if (
       user.currentGroups.some(
@@ -69,8 +69,8 @@ export class DatablockAbility {
        * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS,
        * CREATE_DATASET_WITH_PID_GROUPS or CREATE_DATASET_GROUPS
        */
-      can(Action.DatablockCreate, Datablock);
-      can(Action.DatablockUpdate, Datablock);
+      can(Action.Create, Datablock);
+      can(Action.Update, Datablock);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
@@ -79,9 +79,9 @@ export class DatablockAbility {
        */
       can(Action.AccessAny, Datablock);
 
-      can(Action.DatablockCreate, Datablock);
-      can(Action.DatablockRead, Datablock);
-      can(Action.DatablockUpdate, Datablock);
+      can(Action.Create, Datablock);
+      can(Action.Read, Datablock);
+      can(Action.Update, Datablock);
     }
 
     if (
@@ -90,9 +90,9 @@ export class DatablockAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.DatablockRead, Datablock);
-      can(Action.DatablockUpdate, Datablock);
-      can(Action.DatablockDelete, Datablock);
+      can(Action.Read, Datablock);
+      can(Action.Update, Datablock);
+      can(Action.Delete, Datablock);
     }
 
     return build({

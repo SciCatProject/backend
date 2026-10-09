@@ -6,7 +6,7 @@ This document describes the authorization model used for metadata keys and assoc
 
 The following actions are defined for metadata keys:
 
-- `MetadataKeyRead`
+- `Read`
 
 All write actions (create/update/delete) are system-managed based on datasets and do not have API endpoints.
 
@@ -32,7 +32,7 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `ADMIN_GROUPS` |
 | - | - | - | - |
-| `MetadataKeyRead` | public | public/owner/access | any |
+| `Read` | public | public/owner/access | any |
 
 Legend:
 - public: metadata key's `isPublished` field must be `true`
