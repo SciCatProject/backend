@@ -404,6 +404,7 @@ export class DatasetsService {
 
   async fullFacet(
     filters: IFacets<IDatasetFields>,
+    include?: (DatasetLookupKeysEnum | IDatasetRelation)[],
   ): Promise<Record<string, unknown>[]> {
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
@@ -415,6 +416,19 @@ export class DatasetsService {
       facets,
       "",
     );
+
+    // only required includes filter the datasets, the related documents
+    // themselves are not needed for the counts
+    const requiredStages: PipelineStage[] = [];
+    const requiredRelations = this.addLookupFields(
+      requiredStages,
+      include?.filter((i) => typeof i === "object" && i.required),
+    );
+    if (requiredRelations.length > 0) {
+      requiredStages.push({ $unset: requiredRelations });
+      // before the closing $facet, after a $text match that must come first
+      pipeline.splice(pipeline.length - 1, 0, ...requiredStages);
+    }
 
     return await this.datasetModel.aggregate(pipeline).exec();
   }

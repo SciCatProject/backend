@@ -50,6 +50,7 @@ import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.int
 import {
   IDatasetFields,
   IDatasetFiltersV4,
+  IDatasetRelation,
 } from "./interfaces/dataset-filters.interface";
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
 
@@ -427,6 +428,15 @@ export class DatasetsV4Controller {
     example:
       '{"facets": ["type","creationLocation","ownerGroup","keywords"], fields: {}}',
   })
+  @ApiQuery({
+    name: "include",
+    description:
+      "Relations as in the include of GET /datasets. Those with `required` filter the datasets counted, so that the counts match the list; the others are ignored.",
+    required: false,
+    type: String,
+    example:
+      '[{"relation": "proposals", "scope": {"where": {"pi_email": "pi@example.com"}}, "required": true}]',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     type: FullFacetResponse,
@@ -435,10 +445,14 @@ export class DatasetsV4Controller {
   })
   async fullfacet(
     @Req() request: Request,
-    @Query() filters: { fields?: string; facets?: string },
+    @Query() filters: { fields?: string; facets?: string; include?: string },
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
+    const include = new IncludeValidationPipe(DATASET_LOOKUP_FIELDS).transform(
+      JSON.parse(filters.include ?? "[]"),
+    ) as (DatasetLookupKeysEnum | IDatasetRelation)[];
+    new IncludeRequiredValidationPipe().transform(JSON.stringify({ include }));
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
@@ -456,7 +470,7 @@ export class DatasetsV4Controller {
       facets: JSON.parse(filters.facets ?? "[]"),
     };
 
-    return this.datasetsService.fullFacet(parsedFilters);
+    return this.datasetsService.fullFacet(parsedFilters, include);
   }
 
   // GET /datasets/metadataKeys
