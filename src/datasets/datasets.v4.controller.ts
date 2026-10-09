@@ -58,7 +58,7 @@ import { plainToInstance } from "class-transformer";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import {
   CountApiResponse,
-  FullFacetFilters,
+  DatasetFullFacetFilters,
   FullFacetResponse,
   IsValidResponse,
 } from "src/common/types";
@@ -424,18 +424,9 @@ export class DatasetsV4Controller {
     description:
       "Defines list of field names, for which facet counts should be calculated",
     required: false,
-    type: FullFacetFilters,
+    type: DatasetFullFacetFilters,
     example:
       '{"facets": ["type","creationLocation","ownerGroup","keywords"], fields: {}}',
-  })
-  @ApiQuery({
-    name: "include",
-    description:
-      "Relations as in the include of GET /datasets. Those with `required` filter the datasets counted, so that the counts match the list; the others are ignored.",
-    required: false,
-    type: String,
-    example:
-      '[{"relation": "proposals", "scope": {"where": {"pi_email": "pi@example.com"}}, "required": true}]',
   })
   @ApiResponse({
     status: HttpStatus.OK,
