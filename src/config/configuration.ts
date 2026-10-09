@@ -202,6 +202,7 @@ const configuration = () => {
 
   const config = {
     configSyncToDb: {
+      reload: parseBoolean(process.env.CONFIG_SYNC_TO_DB_RELOAD || "true"),
       configList: process.env.CONFIG_SYNC_TO_DB_LIST
         ? [
             ...new Set([

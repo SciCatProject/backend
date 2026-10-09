@@ -83,4 +83,26 @@ describe("configuration", () => {
       "OIDC_SUCCESS_URL must be <frontend-base-url>/login or <frontend-base-url>/auth-callback for the default client scicat but found https://default-success-url.com/user",
     );
   });
+
+  it("should enable config reload by default", () => {
+    const config = configuration();
+
+    expect(config.configSyncToDb.reload).toBe(true);
+  });
+
+  it("should disable config reload when CONFIG_SYNC_TO_DB_RELOAD is false", () => {
+    process.env.CONFIG_SYNC_TO_DB_RELOAD = "false";
+
+    const config = configuration();
+
+    expect(config.configSyncToDb.reload).toBe(false);
+  });
+
+  it("should enable config reload when CONFIG_SYNC_TO_DB_RELOAD is empty", () => {
+    process.env.CONFIG_SYNC_TO_DB_RELOAD = "";
+
+    const config = configuration();
+
+    expect(config.configSyncToDb.reload).toBe(true);
+  });
 });
