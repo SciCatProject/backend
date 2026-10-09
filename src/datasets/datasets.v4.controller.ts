@@ -50,6 +50,7 @@ import { SubDatasetsPublicInterceptor } from "./interceptors/datasets-public.int
 import {
   IDatasetFields,
   IDatasetFiltersV4,
+  IDatasetRelation,
 } from "./interfaces/dataset-filters.interface";
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
 
@@ -57,7 +58,7 @@ import { plainToInstance } from "class-transformer";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import {
   CountApiResponse,
-  FullFacetFilters,
+  DatasetFullFacetFilters,
   FullFacetResponse,
   IsValidResponse,
 } from "src/common/types";
@@ -423,7 +424,7 @@ export class DatasetsV4Controller {
     description:
       "Defines list of field names, for which facet counts should be calculated",
     required: false,
-    type: FullFacetFilters,
+    type: DatasetFullFacetFilters,
     example:
       '{"facets": ["type","creationLocation","ownerGroup","keywords"], fields: {}}',
   })
@@ -435,10 +436,14 @@ export class DatasetsV4Controller {
   })
   async fullfacet(
     @Req() request: Request,
-    @Query() filters: { fields?: string; facets?: string },
+    @Query() filters: { fields?: string; facets?: string; include?: string },
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
+    const include = new IncludeValidationPipe(DATASET_LOOKUP_FIELDS).transform(
+      JSON.parse(filters.include ?? "[]"),
+    ) as (DatasetLookupKeysEnum | IDatasetRelation)[];
+    new IncludeRequiredValidationPipe().transform(JSON.stringify({ include }));
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
@@ -456,7 +461,7 @@ export class DatasetsV4Controller {
       facets: JSON.parse(filters.facets ?? "[]"),
     };
 
-    return this.datasetsService.fullFacet(parsedFilters);
+    return this.datasetsService.fullFacet(parsedFilters, include);
   }
 
   // GET /datasets/metadataKeys

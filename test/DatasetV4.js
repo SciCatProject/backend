@@ -2426,5 +2426,41 @@ describe("2500: Datasets v4 tests", () => {
           res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
         });
     });
+
+    const getFacet = (include) =>
+      request(appUrl)
+        .get("/api/v4/datasets/fullfacet")
+        .query({
+          fields: JSON.stringify({}),
+          facets: JSON.stringify([]),
+          ...(include && { include: JSON.stringify(include) }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" });
+
+    const getFacetTotal = (include) =>
+      getFacet(include)
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => res.body[0].all[0]?.totalSets ?? 0);
+
+    it("1111: should count only datasets with a matching relation in fullfacet when required is true", async () => {
+      const total = await getFacetTotal(proposalsInclude(true).include);
+      total.should.equal(2);
+    });
+
+    it("1112: should count only datasets whose relations all match in fullfacet when required is all", async () => {
+      const total = await getFacetTotal(proposalsInclude("all").include);
+      total.should.equal(1);
+    });
+
+    it("1113: should ignore includes that are not required in fullfacet", async () => {
+      const total = await getFacetTotal(proposalsInclude(false).include);
+      total.should.equal(await getFacetTotal());
+    });
+
+    it("1114: should reject an invalid required value in fullfacet", async () => {
+      return getFacet(proposalsInclude("some").include).expect(
+        TestData.BadRequestStatusCode,
+      );
+    });
   });
 });

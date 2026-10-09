@@ -9,6 +9,16 @@ export class FullFacetFilters {
   fields?: string;
 }
 
+export class DatasetFullFacetFilters extends FullFacetFilters {
+  @ApiPropertyOptional({
+    description:
+      "Relations as in the include of GET /datasets. Those with `required` filter the datasets counted, so that the counts match the list; the others are ignored.",
+    example:
+      '[{"relation": "proposals", "scope": {"where": {"pi_email": "pi@example.com"}}, "required": true}]',
+  })
+  include?: string;
+}
+
 export class FullQueryFilters {
   @ApiPropertyOptional()
   limits?: string;
