@@ -40,7 +40,7 @@ const InstrumentCorrect4 = {
 
 describe("1000: InstrumentFilter: Test retrieving instruments using filtering capabilities", () => {
   before(async () => {
-    db.collection("Instrument").deleteMany({});
+    await db.collection("Instrument").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

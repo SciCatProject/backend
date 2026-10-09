@@ -60,7 +60,7 @@ const isOSenabled = process.env.OPENSEARCH_ENABLED == "yes";
   "Opensearch: CRUD, filtering and search test case",
   () => {
     before(async () => {
-      db.collection("Dataset").deleteMany({});
+      await db.collection("Dataset").deleteMany({});
 
       accessTokenAdminIngestor = await utils.getToken(appUrl, {
         username: "adminIngestor",

@@ -6,6 +6,7 @@ import { ProposalsService } from "./proposals.service";
 import { ProposalClass } from "./schemas/proposal.schema";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { ProposalLookupKeysEnum } from "./types/proposal-lookup";
+import { ProposalLookupKeysEnumV4 } from "./types/proposal-lookup.v4";
 
 class MetadataKeysServiceMock {
   insertManyFromSource = jest.fn().mockResolvedValue([]);
@@ -47,6 +48,9 @@ class ProposalModelMock {
   aggregate = jest.fn().mockReturnValue({
     exec: jest.fn().mockResolvedValue([mockProposal]),
   });
+  findOne = jest.fn().mockReturnValue({
+    exec: jest.fn().mockResolvedValue(mockProposal),
+  });
   create = jest.fn();
   exec = jest.fn();
 }
@@ -74,6 +78,24 @@ describe("ProposalsService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("findOne", () => {
+    it("should pass the where filter and fields projection to the model", async () => {
+      await service.findOne({
+        where: { proposalId: "ABCDEF" },
+        fields: { title: 1 },
+      });
+      expect(model.findOne).toHaveBeenCalledWith(
+        { proposalId: "ABCDEF" },
+        { title: 1 },
+      );
+    });
+
+    it("should not query with an empty filter when a where filter is provided", async () => {
+      await service.findOne({ where: { proposalId: "ABCDEF" } });
+      expect(model.findOne).not.toHaveBeenCalledWith({}, {});
+    });
   });
 
   describe("findAll", () => {
@@ -157,7 +179,7 @@ describe("ProposalsService", () => {
       expect(lookupStage.$lookup.pipeline).toContainEqual({ $skip: 1 });
     });
 
-    it("should expand 'all' into all non-all relations", async () => {
+    it("should expand 'all' into samples, instruments, and datasets", async () => {
       await service.findAllComplete({
         where: {},
         include: [ProposalLookupKeysEnum.all],
@@ -167,12 +189,28 @@ describe("ProposalsService", () => {
       const lookupStages = pipeline.filter(
         (s: { $lookup?: unknown }) => s.$lookup,
       );
-      expect(lookupStages.length).toBeGreaterThan(0);
-      expect(
-        lookupStages.every(
-          (s: { $lookup: { as: string } }) => s.$lookup.as !== "all",
-        ),
-      ).toBe(true);
+      expect(lookupStages.map((s) => s.$lookup.as)).toEqual([
+        "samples",
+        "instruments",
+        "datasets",
+      ]);
+    });
+
+    it("should expand 'all' regardless of its position", async () => {
+      await service.findAllComplete({
+        where: {},
+        include: [ProposalLookupKeysEnum.all, ProposalLookupKeysEnum.samples],
+      });
+
+      const pipeline = model.aggregate.mock.calls[0][0];
+      const lookupStages = pipeline.filter(
+        (s: { $lookup?: unknown }) => s.$lookup,
+      );
+      expect(lookupStages.map((s) => s.$lookup.as)).toEqual([
+        "samples",
+        "instruments",
+        "datasets",
+      ]);
     });
 
     it("should throw BadRequestException when aggregate fails", async () => {
@@ -198,17 +236,51 @@ describe("ProposalsService", () => {
   });
 
   describe("addLookupFields", () => {
-    it("should add a $lookup stage for samples", () => {
+    it("should add lookup stages for every relationship", () => {
       const pipeline: Parameters<typeof service.addLookupFields>[0] = [
         { $match: {} },
       ];
-      service.addLookupFields(pipeline, [ProposalLookupKeysEnum.samples]);
+      service.addLookupFields(pipeline, [
+        ProposalLookupKeysEnum.samples,
+        ProposalLookupKeysEnum.instruments,
+        ProposalLookupKeysEnum.datasets,
+      ]);
 
-      const lookupStage = pipeline.find((s) => "$lookup" in s) as
-        { $lookup: { from: string; as: string } } | undefined;
-      expect(lookupStage).toBeDefined();
-      expect(lookupStage!.$lookup.from).toBe("Sample");
-      expect(lookupStage!.$lookup.as).toBe("samples");
+      const lookupStages = pipeline.filter((s) => "$lookup" in s) as {
+        $lookup: { from: string; as: string };
+      }[];
+      expect(lookupStages).toEqual([
+        { $lookup: expect.objectContaining({ from: "Sample", as: "samples" }) },
+        {
+          $lookup: expect.objectContaining({
+            from: "Instrument",
+            as: "instruments",
+          }),
+        },
+        {
+          $lookup: expect.objectContaining({
+            from: "Dataset",
+            as: "datasets",
+          }),
+        },
+      ]);
+    });
+
+    it("should add all v4 relationship lookup stages", async () => {
+      await service.findAllCompleteV4({
+        where: {},
+        include: [ProposalLookupKeysEnumV4.all],
+      });
+
+      const pipeline = model.aggregate.mock.calls[0][0];
+      const lookupStages = pipeline.filter(
+        (s: { $lookup?: unknown }) => s.$lookup,
+      );
+      expect(lookupStages.map((s) => s.$lookup.as)).toEqual([
+        "samples",
+        "instruments",
+        "datasets",
+      ]);
     });
 
     it("should not add any stage for an empty include list", () => {

@@ -29,8 +29,8 @@ const nonpublictestdataset = {
 
 describe("1600: PublishedData: Test of access to published data", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("PublishedData").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("PublishedData").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -616,7 +616,7 @@ describe("1601: PublishedData: Test of access scope and update guard on v3 endpo
   };
 
   before(async () => {
-    db.collection("PublishedData").deleteMany({});
+    await db.collection("PublishedData").deleteMany({});
 
     accessTokenAdmin = await utils.getToken(appUrl, {
       username: "admin",

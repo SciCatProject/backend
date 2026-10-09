@@ -171,6 +171,9 @@ describe("ProposalsController", () => {
           {} as PartialUpdateProposalDto,
         ),
       ).rejects.toThrow(NotFoundException);
+      expect(proposalsService.findOne).toHaveBeenCalledWith({
+        where: { proposalId: "proposal-id" },
+      });
     });
 
     it("should throw PreconditionFailedException if proposals service throws it", async () => {
