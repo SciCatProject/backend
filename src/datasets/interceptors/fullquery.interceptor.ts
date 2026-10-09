@@ -26,14 +26,11 @@ export class FullQueryInterceptor implements NestInterceptor {
           const { scientific } = fields;
           data.forEach(({ scientificMetadata }) => {
             scientific.forEach(({ lhs, unit }) => {
-              const currentUnit = get(
-                scientificMetadata,
-                `${lhs}.unit`,
-              ) as string;
-              const currentValue = get(
-                scientificMetadata,
-                `${lhs}.value`,
-              ) as number;
+              const path = lhs.split(".");
+              const unitPath = [...path, "unit"];
+              const valuePath = [...path, "value"];
+              const currentUnit = get(scientificMetadata, unitPath) as string;
+              const currentValue = get(scientificMetadata, valuePath) as number;
               if (
                 unit &&
                 currentUnit &&
@@ -42,12 +39,8 @@ export class FullQueryInterceptor implements NestInterceptor {
               ) {
                 const { valueRequested, unitRequested } =
                   convertToRequestedUnit(currentValue, currentUnit, unit);
-                update(scientificMetadata, `${lhs}.unit`, () => unitRequested);
-                update(
-                  scientificMetadata,
-                  `${lhs}.value`,
-                  () => valueRequested,
-                );
+                update(scientificMetadata, unitPath, () => unitRequested);
+                update(scientificMetadata, valuePath, () => valueRequested);
               }
             });
           });
