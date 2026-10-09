@@ -150,7 +150,7 @@ export class ProposalsV4Controller {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!canViewAny && canView) {
       filter.where = filter.where ?? {};
@@ -183,7 +183,7 @@ export class ProposalsV4Controller {
   // POST /proposals
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalCreate, ProposalClass),
+    ability.can(Action.Create, ProposalClass),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -220,7 +220,7 @@ export class ProposalsV4Controller {
     const proposalDto = await this.checkPermissionsForProposalExtended(
       request,
       createProposalDto,
-      Action.ProposalCreate,
+      Action.Create,
     );
 
     try {
@@ -243,7 +243,7 @@ export class ProposalsV4Controller {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalCreate, ProposalClass),
+    ability.can(Action.Create, ProposalClass),
   )
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
@@ -275,7 +275,7 @@ export class ProposalsV4Controller {
     const proposalDto = await this.checkPermissionsForProposalExtended(
       request,
       createProposalDtoInstance,
-      Action.ProposalCreate,
+      Action.Create,
     );
 
     const errors = await validate(proposalDto);
@@ -287,7 +287,7 @@ export class ProposalsV4Controller {
   // GET /proposals
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
@@ -339,7 +339,7 @@ export class ProposalsV4Controller {
   // GET /proposals/fullfacet
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/fullfacet")
   @ApiQuery({
@@ -380,7 +380,7 @@ export class ProposalsV4Controller {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!canViewAny && canView && !fields.isPublished) {
       fields.userGroups = fields.userGroups ?? [];
@@ -401,7 +401,7 @@ export class ProposalsV4Controller {
   // GET /proposals/findOne
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -451,7 +451,7 @@ export class ProposalsV4Controller {
   // GET /proposals/count
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/count")
   @ApiOperation({
@@ -508,7 +508,7 @@ export class ProposalsV4Controller {
   // GET /proposals/:proposalId
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/:proposalId")
   @UseInterceptors(ClassSerializerInterceptor)
@@ -552,7 +552,7 @@ export class ProposalsV4Controller {
     await this.checkPermissionsForProposalExtended(
       request,
       proposal,
-      Action.ProposalRead,
+      Action.Read,
     );
 
     return proposal;
@@ -561,7 +561,7 @@ export class ProposalsV4Controller {
   // PATCH /proposals/:proposalId
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalUpdate, ProposalClass),
+    ability.can(Action.Update, ProposalClass),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -616,7 +616,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForProposalExtended(
       request,
       foundProposal,
-      Action.ProposalUpdate,
+      Action.Update,
     );
 
     const updateProposalDtoForService =
@@ -637,7 +637,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // PUT /proposals/:proposalId
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalUpdate, ProposalClass),
+    ability.can(Action.Update, ProposalClass),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -683,7 +683,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForProposalExtended(
       request,
       foundProposal,
-      Action.ProposalUpdate,
+      Action.Update,
     );
 
     // PUT replaces the whole document: fields that are not provided are reset.
@@ -706,7 +706,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   // DELETE /proposals/:proposalId
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalDelete, ProposalClass),
+    ability.can(Action.Delete, ProposalClass),
   )
   @Delete("/:proposalId")
   @ApiOperation({
@@ -735,7 +735,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForProposalExtended(
       request,
       foundProposal,
-      Action.ProposalDelete,
+      Action.Delete,
     );
 
     const removedProposal = await this.proposalsService.remove({

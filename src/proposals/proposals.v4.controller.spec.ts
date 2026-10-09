@@ -184,7 +184,7 @@ describe("ProposalsV4Controller", () => {
       const result = await controller.checkPermissionsForProposalExtended(
         mockRequest(mockAdminUser) as Request,
         "proposal-1",
-        Action.ProposalRead,
+        Action.Read,
       );
 
       expect(proposalsService.findOne).toHaveBeenCalledWith({
@@ -204,7 +204,7 @@ describe("ProposalsV4Controller", () => {
         controller.checkPermissionsForProposalExtended(
           mockRequest(mockAdminUser) as Request,
           "nonexistent",
-          Action.ProposalRead,
+          Action.Read,
         ),
       ).rejects.toThrow(NotFoundException);
     });
@@ -220,7 +220,7 @@ describe("ProposalsV4Controller", () => {
         controller.checkPermissionsForProposalExtended(
           mockRequest(mockRegularUser) as Request,
           "proposal-1",
-          Action.ProposalDelete,
+          Action.Delete,
         ),
       ).rejects.toThrow(ForbiddenException);
     });
@@ -234,7 +234,7 @@ describe("ProposalsV4Controller", () => {
       const result = await controller.checkPermissionsForProposalExtended(
         mockRequest(mockAdminUser) as Request,
         mockCreateProposalDto,
-        Action.ProposalCreate,
+        Action.Create,
       );
 
       expect(result).toEqual(mockCreateProposalDto);
@@ -245,7 +245,7 @@ describe("ProposalsV4Controller", () => {
         controller.checkPermissionsForProposalExtended(
           mockRequest(mockAdminUser) as Request,
           null,
-          Action.ProposalRead,
+          Action.Read,
         ),
       ).rejects.toThrow(NotFoundException);
     });
@@ -279,7 +279,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
@@ -307,7 +307,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
@@ -538,7 +538,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
@@ -633,7 +633,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
@@ -721,7 +721,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
@@ -799,7 +799,7 @@ describe("ProposalsV4Controller", () => {
       const abilityMock = {
         can: jest.fn((action) => {
           if (action === Action.AccessAny) return false;
-          if (action === Action.ProposalRead) return true;
+          if (action === Action.Read) return true;
           return false;
         }),
       };
