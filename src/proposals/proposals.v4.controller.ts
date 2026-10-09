@@ -115,7 +115,7 @@ export class ProposalsV4Controller {
 
     if (typeof proposalInput === "string") {
       proposal = await this.proposalsService.findOne({
-        proposalId: proposalInput,
+        where: { proposalId: proposalInput },
       });
 
       if (!proposal) {
@@ -673,9 +673,18 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       Action.ProposalUpdate,
     );
 
+    // PUT replaces the whole document: fields that are not provided are reset.
+    // These defaults are applied here (and not in the DTO) so that PATCH,
+    // which uses a PartialType of the same DTO, does not inherit them.
+    const replaceProposalDto: UpdateProposalV4Dto = {
+      ...updateProposalDto,
+      MeasurementPeriodList: updateProposalDto.MeasurementPeriodList ?? [],
+      parentProposalId: updateProposalDto.parentProposalId ?? null,
+    };
+
     const outputProposalDto = await this.proposalsService.findOneAndReplaceV4(
       { proposalId },
-      updateProposalDto,
+      replaceProposalDto,
     );
 
     return outputProposalDto;
@@ -707,7 +716,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Param("proposalId") proposalId: string,
   ) {
     const foundProposal = await this.proposalsService.findOne({
-      proposalId,
+      where: { proposalId },
     });
 
     await this.checkPermissionsForProposalExtended(

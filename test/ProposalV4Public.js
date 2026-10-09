@@ -162,7 +162,7 @@ describe("3100: Proposals v4 public tests", () => {
         .query({
           filter: JSON.stringify({
             where: {},
-            order: ["title ASC"],
+            limits: { sort: { title: "asc" } },
           }),
         })
         .expect(TestData.SuccessfulGetStatusCode)
@@ -171,7 +171,10 @@ describe("3100: Proposals v4 public tests", () => {
           assert(Array.isArray(res.body));
           if (res.body.length > 1) {
             for (let i = 1; i < res.body.length; i++) {
-              res.body[i - 1].title.should.be.at.most(res.body[i].title);
+              assert(
+                res.body[i - 1].title <= res.body[i].title,
+                `titles not sorted: "${res.body[i - 1].title}" > "${res.body[i].title}"`,
+              );
             }
           }
         });

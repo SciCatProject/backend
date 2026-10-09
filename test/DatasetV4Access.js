@@ -488,10 +488,7 @@ describe("2700: Datasets v4 access tests", () => {
           `/api/v4/datasets/public/${encodeURIComponent(derivedDatasetMinPid)}`,
         )
         .auth(user2Token, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .then((res) => {
-          res.body.should.be.a("object").and.to.be.deep.equal({});
-        });
+        .expect(TestData.NotFoundStatusCode);
     });
 
     it("0302: should fetch dataset relation fields with correct data included if provided in the filter and have the correct rights", () => {

@@ -44,7 +44,7 @@ export class UpdateProposalV4Dto extends OwnableDto {
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateMeasurementPeriodDto)
-  readonly MeasurementPeriodList?: CreateMeasurementPeriodDto[] = [];
+  readonly MeasurementPeriodList?: CreateMeasurementPeriodDto[];
 
   @IsOptional()
   @IsObject()
@@ -52,7 +52,7 @@ export class UpdateProposalV4Dto extends OwnableDto {
 
   @IsOptional()
   @IsString()
-  readonly parentProposalId: string | null = null;
+  readonly parentProposalId?: string | null;
 
   @IsOptional()
   @IsString()

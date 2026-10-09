@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  HttpStatus,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   ApiExtraModels,
   ApiOperation,
@@ -239,6 +246,10 @@ export class ProposalsPublicV4Controller {
     isArray: false,
     description: "Return public proposal with proposalId specified",
   })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Public proposal with the proposalId specified not found",
+  })
   @ApiQuery({
     name: "include",
     enum: ProposalLookupKeysEnumV4,
@@ -259,6 +270,10 @@ export class ProposalsPublicV4Controller {
       where: { proposalId, isPublished: true },
       include: includeArray,
     });
+
+    if (!proposal) {
+      throw new NotFoundException(`Public proposal ${proposalId} not found`);
+    }
 
     return proposal;
   }

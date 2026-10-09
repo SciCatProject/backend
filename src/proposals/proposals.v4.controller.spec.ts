@@ -188,7 +188,7 @@ describe("ProposalsV4Controller", () => {
       );
 
       expect(proposalsService.findOne).toHaveBeenCalledWith({
-        proposalId: "proposal-1",
+        where: { proposalId: "proposal-1" },
       });
       expect(result).toEqual(mockProposal);
     });
@@ -1044,7 +1044,7 @@ describe("ProposalsV4Controller", () => {
       });
       expect(proposalsService.findOneAndReplaceV4).toHaveBeenCalledWith(
         { proposalId: "proposal-1" },
-        updateDto,
+        { ...updateDto, MeasurementPeriodList: [], parentProposalId: null },
       );
       expect(result).toEqual(replacedProposal);
     });
@@ -1100,7 +1100,7 @@ describe("ProposalsV4Controller", () => {
       const result = await controller.findByIdAndDelete(request, "proposal-1");
 
       expect(proposalsService.findOne).toHaveBeenCalledWith({
-        proposalId: "proposal-1",
+        where: { proposalId: "proposal-1" },
       });
       expect(proposalsService.remove).toHaveBeenCalledWith({
         proposalId: "proposal-1",

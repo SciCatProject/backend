@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundException } from "@nestjs/common";
 import { ProposalsPublicV4Controller } from "./proposals-public.v4.controller";
 import { ProposalsService } from "./proposals.service";
 import { ProposalClass, ProposalDocument } from "./schemas/proposal.schema";
@@ -220,28 +221,30 @@ describe("ProposalsPublicV4Controller", () => {
       expect(result).toEqual(mockPublishedProposal);
     });
 
-    it("should return null for unpublished proposal", async () => {
+    it("should throw NotFoundException for unpublished proposal", async () => {
       proposalsService.findOneCompleteV4.mockResolvedValue(null);
 
-      const result = await controller.findByIdPublic("prop-002", undefined);
+      await expect(
+        controller.findByIdPublic("prop-002", undefined),
+      ).rejects.toThrow(NotFoundException);
 
       expect(proposalsService.findOneCompleteV4).toHaveBeenCalledWith({
         where: { proposalId: "prop-002", isPublished: true },
         include: undefined,
       });
-      expect(result).toBeNull();
     });
 
-    it("should return null for non-existent proposal", async () => {
+    it("should throw NotFoundException for non-existent proposal", async () => {
       proposalsService.findOneCompleteV4.mockResolvedValue(null);
 
-      const result = await controller.findByIdPublic("non-existent", undefined);
+      await expect(
+        controller.findByIdPublic("non-existent", undefined),
+      ).rejects.toThrow(NotFoundException);
 
       expect(proposalsService.findOneCompleteV4).toHaveBeenCalledWith({
         where: { proposalId: "non-existent", isPublished: true },
         include: undefined,
       });
-      expect(result).toBeNull();
     });
 
     it("should apply single include relation", async () => {

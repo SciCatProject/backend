@@ -267,7 +267,9 @@ export class PublishedDataV4Controller {
 
     let proposal;
     if (proposalId) {
-      proposal = await this.proposalsService.findOne({ proposalId });
+      proposal = await this.proposalsService.findOne({
+        where: { proposalId },
+      });
     }
 
     if (proposal) {

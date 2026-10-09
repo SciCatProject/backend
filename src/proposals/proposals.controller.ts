@@ -126,7 +126,7 @@ export class ProposalsController {
     group: Action,
   ) {
     const proposal = await this.proposalsService.findOne({
-      proposalId: id,
+      where: { proposalId: id },
     });
 
     if (!proposal) {
@@ -239,7 +239,7 @@ export class ProposalsController {
       Action.ProposalCreate,
     );
     const existingProposal = await this.proposalsService.findOne({
-      proposalId: createProposalDto.proposalId,
+      where: { proposalId: createProposalDto.proposalId },
     });
 
     if (existingProposal) {
@@ -557,7 +557,7 @@ export class ProposalsController {
     @Param("pid") proposalId: string,
   ): Promise<{ canAccess: boolean }> {
     const proposal = await this.proposalsService.findOne({
-      proposalId,
+      where: { proposalId },
     });
 
     const canAccess = this.permissionChecker(

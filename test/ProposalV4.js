@@ -794,6 +794,26 @@ describe("3000: Proposals v4 tests", () => {
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.BadRequestStatusCode);
     });
+
+    it("3000:0808: PATCH of a single field should not reset MeasurementPeriodList", async () => {
+      // proposalId2 has one measurement period from test 0804
+      return request(appUrl)
+        .patch("/api/v4/proposals/" + encodeURIComponent(proposalId2))
+        .send({ title: "Patched title only" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulPatchStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("title").and.equal("Patched title only");
+          res.body.should.have
+            .property("MeasurementPeriodList")
+            .and.be.an("array")
+            .and.have.lengthOf(1);
+          res.body.MeasurementPeriodList[0].should.have
+            .property("instrument")
+            .and.equal("ESS3-3");
+        });
+    });
   });
 
   describe("Proposals v4 delete tests", () => {

@@ -47,6 +47,9 @@ class ProposalModelMock {
   aggregate = jest.fn().mockReturnValue({
     exec: jest.fn().mockResolvedValue([mockProposal]),
   });
+  findOne = jest.fn().mockReturnValue({
+    exec: jest.fn().mockResolvedValue(mockProposal),
+  });
   create = jest.fn();
   exec = jest.fn();
 }
@@ -74,6 +77,24 @@ describe("ProposalsService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("findOne", () => {
+    it("should pass the where filter and fields projection to the model", async () => {
+      await service.findOne({
+        where: { proposalId: "ABCDEF" },
+        fields: { title: 1 },
+      });
+      expect(model.findOne).toHaveBeenCalledWith(
+        { proposalId: "ABCDEF" },
+        { title: 1 },
+      );
+    });
+
+    it("should not query with an empty filter when a where filter is provided", async () => {
+      await service.findOne({ where: { proposalId: "ABCDEF" } });
+      expect(model.findOne).not.toHaveBeenCalledWith({}, {});
+    });
   });
 
   describe("findAll", () => {

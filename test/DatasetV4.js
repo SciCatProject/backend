@@ -360,7 +360,8 @@ describe("2500: Datasets v4 tests", () => {
       const proposalRes = await request(appUrl)
         .post("/api/v3/proposals")
         .send(TestData.ProposalCorrectMin)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
       const proposalId = proposalRes.body.proposalId;
 
       const dataset = {
@@ -370,11 +371,14 @@ describe("2500: Datasets v4 tests", () => {
       await request(appUrl)
         .post("/api/v4/datasets")
         .send(dataset)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
 
       const proposal = await request(appUrl)
         .get(`/api/v3/proposals/${encodeURIComponent(proposalId)}`)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode);
+      proposal.body.should.have.property("proposalId").and.equal(proposalId);
       proposal.body.should.have.property("numberOfDatasets").and.equal(1);
     });
 
@@ -386,7 +390,8 @@ describe("2500: Datasets v4 tests", () => {
       const proposalRes = await request(appUrl)
         .post("/api/v3/proposals")
         .send(proposalBody)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
       const proposalId = proposalRes.body.proposalId;
       const dataset = {
         ...TestData.DerivedCorrectMinV4,
@@ -395,12 +400,15 @@ describe("2500: Datasets v4 tests", () => {
       const datasetRes = await request(appUrl)
         .post("/api/v4/datasets")
         .send(dataset)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode);
 
       let proposal = await request(appUrl)
         .get(`/api/v3/proposals/${encodeURIComponent(proposalId)}`)
-        .auth(accessTokenAdminIngestor, { type: "bearer" });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode);
 
+      proposal.body.should.have.property("proposalId").and.equal(proposalId);
       proposal.body.should.have.property("numberOfDatasets").and.equal(1);
 
       await request(appUrl)
