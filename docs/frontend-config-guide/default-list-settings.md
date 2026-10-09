@@ -54,8 +54,17 @@ Each condition object has two properties:
 | **Property** | **Type** | **Description**                                   | **Example / Notes** |
 | ------------ | -------- | ------------------------------------------------- | ------------------- |
 | _–_          | _–_      | Currently supported **only for dataset filters**. | —                   |
-| `lhs`        | `string` | Metadata key to filter on                         | `"outgassing_values_after_1h"` |
+| `lhs`        | `string` | Path relative to `scientificMetadata`                         | `"group name.attribute name"` |
 | `relation`   | `string` | Comparison operator:<br>• `GREATER_THAN`<br>• `GREATER_THAN_OR_EQUAL`<br>• `LESS_THAN`<br>• `LESS_THAN_OR_EQUAL`<br>• `EQUAL_TO`<br>• `RANGE` | `"EQUAL_TO"` |
 | `rhs`        | `string` | Value to compare against                          | `"3.1e4"`           |
 | `unit`       | `string` | **Optional** unit for the value                       | `"mbar l/s/cm^2"`   | 
 | `unitsOptions`| `string[]`| **Optional** A list of allowed units for this condition. When provided, the unit dropdown will be restricted to only these options   | `["mbar l/s/cm^2", "Pa m^3/s/m^2"]`
+
+Use dots to traverse groups, for example `group.attribute` or
+`group.subgroup.attribute`. Do not include the `scientificMetadata.` prefix or
+append `.value`: the condition selects the attribute and the backend handles its
+value and units. Spaces in group and attribute names are preserved, so
+`group name.attribute name` is valid. Use decoded names, including spaces and
+percent signs, in conditions and field pickers. The metadata key index lists
+full nested paths in this format. Dots always separate groups; field names
+containing dots are unsupported.

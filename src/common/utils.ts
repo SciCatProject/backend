@@ -121,7 +121,7 @@ export const convertToRequestedUnit = (
 
 const buildCondition = (
   key: string,
-  value: string | number,
+  value: IScientificFilter["rhs"],
   operator: string,
 ): Record<string, unknown> => {
   const conditions: Record<string, unknown> = { $or: [] };
@@ -149,7 +149,7 @@ export const mapScientificQuery = (
 
   scientific.forEach((scientificFilter) => {
     const { lhs, relation, rhs, unit } = scientificFilter;
-    const encodedLhs = encodeURIComponentExtended(lhs);
+    const encodedLhs = lhs.split(".").map(encodeURIComponentExtended).join(".");
     const matchKeyGeneric = `${field}.${encodedLhs}`;
     const matchKeyMeasurement = `${field}.${encodedLhs}.valueSI`;
     const matchUnit = `${field}.${encodedLhs}.unitSI`;
@@ -283,8 +283,13 @@ export const IsRecord = (x: unknown): x is Record<string, unknown> => {
 export const IsValueUnitObject = (
   x: unknown,
 ): x is { value?: unknown; unit?: unknown } => {
-  // checks if the argument is object and contains either property 'value' or 'unit'
-  return IsRecord(x) && ("value" in x || "unit" in x);
+  // Recognizes metadata value objects, including legacy and SI fields.
+  return (
+    IsRecord(x) &&
+    ["value", "valueSI", "unit", "unitSI", "v", "u", "human_name"].some(
+      (field) => field in x,
+    )
+  );
 };
 
 export const extractMetadataKeys = <T>(
@@ -1457,6 +1462,37 @@ export function createMetadataKeysInstance(
     sampleCharacteristics?: Record<string, unknown>;
   },
 ): MetadataSourceDoc {
+  const metadata =
+    doc.scientificMetadata ??
+    doc.metadata ??
+    doc.customMetadata ??
+    doc.sampleCharacteristics ??
+    {};
+
+  const flattenedMetadata: Record<string, unknown> = {};
+  const flattenMetadata = (
+    value: Record<string, unknown>,
+    parentPath: string[] = [],
+  ) => {
+    Object.entries(value).forEach(([storedKey, entry]) => {
+      // The source model URL-encodes object field names to satisfy Mongo's field-name rules.
+      // MetadataKeys stores the path as a value, so decode each segment once here.
+      let key: string;
+      try {
+        key = decodeURIComponent(storedKey);
+      } catch {
+        key = storedKey;
+      }
+      const path = [...parentPath, key];
+      if (IsRecord(entry) && !IsValueUnitObject(entry)) {
+        flattenMetadata(entry, path);
+      } else {
+        flattenedMetadata[path.join(".")] = entry;
+      }
+    });
+  };
+  flattenMetadata(metadata);
+
   return {
     sourceType,
     userGroups: Array.from(
@@ -1467,12 +1503,7 @@ export function createMetadataKeysInstance(
       ),
     ),
     isPublished: doc.isPublished ?? false,
-    metadata:
-      doc.scientificMetadata ??
-      doc.metadata ??
-      doc.customMetadata ??
-      doc.sampleCharacteristics ??
-      {},
+    metadata: flattenedMetadata,
   };
 }
 

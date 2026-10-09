@@ -2,6 +2,7 @@ import { FilterQuery } from "mongoose";
 import { ScientificRelation } from "../scientific-relation.enum";
 
 export interface IScientificFilter {
+  /** Decoded relative metadata path; dots separate groups. */
   lhs: string;
   relation: ScientificRelation;
   rhs: string | number;
