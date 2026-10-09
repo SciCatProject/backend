@@ -124,10 +124,7 @@ describe("Attachments v4 tests", () => {
     it("0115: check if invalid attachment is valid", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
-        .send({
-          ...TestData.AttachmentWrongV4,
-          relationships: relationshipsCorrect,
-        })
+        .send(TestData.AttachmentWrongV4)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
@@ -182,7 +179,8 @@ describe("Attachments v4 tests", () => {
 
     it("0400: should update attachment with PUT endpoint", async () => {
       const updatePayload = {
-        ...attachment,
+        ...TestData.AttachmentCorrectV4,
+        relationships: relationshipsCorrect,
         caption: "Updated caption text updated",
       };
 

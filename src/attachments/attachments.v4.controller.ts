@@ -162,6 +162,9 @@ export class AttachmentsV4Controller {
     if (!attachment) {
       return false;
     }
+    if (group == Action.Read) {
+      return true;
+    }
     const relations = attachment.relationships ?? [];
     for (const relation of relations) {
       switch (relation.targetType) {
@@ -176,7 +179,7 @@ export class AttachmentsV4Controller {
             );
           } else if (
             !ability.can(
-              group,
+              Action.Create,
               this.generateDatasetInstanceForPermissions(dataset),
             )
           ) {
