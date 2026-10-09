@@ -6,6 +6,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -36,7 +37,10 @@ import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { ILimitsFilter } from "src/common/interfaces/common.interface";
+import {
+  IAxiosError,
+  ILimitsFilter,
+} from "src/common/interfaces/common.interface";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
@@ -647,7 +651,10 @@ export class PublishedDataV4Controller {
           this.httpService.request(registerDataciteDoiOptions),
         );
       } catch (err) {
-        console.log("Error in registerDataciteDoiOptions", err);
+        Logger.error(
+          `DataCite DOI registration failed for ${publishedData.doi}: ${JSON.stringify((err as IAxiosError).response?.data ?? (err as IAxiosError).message)}`,
+          "PublishedDataController.register",
+        );
 
         handleAxiosRequestError(err, "PublishedDataController.register");
         throw new HttpException(
@@ -774,9 +781,20 @@ export class PublishedDataV4Controller {
       (landingPage.startsWith("https://") || landingPage.startsWith("http://"))
         ? landingPage
         : `https://${landingPage}`;
+    const publicURLprefix = this.configService.get<string>("publicURLprefix");
+    if (!landingPage && !publicURLprefix) {
+      Logger.error(
+        `Cannot build DOI landing page URL for ${doi}: neither metadata.landingPage nor PUBLIC_URL_PREFIX is set.`,
+        "PublishedDataV4Controller.doiRegistrationJSON",
+      );
+      throw new HttpException(
+        "DOI landing page URL could not be determined.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
     const url = landingPage
       ? `${landingPageBase}${encodeURIComponent(doi)}`
-      : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
+      : `${publicURLprefix}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
       { description: abstract, descriptionType: "Abstract", lang: "en" },
