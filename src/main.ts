@@ -11,8 +11,11 @@ import { ConfigService } from "@nestjs/config";
 import { AllExceptionsFilter, ScicatLogger } from "./loggers/logger.service";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import * as bodyParser from "body-parser";
+import mongoose from "mongoose";
 
 async function bootstrap() {
+  mongoose.set("transactionAsyncLocalStorage", true);
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
