@@ -2224,4 +2224,207 @@ describe("2500: Datasets v4 tests", () => {
         .should.deep.equal([`title of ${proposalB}`]);
     });
   });
+
+  describe("Datasets v4 required include tests", () => {
+    const piA = "pi.a@required.test";
+    const proposalA = `required-a-${uuidv4()}`;
+    const proposalB = `required-b-${uuidv4()}`;
+    let pidOnlyA, pidAAndB, pidOnlyB;
+
+    const getDatasets = (filter, token = accessTokenAdminIngestor) =>
+      request(appUrl)
+        .get("/api/v4/datasets")
+        .query({
+          filter: JSON.stringify({
+            where: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] } },
+            ...filter,
+          }),
+        })
+        .auth(token, { type: "bearer" });
+
+    const proposalsInclude = (required, where = { pi_email: piA }) => ({
+      include: [{ relation: "proposals", scope: { where }, required }],
+    });
+
+    before(async () => {
+      for (const [proposalId, pi_email, ownerGroup] of [
+        [proposalA, piA, "group1"],
+        [proposalB, "pi.b@required.test", "group2"],
+      ]) {
+        await request(appUrl)
+          .post("/api/v3/proposals")
+          .send({
+            ...TestData.ProposalCorrectMin,
+            proposalId,
+            pi_email,
+            ownerGroup,
+          })
+          .auth(accessTokenAdminIngestor, { type: "bearer" })
+          .expect(TestData.EntryCreatedStatusCode);
+      }
+
+      const createDataset = async (proposalIds) => {
+        const res = await request(appUrl)
+          .post("/api/v4/datasets")
+          .send({
+            ...TestData.DerivedCorrectMinV4,
+            ownerGroup: "group1",
+            proposalIds,
+          })
+          .auth(accessTokenAdminIngestor, { type: "bearer" })
+          .expect(TestData.EntryCreatedStatusCode);
+        return res.body.pid;
+      };
+      pidOnlyA = await createDataset([proposalA]);
+      pidAAndB = await createDataset([proposalA, proposalB]);
+      pidOnlyB = await createDataset([proposalB]);
+    });
+
+    after(async () => {
+      await processArray([
+        { pid: pidOnlyA },
+        { pid: pidAAndB },
+        { pid: pidOnlyB },
+      ]);
+      await db
+        .collection("Proposal")
+        .deleteMany({ proposalId: { $in: [proposalA, proposalB] } });
+    });
+
+    it("1100: should return all datasets when the include is not required", async () => {
+      return getDatasets(proposalsInclude(false))
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body
+            .map((d) => d.pid)
+            .should.have.members([pidOnlyA, pidAAndB, pidOnlyB]);
+          res.body
+            .find((d) => d.pid === pidOnlyB)
+            .proposals.should.have.lengthOf(0);
+        });
+    });
+
+    it("1101: should return only datasets with at least one matching relation when required is true", async () => {
+      return getDatasets(proposalsInclude(true))
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
+        });
+    });
+
+    it("1102: should return only datasets whose relations all match when required is all", async () => {
+      return getDatasets(proposalsInclude("all"))
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA]);
+        });
+    });
+
+    it("1103: should not match required relations the user cannot access", async () => {
+      return getDatasets(proposalsInclude(true, {}), accessTokenUser1)
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
+        });
+    });
+
+    it("1104: should reject an invalid required value", async () => {
+      return getDatasets(proposalsInclude("some")).expect(
+        TestData.BadRequestStatusCode,
+      );
+    });
+
+    it("1105: should apply required on relations referencing the dataset", async () => {
+      return getDatasets({
+        include: [{ relation: "datablocks", required: true }],
+      })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.should.have.lengthOf(0);
+        });
+    });
+
+    it("1106: should reject required all on relations not stored on the dataset", async () => {
+      return getDatasets({
+        include: [{ relation: "datablocks", required: "all" }],
+      }).expect(TestData.BadRequestStatusCode);
+    });
+
+    it("1107: should check required all on every relation when the scope has a limit", async () => {
+      return getDatasets({
+        include: [
+          {
+            relation: "proposals",
+            scope: { where: {}, limits: { limit: 1 } },
+            required: "all",
+          },
+        ],
+      })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body
+            .map((d) => d.pid)
+            .should.have.members([pidOnlyA, pidAAndB, pidOnlyB]);
+          res.body
+            .find((d) => d.pid === pidAAndB)
+            .proposals.should.have.lengthOf(1);
+        });
+    });
+
+    it("1108: should check required before skipping relations", async () => {
+      return getDatasets({
+        include: [
+          {
+            relation: "proposals",
+            scope: { where: { pi_email: piA }, limits: { skip: 1 } },
+            required: true,
+          },
+        ],
+      })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
+          res.body.forEach((d) => d.proposals.should.have.lengthOf(0));
+        });
+    });
+
+    it("1109: should keep the relation sort when required is set with skip and limit", async () => {
+      return getDatasets({
+        where: { pid: pidAAndB },
+        include: [
+          {
+            relation: "proposals",
+            scope: {
+              where: {},
+              limits: { limit: 1, sort: { proposalId: "desc" } },
+            },
+            required: true,
+          },
+        ],
+      })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.should.have.lengthOf(1);
+          res.body[0].proposals
+            .map((p) => p.proposalId)
+            .should.deep.equal([proposalB]);
+        });
+    });
+
+    it("1110: should not match required relations the user cannot access on v3", async () => {
+      return request(appUrl)
+        .get("/api/v3/datasets")
+        .query({
+          filter: JSON.stringify({
+            where: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] } },
+            ...proposalsInclude(true, {}),
+          }),
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
+        });
+    });
+  });
 });

@@ -34,6 +34,12 @@ const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
                 where: { filename: { $regex: "data", $options: "i" } },
               },
             },
+            required: {
+              oneOf: [{ type: "boolean" }, { type: "string", enum: ["all"] }],
+              description:
+                'true returns only datasets with at least one related document matching the scope where, "all" only datasets whose linked documents all match. "all" is supported for proposals, instruments and samples. Only related documents the user can read are considered.',
+              example: true,
+            },
           },
         },
       ],

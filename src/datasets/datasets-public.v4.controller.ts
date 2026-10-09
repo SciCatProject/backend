@@ -31,6 +31,7 @@ import {
   ALLOWED_DATASET_FILTER_KEYS,
 } from "./types/dataset-lookup";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
+import { IncludeRequiredValidationPipe } from "./pipes/include-required-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { getSwaggerDatasetFilterContent } from "./types/dataset-filter-content";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
@@ -94,6 +95,7 @@ export class DatasetsPublicV4Controller {
         ALLOWED_DATASET_FILTER_KEYS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
+      new IncludeRequiredValidationPipe(),
     )
     queryFilter: string,
   ) {
@@ -218,6 +220,7 @@ export class DatasetsPublicV4Controller {
         ALLOWED_DATASET_FILTER_KEYS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
+      new IncludeRequiredValidationPipe(),
     )
     queryFilter: string,
   ): Promise<OutputDatasetDto | null> {
