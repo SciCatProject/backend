@@ -358,7 +358,12 @@ export class ProposalsV4Controller {
   })
   async fullfacet(
     @Req() request: Request,
-    @Query() filters: { fields?: string; facets?: string },
+    @Query()
+    filters: {
+      filters?: string;
+      fields?: string;
+      facets?: string;
+    },
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
 
@@ -366,7 +371,12 @@ export class ProposalsV4Controller {
       throw new ForbiddenException("Unauthorized access");
     }
 
-    const fields: IProposalFieldsV4 = JSON.parse(filters.fields || "{}");
+    const parsedQuery = filters.filters ? JSON.parse(filters.filters) : filters;
+    const rawFields = parsedQuery.fields;
+    const fields: IProposalFieldsV4 =
+      typeof rawFields === "string"
+        ? JSON.parse(rawFields || "{}")
+        : (rawFields ?? {});
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
@@ -379,7 +389,10 @@ export class ProposalsV4Controller {
 
     const parsedFilters: IFacets<IProposalFieldsV4> = {
       fields: fields,
-      facets: JSON.parse(filters.facets || "[]"),
+      facets:
+        typeof parsedQuery.facets === "string"
+          ? JSON.parse(parsedQuery.facets || "[]")
+          : (parsedQuery.facets ?? []),
     };
 
     return this.proposalsService.fullfacetV4(parsedFilters);

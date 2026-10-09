@@ -72,10 +72,10 @@ export class ProposalsService {
       if (typeof f === "object" && "relation" in f) {
         fieldsList.push(f.relation);
         scopes[f.relation] = f.scope;
-        isAll = f.relation === ProposalLookupKeysEnum.all;
+        isAll = isAll || f.relation === ProposalLookupKeysEnum.all;
         return;
       }
-      isAll = f === ProposalLookupKeysEnum.all;
+      isAll = isAll || f === ProposalLookupKeysEnum.all;
       fieldsList.push(f);
     });
 
@@ -376,7 +376,7 @@ export class ProposalsService {
     const fieldsList: ProposalLookupKeysEnumV4[] = [];
     let isAll = false;
     proposalLookupFields?.forEach((f) => {
-      isAll = f === ProposalLookupKeysEnumV4.all;
+      isAll = isAll || f === ProposalLookupKeysEnumV4.all;
       fieldsList.push(f);
     });
 

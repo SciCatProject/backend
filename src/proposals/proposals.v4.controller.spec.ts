@@ -606,6 +606,29 @@ describe("ProposalsV4Controller", () => {
       expect(result).toEqual(facets);
     });
 
+    it("should parse the documented filters query parameter", async () => {
+      const abilityMock = {
+        can: jest.fn().mockReturnValue(true),
+      };
+      caslAbilityFactory.proposalAccess.mockReturnValue(abilityMock);
+
+      const facets: FullFacetResponse[] = [];
+      proposalsService.fullfacetV4.mockResolvedValue(facets);
+
+      const request = mockRequest(mockAdminUser) as Request;
+      await controller.fullfacet(request, {
+        filters: JSON.stringify({
+          fields: { title: true },
+          facets: ["type"],
+        }),
+      });
+
+      expect(proposalsService.fullfacetV4).toHaveBeenCalledWith({
+        fields: { title: true },
+        facets: ["type"],
+      });
+    });
+
     it("should add userGroups to fields for regular user", async () => {
       const abilityMock = {
         can: jest.fn((action) => {

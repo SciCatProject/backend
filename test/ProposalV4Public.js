@@ -518,6 +518,7 @@ describe("3100: Proposals v4 public tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           assert(Array.isArray(res.body));
+          res.body.should.have.lengthOf.at.least(1);
           res.body.every(
             (p) => p.title && p.title.toLowerCase().includes("public"),
           ).should.be.true;

@@ -125,14 +125,27 @@ export class ProposalsPublicV4Controller {
     description: "Return fullfacet response for proposals requested",
   })
   async fullfacet(
-    @Query() filters: { fields?: string; facets?: string },
+    @Query()
+    filters: {
+      filters?: string;
+      fields?: string;
+      facets?: string;
+    },
   ): Promise<Record<string, unknown>[]> {
-    const fields: IProposalFieldsV4 = JSON.parse(filters.fields || "{}");
+    const parsedQuery = filters.filters ? JSON.parse(filters.filters) : filters;
+    const rawFields = parsedQuery.fields;
+    const fields: IProposalFieldsV4 =
+      typeof rawFields === "string"
+        ? JSON.parse(rawFields || "{}")
+        : (rawFields ?? {});
     fields.isPublished = true;
 
     const parsedFilters: IFacets<IProposalFieldsV4> = {
       fields: fields,
-      facets: JSON.parse(filters.facets || "[]"),
+      facets:
+        typeof parsedQuery.facets === "string"
+          ? JSON.parse(parsedQuery.facets || "[]")
+          : (parsedQuery.facets ?? []),
     };
 
     return this.proposalsService.fullfacetV4(parsedFilters);
