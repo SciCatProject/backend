@@ -118,6 +118,7 @@ import { DatasetType } from "./types/dataset-type.enum";
 import { HistoryService } from "src/history/history.service";
 import { convertGenericHistoriesToObsoleteHistories } from "src/datasets/utils/history.util";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
+import { RelationWhereValidationPipe } from "./pipes/relation-where-validation.pipe";
 import { DATASET_LOOKUP_FIELDS } from "./types/dataset-lookup";
 import { getSwaggerDatasetFilterContentV3 } from "./types/dataset-filter-content.v3";
 import { Filter } from "./decorators/filter.decorator";
@@ -823,10 +824,14 @@ export class DatasetsController {
       request,
       queryFilter.filter ?? {},
     ) as IDatasetFiltersV3<DatasetDocument, IDatasetFields>;
-    if (queryFilter.filter)
+    if (queryFilter.filter) {
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS).transform(
         JSON.stringify(queryFilter.filter),
       );
+      new RelationWhereValidationPipe().transform(
+        JSON.stringify(queryFilter.filter),
+      );
+    }
     const datasets = await this.datasetsService.findAllComplete(
       mergedFilters,
       false,

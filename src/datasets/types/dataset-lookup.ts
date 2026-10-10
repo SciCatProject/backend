@@ -97,6 +97,10 @@ export const DATASET_LOOKUP_FIELDS: Record<
   all: undefined,
 };
 
+export const DATASET_RELATIONS = Object.keys(DATASET_LOOKUP_FIELDS).filter(
+  (field) => field !== DatasetLookupKeysEnum.all,
+);
+
 // Dataset specific keys that are allowed
 export const ALLOWED_DATASET_KEYS = [
   ...Object.keys(new OutputDatasetDto()),

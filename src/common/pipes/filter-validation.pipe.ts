@@ -13,6 +13,8 @@ export class FilterValidationPipe implements PipeTransform<string, string> {
       fields: true,
       limits: true,
     },
+    // relations whose fields the where may refer to, e.g. proposals.pi_email
+    private whereRelations: string[] = [],
   ) {}
   transform(inValue: string): string {
     const allAllowedKeys: string[] = [...this.allowedObjectKeys];
@@ -40,8 +42,10 @@ export class FilterValidationPipe implements PipeTransform<string, string> {
      * intercept filter and make sure we only allow accepted values
      */
     flattenFilterKeys.forEach((key) => {
-      let allowAnyPart = false;
       const keyParts = key.split(".");
+      // fields of related documents are not part of the allowed keys
+      let allowAnyPart =
+        keyParts[0] === "where" && this.whereRelations.includes(keyParts[1]);
       keyParts.forEach((part) => {
         const isInAllowedKeys = allAllowedKeys.includes(part);
         if (!isInAllowedKeys && !allowAnyPart) {

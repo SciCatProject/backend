@@ -73,6 +73,10 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
+import {
+  findRelationsInWhere,
+  splitWhereByRelations,
+} from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -104,6 +108,7 @@ export class DatasetsService {
     pipeline: PipelineStage[],
     datasetLookupFields?: (DatasetLookupKeysEnum | IDatasetRelation)[],
     applyDefaults = true,
+    filteredRelations: string[] = [],
   ) {
     const relationsAndScopes =
       this.extractRelationsAndScopes(datasetLookupFields);
@@ -116,7 +121,8 @@ export class DatasetsService {
       fieldValue.$lookup.as = field;
       const scope = scopes[field];
 
-      if (applyDefaults)
+      // relations the where filters on only expose documents the user can read
+      if (applyDefaults || filteredRelations.includes(field))
         this.datasetsAccessService.addRelationFieldAccess(fieldValue);
 
       const includePipeline = [];
@@ -245,14 +251,20 @@ export class DatasetsService {
       applyDefaults ? { ...filterDefaults, ...filter.limits } : filter.limits,
     );
 
-    const pipeline: PipelineStage[] = [
-      { $match: castWhereFilter(whereFilter) },
-    ];
+    // conditions on included relations are matched once they are looked up
+    const { relations } = this.extractRelationsAndScopes(filter.include);
+    const { before, after } = splitWhereByRelations(
+      castWhereFilter(whereFilter),
+      relations,
+    );
+    const pipeline: PipelineStage[] = [{ $match: before }];
     const addedRelations = this.addLookupFields(
       pipeline,
       filter.include,
       applyDefaults,
+      findRelationsInWhere(after, relations),
     );
+    if (!isEmpty(after)) pipeline.push({ $match: after });
 
     if (!isEmpty(fieldsProjection)) {
       const projection = parsePipelineProjection(
