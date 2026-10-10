@@ -162,9 +162,6 @@ export class AttachmentsV4Controller {
     if (!attachment) {
       return false;
     }
-    if (group == Action.Read) {
-      return true;
-    }
     const relations = attachment.relationships ?? [];
     for (const relation of relations) {
       switch (relation.targetType) {
@@ -172,19 +169,23 @@ export class AttachmentsV4Controller {
           const dataset = await this.datasetsService.findOne({
             where: { pid: relation.targetId },
           });
-          const ability = this.caslAbilityFactory.datasetAccess(user);
           if (!dataset) {
             throw new NotFoundException(
               `Dataset ${relation.targetId} not found for linking an attachment`,
             );
+          }
+          const ability = this.caslAbilityFactory.datasetAccess(user);
+          const ds = this.generateDatasetInstanceForPermissions(dataset);
+          if (group !== Action.Delete && !ability.can(group, ds)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to dataset ${relation.targetId}`,
+            );
           } else if (
-            !ability.can(
-              Action.Create,
-              this.generateDatasetInstanceForPermissions(dataset),
-            )
+            group === Action.Delete &&
+            !ability.can(Action.Update, ds)
           ) {
             throw new ForbiddenException(
-              `Unauthorized to create an attachment to dataset ${relation.targetId}`,
+              `Unauthorized to ${group} an attachment to dataset ${relation.targetId}`,
             );
           }
           return;

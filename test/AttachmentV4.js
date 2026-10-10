@@ -63,7 +63,7 @@ describe("Attachments v4 tests", () => {
       .then((res) => {
         sampleId = res.body.sampleId;
       });
-    
+
     relationshipsCorrect = [
       {
         targetId: datasetId,
@@ -80,7 +80,6 @@ describe("Attachments v4 tests", () => {
 
   describe("Validation tests", () => {
     it("0100: should not be able to validate attachment if not logged in", async () => {
-      
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send({
@@ -493,7 +492,7 @@ describe("Attachments v4 tests", () => {
         .send({
           ...TestData.AttachmentCorrectV4,
           relationships: relationshipsCorrect,
-          aid: uuidv4()
+          aid: uuidv4(),
         })
         .auth(accessTokenUser2, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
@@ -885,6 +884,7 @@ describe("Attachments v4 tests", () => {
           publicAttachmentId = null;
         });
     });
+
     describe("Optimistic concurrency control tests", () => {
       it("0510: should fail one request with HTTP 412 when two requests try to update the same attachment", async () => {
         const res = await request(appUrl)
