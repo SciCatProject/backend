@@ -144,6 +144,7 @@ export const ALLOWED_DATASET_FILTER_KEYS: Record<string, string[]> = {
     "$ne",
     "$nin",
     "$not",
+    "$elemMatch",
     "$exists",
     "$regex",
     "$options",
