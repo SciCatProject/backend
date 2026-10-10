@@ -1,6 +1,7 @@
 "use strict";
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
+const { v4: uuidv4 } = require("uuid");
 
 let accessTokenAdminIngestor = null,
   accessTokenUser1 = null,
@@ -146,6 +147,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.user1.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -163,6 +165,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.user3.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -180,6 +183,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.user4.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -197,6 +201,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.adminIngestor.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -214,6 +219,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.archiveManager.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -231,6 +237,7 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
+        proposalId: uuidv4(),
         isPublished: true,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
