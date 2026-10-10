@@ -2407,5 +2407,17 @@ describe("2500: Datasets v4 tests", () => {
           res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
         });
     });
+
+    it("1112: should reject relation conditions on unknown relation fields", async () => {
+      return getDatasets({ "proposals.notAProposalField": "x" }).expect(
+        TestData.BadRequestStatusCode,
+      );
+    });
+
+    it("1113: should reject operators that are not allowed in relation conditions", async () => {
+      return getDatasets({
+        proposals: { $size: 1 },
+      }).expect(TestData.BadRequestStatusCode);
+    });
   });
 });
