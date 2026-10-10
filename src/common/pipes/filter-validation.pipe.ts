@@ -13,8 +13,8 @@ export class FilterValidationPipe implements PipeTransform<string, string> {
       fields: true,
       limits: true,
     },
-    // relations whose fields the where may refer to, e.g. proposals.pi_email
-    private whereRelations: string[] = [],
+    // keys of the relations the where may refer to, e.g. proposals.pi_email
+    private whereRelationKeys: Record<string, string[]> = {},
   ) {}
   transform(inValue: string): string {
     const allAllowedKeys: string[] = [...this.allowedObjectKeys];
@@ -42,12 +42,20 @@ export class FilterValidationPipe implements PipeTransform<string, string> {
      * intercept filter and make sure we only allow accepted values
      */
     flattenFilterKeys.forEach((key) => {
+      let allowAnyPart = false;
       const keyParts = key.split(".");
-      // fields of related documents are not part of the allowed keys
-      let allowAnyPart =
-        keyParts[0] === "where" && this.whereRelations.includes(keyParts[1]);
+      const relation = keyParts[0] === "where" ? keyParts[1] : undefined;
+      // conditions on a relation are checked against the relation's own keys
+      const allowedKeys =
+        relation && Object.hasOwn(this.whereRelationKeys, relation)
+          ? [
+              relation,
+              ...this.whereRelationKeys[relation],
+              ...this.allowedFilterKeys.where,
+            ]
+          : allAllowedKeys;
       keyParts.forEach((part) => {
-        const isInAllowedKeys = allAllowedKeys.includes(part);
+        const isInAllowedKeys = allowedKeys.includes(part);
         if (!isInAllowedKeys && !allowAnyPart) {
           throw new BadRequestException(
             `Property ${key} should not exist in the filter object`,
