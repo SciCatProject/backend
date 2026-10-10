@@ -77,10 +77,12 @@ import {
 import {
   DatasetLookupKeysEnum,
   DATASET_LOOKUP_FIELDS,
+  DATASET_RELATIONS,
   ALLOWED_DATASET_KEYS,
   ALLOWED_DATASET_FILTER_KEYS,
 } from "./types/dataset-lookup";
 import { IncludeValidationPipe } from "src/common/pipes/include-validation.pipe";
+import { RelationWhereValidationPipe } from "./pipes/relation-where-validation.pipe";
 import { PidValidationPipe } from "./pipes/pid-validation.pipe";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { getSwaggerDatasetFilterContent } from "./types/dataset-filter-content";
@@ -393,8 +395,11 @@ export class DatasetsV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
+        undefined,
+        DATASET_RELATIONS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
+      new RelationWhereValidationPipe(),
     )
     queryFilter: string,
   ): Promise<PartialOutputDatasetDto[]> {
@@ -552,8 +557,11 @@ export class DatasetsV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
+        undefined,
+        DATASET_RELATIONS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
+      new RelationWhereValidationPipe(),
     )
     queryFilter: string,
   ): Promise<OutputDatasetDto | null> {
