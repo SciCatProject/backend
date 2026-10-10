@@ -238,7 +238,6 @@ describe("Attachments v4 access tests", () => {
       .send({
         ...TestData.ProposalCorrectComplete,
         proposalId: uuidv4(),
-        isPublished: true,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
