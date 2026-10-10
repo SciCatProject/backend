@@ -464,7 +464,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       Action.Update,
       aid,
     );
-    const updateAttachmentDtoForservice =
+    const updateAttachmentDtoForService =
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
@@ -472,7 +472,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
-      updateAttachmentDtoForservice,
+      updateAttachmentDtoForService,
       unmodifiedSince,
     );
   }
@@ -550,6 +550,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     return this.attachmentsService.create(createAttachmentDto);
   }
 
+  // POST /attachments/isValid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
     ability.can(Action.Create, Attachment),
