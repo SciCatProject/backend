@@ -71,11 +71,52 @@ export class AttachmentAbility {
 
     if (
       user.currentGroups.some((g) =>
+        this.accessGroups?.createDataset?.includes(g),
+      ) ||
+      this.accessGroups?.createDataset?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetWithPid?.includes(g),
+      ) ||
+      this.accessGroups?.createDatasetWithPid?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_WITH_PID_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
         this.accessGroups?.attachmentPrivileged?.includes(g),
       )
     ) {
       /**
        * User belonging to ATTACHMENT_PRIVILEGED_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetPrivileged?.includes(g),
+      )
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
        */
       can(Action.Create, Attachment);
       can(Action.Update, Attachment, ifOwner);
