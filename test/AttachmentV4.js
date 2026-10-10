@@ -3,8 +3,10 @@ const assert = require("node:assert");
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
 
-let accessTokenAdmin = null,
+let accessTokenAdminIngestor = null,
   datasetId = null,
+  proposalId = null,
+  publishedDataId = null,
   sampleId = null,
   privateAttachmentId = null,
   publicAttachmentId = null,
@@ -14,11 +16,13 @@ describe("Attachments v4 endpoint functionality tests", () => {
   before(async () => {
     db.collection("Attachment").deleteMany({});
     db.collection("Dataset").deleteMany({});
+    db.collection("Proposal").deleteMany({});
+    db.collection("PublishedData").deleteMany({});
     db.collection("Sample").deleteMany({});
 
-    accessTokenAdmin = await utils.getToken(appUrl, {
-      username: "admin",
-      password: TestData.Accounts.admin.password,
+    accessTokenAdminIngestor = await utils.getToken(appUrl, {
+      username: "adminIngestor",
+      password: TestData.Accounts.adminIngestor.password,
     });
 
     await request(appUrl)
@@ -27,19 +31,42 @@ describe("Attachments v4 endpoint functionality tests", () => {
         ...TestData.RawCorrectV4,
         ownerGroup: TestData.Accounts.user1.role,
       })
-      .auth(accessTokenAdmin, { type: "bearer" })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
         datasetId = res.body.pid;
       });
 
     await request(appUrl)
-      .post("/api/v3/Samples")
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.user1.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        proposalId = res.body.proposalId;
+      });
+
+    await request(appUrl)
+      .post("/api/v4/PublishedData")
+      .send(TestData.PublishedDataV4)
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        publishedDataId = res.body.doi;
+      });
+
+    await request(appUrl)
+      .post("/api/v3/samples")
       .send({
         ...TestData.SampleCorrect,
         ownerGroup: TestData.Accounts.user1.role,
       })
-      .auth(accessTokenAdmin, { type: "bearer" })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
@@ -52,6 +79,16 @@ describe("Attachments v4 endpoint functionality tests", () => {
         {
           targetId: datasetId,
           targetType: "dataset",
+          relationType: "is attached to",
+        },
+        {
+          targetId: proposalId,
+          targetType: "proposal",
+          relationType: "is attached to",
+        },
+        {
+          targetId: publishedDataId,
+          targetType: "published_data",
           relationType: "is attached to",
         },
         {
@@ -68,7 +105,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -84,7 +121,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
           ...attachmentCorrect,
           isPublished: true,
         })
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -97,7 +134,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(TestData.AttachmentWrongTargetV4)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.NotFoundStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -106,7 +143,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(TestData.AttachmentWrongTypeV4)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.BadRequestStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -117,7 +154,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentCorrectMinV4)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -129,7 +166,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -137,23 +174,20 @@ describe("Attachments v4 endpoint functionality tests", () => {
         });
     });
 
-    it("0202: should not validate attachment with non-existent relation target", async () => {
+    it("0202: should not validate attachment with non-existent relation target and throw", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTargetV4)
-        .auth(accessTokenAdmin, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/)
-        .then((res) => {
-          res.body.should.have.property("valid").and.equal(false);
-        });
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
     });
 
     it("0203: should not validate attachment with invalid relation target type", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTypeV4)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryValidStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -169,7 +203,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
     it("0300: should fetch all attachments", async () => {
       return request(appUrl)
         .get("/api/v4/attachments")
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -190,7 +224,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
     it("0400: should fetch all public attachments", async () => {
       return request(appUrl)
         .get("/api/v4/attachments/public")
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -206,7 +240,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
     it("0500: should fetch attachment by id", async () => {
       return request(appUrl)
         .get(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -221,7 +255,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       await request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -242,7 +276,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .patch(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(updatePayload)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -264,7 +298,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
             documentId: privateAttachmentId,
           }),
         })
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -331,7 +365,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
         .patch(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .set("Content-type", "application/merge-patch+json")
         .send(updatePayload)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -357,7 +391,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       const res = await request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/);
 
@@ -368,14 +402,14 @@ describe("Attachments v4 endpoint functionality tests", () => {
           )
           .send({ caption: "Updated caption 1" })
           .set("if-unmodified-since", res.body.updatedAt)
-          .auth(accessTokenAdmin, { type: "bearer" }),
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
         request(appUrl)
           .patch(
             `/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`,
           )
           .send({ caption: "Updated caption 2" })
           .set("if-unmodified-since", res.body.updatedAt)
-          .auth(accessTokenAdmin, { type: "bearer" }),
+          .auth(accessTokenAdminIngestor, { type: "bearer" }),
       ]);
       assert(
         [res1.statusCode, res2.statusCode].includes(
@@ -396,7 +430,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       await request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -410,7 +444,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(updatePayload)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -426,7 +460,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
         .delete(
           `/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`,
         )
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -438,7 +472,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
     it("0801: should delete public attachment", async () => {
       return request(appUrl)
         .delete(`/api/v4/attachments/${encodeURIComponent(publicAttachmentId)}`)
-        .auth(accessTokenAdmin, { type: "bearer" })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulDeleteStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {

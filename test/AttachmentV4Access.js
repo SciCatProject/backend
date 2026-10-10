@@ -7,22 +7,22 @@ let accessTokenAdminIngestor = null,
   accessTokenUser3 = null,
   accessTokenUser4 = null,
   accessTokenArchiveManager = null,
-  datasetId = null,
-  publishedDataId = null,
-  proposalId = null,
-  sampleId = null,
-  group1AttachmentId = null,
-  group2AttachmentId = null,
+  group1Relationships = [],
+  group3Relationships = [],
+  group4Relationships = [],
+  adminIngestorRelationships = [],
+  archiveManagerRelationships = [],
+  publicRelationships = [],
+  group4AttachmentId = null,
   archiveManagerAttachmentId = null,
-  publicAttachmentId = null,
-  attachmentCorrect = null;
+  publicAttachmentId = null;
 
 describe("Attachments v4 access tests", () => {
   before(async () => {
     db.collection("Attachment").deleteMany({});
     db.collection("Dataset").deleteMany({});
-    db.collection("PublishedData").deleteMany({});
     db.collection("Proposal").deleteMany({});
+    db.collection("PublishedData").deleteMany({});
     db.collection("Sample").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
@@ -55,11 +55,238 @@ describe("Attachments v4 access tests", () => {
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .then((res) => {
-        datasetId = res.body.pid;
+        group1Relationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
       });
 
     await request(appUrl)
-      .post("/api/v3/Samples")
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.user3.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        group3Relationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.user4.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        group4Relationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.adminIngestor.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        adminIngestorRelationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.archiveManager.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        archiveManagerRelationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v4/datasets")
+      .send({
+        ...TestData.RawCorrectV4,
+        ownerGroup: TestData.Accounts.user5.role,
+        isPublished: true,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .then((res) => {
+        publicRelationships.push({
+          targetId: res.body.pid,
+          targetType: "dataset",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.user1.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        group1Relationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.user3.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        group3Relationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.user4.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        group4Relationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.adminIngestor.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        adminIngestorRelationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.archiveManager.role,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        archiveMangerRelationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/proposals")
+      .send({
+        ...TestData.ProposalCorrectComplete,
+        ownerGroup: TestData.Accounts.user5.role,
+        isPublished: true,
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        publicRelationships.push({
+          targetId: res.body.pid,
+          targetType: "proposal",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v4/publisheddata")
+      .send(TestData.PublishedDataV4)
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        group1Relationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+        group3Relationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+        group4Relationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+        adminIngestorRelationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+        archiveManagerRelationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+        publicRelationships.push({
+          targetId: res.body.pid,
+          targetType: "published_data",
+          relationType: "is attached to",
+        });
+      });
+
+    await request(appUrl)
+      .post("/api/v3/samples")
       .send({
         ...TestData.SampleCorrect,
         ownerGroup: TestData.Accounts.user1.role,
@@ -68,58 +295,59 @@ describe("Attachments v4 access tests", () => {
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        sampleId = res.body.sampleId;
-      });
-
-    attachmentCorrect = {
-      ...TestData.AttachmentCorrectV4,
-      relationships: [
-        {
-          targetId: datasetId,
-          targetType: "dataset",
-          relationType: "is attached to",
-        },
-        {
-          targetId: sampleId,
+        group1Relationships.push({
+          targetId: res.body.pid,
           targetType: "sample",
           relationType: "is attached to",
-        },
-      ],
-    };
+        });
+        group3Relationships.push({
+          targetId: res.body.pid,
+          targetType: "sample",
+          relationType: "is attached to",
+        });
+        group4Relationships.push({
+          targetId: res.body.pid,
+          targetType: "sample",
+          relationType: "is attached to",
+        });
+        adminIngestorRelationships.push({
+          targetId: res.body.pid,
+          targetType: "sample",
+          relationType: "is attached to",
+        });
+        archiveManagerRelationships.push({
+          targetId: res.body.pid,
+          targetType: "sample",
+          relationType: "is attached to",
+        });
+        publicRelationships.push({
+          targetId: res.body.pid,
+          targetType: "sample",
+          relationType: "is attached to",
+        });
+      });
 
     await request(appUrl)
       .post("/api/v4/attachments")
       .send({
-        ...attachmentCorrect,
-        ownerGroup: TestData.Accounts.user1.role,
+        ...TestData.AttachmentCorrectV4,
+        ownerGroup: TestData.Accounts.user4.role,
+        relationships: group4Relationships,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
         res.body.should.have.property("aid").and.be.a("string");
-        group1AttachmentId = res.body.aid;
+        group4AttachmentId = res.body.aid;
       });
 
     await request(appUrl)
       .post("/api/v4/attachments")
       .send({
-        ...attachmentCorrect,
-        ownerGroup: TestData.Accounts.user2.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("aid").and.be.a("string");
-        group2AttachmentId = res.body.aid;
-      });
-
-    await request(appUrl)
-      .post("/api/v4/attachments")
-      .send({
-        ...attachmentCorrect,
+        ...TestData.AttachmentCorrectV4,
         ownerGroup: TestData.Accounts.archiveManager.role,
+        relationships: archiveManagerRelationships,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
@@ -132,9 +360,10 @@ describe("Attachments v4 access tests", () => {
     await request(appUrl)
       .post("/api/v4/attachments")
       .send({
-        ...attachmentCorrect,
-        ownerGroup: TestData.Accounts.user4.role,
+        ...TestData.AttachmentCorrectV4,
+        ownerGroup: TestData.Accounts.user5.role,
         isPublished: true,
+        relationships: publicRelationships,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
@@ -146,18 +375,18 @@ describe("Attachments v4 access tests", () => {
   });
 
   describe("Unauthenticated user access", () => {
-    it("0100: cannot validate attachment", async () => {
+    it("0100: cannot create attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments")
+        .send(TestData.AttachmentCorrectV4)
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0101: cannot create attachment", async () => {
+    it("0101: cannot validate attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments/isValid")
+        .send(TestData.AttachmentCorrectV4)
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -189,7 +418,7 @@ describe("Attachments v4 access tests", () => {
 
     it("0104: cannot fetch private attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group1AttachmentId)}`)
+        .get(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -205,7 +434,7 @@ describe("Attachments v4 access tests", () => {
     it("0106: cannot update attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(publicAttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "unauthorized" })
+        .send({ ...TestData.AttachmentCorrectV4, caption: "unauthorized" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -219,19 +448,27 @@ describe("Attachments v4 access tests", () => {
   });
 
   describe("Authenticated user access (no special group membership)", () => {
-    it("0200: cannot validate attachment", async () => {
+    it("0200: cannot create attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+        })
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0201: cannot create attachment", async () => {
+    it("0201: cannot validate attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+        })
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -249,10 +486,10 @@ describe("Attachments v4 access tests", () => {
           const [res1, res2] = res.body;
           res1.should.have
             .property("aid")
-            .and.be.oneOf([group2AttachmentId, publicAttachmentId]);
+            .and.be.oneOf([group4AttachmentId, publicAttachmentId]);
           res2.should.have
             .property("aid")
-            .and.be.oneOf([group2AttachmentId, publicAttachmentId]);
+            .and.be.oneOf([group4AttachmentId, publicAttachmentId]);
         });
     });
 
@@ -270,19 +507,21 @@ describe("Attachments v4 access tests", () => {
 
     it("0204: can fetch own attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .get(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.a("object");
-          res.body.should.have.property("aid").and.equal(group2AttachmentId);
+          res.body.should.have.property("aid").and.equal(group4AttachmentId);
         });
     });
 
     it("0205: cannot fetch foreign attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group1AttachmentId)}`)
+        .get(
+          `/api/v4/attachments/${encodeURIComponent(archiveManagerAttachmentId)}`,
+        )
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -290,7 +529,7 @@ describe("Attachments v4 access tests", () => {
 
     it("0206: cannot update attachment with PATCH", async () => {
       return request(appUrl)
-        .patch(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .patch(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .send({ caption: "unauthorized" })
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
@@ -299,8 +538,8 @@ describe("Attachments v4 access tests", () => {
 
     it("0207: cannot update attachment with PUT", async () => {
       return request(appUrl)
-        .put(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "unauthorized" })
+        .put(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
+        .send({ ...TestData.AttachmentCorrectV4, caption: "unauthorized" })
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -308,7 +547,7 @@ describe("Attachments v4 access tests", () => {
 
     it("0208: cannot delete attachment", async () => {
       return request(appUrl)
-        .delete(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .delete(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -318,36 +557,13 @@ describe("Attachments v4 access tests", () => {
   describe("ATTACHMENT_GROUPS user access", () => {
     let newAttachmentId = null;
 
-    it("0300: can validate attachment for own ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user1.role,
-        })
-        .auth(accessTokenUser1, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0301: cannot validate attachment for foreign ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
-        })
-        .auth(accessTokenUser1, { type: "bearer" })
-        .expect(TestData.AccessForbiddenStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0302: can create attachment for own ownerGroup", async () => {
+    it("0300: can create attachment for own ownerGroup with owned relationships", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
+          ...TestData.AttachmentCorrectV4,
           ownerGroup: TestData.Accounts.user1.role,
+          relationships: group1Relationships,
         })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
@@ -358,23 +574,79 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have
             .property("ownerGroup")
             .and.equal(TestData.Accounts.user1.role);
+          res.body.should.have
+            .property("relationships")
+            .and.deep.equal(group1Relationships);
           newAttachmentId = res.body.aid;
         });
     });
 
-    it("0303: cannot create attachment for foreign ownerGroup", async () => {
+    it("0301: cannot create attachment for own ownerGroup with foreign relationships", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user1.role,
+          relationships: group4Relationships,
         })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0304: can fetch only public attachments and attachments owned by their group", async () => {
+    it("0302: cannot create attachment for foreign ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group1Relationships,
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0303: can validate attachment for own ownerGroup with own relationships", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user1.role,
+          relationships: group1Relationships,
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0304: cannot validate attachment for own ownerGroup with foreign relationships", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user1.role,
+          relationships: group4Relationships,
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0305: cannot validate attachment for foreign ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+        })
+        .auth(accessTokenUser1, { type: "bearer" })
+        .expect(TestData.AccessForbiddenStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0306: can fetch only public attachments and attachments owned by their group", async () => {
       return request(appUrl)
         .get("/api/v4/attachments")
         .auth(accessTokenUser1, { type: "bearer" })
@@ -382,33 +654,18 @@ describe("Attachments v4 access tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.an("array");
-          res.body.should.have.length(3);
-          const [res1, res2, res3] = res.body;
+          res.body.should.have.length(2);
+          const [res1, res2] = res.body;
           res1.should.have
             .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
+            .and.be.oneOf([newAttachmentId, publicAttachmentId]);
           res2.should.have
             .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
-          res3.should.have
-            .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
+            .and.be.oneOf([newAttachmentId, publicAttachmentId]);
         });
     });
 
-    it("0305: can fetch public attachment by id", async () => {
+    it("0307: can fetch public attachment by id", async () => {
       return request(appUrl)
         .get(`/api/v4/attachments/${encodeURIComponent(publicAttachmentId)}`)
         .auth(accessTokenUser1, { type: "bearer" })
@@ -420,27 +677,27 @@ describe("Attachments v4 access tests", () => {
         });
     });
 
-    it("0306: can fetch own attachment by id", async () => {
+    it("0308: can fetch own attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group1AttachmentId)}`)
+        .get(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.a("object");
-          res.body.should.have.property("aid").and.equal(group1AttachmentId);
+          res.body.should.have.property("aid").and.equal(newAttachmentId);
         });
     });
 
-    it("0307: cannot fetch foreign attachment by id", async () => {
+    it("0309: cannot fetch foreign attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .get(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0308: can update own attachment with PATCH", async () => {
+    it("0310: can update own attachment with PATCH", async () => {
       return request(appUrl)
         .patch(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
         .send({ caption: "patched by user1" })
@@ -454,19 +711,19 @@ describe("Attachments v4 access tests", () => {
         });
     });
 
-    it("0309: cannot update foreign attachment with PATCH", async () => {
+    it("0311: cannot update foreign attachment with PATCH", async () => {
       return request(appUrl)
-        .patch(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .patch(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .send({ caption: "patched by user1" })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0310: can update own attachment with PUT", async () => {
+    it("0312: can update own attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "updated by user1" })
+        .send({ ...TestData.AttachmentCorrectV4, caption: "updated by user1" })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
@@ -477,16 +734,16 @@ describe("Attachments v4 access tests", () => {
         });
     });
 
-    it("0311: cannot update foreign attachment with PUT", async () => {
+    it("0313: cannot update foreign attachment with PUT", async () => {
       return request(appUrl)
-        .put(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "updated by user1" })
+        .put(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
+        .send({ ...TestData.AttachmentCorrectV4, caption: "updated by user1" })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0312: can delete own attachment", async () => {
+    it("0314: can delete own attachment", async () => {
       return request(appUrl)
         .delete(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
         .auth(accessTokenUser1, { type: "bearer" })
@@ -497,9 +754,9 @@ describe("Attachments v4 access tests", () => {
         });
     });
 
-    it("0313: cannot delete foreign attachment", async () => {
+    it("0315: cannot delete foreign attachment", async () => {
       return request(appUrl)
-        .delete(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
+        .delete(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -523,36 +780,13 @@ describe("Attachments v4 access tests", () => {
         });
     });
 
-    it("0400: can validate attachment for own ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user3.role,
-        })
-        .auth(accessTokenUser3, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0401: can validate attachment for foreign ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
-        })
-        .auth(accessTokenUser3, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0402: can create attachment for own ownerGroup", async () => {
+    it("0400: can create attachment for own ownerGroup", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
+          ...TestData.AttachmentCorrectV4,
           ownerGroup: TestData.Accounts.user3.role,
+          relationships: group3Relationships,
         })
         .auth(accessTokenUser3, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
@@ -563,16 +797,20 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have
             .property("ownerGroup")
             .and.equal(TestData.Accounts.user3.role);
+          res.body.should.have
+            .property("relationships")
+            .and.deep.equal(group3Relationships);
           newAttachmentId = res.body.aid;
         });
     });
 
-    it("0403: can create attachment for foreign ownerGroup", async () => {
+    it("0401: can create attachment for foreign ownerGroup", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
         })
         .auth(accessTokenUser3, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
@@ -582,9 +820,38 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have.property("aid").and.be.a("string");
           res.body.should.have
             .property("ownerGroup")
-            .and.equal(TestData.Accounts.user2.role);
+            .and.equal(TestData.Accounts.user4.role);
+          res.body.should.have
+            .property("relationships")
+            .and.deep.equal(group4Relationships);
           crossGroupAttachmentId = res.body.aid;
         });
+    });
+
+    it("0402: can validate attachment for own ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user3.role,
+          relationships: group3Relationships,
+        })
+        .auth(accessTokenUser3, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0403: can validate attachment for foreign ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+        })
+        .auth(accessTokenUser3, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/);
     });
 
     it("0404: can fetch only public attachments and attachments owned by their group", async () => {
@@ -595,29 +862,14 @@ describe("Attachments v4 access tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.an("array");
-          res.body.should.have.length(3);
-          const [res1, res2, res3] = res.body;
+          res.body.should.have.length(2);
+          const [res1, res2] = res.body;
           res1.should.have
             .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
+            .and.be.oneOf([newAttachmentId, publicAttachmentId]);
           res2.should.have
             .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
-          res3.should.have
-            .property("aid")
-            .and.be.oneOf([
-              newAttachmentId,
-              group1AttachmentId,
-              publicAttachmentId,
-            ]);
+            .and.be.oneOf([newAttachmentId, publicAttachmentId]);
         });
     });
 
@@ -683,7 +935,12 @@ describe("Attachments v4 access tests", () => {
     it("0410: can update own attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "updated by user3" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user3.role,
+          relationships: group3Relationships,
+          caption: "updated by user3",
+        })
         .auth(accessTokenUser3, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
@@ -699,7 +956,12 @@ describe("Attachments v4 access tests", () => {
         .put(
           `/api/v4/attachments/${encodeURIComponent(crossGroupAttachmentId)}`,
         )
-        .send({ ...attachmentCorrect, caption: "updated by user3" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+          caption: "updated by user3",
+        })
         .auth(accessTokenUser3, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -731,36 +993,13 @@ describe("Attachments v4 access tests", () => {
     let newAttachmentId = null;
     let crossGroupAttachmentId = null;
 
-    it("0500: can validate attachment for own ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.adminIngestor.role,
-        })
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0501: can validate attachment for foreign ownerGroup", async () => {
-      return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
-        })
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.EntryValidStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
-    it("0502: can create attachment for own ownerGroup", async () => {
+    it("0500: can create attachment for own ownerGroup", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
+          ...TestData.AttachmentCorrectV4,
           ownerGroup: TestData.Accounts.adminIngestor.role,
+          relationships: adminIngestorRelationships,
         })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
@@ -771,16 +1010,20 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have
             .property("ownerGroup")
             .and.equal(TestData.Accounts.adminIngestor.role);
+          res.body.should.have
+            .property("relationships")
+            .and.deep.equal(adminIngestorRelationships);
           newAttachmentId = res.body.aid;
         });
     });
 
-    it("0503: can create attachment for foreign ownerGroup", async () => {
+    it("0501: can create attachment for foreign ownerGroup", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send({
-          ...attachmentCorrect,
-          ownerGroup: TestData.Accounts.user2.role,
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
         })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.EntryCreatedStatusCode)
@@ -790,9 +1033,38 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have.property("aid").and.be.a("string");
           res.body.should.have
             .property("ownerGroup")
-            .and.equal(TestData.Accounts.user2.role);
+            .and.equal(TestData.Accounts.user4.role);
+          res.body.should.have
+            .property("relationships")
+            .and.deep.equal(group4Relationships);
           crossGroupAttachmentId = res.body.aid;
         });
+    });
+
+    it("0502: can validate attachment for own ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.adminIngestor.role,
+          relationships: adminIngestorRelationships,
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0503: can validate attachment for foreign ownerGroup", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/);
     });
 
     it("0504: can fetch all attachments", async () => {
@@ -810,8 +1082,7 @@ describe("Attachments v4 access tests", () => {
               .and.be.oneOf([
                 newAttachmentId,
                 crossGroupAttachmentId,
-                group1AttachmentId,
-                group2AttachmentId,
+                group4AttachmentId,
                 archiveManagerAttachmentId,
                 publicAttachmentId,
               ]);
@@ -892,7 +1163,12 @@ describe("Attachments v4 access tests", () => {
     it("0510: can update own attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
-        .send({ ...attachmentCorrect, caption: "updated by adminIngestor" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.adminIngestor.role,
+          relationships: adminIngestorRelationships,
+          caption: "updated by adminIngestor",
+        })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
@@ -908,7 +1184,12 @@ describe("Attachments v4 access tests", () => {
         .put(
           `/api/v4/attachments/${encodeURIComponent(crossGroupAttachmentId)}`,
         )
-        .send({ ...attachmentCorrect, caption: "updated by adminIngestor" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+          caption: "updated by adminIngestor",
+        })
         .auth(accessTokenAdminIngestor, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
@@ -945,19 +1226,27 @@ describe("Attachments v4 access tests", () => {
   });
 
   describe("DELETE_GROUPS user access", () => {
-    it("0600: cannot validate attachment", async () => {
+    it("0600: cannot create attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments/isValid")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.archiveManager.role,
+          relationships: archiveManagerRelationships,
+        })
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
 
-    it("0601: cannot create attachment", async () => {
+    it("0601: cannot validate attachment", async () => {
       return request(appUrl)
-        .post("/api/v4/attachments")
-        .send(attachmentCorrect)
+        .post("/api/v4/attachments/isValid")
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.archiveManager.role,
+          relationships: archiveManagerRelationships,
+        })
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -1012,7 +1301,7 @@ describe("Attachments v4 access tests", () => {
 
     it("0605: cannot fetch foreign attachment by id", async () => {
       return request(appUrl)
-        .get(`/api/v4/attachments/${encodeURIComponent(group1AttachmentId)}`)
+        .get(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
@@ -1034,7 +1323,12 @@ describe("Attachments v4 access tests", () => {
         .put(
           `/api/v4/attachments/${encodeURIComponent(archiveManagerAttachmentId)}`,
         )
-        .send({ ...attachmentCorrect, caption: "unauthorized" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.archiveManager.role,
+          relationships: archiveManagerRelationships,
+          caption: "unauthorized",
+        })
         .auth(accessTokenArchiveManager, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);

@@ -166,6 +166,9 @@ export class AttachmentsV4Controller {
     group: Action,
     relations: AttachmentRelationshipClass[],
   ) {
+    if (group === Action.Read) {
+      return;
+    }
     for (const relation of relations) {
       let ability;
       switch (relation.targetType) {
@@ -242,7 +245,7 @@ export class AttachmentsV4Controller {
           return;
       }
     }
-    return true;
+    return;
   }
 
   private addAccessBasedFilters(
@@ -599,15 +602,12 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
 
     const user: JWTUser = request.user as JWTUser;
 
-    try {
-      await this.checkPermissionsForAttachmentCreate(
-        user,
-        Action.Create,
-        CreateAttachmentDtoInstance,
-      );
-    } catch {
-      return { valid: false };
-    }
+    await this.checkPermissionsForAttachmentCreate(
+      user,
+      Action.Create,
+      CreateAttachmentDtoInstance,
+    );
+
     const errorsAttachment = await validate(
       CreateAttachmentDtoInstance,
       validatorOptions,
