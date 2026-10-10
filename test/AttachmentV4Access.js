@@ -4,10 +4,12 @@ const { TestData } = require("./TestData");
 
 let accessTokenAdminIngestor = null,
   accessTokenUser1 = null,
-  accessTokenUser2 = null,
   accessTokenUser3 = null,
+  accessTokenUser4 = null,
   accessTokenArchiveManager = null,
   datasetId = null,
+  publishedDataId = null,
+  proposalId = null,
   sampleId = null,
   group1AttachmentId = null,
   group2AttachmentId = null,
@@ -19,6 +21,8 @@ describe("Attachments v4 access tests", () => {
   before(async () => {
     db.collection("Attachment").deleteMany({});
     db.collection("Dataset").deleteMany({});
+    db.collection("PublishedData").deleteMany({});
+    db.collection("Proposal").deleteMany({});
     db.collection("Sample").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
@@ -29,13 +33,13 @@ describe("Attachments v4 access tests", () => {
       username: "user1",
       password: TestData.Accounts.user1.password,
     });
-    accessTokenUser2 = await utils.getToken(appUrl, {
-      username: "user2",
-      password: TestData.Accounts.user2.password,
-    });
     accessTokenUser3 = await utils.getToken(appUrl, {
       username: "user3",
       password: TestData.Accounts.user3.password,
+    });
+    accessTokenUser4 = await utils.getToken(appUrl, {
+      username: "user4",
+      password: TestData.Accounts.user4.password,
     });
     accessTokenArchiveManager = await utils.getToken(appUrl, {
       username: "archiveManager",
@@ -168,7 +172,7 @@ describe("Attachments v4 access tests", () => {
           res.body.should.have.length(1);
           const [res1] = res.body;
           res1.should.have.property("aid").and.equal(publicAttachmentId);
-          res2.should.have.property("isPublished").and.equal(true);
+          res1.should.have.property("isPublished").and.equal(true);
         });
     });
 
@@ -219,7 +223,7 @@ describe("Attachments v4 access tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(attachmentCorrect)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -228,7 +232,7 @@ describe("Attachments v4 access tests", () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(attachmentCorrect)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -236,7 +240,7 @@ describe("Attachments v4 access tests", () => {
     it("0202: can fetch only public attachments and attachments owned by their group", async () => {
       return request(appUrl)
         .get("/api/v4/attachments")
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -255,7 +259,7 @@ describe("Attachments v4 access tests", () => {
     it("0203: can fetch public attachment by id", async () => {
       return request(appUrl)
         .get(`/api/v4/attachments/${encodeURIComponent(publicAttachmentId)}`)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -267,7 +271,7 @@ describe("Attachments v4 access tests", () => {
     it("0204: can fetch own attachment by id", async () => {
       return request(appUrl)
         .get(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
         .then((res) => {
@@ -279,7 +283,7 @@ describe("Attachments v4 access tests", () => {
     it("0205: cannot fetch foreign attachment by id", async () => {
       return request(appUrl)
         .get(`/api/v4/attachments/${encodeURIComponent(group1AttachmentId)}`)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -288,7 +292,7 @@ describe("Attachments v4 access tests", () => {
       return request(appUrl)
         .patch(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
         .send({ caption: "unauthorized" })
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -297,7 +301,7 @@ describe("Attachments v4 access tests", () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
         .send({ ...attachmentCorrect, caption: "unauthorized" })
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
@@ -305,7 +309,7 @@ describe("Attachments v4 access tests", () => {
     it("0208: cannot delete attachment", async () => {
       return request(appUrl)
         .delete(`/api/v4/attachments/${encodeURIComponent(group2AttachmentId)}`)
-        .auth(accessTokenUser2, { type: "bearer" })
+        .auth(accessTokenUser4, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });

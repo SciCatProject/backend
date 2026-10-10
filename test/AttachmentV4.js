@@ -287,7 +287,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
             .and.equal(attachmentCorrect.caption);
           updateHistory.before.should.have
             .property("thumbnail")
-            .and.equal(attachmentCorrect.caption);
+            .and.equal(attachmentCorrect.thumbnail);
           updateHistory.before.should.have
             .property("relationships")
             .and.deep.equal(attachmentCorrect.relationships);
@@ -328,9 +328,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       };
 
       return request(appUrl)
-        .patch(
-          `/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`,
-        )
+        .patch(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .set("Content-type", "application/merge-patch+json")
         .send(updatePayload)
         .auth(accessTokenAdmin, { type: "bearer" })

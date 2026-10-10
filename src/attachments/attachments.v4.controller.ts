@@ -15,7 +15,6 @@ import {
   Patch,
   Put,
   HttpCode,
-  BadRequestException,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -62,6 +61,7 @@ import { AttachmentRelationTargetType } from "./types/relationship-filter.enum";
 import { parseDate } from "src/common/utils";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { DatasetsService } from "src/datasets/datasets.service";
+import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataService } from "src/published-data/published-data.service";
 import { SamplesService } from "src/samples/samples.service";
@@ -96,9 +96,9 @@ export class AttachmentsV4Controller {
     attachment: Attachment | CreateAttachmentV4Dto,
   ): Attachment {
     const attachmentInstance = new Attachment();
-    attachmentInstance.accessGroups = attachment.accessGroups || [];
-    attachmentInstance.ownerGroup = attachment.ownerGroup || "";
     attachmentInstance.aid = attachment.aid || "";
+    attachmentInstance.ownerGroup = attachment.ownerGroup || "";
+    attachmentInstance.accessGroups = attachment.accessGroups || [];
     attachmentInstance.isPublished = attachment.isPublished || false;
 
     return attachmentInstance;
@@ -108,14 +108,24 @@ export class AttachmentsV4Controller {
     dataset: DatasetClass,
   ): DatasetClass {
     const datasetInstance = new DatasetClass();
-    datasetInstance._id = dataset.pid || "";
     datasetInstance.pid = dataset.pid || "";
-    datasetInstance.ownerGroup = dataset.ownerGroup;
+    datasetInstance.ownerGroup = dataset.ownerGroup || "";
     datasetInstance.accessGroups = dataset.accessGroups || [];
-    datasetInstance.sharedWith = dataset.sharedWith;
     datasetInstance.isPublished = dataset.isPublished || false;
 
     return datasetInstance;
+  }
+
+  private generateProposalInstanceForPermissions(
+    proposal: ProposalClass,
+  ): ProposalClass {
+    const proposalInstance = new ProposalClass();
+    proposalInstance.proposalId = proposal.proposalId || "";
+    proposalInstance.ownerGroup = proposal.ownerGroup || "";
+    proposalInstance.accessGroups = proposal.accessGroups || [];
+    proposalInstance.isPublished = proposal.isPublished || false;
+
+    return proposalInstance;
   }
 
   private permissionChecker(
@@ -157,6 +167,7 @@ export class AttachmentsV4Controller {
     relations: AttachmentRelationshipClass[],
   ) {
     for (const relation of relations) {
+      let ability;
       switch (relation.targetType) {
         case AttachmentRelationTargetType.Dataset:
           const dataset = await this.datasetsService.findOne({
@@ -167,7 +178,7 @@ export class AttachmentsV4Controller {
               `Dataset ${relation.targetId} not found for linking an attachment`,
             );
           }
-          const ability = this.caslAbilityFactory.datasetAccess(user);
+          ability = this.caslAbilityFactory.datasetAccess(user);
           const ds = this.generateDatasetInstanceForPermissions(dataset);
           if (group !== Action.Delete && !ability.can(group, ds)) {
             throw new ForbiddenException(
@@ -190,6 +201,20 @@ export class AttachmentsV4Controller {
           if (!proposal) {
             throw new NotFoundException(
               `Proposal ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          ability = this.caslAbilityFactory.proposalAccess(user);
+          const pr = this.generateProposalInstanceForPermissions(proposal);
+          if (group !== Action.Delete && !ability.can(group, pr)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to proposal ${relation.targetId}`,
+            );
+          } else if (
+            group === Action.Delete &&
+            !ability.can(Action.Update, pr)
+          ) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to proposal ${relation.targetId}`,
             );
           }
           return;
@@ -580,10 +605,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
         Action.Create,
         CreateAttachmentDtoInstance,
       );
-    } catch (error) {
+    } catch {
       return { valid: false };
     }
-    
     const errorsAttachment = await validate(
       CreateAttachmentDtoInstance,
       validatorOptions,

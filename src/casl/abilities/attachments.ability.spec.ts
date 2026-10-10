@@ -20,6 +20,8 @@ import {
   attachmentPrivilegedUser2,
   createDatasetPrivilegedUser1,
   createDatasetPrivilegedUser2,
+  proposalUser1,
+  proposalUser2,
   publicAttachment,
   ownedAttachment,
 } from "./test-data.util";
@@ -237,6 +239,38 @@ describe("AttachmentAbility", () => {
 
     it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("PROPOSAL_GROUPS permissions", () => {
+    it("should give correct rights to PROPOSAL_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(proposalUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to PROPOSAL_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(proposalUser2);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
       expect(ability.can(Action.Create, Attachment)).toBe(true);

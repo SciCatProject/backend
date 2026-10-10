@@ -123,6 +123,19 @@ export class AttachmentAbility {
       can(Action.Delete, Attachment, ifOwner);
     }
 
+    if (
+      user.currentGroups.some((g) => {
+        return this.accessGroups?.proposal?.includes(g);
+      })
+    ) {
+      /**
+       * User belonging to PROPOSAL_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
