@@ -116,6 +116,7 @@ describe("1165: Jobs test filters and access", () => {
       });
     const attachment = {
       ...TestData.AttachmentCorrectV4,
+      isPublished: true,
       relationships: [
         {
           targetId: datasetPid1,

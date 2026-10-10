@@ -130,7 +130,6 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v4/datasets")
       .send({
         ...TestData.RawCorrectV4,
-        ownerGroup: TestData.Accounts.user6.role,
         isPublished: true,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -232,7 +231,6 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/proposals")
       .send({
         ...TestData.ProposalCorrectComplete,
-        ownerGroup: TestData.Accounts.user6.role,
         isPublished: true,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -361,7 +359,6 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v4/attachments")
       .send({
         ...TestData.AttachmentCorrectV4,
-        ownerGroup: TestData.Accounts.user6.role,
         isPublished: true,
         relationships: publicRelationships,
       })
