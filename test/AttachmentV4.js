@@ -179,7 +179,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTargetV4)
         .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.AccessForbiddenStatusCode)
+        .expect(TestData.NotFoundStatusCode)
         .expect("Content-Type", /json/);
     });
 

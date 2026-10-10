@@ -141,7 +141,6 @@ const TestData = {
     proposalId: "",
     ownerGroup: "ess",
     accessGroups: ["loki", "odin"],
-    relationships: [],
   },
 
   AttachmentCorrectMinV4: {
