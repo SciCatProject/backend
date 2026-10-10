@@ -32,3 +32,23 @@ export class RelationWhereValidationPipe implements PipeTransform<
     return inValue;
   }
 }
+
+@Injectable()
+export class NoRelationWhereValidationPipe implements PipeTransform<
+  string,
+  string
+> {
+  transform(inValue: string): string {
+    if (!inValue || !isJsonString(inValue)) return inValue;
+    const used = findRelationsInWhere(
+      JSON.parse(inValue).where,
+      DATASET_RELATIONS,
+    );
+    if (used.length > 0)
+      throw new BadRequestException(
+        `Conditions on relations (${used.join(", ")}) are only supported in API v4`,
+      );
+
+    return inValue;
+  }
+}

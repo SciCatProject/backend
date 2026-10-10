@@ -2389,32 +2389,13 @@ describe("2500: Datasets v4 tests", () => {
         .expect(TestData.BadRequestStatusCode);
     });
 
-    it("1111: should only match relations the user can access on v3", async () => {
-      return request(appUrl)
-        .get("/api/v3/datasets")
-        .query({
-          filter: JSON.stringify({
-            where: {
-              pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] },
-              proposals: { $ne: [] },
-            },
-            ...proposalsInclude,
-          }),
-        })
-        .auth(accessTokenUser1, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .then((res) => {
-          res.body.map((d) => d.pid).should.have.members([pidOnlyA, pidAAndB]);
-        });
-    });
-
-    it("1112: should reject relation conditions on unknown relation fields", async () => {
+    it("1111: should reject relation conditions on unknown relation fields", async () => {
       return getDatasets({ "proposals.notAProposalField": "x" }).expect(
         TestData.BadRequestStatusCode,
       );
     });
 
-    it("1113: should reject operators that are not allowed in relation conditions", async () => {
+    it("1112: should reject operators that are not allowed in relation conditions", async () => {
       return getDatasets({
         proposals: { $size: 1 },
       }).expect(TestData.BadRequestStatusCode);

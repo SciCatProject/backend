@@ -73,10 +73,7 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
-import {
-  findRelationsInWhere,
-  splitWhereByRelations,
-} from "./utils/relation-where.util";
+import { splitWhereByRelations } from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -108,7 +105,6 @@ export class DatasetsService {
     pipeline: PipelineStage[],
     datasetLookupFields?: (DatasetLookupKeysEnum | IDatasetRelation)[],
     applyDefaults = true,
-    filteredRelations: string[] = [],
   ) {
     const relationsAndScopes =
       this.extractRelationsAndScopes(datasetLookupFields);
@@ -121,8 +117,7 @@ export class DatasetsService {
       fieldValue.$lookup.as = field;
       const scope = scopes[field];
 
-      // relations the where filters on only expose documents the user can read
-      if (applyDefaults || filteredRelations.includes(field))
+      if (applyDefaults)
         this.datasetsAccessService.addRelationFieldAccess(fieldValue);
 
       const includePipeline = [];
@@ -262,7 +257,6 @@ export class DatasetsService {
       pipeline,
       filter.include,
       applyDefaults,
-      findRelationsInWhere(after, relations),
     );
     if (!isEmpty(after)) pipeline.push({ $match: after });
 
