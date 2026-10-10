@@ -2224,4 +2224,181 @@ describe("2500: Datasets v4 tests", () => {
         .should.deep.equal([`title of ${proposalB}`]);
     });
   });
+
+  describe("Datasets v4 where on included relations tests", () => {
+    const piA = "pi.a@relation-where.test";
+    const proposalA = `relation-where-a-${uuidv4()}`;
+    const proposalB = `relation-where-b-${uuidv4()}`;
+    let pidOnlyA, pidAAndB, pidOnlyB;
+
+    const proposalsInclude = { include: [{ relation: "proposals" }] };
+
+    const getDatasets = (where, filter = proposalsInclude, token) =>
+      request(appUrl)
+        .get("/api/v4/datasets")
+        .query({
+          filter: JSON.stringify({
+            where: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] }, ...where },
+            ...filter,
+          }),
+        })
+        .auth(token ?? accessTokenAdminIngestor, { type: "bearer" });
+
+    const expectPids = (where, pids, filter, token) =>
+      getDatasets(where, filter, token)
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => res.body.map((d) => d.pid).should.have.members(pids));
+
+    before(async () => {
+      for (const [proposalId, pi_email, ownerGroup] of [
+        [proposalA, piA, "group1"],
+        [proposalB, "pi.b@relation-where.test", "group2"],
+      ]) {
+        await request(appUrl)
+          .post("/api/v3/proposals")
+          .send({
+            ...TestData.ProposalCorrectMin,
+            proposalId,
+            pi_email,
+            ownerGroup,
+          })
+          .auth(accessTokenAdminIngestor, { type: "bearer" })
+          .expect(TestData.EntryCreatedStatusCode);
+      }
+
+      const createDataset = async (proposalIds) => {
+        const res = await request(appUrl)
+          .post("/api/v4/datasets")
+          .send({
+            ...TestData.DerivedCorrectMinV4,
+            ownerGroup: "group1",
+            proposalIds,
+          })
+          .auth(accessTokenAdminIngestor, { type: "bearer" })
+          .expect(TestData.EntryCreatedStatusCode);
+        return res.body.pid;
+      };
+      pidOnlyA = await createDataset([proposalA]);
+      pidAAndB = await createDataset([proposalA, proposalB]);
+      pidOnlyB = await createDataset([proposalB]);
+    });
+
+    after(async () => {
+      await processArray([
+        { pid: pidOnlyA },
+        { pid: pidAAndB },
+        { pid: pidOnlyB },
+      ]);
+      await db
+        .collection("Proposal")
+        .deleteMany({ proposalId: { $in: [proposalA, proposalB] } });
+    });
+
+    it("1100: should return all datasets when the where does not refer to the relation", async () => {
+      return expectPids({}, [pidOnlyA, pidAAndB, pidOnlyB]);
+    });
+
+    it("1101: should return datasets with at least one matching relation", async () => {
+      return expectPids({ "proposals.pi_email": piA }, [pidOnlyA, pidAAndB]);
+    });
+
+    it("1102: should return datasets whose relations all match", async () => {
+      return expectPids(
+        {
+          proposals: {
+            $ne: [],
+            $not: { $elemMatch: { pi_email: { $ne: piA } } },
+          },
+        },
+        [pidOnlyA],
+      );
+    });
+
+    it("1103: should return datasets with no matching relation", async () => {
+      return expectPids(
+        { proposals: { $not: { $elemMatch: { pi_email: piA } } } },
+        [pidOnlyB],
+      );
+    });
+
+    it("1104: should only match relations the user can access", async () => {
+      return expectPids(
+        { proposals: { $ne: [] } },
+        [pidOnlyA, pidAAndB],
+        proposalsInclude,
+        accessTokenUser1,
+      );
+    });
+
+    it("1105: should match an $or mixing dataset and relation conditions", async () => {
+      return expectPids(
+        { $or: [{ pid: pidOnlyB }, { "proposals.pi_email": piA }] },
+        [pidOnlyA, pidAAndB, pidOnlyB],
+      );
+    });
+
+    it("1106: should split relation conditions out of $and", async () => {
+      return expectPids(
+        {
+          $and: [{ "proposals.pi_email": piA }, { pid: { $ne: pidOnlyA } }],
+        },
+        [pidAAndB],
+      );
+    });
+
+    it("1107: should apply the include scope before the where", async () => {
+      return expectPids(
+        { "proposals.pi_email": "pi.b@relation-where.test" },
+        [],
+        {
+          include: [
+            { relation: "proposals", scope: { where: { pi_email: piA } } },
+          ],
+        },
+      );
+    });
+
+    it("1108: should paginate the datasets after the relation conditions", async () => {
+      const sorted = [pidOnlyA, pidAAndB].sort();
+      return getDatasets(
+        { "proposals.pi_email": piA },
+        {
+          ...proposalsInclude,
+          limits: { skip: 1, limit: 1, sort: { pid: "asc" } },
+        },
+      )
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.deep.equal([sorted[1]]);
+        });
+    });
+
+    it("1109: should reject relation conditions on relations that are not included", async () => {
+      return getDatasets({ "proposals.pi_email": piA }, {}).expect(
+        TestData.BadRequestStatusCode,
+      );
+    });
+
+    it("1110: should reject relation conditions on count", async () => {
+      return request(appUrl)
+        .get("/api/v4/datasets/count")
+        .query({
+          filter: JSON.stringify({ where: { "proposals.pi_email": piA } }),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.BadRequestStatusCode);
+    });
+
+    it("1111: should reject relation conditions on unknown relation fields", async () => {
+      return getDatasets({ "proposals.notAProposalField": "x" }).expect(
+        TestData.BadRequestStatusCode,
+      );
+    });
+
+    it("1112: should reject operators that are not allowed in relation conditions", async () => {
+      return getDatasets({
+        proposals: { $size: 1 },
+      }).expect(TestData.BadRequestStatusCode);
+    });
+  });
 });

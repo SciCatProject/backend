@@ -7,6 +7,8 @@ import { parseBoolean } from "src/common/utils";
 const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
   where: {
     type: "object",
+    description:
+      'Conditions may also refer to fields of included relations, e.g. { "proposals.pi_email": "pi@example.com" }. The relation must be included, and the conditions apply to the included documents: only those the user can read, after the include scope where and limits.',
     example: {
       datasetName: { $regex: "Dataset", $options: "i" },
     },

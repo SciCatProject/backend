@@ -4,6 +4,13 @@ import { HistoryClass } from "src/datasets/schemas/history.schema";
 import { LifecycleClass } from "src/datasets/schemas/lifecycle.schema";
 import { RelationshipClass } from "src/datasets/schemas/relationship.schema";
 import { TechniqueClass } from "src/datasets/schemas/technique.schema";
+import { ALLOWED_ATTACHMENT_KEYS } from "src/attachments/types/attachment-lookup";
+import { DataFile } from "src/common/schemas/datafile.schema";
+import { Datablock } from "src/datablocks/schemas/datablock.schema";
+import { Instrument } from "src/instruments/schemas/instrument.schema";
+import { ALLOWED_ORIGDATABLOCK_KEYS } from "src/origdatablocks/types/origdatablock-lookup";
+import { ALLOWED_PROPOSAL_KEYS } from "src/proposals/types/proposal-lookup";
+import { SampleClass } from "src/samples/schemas/sample.schema";
 
 export enum DatasetLookupKeysEnum {
   instruments = "instruments",
@@ -97,6 +104,20 @@ export const DATASET_LOOKUP_FIELDS: Record<
   all: undefined,
 };
 
+export const DATASET_RELATIONS = Object.keys(DATASET_LOOKUP_FIELDS).filter(
+  (field) => field !== DatasetLookupKeysEnum.all,
+);
+
+// Keys of the related documents that where conditions on relations may use
+export const DATASET_RELATION_KEYS: Record<string, string[]> = {
+  instruments: Object.keys(new Instrument()),
+  proposals: ALLOWED_PROPOSAL_KEYS,
+  origdatablocks: ALLOWED_ORIGDATABLOCK_KEYS,
+  datablocks: [...Object.keys(new Datablock()), ...Object.keys(new DataFile())],
+  attachments: ALLOWED_ATTACHMENT_KEYS,
+  samples: Object.keys(new SampleClass()),
+};
+
 // Dataset specific keys that are allowed
 export const ALLOWED_DATASET_KEYS = [
   ...Object.keys(new OutputDatasetDto()),
@@ -123,6 +144,7 @@ export const ALLOWED_DATASET_FILTER_KEYS: Record<string, string[]> = {
     "$ne",
     "$nin",
     "$not",
+    "$elemMatch",
     "$exists",
     "$regex",
     "$options",

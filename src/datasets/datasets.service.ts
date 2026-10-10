@@ -73,6 +73,7 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
+import { splitWhereByRelations } from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -245,14 +246,19 @@ export class DatasetsService {
       applyDefaults ? { ...filterDefaults, ...filter.limits } : filter.limits,
     );
 
-    const pipeline: PipelineStage[] = [
-      { $match: castWhereFilter(whereFilter) },
-    ];
+    // conditions on included relations are matched once they are looked up
+    const { relations } = this.extractRelationsAndScopes(filter.include);
+    const { before, after } = splitWhereByRelations(
+      castWhereFilter(whereFilter),
+      relations,
+    );
+    const pipeline: PipelineStage[] = [{ $match: before }];
     const addedRelations = this.addLookupFields(
       pipeline,
       filter.include,
       applyDefaults,
     );
+    if (!isEmpty(after)) pipeline.push({ $match: after });
 
     if (!isEmpty(fieldsProjection)) {
       const projection = parsePipelineProjection(
