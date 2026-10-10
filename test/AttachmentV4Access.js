@@ -226,7 +226,7 @@ describe("Attachments v4 access tests", () => {
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
-        archiveMangerRelationships.push({
+        archiveManagerRelationships.push({
           targetId: res.body.pid,
           targetType: "proposal",
           relationType: "is attached to",
