@@ -137,13 +137,16 @@ describe("Attachments v4 endpoint functionality tests", () => {
         });
     });
 
-    it("0202: should fail to process attachment with non-existent relation target", async () => {
+    it("0202: should not validate attachment with non-existent relation target", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTargetV4)
         .auth(accessTokenAdmin, { type: "bearer" })
-        .expect(TestData.NotFoundStatusCode)
-        .expect("Content-Type", /json/);
+        .expect(TestData.EntryValidStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("valid").and.equal(false);
+        });
     });
 
     it("0203: should not validate attachment with invalid relation target type", async () => {
@@ -186,7 +189,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
   describe("Endpoint: GET /api/v4/attachments/public", () => {
     it("0400: should fetch all public attachments", async () => {
       return request(appUrl)
-        .get("/api/v4/attachments")
+        .get("/api/v4/attachments/public")
         .auth(accessTokenAdmin, { type: "bearer" })
         .expect(TestData.SuccessfulGetStatusCode)
         .expect("Content-Type", /json/)
@@ -214,15 +217,6 @@ describe("Attachments v4 endpoint functionality tests", () => {
   });
 
   describe("Endpoint: PATCH /api/v4/attachments/:id", () => {
-    before(async () => {
-      await request(appUrl)
-        .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
-        .send(attachmentCorrect)
-        .auth(accessTokenAdmin, { type: "bearer" })
-        .expect(TestData.SuccessfulPatchStatusCode)
-        .expect("Content-Type", /json/);
-    });
-
     after(async () => {
       await request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
@@ -335,7 +329,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
 
       return request(appUrl)
         .patch(
-          `/api/v4/attachments/${encodeURIComponent(attachmentCorrect.aid)}`,
+          `/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`,
         )
         .set("Content-type", "application/merge-patch+json")
         .send(updatePayload)
@@ -416,7 +410,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
       };
 
       return request(appUrl)
-        .put(`/api/v4/attachments/${encodeURIComponent(attachmentCorrect.aid)}`)
+        .put(`/api/v4/attachments/${encodeURIComponent(privateAttachmentId)}`)
         .send(updatePayload)
         .auth(accessTokenAdmin, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)

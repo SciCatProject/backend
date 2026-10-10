@@ -88,11 +88,8 @@ export class AttachmentsV4Controller {
   private addPublicFilter(
     filter: IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields>,
   ) {
-    if (!filter.where) {
-      filter.where = {};
-    }
-
-    filter.where = { ...filter.where, isPublished: true };
+    filter.where = { ...(filter.where ?? {}), isPublished: true };
+    return filter;
   }
 
   private generateAttachmentInstanceForPermissions(
@@ -157,12 +154,8 @@ export class AttachmentsV4Controller {
   private async relationChecker(
     user: JWTUser,
     group: Action,
-    attachment: Attachment | CreateAttachmentV4Dto | null,
+    relations: AttachmentRelationshipClass[],
   ) {
-    if (!attachment) {
-      return false;
-    }
-    const relations = attachment.relationships ?? [];
     for (const relation of relations) {
       switch (relation.targetType) {
         case AttachmentRelationTargetType.Dataset:
@@ -222,17 +215,12 @@ export class AttachmentsV4Controller {
             );
           }
           return;
-
-        default:
-          throw new BadRequestException(
-            `${relation.targetType} is not a valid targetType`,
-          );
       }
     }
     return true;
   }
 
-  addAccessBasedFilters(
+  private addAccessBasedFilters(
     user: JWTUser,
     filter: IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields>,
   ): IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields> {
@@ -278,7 +266,7 @@ export class AttachmentsV4Controller {
       throw new ForbiddenException("Unauthorized to this attachment");
     }
 
-    await this.relationChecker(user, group, attachment);
+    await this.relationChecker(user, group, attachment.relationships ?? []);
 
     return attachment;
   }
@@ -293,7 +281,7 @@ export class AttachmentsV4Controller {
       throw new ForbiddenException("Unauthorized to create this attachment");
     }
 
-    await this.relationChecker(user, group, attachment);
+    await this.relationChecker(user, group, attachment.relationships ?? []);
 
     return attachment;
   }
@@ -386,9 +374,9 @@ export class AttachmentsV4Controller {
     queryFilter: string,
   ): Promise<OutputAttachmentV4Dto[]> {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
-    this.addPublicFilter(parsedFilter);
+    const mergedFilter = this.addPublicFilter(parsedFilter);
 
-    const attachments = this.attachmentsService.findAll(parsedFilter);
+    const attachments = this.attachmentsService.findAll(mergedFilter);
     return attachments;
   }
 
@@ -585,11 +573,17 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     );
 
     const user: JWTUser = request.user as JWTUser;
-    await this.checkPermissionsForAttachmentCreate(
-      user,
-      Action.Create,
-      CreateAttachmentDtoInstance,
-    );
+
+    try {
+      await this.checkPermissionsForAttachmentCreate(
+        user,
+        Action.Create,
+        CreateAttachmentDtoInstance,
+      );
+    } catch (error) {
+      return { valid: false };
+    }
+    
     const errorsAttachment = await validate(
       CreateAttachmentDtoInstance,
       validatorOptions,

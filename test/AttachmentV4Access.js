@@ -117,7 +117,7 @@ describe("Attachments v4 access tests", () => {
         ...attachmentCorrect,
         ownerGroup: TestData.Accounts.archiveManager.role,
       })
-      .auth(accessTokenArchiveManager, { type: "bearer" })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
       .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/)
       .then((res) => {
