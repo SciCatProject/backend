@@ -155,7 +155,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         group1Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -173,7 +173,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         group3Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -191,7 +191,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         group4Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -209,7 +209,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         adminIngestorRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -227,7 +227,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         archiveManagerRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -244,7 +244,7 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         publicRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
         });
@@ -258,32 +258,32 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         group1Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
         group3Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
         group4Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
         adminIngestorRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
         archiveManagerRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
         publicRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.doi,
           targetType: "published_data",
           relationType: "is attached to",
         });
@@ -300,32 +300,32 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         group1Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
         group3Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
         group4Relationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
         adminIngestorRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
         archiveManagerRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
         publicRelationships.push({
-          targetId: res.body.pid,
+          targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
         });
