@@ -189,6 +189,7 @@ export class AttachmentsV4Controller {
             );
           } else if (
             group === Action.Delete &&
+            !ability.can(group, ds) &&
             !ability.can(Action.Update, ds)
           ) {
             throw new ForbiddenException(
@@ -214,6 +215,7 @@ export class AttachmentsV4Controller {
             );
           } else if (
             group === Action.Delete &&
+            !ability.can(group, pr) &&
             !ability.can(Action.Update, pr)
           ) {
             throw new ForbiddenException(

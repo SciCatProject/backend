@@ -1078,7 +1078,7 @@ describe("Attachments v4 access tests", () => {
         .expect("Content-Type", /json/)
         .then((res) => {
           res.body.should.be.an("array");
-          res.body.should.have.length(6);
+          res.body.should.have.length(5);
           res.body.forEach((item) => {
             item.should.have
               .property("aid")
