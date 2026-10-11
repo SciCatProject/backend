@@ -521,9 +521,10 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
-    
-    const updatedRelationships = updateAttachmentDtoForService.relationships ?? [];
-    this.relationshipChecker(user, Action.Update, updatedRelationships);
+
+    const updatedRelationships =
+      updateAttachmentDtoForService.relationships ?? [];
+    await this.relationshipChecker(user, Action.Update, updatedRelationships);
 
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
@@ -569,7 +570,7 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     await this.checkPermissionsForAttachment(user, Action.Update, aid);
 
     const updatedRelationships = updateAttachmentDto.relationships ?? [];
-    this.relationshipChecker(user, Action.Update, updatedRelationships);
+    await this.relationshipChecker(user, Action.Update, updatedRelationships);
 
     return this.attachmentsService.findOneAndReplace(
       { _id: aid },
