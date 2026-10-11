@@ -108,7 +108,8 @@ export class AttachmentsV4Controller {
     dataset: DatasetClass,
   ): DatasetClass {
     const datasetInstance = new DatasetClass();
-    datasetInstance.pid = dataset.pid || "";
+    // Drop the actual pid to avoid issues with createDataset vs. createDatasetWithPid
+    datasetInstance.pid = "";
     datasetInstance.ownerGroup = dataset.ownerGroup || "";
     datasetInstance.accessGroups = dataset.accessGroups || [];
     datasetInstance.isPublished = dataset.isPublished || false;
