@@ -726,7 +726,12 @@ describe("Attachments v4 access tests", () => {
     it("0312: can update own attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(newAttachmentId)}`)
-        .send({ ...TestData.AttachmentCorrectV4, caption: "updated by user1" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user1.role,
+          relationships: group1Relationships,
+          caption: "updated by user1",
+        })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.SuccessfulPatchStatusCode)
         .expect("Content-Type", /json/)
@@ -740,7 +745,12 @@ describe("Attachments v4 access tests", () => {
     it("0313: cannot update foreign attachment with PUT", async () => {
       return request(appUrl)
         .put(`/api/v4/attachments/${encodeURIComponent(group4AttachmentId)}`)
-        .send({ ...TestData.AttachmentCorrectV4, caption: "updated by user1" })
+        .send({
+          ...TestData.AttachmentCorrectV4,
+          ownerGroup: TestData.Accounts.user4.role,
+          relationships: group4Relationships,
+          caption: "updated by user1",
+        })
         .auth(accessTokenUser1, { type: "bearer" })
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
