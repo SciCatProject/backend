@@ -64,6 +64,7 @@ import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { PublishedDataService } from "src/published-data/published-data.service";
+import { SampleClass } from "src/samples/schemas/sample.schema";
 import { SamplesService } from "src/samples/samples.service";
 
 @ApiBearerAuth()
@@ -127,6 +128,18 @@ export class AttachmentsV4Controller {
     proposalInstance.isPublished = proposal.isPublished || false;
 
     return proposalInstance;
+  }
+
+  private generateSampleInstanceForPermissions(
+    sample: SampleClass,
+  ): SampleClass {
+    const sampleInstance = new SampleClass();
+    sampleInstance.sampleId = sample.sampleId || "";
+    sampleInstance.ownerGroup = sample.ownerGroup || "";
+    sampleInstance.accessGroups = sample.accessGroups || [];
+    sampleInstance.isPublished = sample.isPublished || false;
+
+    return sampleInstance;
   }
 
   private permissionChecker(
@@ -243,6 +256,21 @@ export class AttachmentsV4Controller {
           if (!sample) {
             throw new NotFoundException(
               `Sample ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          ability = this.caslAbilityFactory.sampleAccess(user);
+          const sa = this.generateSampleInstanceForPermissions(sample);
+          if (group !== Action.Delete && !ability.can(group, sa)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to sample ${relation.targetId}`,
+            );
+          } else if (
+            group === Action.Delete &&
+            !ability.can(group, sa) &&
+            !ability.can(Action.Update, sa)
+          ) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to sample ${relation.targetId}`,
             );
           }
           return;

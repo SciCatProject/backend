@@ -98,6 +98,18 @@ export class AttachmentAbility {
     }
 
     if (
+      user.currentGroups.some((g) => this.accessGroups?.sample?.includes(g)) ||
+      this.accessGroups?.sample?.includes("#all")
+    ) {
+      /**
+       * User belonging to SAMPLE_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
       user.currentGroups.some((g) =>
         this.accessGroups?.attachmentPrivileged?.includes(g),
       )
@@ -130,6 +142,19 @@ export class AttachmentAbility {
     ) {
       /**
        * User belonging to PROPOSAL_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.samplePrivileged?.includes(g),
+      )
+    ) {
+      /**
+       * User belonging to SAMPLE_PRIVILEGED_GROUPS
        */
       can(Action.Create, Attachment);
       can(Action.Update, Attachment, ifOwner);
