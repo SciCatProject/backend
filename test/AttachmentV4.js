@@ -14,11 +14,11 @@ let accessTokenAdminIngestor = null,
 
 describe("Attachments v4 endpoint functionality tests", () => {
   before(async () => {
-    db.collection("Attachment").deleteMany({});
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposal").deleteMany({});
-    db.collection("PublishedData").deleteMany({});
-    db.collection("Sample").deleteMany({});
+    await db.collection("Attachment").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
+    await db.collection("PublishedData").deleteMany({});
+    await db.collection("Sample").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

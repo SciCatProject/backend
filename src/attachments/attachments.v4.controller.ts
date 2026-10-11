@@ -175,7 +175,7 @@ export class AttachmentsV4Controller {
     }
   }
 
-  private async relationChecker(
+  private async relationshipChecker(
     user: JWTUser,
     group: Action,
     relations: AttachmentRelationshipClass[],
@@ -325,7 +325,10 @@ export class AttachmentsV4Controller {
       throw new ForbiddenException("Unauthorized to this attachment");
     }
 
-    await this.relationChecker(user, group, attachment.relationships ?? []);
+    const relationships = Array.isArray(attachment.relationships)
+      ? attachment.relationships
+      : [];
+    await this.relationshipChecker(user, group, relationships);
 
     return attachment;
   }
@@ -340,7 +343,10 @@ export class AttachmentsV4Controller {
       throw new ForbiddenException("Unauthorized to create this attachment");
     }
 
-    await this.relationChecker(user, group, attachment.relationships ?? []);
+    const relationships = Array.isArray(attachment.relationships)
+      ? attachment.relationships
+      : [];
+    await this.relationshipChecker(user, group, relationships);
 
     return attachment;
   }
@@ -515,6 +521,9 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
+    
+    const updatedRelationships = updateAttachmentDtoForService.relationships ?? [];
+    this.relationshipChecker(user, Action.Update, updatedRelationships);
 
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
@@ -558,6 +567,10 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   ): Promise<OutputAttachmentV4Dto | null> {
     const user: JWTUser = request.user as JWTUser;
     await this.checkPermissionsForAttachment(user, Action.Update, aid);
+
+    const updatedRelationships = updateAttachmentDto.relationships ?? [];
+    this.relationshipChecker(user, Action.Update, updatedRelationships);
+
     return this.attachmentsService.findOneAndReplace(
       { _id: aid },
       updateAttachmentDto,
