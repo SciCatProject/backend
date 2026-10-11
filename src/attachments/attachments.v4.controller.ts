@@ -39,7 +39,6 @@ import {
   IAttachmentFields,
   IAttachmentFiltersV4,
 } from "./interfaces/attachment-filters.interface";
-
 import { getSwaggerAttachmentFilterContent } from "./types/attachment-filter-contents";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import { CreateAttachmentV4Dto } from "./dto/create-attachment.v4.dto";
@@ -48,7 +47,7 @@ import {
   PartialUpdateAttachmentV4Dto,
   UpdateAttachmentV4Dto,
 } from "./dto/update-attachment.v4.dto";
-import { AttachmentsV4Service as AttachmentService } from "./attachments.v4.service";
+import { AttachmentsV4Service as AttachmentsService } from "./attachments.v4.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
 import { validate, ValidatorOptions } from "class-validator";
 import { plainToInstance } from "class-transformer";
@@ -58,7 +57,15 @@ import {
   ALLOWED_ATTACHMENT_FILTER_KEYS,
 } from "./types/attachment-lookup";
 import { AttachmentRelationshipClass } from "./schemas/relationship.schema";
+import { AttachmentRelationTargetType } from "./types/relationship-filter.enum";
 import { parseDate } from "src/common/utils";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { DatasetsService } from "src/datasets/datasets.service";
+import { ProposalClass } from "src/proposals/schemas/proposal.schema";
+import { ProposalsService } from "src/proposals/proposals.service";
+import { PublishedDataService } from "src/published-data/published-data.service";
+import { SampleClass } from "src/samples/schemas/sample.schema";
+import { SamplesService } from "src/samples/samples.service";
 
 @ApiBearerAuth()
 @ApiExtraModels(AttachmentRelationshipClass)
@@ -71,35 +78,74 @@ import { parseDate } from "src/common/utils";
 @Controller({ path: "attachments", version: "4" })
 export class AttachmentsV4Controller {
   constructor(
-    private attachmentsService: AttachmentService,
     private caslAbilityFactory: CaslAbilityFactory,
+    private attachmentsService: AttachmentsService,
+    private datasetsService: DatasetsService,
+    private proposalService: ProposalsService,
+    private publishedDataService: PublishedDataService,
+    private sampleService: SamplesService,
   ) {}
-  addPublicFilter(
+
+  private addPublicFilter(
     filter: IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields>,
   ) {
-    if (!filter.where) {
-      filter.where = {};
-    }
-
-    filter.where = { ...filter.where, isPublished: true };
+    filter.where = { ...(filter.where ?? {}), isPublished: true };
+    return filter;
   }
 
   private generateAttachmentInstanceForPermissions(
     attachment: Attachment | CreateAttachmentV4Dto,
   ): Attachment {
     const attachmentInstance = new Attachment();
-    attachmentInstance.accessGroups = attachment.accessGroups || [];
-    attachmentInstance.ownerGroup = attachment.ownerGroup || "";
     attachmentInstance.aid = attachment.aid || "";
+    attachmentInstance.ownerGroup = attachment.ownerGroup || "";
+    attachmentInstance.accessGroups = attachment.accessGroups || [];
     attachmentInstance.isPublished = attachment.isPublished || false;
 
     return attachmentInstance;
   }
 
+  private generateDatasetInstanceForPermissions(
+    dataset: DatasetClass,
+  ): DatasetClass {
+    const datasetInstance = new DatasetClass();
+    // Drop the actual pid to avoid issues with createDataset vs. createDatasetWithPid
+    datasetInstance.pid = "";
+    datasetInstance.ownerGroup = dataset.ownerGroup || "";
+    datasetInstance.accessGroups = dataset.accessGroups || [];
+    datasetInstance.isPublished = dataset.isPublished || false;
+
+    return datasetInstance;
+  }
+
+  private generateProposalInstanceForPermissions(
+    proposal: ProposalClass,
+  ): ProposalClass {
+    const proposalInstance = new ProposalClass();
+    proposalInstance.proposalId = proposal.proposalId || "";
+    proposalInstance.ownerGroup = proposal.ownerGroup || "";
+    proposalInstance.accessGroups = proposal.accessGroups || [];
+    proposalInstance.isPublished = proposal.isPublished || false;
+
+    return proposalInstance;
+  }
+
+  private generateSampleInstanceForPermissions(
+    sample: SampleClass,
+  ): SampleClass {
+    const sampleInstance = new SampleClass();
+    sampleInstance.sampleId = sample.sampleId || "";
+    sampleInstance.ownerGroup = sample.ownerGroup || "";
+    sampleInstance.accessGroups = sample.accessGroups || [];
+    sampleInstance.isPublished = sample.isPublished || false;
+
+    return sampleInstance;
+  }
+
   private permissionChecker(
+    user: JWTUser,
     group: Action,
     attachment: Attachment | CreateAttachmentV4Dto | null,
-    request: Request,
   ) {
     if (!attachment) {
       return false;
@@ -107,8 +153,6 @@ export class AttachmentsV4Controller {
 
     const attachmentInstance =
       this.generateAttachmentInstanceForPermissions(attachment);
-
-    const user: JWTUser = request.user as JWTUser;
     const ability = this.caslAbilityFactory.attachmentAccess(user);
 
     try {
@@ -131,7 +175,111 @@ export class AttachmentsV4Controller {
     }
   }
 
-  addAccessBasedFilters(
+  private async relationshipChecker(
+    user: JWTUser,
+    group: Action,
+    relations: AttachmentRelationshipClass[],
+  ) {
+    if (group === Action.Read) {
+      return;
+    }
+    for (const relation of relations) {
+      let ability;
+      switch (relation.targetType) {
+        case AttachmentRelationTargetType.Dataset:
+          const dataset = await this.datasetsService.findOne({
+            where: { pid: relation.targetId },
+          });
+          if (!dataset) {
+            throw new NotFoundException(
+              `Dataset ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          ability = this.caslAbilityFactory.datasetAccess(user);
+          const ds = this.generateDatasetInstanceForPermissions(dataset);
+          if (group !== Action.Delete && !ability.can(group, ds)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to dataset ${relation.targetId}`,
+            );
+          } else if (
+            group === Action.Delete &&
+            !ability.can(group, ds) &&
+            !ability.can(Action.Update, ds)
+          ) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to dataset ${relation.targetId}`,
+            );
+          }
+          return;
+
+        case AttachmentRelationTargetType.Proposal:
+          const proposal = await this.proposalService.findOne({
+            where: { proposalId: relation.targetId },
+          });
+          if (!proposal) {
+            throw new NotFoundException(
+              `Proposal ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          ability = this.caslAbilityFactory.proposalAccess(user);
+          const pr = this.generateProposalInstanceForPermissions(proposal);
+          if (group !== Action.Delete && !ability.can(group, pr)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to proposal ${relation.targetId}`,
+            );
+          } else if (
+            group === Action.Delete &&
+            !ability.can(group, pr) &&
+            !ability.can(Action.Update, pr)
+          ) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to proposal ${relation.targetId}`,
+            );
+          }
+          return;
+
+        case AttachmentRelationTargetType.PublishedData:
+          const publishedData = await this.publishedDataService.findOne({
+            where: { doi: relation.targetId },
+          });
+          if (!publishedData) {
+            throw new NotFoundException(
+              `PublishedData ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          return;
+
+        case AttachmentRelationTargetType.Sample:
+          const sample = await this.sampleService.findOne({
+            where: { sampleId: relation.targetId },
+          });
+          if (!sample) {
+            throw new NotFoundException(
+              `Sample ${relation.targetId} not found for linking an attachment`,
+            );
+          }
+          ability = this.caslAbilityFactory.sampleAccess(user);
+          const sa = this.generateSampleInstanceForPermissions(sample);
+          if (group !== Action.Delete && !ability.can(group, sa)) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to sample ${relation.targetId}`,
+            );
+          } else if (
+            group === Action.Delete &&
+            !ability.can(group, sa) &&
+            !ability.can(Action.Update, sa)
+          ) {
+            throw new ForbiddenException(
+              `Unauthorized to ${group} an attachment to sample ${relation.targetId}`,
+            );
+          }
+          return;
+      }
+    }
+    return;
+  }
+
+  private addAccessBasedFilters(
     user: JWTUser,
     filter: IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields>,
   ): IAttachmentFiltersV4<AttachmentDocument, IAttachmentFields> {
@@ -142,71 +290,63 @@ export class AttachmentsV4Controller {
     filter.where = filter.where ?? {};
 
     if (!user) {
-      if (filter.where["$and"]) {
-        filter.where["$and"].push({
-          isPublished: true,
-        });
-      } else {
-        filter.where["$and"] = [{ isPublished: true }];
-      }
+      filter.where["$and"] = filter.where["$and"] ?? [];
+      filter.where["$and"].push({
+        isPublished: true,
+      });
     } else if (!canViewAny && canView) {
-      if (filter.where["$and"]) {
-        filter.where["$and"].push({
-          $or: [
-            { ownerGroup: { $in: user.currentGroups } },
-            { accessGroups: { $in: user.currentGroups } },
-            { sharedWith: { $in: [user.email] } },
-            { isPublished: true },
-          ],
-        });
-      } else {
-        filter.where["$and"] = [
-          {
-            $or: [
-              { ownerGroup: { $in: user.currentGroups } },
-              { accessGroups: { $in: user.currentGroups } },
-              { sharedWith: { $in: [user.email] } },
-              { isPublished: true },
-            ],
-          },
-        ];
-      }
+      filter.where["$and"] = filter.where["$and"] ?? [];
+      filter.where["$and"].push({
+        $or: [
+          { ownerGroup: { $in: user.currentGroups } },
+          { accessGroups: { $in: user.currentGroups } },
+          { sharedWith: { $in: [user.email] } },
+          { isPublished: true },
+        ],
+      });
     }
     return filter;
   }
 
   private async checkPermissionsForAttachment(
-    request: Request,
-    id: string,
+    user: JWTUser,
     group: Action,
+    id: string,
   ) {
     const attachment = await this.attachmentsService.findOne({
       _id: id,
     });
-
     if (!attachment) {
       throw new NotFoundException(`Attachment: ${id} not found`);
     }
 
-    const canDoAction = this.permissionChecker(group, attachment, request);
-
+    const canDoAction = this.permissionChecker(user, group, attachment);
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized to this attachment");
     }
 
+    const relationships = Array.isArray(attachment.relationships)
+      ? attachment.relationships
+      : [];
+    await this.relationshipChecker(user, group, relationships);
+
     return attachment;
   }
 
-  private checkPermissionsForAttachmentCreate(
-    request: Request,
-    attachment: CreateAttachmentV4Dto,
+  private async checkPermissionsForAttachmentCreate(
+    user: JWTUser,
     group: Action,
+    attachment: CreateAttachmentV4Dto,
   ) {
-    const canDoAction = this.permissionChecker(group, attachment, request);
-
+    const canDoAction = this.permissionChecker(user, group, attachment);
     if (!canDoAction) {
       throw new ForbiddenException("Unauthorized to create this attachment");
     }
+
+    const relationships = Array.isArray(attachment.relationships)
+      ? attachment.relationships
+      : [];
+    await this.relationshipChecker(user, group, relationships);
 
     return attachment;
   }
@@ -299,9 +439,9 @@ export class AttachmentsV4Controller {
     queryFilter: string,
   ): Promise<OutputAttachmentV4Dto[]> {
     const parsedFilter = JSON.parse(queryFilter ?? "{}");
-    this.addPublicFilter(parsedFilter);
+    const mergedFilter = this.addPublicFilter(parsedFilter);
 
-    const attachments = this.attachmentsService.findAll(parsedFilter);
+    const attachments = this.attachmentsService.findAll(mergedFilter);
     return attachments;
   }
 
@@ -330,7 +470,8 @@ export class AttachmentsV4Controller {
     @Req() request: Request,
     @Param("aid") aid: string,
   ): Promise<OutputAttachmentV4Dto | null> {
-    await this.checkPermissionsForAttachment(request, aid, Action.Read);
+    const user: JWTUser = request.user as JWTUser;
+    await this.checkPermissionsForAttachment(user, Action.Read, aid);
     return this.attachmentsService.findOne({ aid });
   }
 
@@ -370,20 +511,25 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Param("aid") aid: string,
     @Body() updateAttachmentDto: PartialUpdateAttachmentV4Dto,
   ): Promise<OutputAttachmentV4Dto | null> {
+    const user: JWTUser = request.user as JWTUser;
     const foundAttachment = await this.checkPermissionsForAttachment(
-      request,
-      aid,
+      user,
       Action.Update,
+      aid,
     );
-    const updateAttachmentDtoForservice =
+    const updateAttachmentDtoForService =
       request.headers["content-type"] === "application/merge-patch+json"
         ? jmp.apply(foundAttachment, updateAttachmentDto)
         : updateAttachmentDto;
 
+    const updatedRelationships =
+      updateAttachmentDtoForService.relationships ?? [];
+    await this.relationshipChecker(user, Action.Update, updatedRelationships);
+
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.attachmentsService.findOneAndUpdate(
       { _id: aid },
-      updateAttachmentDtoForservice,
+      updateAttachmentDtoForService,
       unmodifiedSince,
     );
   }
@@ -420,7 +566,12 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Param("aid") aid: string,
     @Body() updateAttachmentDto: UpdateAttachmentV4Dto,
   ): Promise<OutputAttachmentV4Dto | null> {
-    await this.checkPermissionsForAttachment(request, aid, Action.Update);
+    const user: JWTUser = request.user as JWTUser;
+    await this.checkPermissionsForAttachment(user, Action.Update, aid);
+
+    const updatedRelationships = updateAttachmentDto.relationships ?? [];
+    await this.relationshipChecker(user, Action.Update, updatedRelationships);
+
     return this.attachmentsService.findOneAndReplace(
       { _id: aid },
       updateAttachmentDto,
@@ -451,14 +602,16 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Req() request: Request,
     @Body() createAttachmentDto: CreateAttachmentV4Dto,
   ): Promise<OutputAttachmentV4Dto> {
-    this.checkPermissionsForAttachmentCreate(
-      request,
-      createAttachmentDto,
+    const user: JWTUser = request.user as JWTUser;
+    await this.checkPermissionsForAttachmentCreate(
+      user,
       Action.Create,
+      createAttachmentDto,
     );
     return this.attachmentsService.create(createAttachmentDto);
   }
 
+  // POST /attachments/isValid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("attachments", (ability: AppAbility) =>
     ability.can(Action.Create, Attachment),
@@ -492,11 +645,14 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
       createAttachmentDto,
     );
 
-    this.checkPermissionsForAttachmentCreate(
-      request,
-      CreateAttachmentDtoInstance,
+    const user: JWTUser = request.user as JWTUser;
+
+    await this.checkPermissionsForAttachmentCreate(
+      user,
       Action.Create,
+      CreateAttachmentDtoInstance,
     );
+
     const errorsAttachment = await validate(
       CreateAttachmentDtoInstance,
       validatorOptions,
@@ -530,7 +686,8 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     @Req() request: Request,
     @Param("aid") aid: string,
   ): Promise<unknown> {
-    await this.checkPermissionsForAttachment(request, aid, Action.Delete);
+    const user: JWTUser = request.user as JWTUser;
+    await this.checkPermissionsForAttachment(user, Action.Delete, aid);
     return this.attachmentsService.findOneAndDelete({ aid });
   }
 }

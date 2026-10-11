@@ -12,8 +12,20 @@ import {
   deleteUser,
   attachmentUser1,
   attachmentUser2,
+  createDatasetUser1,
+  createDatasetUser2,
+  createDatasetWithPidUser1,
+  createDatasetWithPidUser2,
   attachmentPrivilegedUser1,
   attachmentPrivilegedUser2,
+  createDatasetPrivilegedUser1,
+  createDatasetPrivilegedUser2,
+  proposalUser1,
+  proposalUser2,
+  sampleUser1,
+  sampleUser2,
+  samplePrivilegedUser1,
+  samplePrivilegedUser2,
   publicAttachment,
   ownedAttachment,
 } from "./test-data.util";
@@ -117,6 +129,102 @@ describe("AttachmentAbility", () => {
     });
   });
 
+  describe("CREATE_DATASET_GROUPS permissions", () => {
+    it("should give correct rights to CREATE_DATASET_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to CREATE_DATASET_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("CREATE_DATASET_WITH_PID_GROUPS permissions", () => {
+    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetWithPidUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to CREATE_DATASET_WITH_PID_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetWithPidUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("SAMPLE_GROUPS permissions", () => {
+    it("should give correct rights to SAMPLE_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(sampleUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to SAMPLE_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(sampleUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
   describe("ATTACHMENT_PRIVILEGED_GROUPS permissions", () => {
     it("should give correct rights to ATTACHMENT_PRIVILEGED_GROUPS users that own the resource", () => {
       const ability = abilityBuilder.buildAbility(attachmentPrivilegedUser1);
@@ -135,6 +243,102 @@ describe("AttachmentAbility", () => {
 
     it("should give correct rights to ATTACHMENT_PRIVILEGED_GROUPS users that don't own the resource", () => {
       const ability = abilityBuilder.buildAbility(attachmentPrivilegedUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("CREATE_DATASET_PRIVILEGED_GROUPS permissions", () => {
+    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to CREATE_DATASET_PRIVILEGED_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(createDatasetPrivilegedUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("PROPOSAL_GROUPS permissions", () => {
+    it("should give correct rights to PROPOSAL_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(proposalUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to PROPOSAL_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(proposalUser2);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(false);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(false);
+    });
+  });
+
+  describe("SAMPLE_PRIVILEGED_GROUPS permissions", () => {
+    it("should give correct rights to SAMPLE_PRIVILEGED_GROUPS users that own the resource", () => {
+      const ability = abilityBuilder.buildAbility(samplePrivilegedUser1);
+
+      expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
+      expect(ability.can(Action.Create, Attachment)).toBe(true);
+      expect(ability.can(Action.Create, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Read, Attachment)).toBe(true);
+      expect(ability.can(Action.Read, publicAttachment)).toBe(true);
+      expect(ability.can(Action.Read, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Update, Attachment)).toBe(true);
+      expect(ability.can(Action.Update, ownedAttachment)).toBe(true);
+      expect(ability.can(Action.Delete, Attachment)).toBe(true);
+      expect(ability.can(Action.Delete, ownedAttachment)).toBe(true);
+    });
+
+    it("should give correct rights to SAMPLE_PRIVILEGED_GROUPS users that don't own the resource", () => {
+      const ability = abilityBuilder.buildAbility(samplePrivilegedUser2);
 
       expect(ability.can(Action.AccessAny, Attachment)).toBe(false);
       expect(ability.can(Action.Create, Attachment)).toBe(true);

@@ -71,11 +71,90 @@ export class AttachmentAbility {
 
     if (
       user.currentGroups.some((g) =>
+        this.accessGroups?.createDataset?.includes(g),
+      ) ||
+      this.accessGroups?.createDataset?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetWithPid?.includes(g),
+      ) ||
+      this.accessGroups?.createDatasetWithPid?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_WITH_PID_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) => this.accessGroups?.sample?.includes(g)) ||
+      this.accessGroups?.sample?.includes("#all")
+    ) {
+      /**
+       * User belonging to SAMPLE_GROUPS
+       */
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
         this.accessGroups?.attachmentPrivileged?.includes(g),
       )
     ) {
       /**
        * User belonging to ATTACHMENT_PRIVILEGED_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetPrivileged?.includes(g),
+      )
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) => {
+        return this.accessGroups?.proposal?.includes(g);
+      })
+    ) {
+      /**
+       * User belonging to PROPOSAL_GROUPS
+       */
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.samplePrivileged?.includes(g),
+      )
+    ) {
+      /**
+       * User belonging to SAMPLE_PRIVILEGED_GROUPS
        */
       can(Action.Create, Attachment);
       can(Action.Update, Attachment, ifOwner);
