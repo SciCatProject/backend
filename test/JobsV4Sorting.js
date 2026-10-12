@@ -467,4 +467,22 @@ describe("1175: Jobs retrieving with sorting", () => {
         values.should.deep.equal(sorted);
       });
   });
+
+  it("0110: should apply skip before limit", async () => {
+    const getJobIds = (limits) =>
+      request(appUrl)
+        .get("/api/v4/Jobs")
+        .query({ filter: JSON.stringify({ limits }) })
+        .set("Accept", "application/json")
+        .auth(accessTokenAdmin, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => res.body.map((j) => j.id));
+
+    const sort = { createdAt: "asc" };
+    const allIds = await getJobIds({ sort });
+    allIds.should.have.lengthOf.at.least(3);
+
+    const pageIds = await getJobIds({ skip: 1, limit: 1, sort });
+    pageIds.should.deep.equal([allIds[1]]);
+  });
 });

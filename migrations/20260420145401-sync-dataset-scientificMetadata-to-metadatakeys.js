@@ -18,7 +18,13 @@ function buildPipeline(sourceType) {
         datasetId: 1,
         key: "$metaArr.k",
         isPublished: 1,
-        humanReadableName: { $ifNull: ["$metaArr.v.human_name", ""] },
+        humanReadableName: {
+          $cond: [
+            { $eq: [{ $type: "$metaArr.v.human_name" }, "string"] },
+            "$metaArr.v.human_name",
+            "",
+          ],
+        },
         userGroups: {
           $setUnion: [["$ownerGroup"], { $ifNull: ["$accessGroups", []] }],
         },

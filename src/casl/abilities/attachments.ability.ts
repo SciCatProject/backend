@@ -36,7 +36,7 @@ export class AttachmentAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.AttachmentRead, Attachment, ifPublished);
+    can(Action.Read, Attachment, ifPublished);
 
     if (!user) {
       return build({
@@ -51,9 +51,9 @@ export class AttachmentAbility {
     /**
      * Authenticated user
      */
-    can(Action.AttachmentRead, Attachment, ifOwner);
-    can(Action.AttachmentRead, Attachment, ifAccess);
-    can(Action.AttachmentRead, Attachment, ifPublished);
+    can(Action.Read, Attachment, ifOwner);
+    can(Action.Read, Attachment, ifAccess);
+    can(Action.Read, Attachment, ifPublished);
 
     if (
       user.currentGroups.some((g) =>
@@ -64,9 +64,9 @@ export class AttachmentAbility {
       /**
        * User belonging to ATTACHMENT_GROUPS
        */
-      can(Action.AttachmentCreate, Attachment, ifOwner);
-      can(Action.AttachmentUpdate, Attachment, ifOwner);
-      can(Action.AttachmentDelete, Attachment, ifOwner);
+      can(Action.Create, Attachment, ifOwner);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
     }
 
     if (
@@ -77,9 +77,9 @@ export class AttachmentAbility {
       /**
        * User belonging to ATTACHMENT_PRIVILEGED_GROUPS
        */
-      can(Action.AttachmentCreate, Attachment);
-      can(Action.AttachmentUpdate, Attachment, ifOwner);
-      can(Action.AttachmentDelete, Attachment, ifOwner);
+      can(Action.Create, Attachment);
+      can(Action.Update, Attachment, ifOwner);
+      can(Action.Delete, Attachment, ifOwner);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
@@ -88,10 +88,10 @@ export class AttachmentAbility {
        */
       can(Action.AccessAny, Attachment);
 
-      can(Action.AttachmentCreate, Attachment);
-      can(Action.AttachmentRead, Attachment);
-      can(Action.AttachmentUpdate, Attachment);
-      can(Action.AttachmentDelete, Attachment);
+      can(Action.Create, Attachment);
+      can(Action.Read, Attachment);
+      can(Action.Update, Attachment);
+      can(Action.Delete, Attachment);
     }
 
     if (
@@ -100,7 +100,7 @@ export class AttachmentAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.AttachmentDelete, Attachment);
+      can(Action.Delete, Attachment);
     }
 
     return build({

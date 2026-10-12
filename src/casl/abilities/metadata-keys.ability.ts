@@ -36,7 +36,7 @@ export class MetadataKeyAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.MetadataKeyRead, MetadataKeyClass, ifPublished);
+    can(Action.Read, MetadataKeyClass, ifPublished);
 
     if (!user) {
       return build({
@@ -50,13 +50,13 @@ export class MetadataKeyAbility {
     /**
      * Authenticated user
      */
-    can(Action.MetadataKeyRead, MetadataKeyClass, ifAccess);
+    can(Action.Read, MetadataKeyClass, ifAccess);
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.MetadataKeyRead, MetadataKeyClass);
+      can(Action.Read, MetadataKeyClass);
     }
 
     return build({

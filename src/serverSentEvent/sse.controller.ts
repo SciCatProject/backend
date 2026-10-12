@@ -37,7 +37,7 @@ export class SseController {
   @Sse("stream")
   @UseGuards(PoliciesGuard)
   @CheckPolicies("sse", (ability: AppAbility) =>
-    ability.can(Action.SseRead, SseClass),
+    ability.can(Action.Read, SseClass),
   )
   @ApiOperation({
     summary: "Subscribe to server-sent events.",
@@ -69,7 +69,7 @@ export class SseController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("sse", (ability: AppAbility) =>
-    ability.can(Action.SseRead, SseClass),
+    ability.can(Action.Read, SseClass),
   )
   @Post("ticket")
   async createTicket(@Req() request: Request): Promise<{ ticket: string }> {

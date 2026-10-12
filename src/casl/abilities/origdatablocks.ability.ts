@@ -36,7 +36,7 @@ export class OrigDatablockAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.OrigdatablockRead, OrigDatablock, ifPublished);
+    can(Action.Read, OrigDatablock, ifPublished);
     can(Action.DatasetOrigdatablockRead, OrigDatablock, ifPublished);
 
     if (!user) {
@@ -52,9 +52,9 @@ export class OrigDatablockAbility {
     /**
      * Authenticated user
      */
-    can(Action.OrigdatablockRead, OrigDatablock, ifOwner);
-    can(Action.OrigdatablockRead, OrigDatablock, ifAccess);
-    can(Action.OrigdatablockRead, OrigDatablock, ifPublished);
+    can(Action.Read, OrigDatablock, ifOwner);
+    can(Action.Read, OrigDatablock, ifAccess);
+    can(Action.Read, OrigDatablock, ifPublished);
 
     if (
       user.currentGroups.some((g) =>
@@ -65,8 +65,8 @@ export class OrigDatablockAbility {
       /**
        * User belonging to CREATE_DATASET_GROUPS
        */
-      can(Action.OrigdatablockCreate, OrigDatablock, ifOwner);
-      can(Action.OrigdatablockUpdate, OrigDatablock, ifOwner);
+      can(Action.Create, OrigDatablock, ifOwner);
+      can(Action.Update, OrigDatablock, ifOwner);
     }
 
     if (
@@ -78,8 +78,8 @@ export class OrigDatablockAbility {
       /**
        * User belonging to CREATE_DATASET_WITH_PID_GROUPS
        */
-      can(Action.OrigdatablockCreate, OrigDatablock, ifOwner);
-      can(Action.OrigdatablockUpdate, OrigDatablock, ifOwner);
+      can(Action.Create, OrigDatablock, ifOwner);
+      can(Action.Update, OrigDatablock, ifOwner);
     }
 
     if (
@@ -90,8 +90,8 @@ export class OrigDatablockAbility {
       /**
        * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
        */
-      can(Action.OrigdatablockCreate, OrigDatablock);
-      can(Action.OrigdatablockUpdate, OrigDatablock, ifOwner);
+      can(Action.Create, OrigDatablock);
+      can(Action.Update, OrigDatablock, ifOwner);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
@@ -100,9 +100,9 @@ export class OrigDatablockAbility {
        */
       can(Action.AccessAny, OrigDatablock);
 
-      can(Action.OrigdatablockCreate, OrigDatablock);
-      can(Action.OrigdatablockRead, OrigDatablock);
-      can(Action.OrigdatablockUpdate, OrigDatablock);
+      can(Action.Create, OrigDatablock);
+      can(Action.Read, OrigDatablock);
+      can(Action.Update, OrigDatablock);
     }
 
     if (
@@ -111,7 +111,7 @@ export class OrigDatablockAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.OrigdatablockDelete, OrigDatablock);
+      can(Action.Delete, OrigDatablock);
     }
 
     return build({

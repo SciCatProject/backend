@@ -35,7 +35,7 @@ export class InstrumentAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.InstrumentRead, Instrument);
+    can(Action.Read, Instrument);
 
     if (!user) {
       return build({
@@ -47,14 +47,14 @@ export class InstrumentAbility {
     /**
      * Authenticated user
      */
-    can(Action.InstrumentRead, Instrument);
+    can(Action.Read, Instrument);
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.InstrumentCreate, Instrument);
-      can(Action.InstrumentUpdate, Instrument);
+      can(Action.Create, Instrument);
+      can(Action.Update, Instrument);
     }
 
     if (
@@ -63,7 +63,7 @@ export class InstrumentAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.InstrumentDelete, Instrument);
+      can(Action.Delete, Instrument);
     }
 
     return build({

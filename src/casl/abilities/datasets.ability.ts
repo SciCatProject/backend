@@ -36,7 +36,7 @@ export class DatasetAbility {
     /**
      * Unauthenticated user
      */
-    can(Action.DatasetRead, DatasetClass, ifPublished);
+    can(Action.Read, DatasetClass, ifPublished);
     can(Action.DatasetAttachmentRead, DatasetClass, ifPublished);
     can(Action.DatasetDatablockRead, DatasetClass, ifPublished);
     can(Action.DatasetOrigdatablockRead, DatasetClass, ifPublished);
@@ -54,9 +54,9 @@ export class DatasetAbility {
     /**
      * Authenticated user
      */
-    can(Action.DatasetRead, DatasetClass, ifOwner);
-    can(Action.DatasetRead, DatasetClass, ifAccess);
-    can(Action.DatasetRead, DatasetClass, ifPublished);
+    can(Action.Read, DatasetClass, ifOwner);
+    can(Action.Read, DatasetClass, ifAccess);
+    can(Action.Read, DatasetClass, ifPublished);
 
     can(Action.DatasetAttachmentRead, DatasetClass, ifOwner);
     can(Action.DatasetAttachmentRead, DatasetClass, ifAccess);
@@ -81,11 +81,11 @@ export class DatasetAbility {
       /**
        * User belonging to CREATE_DATASET_GROUPS
        */
-      can(Action.DatasetCreate, DatasetClass, {
+      can(Action.Create, DatasetClass, {
         ...ifOwner,
         pid: { $eq: "" },
       });
-      can(Action.DatasetUpdate, DatasetClass, ifOwner);
+      can(Action.Update, DatasetClass, ifOwner);
       can(Action.DatasetLifecycleUpdate, DatasetClass, ifOwner);
 
       can(Action.DatasetAttachmentCreate, DatasetClass, ifOwner);
@@ -108,8 +108,8 @@ export class DatasetAbility {
       /**
        * User belonging to CREATE_DATASET_WITH_PID_GROUPS
        */
-      can(Action.DatasetCreate, DatasetClass, ifOwner);
-      can(Action.DatasetUpdate, DatasetClass, ifOwner);
+      can(Action.Create, DatasetClass, ifOwner);
+      can(Action.Update, DatasetClass, ifOwner);
       can(Action.DatasetLifecycleUpdate, DatasetClass, ifOwner);
 
       can(Action.DatasetAttachmentCreate, DatasetClass, ifOwner);
@@ -131,8 +131,8 @@ export class DatasetAbility {
       /**
        * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
        */
-      can(Action.DatasetCreate, DatasetClass);
-      can(Action.DatasetUpdate, DatasetClass, ifOwner);
+      can(Action.Create, DatasetClass);
+      can(Action.Update, DatasetClass, ifOwner);
       can(Action.DatasetLifecycleUpdate, DatasetClass, ifOwner);
 
       can(Action.DatasetAttachmentCreate, DatasetClass);
@@ -152,9 +152,9 @@ export class DatasetAbility {
        */
       can(Action.AccessAny, DatasetClass);
 
-      can(Action.DatasetCreate, DatasetClass);
-      can(Action.DatasetRead, DatasetClass);
-      can(Action.DatasetUpdate, DatasetClass);
+      can(Action.Create, DatasetClass);
+      can(Action.Read, DatasetClass);
+      can(Action.Update, DatasetClass);
       can(Action.DatasetLifecycleUpdate, DatasetClass);
 
       can(Action.DatasetAttachmentCreate, DatasetClass);
@@ -179,7 +179,7 @@ export class DatasetAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.DatasetDelete, DatasetClass);
+      can(Action.Delete, DatasetClass);
       can(Action.DatasetAttachmentDelete, DatasetClass);
       can(Action.DatasetDatablockDelete, DatasetClass);
       can(Action.DatasetOrigdatablockDelete, DatasetClass);
@@ -195,7 +195,7 @@ export class DatasetAbility {
        */
       can(Action.AccessAny, DatasetClass);
 
-      can(Action.DatasetRead, DatasetClass);
+      can(Action.Read, DatasetClass);
       can(Action.DatasetLifecycleUpdate, DatasetClass);
     }
 

@@ -36,7 +36,7 @@ export class SseAbility {
       /**
        * Authenticated user
        */
-      can(Action.SseRead, SseClass);
+      can(Action.Read, SseClass);
     }
 
     if (
@@ -46,7 +46,7 @@ export class SseAbility {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.SseRead, SseClass);
+      can(Action.Read, SseClass);
       can(Action.AccessAny, SseClass);
     }
 

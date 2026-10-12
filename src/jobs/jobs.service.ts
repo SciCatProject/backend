@@ -168,8 +168,8 @@ export class JobsService {
     } else {
       pipeline.push({ $sort: { createdAt: 1 } });
     }
-    if (limits?.limit) pipeline.push({ $limit: limits.limit });
     if (limits?.skip) pipeline.push({ $skip: limits.skip });
+    if (limits?.limit) pipeline.push({ $limit: limits.limit });
 
     if (!isEmpty(access)) pipeline.unshift({ $match: access });
     const data = await this.jobModel

@@ -6,10 +6,11 @@ This document describes the authorization model used for samples and associated 
 
 The following actions are defined for samples:
 
-- `SampleCreate`
-- `SampleRead`
-- `SampleUpdate`
-- `SampleDelete`
+- `AccessAny`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 - `SampleAttachmentCreate`
 - `SampleAttachmentRead`
 - `SampleAttachmentUpdate`
@@ -55,10 +56,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `SAMPLE_GROUPS` | `SAMPLE_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - |
-| `SampleCreate` | - | - | owner | any | any | - |
-| `SampleRead` | public | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
-| `SampleUpdate` | - | - | owner | owner | any | - |
-| `SampleDelete` | - | - | - | - | - | any |
+| `Create` | - | - | owner | any | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
+| `Update` | - | - | owner | owner | any | - |
+| `Delete` | - | - | - | - | - | any |
 | `SampleAttachmentCreate` | - | - | owner | any | any | - |
 | `SampleAttachmentRead` | public | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
 | `SampleAttachmentUpdate` | - | - | owner | owner | any | - |

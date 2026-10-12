@@ -87,8 +87,8 @@ request.
 Two independent checks apply.
 
 **At connection time**, CASL decides who may open a stream at all. Any
-authenticated user has `sse_read`; members of `ADMIN_GROUPS` additionally get
-`access_any`, which gates the connections endpoint.
+authenticated user has `Read` permissions; members of `ADMIN_GROUPS` additionally get
+`AccessAny`, which gates the connections endpoint.
 
 **Per event**, `SseService` filters every message against every connected user
 before sending it. A user receives a document only if one of these holds:

@@ -167,7 +167,7 @@ export class SamplesController {
 
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
-    const canView = ability.can(Action.SampleRead, SampleClass);
+    const canView = ability.can(Action.Read, SampleClass);
 
     if (!canViewAny) {
       mergedFilters.where = mergedFilters.where ?? {};
@@ -207,7 +207,7 @@ export class SamplesController {
   // POST /samples
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleCreate, SampleClass),
+    ability.can(Action.Create, SampleClass),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<SampleClass>(
@@ -241,7 +241,7 @@ export class SamplesController {
     const sampleDTO = this.checkPermissionsForSampleCreate(
       request,
       createSampleDto,
-      Action.SampleCreate,
+      Action.Create,
     );
 
     const createdSample = await this.samplesService.create(sampleDTO);
@@ -253,7 +253,7 @@ export class SamplesController {
   // GET /samples
   @UseGuards(PoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get()
   @SerializeOptions({
@@ -296,7 +296,7 @@ export class SamplesController {
   // GET /samples/count
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/count")
   @ApiOperation({
@@ -325,7 +325,7 @@ export class SamplesController {
 
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
-    const canView = ability.can(Action.SampleRead, SampleClass);
+    const canView = ability.can(Action.Read, SampleClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -340,7 +340,7 @@ export class SamplesController {
   // GET /samples/fullquery
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/fullquery")
   @SerializeOptions({
@@ -386,7 +386,7 @@ export class SamplesController {
 
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
-    const canView = ability.can(Action.SampleRead, SampleClass);
+    const canView = ability.can(Action.Read, SampleClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -412,7 +412,7 @@ export class SamplesController {
   // GET /samples/metadataKeys
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/metadataKeys")
   @ApiOperation({
@@ -452,7 +452,7 @@ export class SamplesController {
 
     const ability = this.caslAbilityFactory.sampleAccess(user);
     const canViewAny = ability.can(Action.AccessAny, SampleClass);
-    const canView = ability.can(Action.SampleRead, SampleClass);
+    const canView = ability.can(Action.Read, SampleClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -472,7 +472,7 @@ export class SamplesController {
   // GET /samples/findOne
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -531,7 +531,7 @@ export class SamplesController {
   // GET /samples/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/:id")
   @Header("content-type", "application/json")
@@ -560,7 +560,7 @@ export class SamplesController {
     const sample = await this.checkPermissionsForSample(
       request,
       id,
-      Action.SampleRead,
+      Action.Read,
     );
 
     return sample;
@@ -569,7 +569,7 @@ export class SamplesController {
   // GET /samples/:id/authorization
   @UseGuards(PoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/:id/authorization")
   @ApiParam({
@@ -588,18 +588,14 @@ export class SamplesController {
       sampleId: id,
     });
 
-    const canAccess = this.permissionChecker(
-      Action.SampleRead,
-      sample,
-      request,
-    );
+    const canAccess = this.permissionChecker(Action.Read, sample, request);
     return { canAccess };
   }
 
   // PATCH /samples/:id
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleUpdate, SampleClass),
+    ability.can(Action.Update, SampleClass),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<SampleClass>(
@@ -637,7 +633,7 @@ export class SamplesController {
     @Body() updateSampleDto: PartialUpdateSampleDto,
     @Headers() headers: Record<string, string>,
   ): Promise<OutputSampleDto | null> {
-    await this.checkPermissionsForSample(request, id, Action.SampleUpdate);
+    await this.checkPermissionsForSample(request, id, Action.Update);
 
     const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
 
@@ -655,7 +651,7 @@ export class SamplesController {
   // DELETE /samples/:id
   @UseGuards()
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleDelete, SampleClass),
+    ability.can(Action.Delete, SampleClass),
   )
   @Delete("/:id")
   @ApiOperation({
@@ -675,7 +671,7 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<unknown> {
-    await this.checkPermissionsForSample(request, id, Action.SampleDelete);
+    await this.checkPermissionsForSample(request, id, Action.Delete);
     return this.samplesService.remove({ sampleId: id });
   }
 
@@ -866,7 +862,7 @@ export class SamplesController {
   // GET /samples/:id/datasets
   @UseGuards(AuthenticatedPoliciesGuard)
   @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleRead, SampleClass),
+    ability.can(Action.Read, SampleClass),
   )
   @Get("/:id/datasets")
   @ApiOperation({
@@ -889,14 +885,14 @@ export class SamplesController {
     @Req() request: Request,
     @Param("id") id: string,
   ): Promise<DatasetClass[] | null> {
-    await this.checkPermissionsForSample(request, id, Action.SampleRead);
+    await this.checkPermissionsForSample(request, id, Action.Read);
 
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       fields.isPublished = true;

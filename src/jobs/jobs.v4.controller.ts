@@ -64,7 +64,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobCreate, JobClass),
+    ability.can(Action.Create, JobClass),
   )
   @Post()
   @ApiOperation({
@@ -93,7 +93,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobUpdate, JobClass),
+    ability.can(Action.Update, JobClass),
   )
   @Patch(":id")
   @ApiOperation({
@@ -135,7 +135,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobRead, JobClass),
+    ability.can(Action.Read, JobClass),
   )
   @Get("/fullquery")
   @ApiOperation({
@@ -182,7 +182,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobRead, JobClass),
+    ability.can(Action.Read, JobClass),
   )
   @Get("/fullfacet")
   @ApiOperation({
@@ -225,7 +225,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobRead, JobClass),
+    ability.can(Action.Read, JobClass),
   )
   @Get("/datasetDetails")
   @ApiOperation({
@@ -281,7 +281,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobRead, JobClass),
+    ability.can(Action.Read, JobClass),
   )
   @Get(":id")
   @ApiOperation({
@@ -347,7 +347,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobRead, JobClass),
+    ability.can(Action.Read, JobClass),
   )
   @Get()
   @ApiOperation({
@@ -390,7 +390,7 @@ export class JobsV4Controller {
    */
   @UseGuards(PoliciesGuard)
   @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.JobDelete, JobClass),
+    ability.can(Action.Delete, JobClass),
   )
   @Delete(":id")
   @ApiOperation({

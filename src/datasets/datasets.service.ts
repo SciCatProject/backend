@@ -122,6 +122,13 @@ export class DatasetsService {
       const includePipeline = [];
       if (scope?.where)
         includePipeline.push({ $match: castWhereFilter(scope.where) });
+
+      const limits = parseOrderLimits(scope?.limits);
+      if (limits?.sort) {
+        const sort = parsePipelineSort(limits.sort);
+        includePipeline.push({ $sort: sort });
+      }
+
       if (scope?.fields)
         includePipeline.push({
           $project: parsePipelineProjection(scope.fields as string[]),
@@ -130,12 +137,6 @@ export class DatasetsService {
         includePipeline.push({ $skip: scope.limits.skip });
       if (scope?.limits?.limit)
         includePipeline.push({ $limit: scope.limits.limit });
-
-      const limits = parseOrderLimits(scope?.limits);
-      if (limits?.sort) {
-        const sort = parsePipelineSort(limits.sort);
-        includePipeline.push({ $sort: sort });
-      }
 
       if (includePipeline.length > 0)
         fieldValue.$lookup.pipeline = (

@@ -35,7 +35,7 @@ export class RuntimeConfigAbility {
     /**
      * Any user
      */
-    can(Action.RuntimeConfigRead, RuntimeConfig);
+    can(Action.Read, RuntimeConfig);
 
     if (
       user &&
@@ -44,7 +44,7 @@ export class RuntimeConfigAbility {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.RuntimeConfigUpdate, RuntimeConfig);
+      can(Action.Update, RuntimeConfig);
     }
 
     return build({

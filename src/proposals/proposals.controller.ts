@@ -164,7 +164,7 @@ export class ProposalsController {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!canViewAny) {
       mergedFilters.where = mergedFilters.where ?? {};
@@ -205,7 +205,7 @@ export class ProposalsController {
   // POST /proposals
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalCreate, ProposalClass),
+    ability.can(Action.Create, ProposalClass),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -236,7 +236,7 @@ export class ProposalsController {
     const proposalDTO = this.checkPermissionsForProposalCreate(
       request,
       createProposalDto,
-      Action.ProposalCreate,
+      Action.Create,
     );
     const existingProposal = await this.proposalsService.findOne({
       proposalId: createProposalDto.proposalId,
@@ -253,7 +253,7 @@ export class ProposalsController {
 
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalCreate, ProposalClass),
+    ability.can(Action.Create, ProposalClass),
   )
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
@@ -292,7 +292,7 @@ export class ProposalsController {
   // GET /proposals
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get()
   @ApiOperation({
@@ -337,7 +337,7 @@ export class ProposalsController {
   // GET /proposals/count
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/count")
   @ApiOperation({
@@ -369,7 +369,7 @@ export class ProposalsController {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -384,7 +384,7 @@ export class ProposalsController {
   // GET /proposals/fullquery
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/fullquery")
   @ApiOperation({
@@ -426,7 +426,7 @@ export class ProposalsController {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -445,7 +445,7 @@ export class ProposalsController {
   // GET /proposals/fullfacet
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/fullfacet")
   @ApiQuery({
@@ -479,7 +479,7 @@ export class ProposalsController {
 
     const ability = this.caslAbilityFactory.proposalAccess(user);
     const canViewAny = ability.can(Action.AccessAny, ProposalClass);
-    const canView = ability.can(Action.ProposalRead, ProposalClass);
+    const canView = ability.can(Action.Read, ProposalClass);
 
     if (!user) {
       fields.isPublished = true;
@@ -499,7 +499,7 @@ export class ProposalsController {
   // GET /proposals/:pid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/:pid")
   @ApiOperation({
@@ -524,7 +524,7 @@ export class ProposalsController {
     const proposal = await this.checkPermissionsForProposal(
       request,
       proposalId,
-      Action.ProposalRead,
+      Action.Read,
     );
 
     return proposal;
@@ -533,7 +533,7 @@ export class ProposalsController {
   // GET /proposals/:pid/authorization
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalRead, ProposalClass),
+    ability.can(Action.Read, ProposalClass),
   )
   @Get("/:pid/authorization")
   @ApiOperation({
@@ -560,18 +560,14 @@ export class ProposalsController {
       proposalId,
     });
 
-    const canAccess = this.permissionChecker(
-      Action.ProposalRead,
-      proposal,
-      request,
-    );
+    const canAccess = this.permissionChecker(Action.Read, proposal, request);
     return { canAccess };
   }
 
   // PATCH /proposals/:pid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalUpdate, ProposalClass),
+    ability.can(Action.Update, ProposalClass),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -606,11 +602,7 @@ export class ProposalsController {
     @Headers() headers: Record<string, string>,
     @Body() updateProposalDto: PartialUpdateProposalDto,
   ): Promise<ProposalClass | null> {
-    await this.checkPermissionsForProposal(
-      request,
-      proposalId,
-      Action.ProposalUpdate,
-    );
+    await this.checkPermissionsForProposal(request, proposalId, Action.Update);
 
     const unmodifiedSince = parseDate(headers["if-unmodified-since"]);
     return this.proposalsService.findOneAndUpdate(
@@ -623,7 +615,7 @@ export class ProposalsController {
   // DELETE /proposals/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalDelete, ProposalClass),
+    ability.can(Action.Delete, ProposalClass),
   )
   @Delete("/:pid")
   @ApiOperation({
@@ -643,11 +635,7 @@ export class ProposalsController {
     @Req() request: Request,
     @Param("pid") proposalId: string,
   ): Promise<unknown> {
-    await this.checkPermissionsForProposal(
-      request,
-      proposalId,
-      Action.ProposalDelete,
-    );
+    await this.checkPermissionsForProposal(request, proposalId, Action.Delete);
     return this.proposalsService.remove({ proposalId: proposalId });
   }
 
@@ -852,18 +840,14 @@ export class ProposalsController {
     @Req() request: Request,
     @Param("pid") proposalId: string,
   ): Promise<DatasetClass[] | null> {
-    await this.checkPermissionsForProposal(
-      request,
-      proposalId,
-      Action.ProposalRead,
-    );
+    await this.checkPermissionsForProposal(request, proposalId, Action.Read);
 
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse("{}");
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
-    const canView = ability.can(Action.DatasetRead, DatasetClass);
+    const canView = ability.can(Action.Read, DatasetClass);
 
     if (!user) {
       fields.isPublished = true;

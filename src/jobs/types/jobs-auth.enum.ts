@@ -11,6 +11,9 @@ export enum CreateJobAuth {
   // User belongs to dataset's ownerGroup for all `datasetIds`.
   // Equivalent to write access to all datasets in the request
   DatasetOwner = "#datasetOwner",
+  // Same as #datasetAccess and the user is the PI (pi_email)
+  // of all proposals linked to the datasets in the request
+  DatasetAccessAndProposalPI = "#datasetAccessAndProposalPI",
   // User belongs to either ADMIN_GROUP or CREATE_JOB_PRIVILEGED_GROUP
   // Equivalent to jobs admin only
   JobAdmin = "#jobAdmin",

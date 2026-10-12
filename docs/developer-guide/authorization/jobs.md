@@ -6,10 +6,10 @@ This document describes the authorization model used for jobs and associated end
 
 The following actions are defined for jobs:
 
-- `JobCreate`
-- `JobRead`
-- `JobUpdate`
-- `JobDelete`
+- `Create`
+- `Read`
+- `Update`
+- `Delete`
 
 ## Permissions
 
@@ -25,7 +25,7 @@ Unauthenticated users do not have read access to jobs.
 An authenticated user may read jobs if their username matches the job's `ownerUser` of that job or if they are a member of the job's `ownerGroup`.
 
 They are permitted to create jobs of a certain job type if the corresponding create.auth field is configured to:
-- Any wildcard except `#jobAdmin` (`#all`, `#datasetPublic`, `#authenticated`, `#datasetAccess`, `#datasetOwner`)
+- Any wildcard except `#jobAdmin` (`#all`, `#datasetPublic`, `#authenticated`, `#datasetAccess`, `#datasetOwner`, `#datasetAccessAndProposalPI`)
 - A group `@g` that the user is a member of
 - The user's exact username
 
@@ -62,10 +62,10 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `CREATE_JOB_PRIVILEGED_GROUPS` | `UPDATE_JOB_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - |
-| `JobCreate` | configPublic | config | any | - | any | - |
-| `JobRead` | - | owner | any | any | any | owner |
-| `JobUpdate` | configPublic | config | - | any | any | - |
-| `JobDelete` | - | - | - | - | - | any |
+| `Create` | configPublic | config | any | - | any | - |
+| `Read` | - | owner | any | any | any | owner |
+| `Update` | configPublic | config | - | any | any | - |
+| `Delete` | - | - | - | - | - | any |
 
 Legend:
 - configPublic: auth configuration value for a job type must allow public access

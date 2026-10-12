@@ -48,11 +48,11 @@ export class JobAbility {
         jobConfig.create.auth === CreateJobAuth.All ||
         jobConfig.create.auth === CreateJobAuth.DatasetPublic
       ) {
-        can(Action.JobCreate, JobClass, matchJobType);
+        can(Action.Create, JobClass, matchJobType);
       }
 
       if (jobConfig.update.auth === UpdateJobAuth.All) {
-        can(Action.JobUpdate, JobClass, {
+        can(Action.Update, JobClass, {
           ownerGroup: undefined,
           ...matchJobType,
         });
@@ -103,14 +103,14 @@ export class JobAbility {
       }
 
       if (createAuthorizationValues.some((a) => jobConfig.create.auth === a)) {
-        can(Action.JobCreate, JobClass, matchJobType);
+        can(Action.Create, JobClass, matchJobType);
       }
 
-      can(Action.JobRead, JobClass, { ...ifOwnerUser, ...matchJobType });
-      can(Action.JobRead, JobClass, { ...ifOwnerGroup, ...matchJobType });
+      can(Action.Read, JobClass, { ...ifOwnerUser, ...matchJobType });
+      can(Action.Read, JobClass, { ...ifOwnerGroup, ...matchJobType });
 
       if (updateAuthorizationValues.some((a) => jobConfig.update.auth === a)) {
-        can(Action.JobUpdate, JobClass, updateScope);
+        can(Action.Update, JobClass, updateScope);
       }
     });
 
@@ -122,8 +122,8 @@ export class JobAbility {
       /**
        * User belonging to CREATE_JOB_PRIVILEGED_GROUPS
        */
-      can(Action.JobCreate, JobClass);
-      can(Action.JobRead, JobClass);
+      can(Action.Create, JobClass);
+      can(Action.Read, JobClass);
     }
 
     if (
@@ -134,17 +134,17 @@ export class JobAbility {
       /**
        * User belonging to UPDATE_JOB_PRIVILEGED_GROUPS
        */
-      can(Action.JobRead, JobClass);
-      can(Action.JobUpdate, JobClass);
+      can(Action.Read, JobClass);
+      can(Action.Update, JobClass);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
       /**
        * User belonging to ADMIN_GROUPS
        */
-      can(Action.JobCreate, JobClass);
-      can(Action.JobRead, JobClass);
-      can(Action.JobUpdate, JobClass);
+      can(Action.Create, JobClass);
+      can(Action.Read, JobClass);
+      can(Action.Update, JobClass);
     }
 
     if (
@@ -153,7 +153,7 @@ export class JobAbility {
       /**
        * User belonging to DELETE_JOB_GROUPS
        */
-      can(Action.JobDelete, JobClass);
+      can(Action.Delete, JobClass);
     }
 
     /**
@@ -170,7 +170,7 @@ export class JobAbility {
       /**
        * User belonging only to CREATE_JOB_PRIVILEGED_GROUPS
        */
-      cannot(Action.JobUpdate, JobClass);
+      cannot(Action.Update, JobClass);
     }
 
     if (
@@ -184,7 +184,7 @@ export class JobAbility {
       /**
        * User belonging only to UPDATE_JOB_PRIVILEGED_GROUPS
        */
-      cannot(Action.JobCreate, JobClass);
+      cannot(Action.Create, JobClass);
     }
 
     return build({

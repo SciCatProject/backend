@@ -185,7 +185,7 @@ export class OrigDatablocksV4Controller {
     await this.checkOrigDatablockPermissionsForUser(user, origdatablock, group);
 
     // Bypass dataset permission checks for delete, will deadlock otherwise if dataset is deleted first
-    if (group != Action.OrigdatablockDelete) {
+    if (group != Action.Delete) {
       const dataset = await this.datasetsService.findOneComplete({
         where: { pid: origdatablock.datasetId },
       });
@@ -196,11 +196,7 @@ export class OrigDatablocksV4Controller {
         );
       }
 
-      await this.checkDatasetPermissionsForUser(
-        user,
-        dataset,
-        Action.DatasetUpdate,
-      );
+      await this.checkDatasetPermissionsForUser(user, dataset, Action.Update);
     }
 
     return origdatablock;
@@ -241,11 +237,7 @@ export class OrigDatablocksV4Controller {
       );
     }
 
-    await this.checkDatasetPermissionsForUser(
-      user,
-      dataset,
-      Action.DatasetRead,
-    );
+    await this.checkDatasetPermissionsForUser(user, dataset, Action.Read);
 
     return origdatablock;
   }
@@ -259,7 +251,7 @@ export class OrigDatablocksV4Controller {
   ): IOrigDatablockFiltersV4<OrigDatablockDocument, IOrigDatablockFields> {
     const ability = this.caslAbilityFactory.origDatablockAccess(user);
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
-    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+    const canView = ability.can(Action.Read, OrigDatablock);
 
     if (!user) {
       // In API v4 unauthorized users must use the public endpoints
@@ -295,7 +287,7 @@ export class OrigDatablocksV4Controller {
   // POST /origdatablocks
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockCreate, OrigDatablock),
+    ability.can(Action.Create, OrigDatablock),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.CREATED)
@@ -336,7 +328,7 @@ export class OrigDatablocksV4Controller {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       createOrigDatablockDto,
-      Action.OrigdatablockCreate,
+      Action.Create,
     );
     return this.origDatablocksService.createAndUpdateDatasetSizeAndFileCount(
       createOrigDatablockDto,
@@ -346,7 +338,7 @@ export class OrigDatablocksV4Controller {
   // POST /origdatablocks/isValid
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockCreate, OrigDatablock),
+    ability.can(Action.Create, OrigDatablock),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.OK)
@@ -375,7 +367,7 @@ export class OrigDatablocksV4Controller {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       createOrigDatablockDto as CreateOrigDatablockDto,
-      Action.OrigdatablockCreate,
+      Action.Create,
     );
 
     const dtoTestOrigDatablock = plainToInstance(
@@ -393,7 +385,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get()
   @ApiOperation({
@@ -441,7 +433,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks/files
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get("/files")
   @ApiOperation({
@@ -489,7 +481,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks/fullfacet
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get("/fullfacet")
   @ApiQuery({
@@ -516,7 +508,7 @@ export class OrigDatablocksV4Controller {
 
     const ability = this.caslAbilityFactory.origDatablockAccess(user);
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
-    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+    const canView = ability.can(Action.Read, OrigDatablock);
 
     if (!user) {
       fields.isPublished = true;
@@ -536,7 +528,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks/fullfacet/files
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get("/fullfacet/files")
   @ApiQuery({
@@ -557,7 +549,7 @@ export class OrigDatablocksV4Controller {
 
     const ability = this.caslAbilityFactory.origDatablockAccess(user);
     const canViewAny = ability.can(Action.AccessAny, OrigDatablock);
-    const canView = ability.can(Action.OrigdatablockRead, OrigDatablock);
+    const canView = ability.can(Action.Read, OrigDatablock);
 
     if (!user) {
       fields.isPublished = true;
@@ -581,7 +573,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks/files/count
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get("/files/count")
   @ApiOperation({
@@ -635,7 +627,7 @@ export class OrigDatablocksV4Controller {
   // GET /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockRead, OrigDatablock),
+    ability.can(Action.Read, OrigDatablock),
   )
   @Get("/:id")
   @ApiOperation({
@@ -665,11 +657,7 @@ export class OrigDatablocksV4Controller {
     @Query("include", new IncludeValidationPipe(ORIGDATABLOCK_LOOKUP_FIELDS))
     include: OrigDatablockLookupKeysEnum[] | OrigDatablockLookupKeysEnum,
   ): Promise<OutputOrigDatablockDto | null> {
-    await this.checkPermissionsForOrigDatablockRead(
-      request,
-      id,
-      Action.OrigdatablockRead,
-    );
+    await this.checkPermissionsForOrigDatablockRead(request, id, Action.Read);
 
     const includeArray = Array.isArray(include)
       ? include
@@ -686,7 +674,7 @@ export class OrigDatablocksV4Controller {
   // PATCH /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockUpdate, OrigDatablock),
+    ability.can(Action.Update, OrigDatablock),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
@@ -718,7 +706,7 @@ export class OrigDatablocksV4Controller {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
-      Action.OrigdatablockUpdate,
+      Action.Update,
     );
     const unmodifiedSince = parseDate(request.headers["if-unmodified-since"]);
     return this.origDatablocksService.updateOneAndUpdateDatasetSizeAndFileCount(
@@ -731,7 +719,7 @@ export class OrigDatablocksV4Controller {
   // DELETE /origdatablocks/:id
   @UseGuards(PoliciesGuard)
   @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.OrigdatablockDelete, OrigDatablock),
+    ability.can(Action.Delete, OrigDatablock),
   )
   @Delete("/:id")
   @ApiOperation({
@@ -755,7 +743,7 @@ export class OrigDatablocksV4Controller {
     await this.checkPermissionsForOrigDatablockWrite(
       request,
       id,
-      Action.OrigdatablockDelete,
+      Action.Delete,
     );
 
     return this.origDatablocksService.removeAndUpdateDatasetSizeAndFileCount({

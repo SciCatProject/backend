@@ -83,10 +83,7 @@ describe("MetadataKeysV4Controller", () => {
 
     expect(caslAbilityFactory.metadataKeyAccess).toHaveBeenCalledWith(user);
 
-    expect(accessibleBy).toHaveBeenCalledWith(
-      abilities,
-      Action.MetadataKeyRead,
-    );
+    expect(accessibleBy).toHaveBeenCalledWith(abilities, Action.Read);
     expect(ofType).toHaveBeenCalledWith(MetadataKeyClass);
 
     expect(metadatakeysService.findAll).toHaveBeenCalledWith(
