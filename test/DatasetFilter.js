@@ -1257,4 +1257,14 @@ describe("0400: DatasetFilter: Test retrieving datasets using filtering capabili
       .set("Accept", "application/json")
       .expect(TestData.BadRequestStatusCode);
   });
+
+  it("0760: should reject conditions on relations in fullfacet", async () => {
+    const fields = { mode: { "proposals.pi_email": "pi@example.com" } };
+    return request(appUrl)
+      .get("/api/v3/Datasets/fullfacet")
+      .query({ fields: JSON.stringify(fields), facets: JSON.stringify([]) })
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .set("Accept", "application/json")
+      .expect(TestData.BadRequestStatusCode);
+  });
 });
