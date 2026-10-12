@@ -94,7 +94,7 @@ export class PublishedDataService {
   async findOne(
     filter: FilterQuery<PublishedDataDocument>,
   ): Promise<PublishedData | null> {
-    return this.publishedDataModel.findOne(filter).exec();
+    return this.publishedDataModel.findOne(filter).lean().exec();
   }
 
   async update(
