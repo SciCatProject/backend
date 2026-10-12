@@ -2233,7 +2233,7 @@ describe("2500: Datasets v4 tests", () => {
 
     const proposalsInclude = { include: [{ relation: "proposals" }] };
 
-    const getDatasets = (where, filter = proposalsInclude, token) =>
+    const getDatasets = (where, filter = {}, token) =>
       request(appUrl)
         .get("/api/v4/datasets")
         .query({
@@ -2346,16 +2346,26 @@ describe("2500: Datasets v4 tests", () => {
       );
     });
 
-    it("1107: should apply the include scope before the where", async () => {
-      return expectPids(
+    it("1107: should filter independently of the include scope", async () => {
+      return getDatasets(
         { "proposals.pi_email": "pi.b@relation-where.test" },
-        [],
         {
           include: [
             { relation: "proposals", scope: { where: { pi_email: piA } } },
           ],
         },
-      );
+      )
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => {
+          res.body.map((d) => d.pid).should.have.members([pidAAndB, pidOnlyB]);
+          res.body
+            .find((d) => d.pid === pidAAndB)
+            .proposals.map((p) => p.proposalId)
+            .should.deep.equal([proposalA]);
+          res.body
+            .find((d) => d.pid === pidOnlyB)
+            .proposals.should.have.lengthOf(0);
+        });
     });
 
     it("1108: should paginate the datasets after the relation conditions", async () => {
@@ -2373,9 +2383,19 @@ describe("2500: Datasets v4 tests", () => {
         });
     });
 
-    it("1109: should reject relation conditions on relations that are not included", async () => {
-      return getDatasets({ "proposals.pi_email": piA }, {}).expect(
-        TestData.BadRequestStatusCode,
+    it("1109: should only return relations that are included", async () => {
+      const where = { "proposals.pi_email": piA };
+      const filtered = await getDatasets(where).expect(
+        TestData.SuccessfulGetStatusCode,
+      );
+      filtered.body.should.have.lengthOf(2);
+      filtered.body.forEach((d) => d.should.not.have.property("proposals"));
+
+      const included = await getDatasets(where, proposalsInclude).expect(
+        TestData.SuccessfulGetStatusCode,
+      );
+      included.body.forEach(
+        (d) => d.proposals.should.be.an("array").that.is.not.empty,
       );
     });
 

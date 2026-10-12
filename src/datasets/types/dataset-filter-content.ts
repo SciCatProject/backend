@@ -8,7 +8,7 @@ const FILTERS: Record<"limits" | "fields" | "where" | "include", object> = {
   where: {
     type: "object",
     description:
-      'Conditions may also refer to fields of included relations, e.g. { "proposals.pi_email": "pi@example.com" }. The relation must be included, and the conditions apply to the included documents: only those the user can read, after the include scope where and limits.',
+      'Conditions may also refer to fields of related documents, e.g. { "proposals.pi_email": "pi@example.com" }. They apply to all related documents the user can read, independently of include, which only decides what is returned.',
     example: {
       datasetName: { $regex: "Dataset", $options: "i" },
     },

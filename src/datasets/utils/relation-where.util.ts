@@ -44,10 +44,10 @@ export function refersToRelation(query: unknown, relations: string[]): boolean {
 /**
  * The relations a where filter refers to, out of the given ones.
  */
-export function findRelationsInWhere(
+export function findRelationsInWhere<T extends string>(
   where: Condition | undefined,
-  relations: string[],
-): string[] {
+  relations: T[],
+): T[] {
   return relations.filter((relation) =>
     refersToRelation(where ?? {}, [relation]),
   );
