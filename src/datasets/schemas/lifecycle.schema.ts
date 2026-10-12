@@ -9,10 +9,10 @@ export type LifecycleDocument = LifecycleClass & Document;
 export class LifecycleClass {
   @Prop({
     type: String,
-    required: false,
+    required: true,
     default: () => uuidv4(),
   })
-  id?: string;
+  id: string;
 
   @ApiProperty({
     type: Boolean,
