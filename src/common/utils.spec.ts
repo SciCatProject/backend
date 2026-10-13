@@ -1,5 +1,10 @@
 // Currently only covers converToSI
-import { convertToSI, parseBoolean, parseDate } from "./utils";
+import {
+  convertToSI,
+  parseBoolean,
+  parseDate,
+  parseOrderLimits,
+} from "./utils";
 
 describe("convertToSI", () => {
   it("should convert a known unit to SI successfully", () => {
@@ -84,5 +89,40 @@ describe("parseBoolean", () => {
     expect(parseBoolean("off")).toBe(false);
     expect(parseBoolean(null)).toBe(false);
     expect(parseBoolean(undefined)).toBe(false);
+  });
+});
+
+describe("parseOrderLimits", () => {
+  it("should return an empty object for undefined input", () => {
+    expect(parseOrderLimits(undefined)).toEqual({});
+  });
+
+  it("should keep limits untouched when no order is given", () => {
+    expect(parseOrderLimits({ limit: 10, skip: 5 })).toEqual({
+      limit: 10,
+      skip: 5,
+    });
+  });
+
+  it("should parse an explicit direction", () => {
+    expect(parseOrderLimits({ order: "ownerGroup:desc" })).toEqual({
+      sort: { ownerGroup: "desc" },
+    });
+    expect(parseOrderLimits({ order: "ownerGroup:asc" })).toEqual({
+      sort: { ownerGroup: "asc" },
+    });
+  });
+
+  it("should default to ascending when no direction is given", () => {
+    expect(parseOrderLimits({ order: "ownerGroup", limit: 1 })).toEqual({
+      sort: { ownerGroup: "asc" },
+      limit: 1,
+    });
+  });
+
+  it("should ignore an unknown direction", () => {
+    expect(parseOrderLimits({ order: "ownerGroup:DESC" })).toEqual({
+      sort: {},
+    });
   });
 });
