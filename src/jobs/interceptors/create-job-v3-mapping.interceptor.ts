@@ -124,6 +124,7 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     const datasetsFilter: FilterQuery<DatasetDocument> = {
       where: { pid: { $in: datasetPid } },
       fields: ["ownerGroup"],
+      limits: { limit: datasetPid.length },
     };
     const isAdmin = jobUserCurrentGroups?.some((group) =>
       this.adminUsers.has(group),

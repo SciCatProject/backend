@@ -140,6 +140,7 @@ export class JobsControllerUtils {
         pid: { $in: datasetIds },
       },
       fields: ["pid"],
+      limits: { limit: datasetIds.length },
     };
 
     const datasets = await this.datasetsService.findAll(filter);
@@ -164,6 +165,7 @@ export class JobsControllerUtils {
       await this.origDatablocksService.findAll({
         where: { datasetId: { $in: ids } },
         fields: ["datasetId", "dataFileList.path"],
+        limits: { limit: 0 },
       });
 
     const origsMappedByDatasetId = datasetOrigDatablocks.reduce(

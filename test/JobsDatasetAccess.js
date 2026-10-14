@@ -23,7 +23,10 @@ let accessTokenAdminIngestor = null,
   jobId6 = null,
   encodedJobOwnedByAnonym = null,
   jobId7 = null,
-  encodedJobOwnedByUser3 = null;
+  encodedJobOwnedByUser3 = null,
+  manyDatasetPids = [];
+
+const datasetCountAboveDefaultLimit = 101;
 
 const dataset1 = {
   ...TestData.RawCorrect,
@@ -82,6 +85,7 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
 
   after(() => {
     db.collection("Dataset").deleteMany({});
+    db.collection("OrigDatablock").deleteMany({});
     db.collection("Job").deleteMany({});
   });
 
@@ -770,5 +774,65 @@ describe("1140: Jobs: Test New Job Model Authorization for dataset_access jobs t
       .set("Accept", "application/json")
       .expect(TestData.AccessForbiddenStatusCode)
       .expect("Content-Type", /json/);
+  });
+
+  it("0340: Add more than 100 datasets as Admin Ingestor", async () => {
+    manyDatasetPids = await Promise.all(
+      Array.from({ length: datasetCountAboveDefaultLimit }, () =>
+        request(appUrl)
+          .post("/api/v4/datasets")
+          .send({
+            ...TestData.RawCorrectMinV4,
+            isPublished: false,
+            ownerGroup: "group5",
+            accessGroups: ["group1"],
+          })
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+          .expect(TestData.EntryCreatedStatusCode)
+          .expect("Content-Type", /json/)
+          .then((res) => res.body["pid"]),
+      ),
+    );
+  });
+
+  it("0350: Add an origdatablock to each of these datasets as Admin Ingestor", async () => {
+    return Promise.all(
+      manyDatasetPids.map((pid) =>
+        request(appUrl)
+          .post("/api/v4/origdatablocks")
+          .send({ ...TestData.OrigDatablockV4Correct, datasetId: pid })
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+          .expect(TestData.EntryCreatedStatusCode)
+          .expect("Content-Type", /json/),
+      ),
+    );
+  });
+
+  it("0360: Add a new job as a normal user in '#datasetAccess' configuration with access to more than 100 datasets, choosing only specific files", async () => {
+    const filePath = TestData.OrigDatablockV4Correct.dataFileList[0].path;
+    const newJob = {
+      ...jobDatasetAccess,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: manyDatasetPids.map((pid) => ({ pid, files: [filePath] })),
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("statusCode").to.be.equal("jobSubmitted");
+        res.body.jobParams.datasetList.should.have.lengthOf(
+          datasetCountAboveDefaultLimit,
+        );
+      });
   });
 });

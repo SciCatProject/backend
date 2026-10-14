@@ -27,7 +27,10 @@ let accessTokenAdminIngestor = null,
   jobCreateDtoByUser1 = null,
   jobCreateDtoByAnonymous = null,
   jobUpdateDto1 = null,
-  jobUpdateDto2 = null;
+  jobUpdateDto2 = null,
+  manyDatasetPids = [];
+
+const datasetCountAboveDefaultLimit = 101;
 
 const dataset1 = {
   ...TestData.RawCorrect,
@@ -1547,6 +1550,47 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
           .property("emailJobInitiator")
           .to.be.equal(jobCreateDtoByAnonymous.emailJobInitiator);
         encodedJobAnonymous = encodeURIComponent(res.body["id"]);
+      });
+  });
+
+  it("0470: Add more than 100 datasets as Admin Ingestor", async () => {
+    manyDatasetPids = await Promise.all(
+      Array.from({ length: datasetCountAboveDefaultLimit }, () =>
+        request(appUrl)
+          .post("/api/v3/Datasets")
+          .send(dataset1)
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+          .expect(TestData.EntryCreatedStatusCode)
+          .expect("Content-Type", /json/)
+          .then((res) => res.body["pid"]),
+      ),
+    );
+  });
+
+  it("0480: Add via /api/v3 a new job for user5.1, as user5.1 in #datasetAccess auth with more than 100 datasets", async () => {
+    const newJob = {
+      ...jobDatasetAccess,
+      jobParams: {
+        username: TestData.Accounts["user5.1"]["username"],
+      },
+      datasetList: manyDatasetPids.map((pid) => ({ pid, files: [] })),
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("jobStatusMessage")
+          .to.be.equal("jobSubmitted");
+        res.body.should.have
+          .property("datasetList")
+          .with.lengthOf(datasetCountAboveDefaultLimit);
       });
   });
 

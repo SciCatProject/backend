@@ -90,6 +90,7 @@ export async function loadDatasets<T extends JobDto>(
             $in: datasetIds,
           },
         },
+        limits: { limit: datasetIds.length },
       };
 
       const result = await datasetsService.findAll(filter);
