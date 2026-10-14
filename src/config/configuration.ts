@@ -3,6 +3,10 @@ import { merge } from "lodash";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
 import { parseBoolean } from "src/common/utils";
+import {
+  getPolicyPublicationShiftInYears,
+  getPolicyRetentionShiftInYears,
+} from "./policy-times";
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -454,8 +458,8 @@ const configuration = () => {
       },
     },
     policyTimes: {
-      policyPublicationShiftInYears: process.env.POLICY_PUBLICATION_SHIFT ?? 3,
-      policyRetentionShiftInYears: process.env.POLICY_RETENTION_SHIFT ?? -1,
+      policyPublicationShiftInYears: getPolicyPublicationShiftInYears(),
+      policyRetentionShiftInYears: getPolicyRetentionShiftInYears(),
     },
     customDatasetTypes: jsonConfigMap.datasetTypes,
     proposalTypes: jsonConfigMap.proposalTypes,

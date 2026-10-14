@@ -329,7 +329,6 @@ const TestData = {
     datasetlifecycle: {
       _id: "JEST_ANY",
       archivable: true,
-      archiveRetentionTime: "JEST_ANY",
       archiveStatusMessage: "datasetCreated",
       dateOfDiskPurging: "JEST_ANY",
       dateOfPublishing: "JEST_ANY",
