@@ -67,12 +67,14 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
             if (!this._id) {
               this._id = this.pid;
             }
-            const policy = await policyService.findOne({
-              ownerGroup: this.ownerGroup,
-            });
+            const policy = await policyService.findArchivePolicy(
+              this.ownerGroup,
+            );
             let av: string;
             if (policy) {
-              av = policy.tapeRedundancy || "low";
+              av =
+                (policy.policyParams as { tapeRedundancy?: string } | undefined)
+                  ?.tapeRedundancy || "low";
             } else {
               const regexLiteral = /(?<=AV\=)(.*?)(?=\,)/g;
               av = (regexLiteral.exec(this.classification ?? "") || ["low"])[0];

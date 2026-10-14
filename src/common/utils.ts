@@ -390,7 +390,7 @@ export const parseOrderLimits = (
   if (!limits.order) return limitFilters;
   const sort: Record<string, "asc" | "desc"> = {};
   const [field, direction] = limits.order.split(":");
-  if (direction === "asc" || direction === "desc") sort[field] = direction;
+  sort[field] = direction === "desc" ? "desc" : "asc";
   limitFilters.sort = sort;
   return omit(limitFilters, "order");
 };
