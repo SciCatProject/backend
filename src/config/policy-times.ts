@@ -23,7 +23,11 @@ export const getPolicyRetentionShiftInYears = (): number =>
   );
 
 // Start of today (local time) shifted by the given number of years.
+// February 29 becomes February 28 when the target year is not a leap year.
 export const todayShiftedByYears = (years: number): Date => {
   const now = new Date();
-  return new Date(now.getFullYear() + years, now.getMonth(), now.getDate());
+  const year = now.getFullYear() + years;
+  const month = now.getMonth();
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(now.getDate(), lastDayOfMonth));
 };

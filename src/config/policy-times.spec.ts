@@ -43,4 +43,10 @@ describe("policy-times", () => {
     expect(todayShiftedByYears(3)).toEqual(new Date(2029, 9, 13));
     expect(todayShiftedByYears(0)).toEqual(new Date(2026, 9, 13));
   });
+
+  it("should clamp February 29 to February 28 in a non-leap target year", () => {
+    jest.useFakeTimers().setSystemTime(new Date(2028, 1, 29, 10));
+    expect(todayShiftedByYears(1)).toEqual(new Date(2029, 1, 28));
+    expect(todayShiftedByYears(4)).toEqual(new Date(2032, 1, 29));
+  });
 });
