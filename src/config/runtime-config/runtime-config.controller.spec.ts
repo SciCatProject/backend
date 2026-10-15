@@ -8,6 +8,7 @@ import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 class RuntimeConfigServiceMock {
   getConfig = jest.fn();
   updateConfig = jest.fn();
+  patchConfig = jest.fn();
 }
 
 class CaslAbilityFactoryMock {}
@@ -86,6 +87,47 @@ describe("RuntimeConfigController", () => {
 
       await expect(
         controller.updateConfig(mockReq, "missing", { data: {} }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("patchConfig", () => {
+    it("should call service.patchConfig with patch body and user from request", async () => {
+      const cfg = {
+        cid: "frontendConfig",
+        data: { a: 1, statusBannerMessage: "downtime" },
+      };
+      service.patchConfig.mockResolvedValue(cfg);
+
+      const mockReq = {
+        user: { username: "adminIngestor" },
+      } as unknown as Request;
+
+      const patch = { statusBannerMessage: "downtime" };
+
+      const res = await controller.patchConfig(
+        mockReq,
+        "frontendConfig",
+        patch,
+      );
+
+      expect(res).toEqual(cfg);
+      expect(service.patchConfig).toHaveBeenCalledWith(
+        "frontendConfig",
+        patch,
+        mockReq.user,
+      );
+    });
+
+    it("should throw NotFoundException from service when config id does not exist", async () => {
+      service.patchConfig.mockRejectedValue(new NotFoundException("not found"));
+
+      const mockReq = {
+        user: { username: "adminIngestor" },
+      } as unknown as Request;
+
+      await expect(
+        controller.patchConfig(mockReq, "missing", { a: 1 }),
       ).rejects.toThrow(NotFoundException);
     });
   });
