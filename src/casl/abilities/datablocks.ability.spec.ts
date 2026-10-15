@@ -65,8 +65,8 @@ describe("DatablockAbility", () => {
       expect(ability.can(Action.Read, Datablock)).toBe(true);
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
       expect(ability.can(Action.Read, ownedDatablock)).toBe(true);
-      expect(ability.can(Action.Update, Datablock)).toBe(true);
-      expect(ability.can(Action.Update, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Update, Datablock)).toBe(false);
+      expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(false);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(false);
     });
@@ -80,7 +80,7 @@ describe("DatablockAbility", () => {
       expect(ability.can(Action.Read, Datablock)).toBe(true);
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
       expect(ability.can(Action.Read, ownedDatablock)).toBe(false);
-      expect(ability.can(Action.Update, Datablock)).toBe(true);
+      expect(ability.can(Action.Update, Datablock)).toBe(false);
       expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(false);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(false);
@@ -108,12 +108,12 @@ describe("DatablockAbility", () => {
 
       expect(ability.can(Action.AccessAny, Datablock)).toBe(false);
       expect(ability.can(Action.Create, Datablock)).toBe(true);
-      expect(ability.can(Action.Create, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Read, Datablock)).toBe(true);
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
       expect(ability.can(Action.Read, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Update, Datablock)).toBe(true);
-      expect(ability.can(Action.Update, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(false);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(false);
     });
@@ -140,12 +140,12 @@ describe("DatablockAbility", () => {
 
       expect(ability.can(Action.AccessAny, Datablock)).toBe(false);
       expect(ability.can(Action.Create, Datablock)).toBe(true);
-      expect(ability.can(Action.Create, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Create, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Read, Datablock)).toBe(true);
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
       expect(ability.can(Action.Read, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Update, Datablock)).toBe(true);
-      expect(ability.can(Action.Update, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(false);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(false);
     });
@@ -177,7 +177,7 @@ describe("DatablockAbility", () => {
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
       expect(ability.can(Action.Read, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Update, Datablock)).toBe(true);
-      expect(ability.can(Action.Update, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(false);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(false);
     });
@@ -209,9 +209,9 @@ describe("DatablockAbility", () => {
       expect(ability.can(Action.Create, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Read, Datablock)).toBe(true);
       expect(ability.can(Action.Read, publicDatablock)).toBe(true);
-      expect(ability.can(Action.Read, ownedDatablock)).toBe(true);
-      expect(ability.can(Action.Update, Datablock)).toBe(true);
-      expect(ability.can(Action.Update, ownedDatablock)).toBe(true);
+      expect(ability.can(Action.Read, ownedDatablock)).toBe(false);
+      expect(ability.can(Action.Update, Datablock)).toBe(false);
+      expect(ability.can(Action.Update, ownedDatablock)).toBe(false);
       expect(ability.can(Action.Delete, Datablock)).toBe(true);
       expect(ability.can(Action.Delete, ownedDatablock)).toBe(true);
     });
