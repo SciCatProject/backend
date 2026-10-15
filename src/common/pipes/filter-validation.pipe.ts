@@ -1,6 +1,7 @@
 import { PipeTransform, Injectable } from "@nestjs/common";
 import { BadRequestException } from "@nestjs/common/exceptions";
 import { flattenObject } from "src/common/utils";
+import { parseSafeJson } from "src/common/safe-json";
 
 @Injectable()
 export class FilterValidationPipe implements PipeTransform<string, string> {
@@ -16,17 +17,11 @@ export class FilterValidationPipe implements PipeTransform<string, string> {
   ) {}
   transform(inValue: string): string {
     const allAllowedKeys: string[] = [...this.allowedObjectKeys];
-    let inValueParsed;
+    const inValueParsed = parseSafeJson(inValue, {}, "filter");
     for (const key in this.filters) {
       if (this.filters[key]) {
         allAllowedKeys.push(...this.allowedFilterKeys[key]);
       }
-    }
-    try {
-      inValueParsed = JSON.parse(inValue ?? "{}");
-    } catch (err) {
-      const error = err as Error;
-      throw new BadRequestException(`Invalid JSON in filter: ${error.message}`);
     }
     const flattenFilterKeys = Object.keys(flattenObject(inValueParsed));
     const arbitraryObjectFields = [

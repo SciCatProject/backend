@@ -3,6 +3,8 @@ import { ProposalClass } from "../schemas/proposal.schema";
 
 export enum ProposalLookupKeysEnum {
   samples = "samples",
+  instruments = "instruments",
+  datasets = "datasets",
   all = "all",
 }
 
@@ -17,6 +19,34 @@ export const PROPOSAL_LOOKUP_FIELDS: Record<
       let: { proposalId: "$proposalId" },
       pipeline: [
         { $match: { $expr: { $eq: ["$proposalId", "$$proposalId"] } } },
+      ],
+    },
+  },
+  instruments: {
+    $lookup: {
+      from: "Instrument",
+      as: "",
+      let: { instrumentIds: "$instrumentIds" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $in: ["$pid", { $ifNull: ["$$instrumentIds", []] }] },
+          },
+        },
+      ],
+    },
+  },
+  datasets: {
+    $lookup: {
+      from: "Dataset",
+      as: "",
+      let: { proposalId: "$proposalId" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $in: ["$$proposalId", { $ifNull: ["$proposalIds", []] }] },
+          },
+        },
       ],
     },
   },

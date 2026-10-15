@@ -10,7 +10,7 @@ let accessTokenAdminIngestor = null,
 
 describe("1800: RawDatasetDatablock: Test Datablocks and their relation to raw Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

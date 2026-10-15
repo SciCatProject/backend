@@ -17,7 +17,7 @@ const newName = "ESS3-1";
 
 describe("0900: Instrument: instrument management, creation, update, deletion and search", () => {
   before(async () => {
-    db.collection("Instrument").deleteMany({});
+    await db.collection("Instrument").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

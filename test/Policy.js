@@ -10,7 +10,7 @@ const testdataset = { ...TestData.PolicyCorrect };
 
 describe("1300: Policy: Simple Policy tests", () => {
   before(async () => {
-    db.collection("Policy").deleteMany({});
+    await db.collection("Policy").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

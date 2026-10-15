@@ -45,11 +45,11 @@ const dataset3 = {
 
 describe("1165: Jobs test filters and access", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
-    db.collection("Job").deleteMany({});
-    db.collection("Attachment").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
+    await db.collection("Attachment").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -317,12 +317,12 @@ describe("1165: Jobs test filters and access", () => {
       });
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
-    db.collection("Job").deleteMany({});
-    db.collection("Attachment").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
+    await db.collection("Attachment").deleteMany({});
   });
 
   it("0010: Access jobs as a user from ADMIN_GROUPS with wrong include query", async () => {

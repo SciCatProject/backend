@@ -71,9 +71,9 @@ const jobDatasetAccess = {
 
 describe("1191: Jobs: Test Backwards Compatibility", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -96,10 +96,10 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
     });
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
   });
 
   it("0010: Add dataset 1 as Admin Ingestor", async () => {

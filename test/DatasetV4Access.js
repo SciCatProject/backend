@@ -22,11 +22,11 @@ let user1Token = null,
 
 describe("2700: Datasets v4 access tests", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposal").deleteMany({});
-    db.collection("Instrument").deleteMany({});
-    db.collection("Sample").deleteMany({});
-    db.collection("Attachment").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
+    await db.collection("Instrument").deleteMany({});
+    await db.collection("Sample").deleteMany({});
+    await db.collection("Attachment").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -192,9 +192,9 @@ describe("2700: Datasets v4 access tests", () => {
     }
   }
 
-  after(() => {
-    db.collection("Datablock").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
+  after(async () => {
+    await db.collection("Datablock").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
   });
 
   describe("Fetching v4 all datasets access", () => {
@@ -488,10 +488,7 @@ describe("2700: Datasets v4 access tests", () => {
           `/api/v4/datasets/public/${encodeURIComponent(derivedDatasetMinPid)}`,
         )
         .auth(user2Token, { type: "bearer" })
-        .expect(TestData.SuccessfulGetStatusCode)
-        .then((res) => {
-          res.body.should.be.a("object").and.to.be.deep.equal({});
-        });
+        .expect(TestData.NotFoundStatusCode);
     });
 
     it("0302: should fetch dataset relation fields with correct data included if provided in the filter and have the correct rights", () => {

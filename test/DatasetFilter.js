@@ -164,7 +164,7 @@ const RawCorrectGroup2 = {
 
 describe("0400: DatasetFilter: Test retrieving datasets using filtering capabilities", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
