@@ -27,6 +27,7 @@ import {
 import {
   DatasetLookupKeysEnum,
   DATASET_LOOKUP_FIELDS,
+  DATASET_RELATION_KEYS,
   ALLOWED_DATASET_KEYS,
   ALLOWED_DATASET_FILTER_KEYS,
 } from "./types/dataset-lookup";
@@ -92,6 +93,8 @@ export class DatasetsPublicV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
+        undefined,
+        DATASET_RELATION_KEYS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
     )
@@ -216,6 +219,8 @@ export class DatasetsPublicV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
+        undefined,
+        DATASET_RELATION_KEYS,
       ),
       new IncludeValidationPipe(DATASET_LOOKUP_FIELDS),
     )
