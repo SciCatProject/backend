@@ -272,6 +272,7 @@ export class DatasetsPublicV4Controller {
           fields: false,
           limits: false,
         },
+        DATASET_RELATION_KEYS,
       ),
     )
     queryFilter?: string,

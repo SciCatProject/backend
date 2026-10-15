@@ -381,6 +381,12 @@ export class DatasetsService {
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
 
+    const { before, after } = splitWhereByRelations(
+      fields.mode,
+      DATASET_RELATIONS,
+    );
+    if (fields.mode) fields.mode = before;
+
     const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
       this.datasetModel,
       "pid",
@@ -388,6 +394,7 @@ export class DatasetsService {
       facets,
       "",
     );
+    pipeline.splice(pipeline.length - 1, 0, ...this.relationWhereStages(after));
 
     return await this.datasetModel.aggregate(pipeline).exec();
   }
@@ -467,10 +474,24 @@ export class DatasetsService {
     filter: FilterQuery<DatasetDocument>,
   ): Promise<{ count: number }> {
     const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
-    let count = 0;
-    count = await this.datasetModel.countDocuments(whereFilter).exec();
+    const { before, after } = splitWhereByRelations(
+      castWhereFilter(filter.where ?? {}),
+      DATASET_RELATIONS,
+    );
+    if (isEmpty(after)) {
+      let count = 0;
+      count = await this.datasetModel.countDocuments(whereFilter).exec();
+      return { count };
+    }
 
-    return { count };
+    const [result] = await this.datasetModel
+      .aggregate<{ count: number }>([
+        { $match: before },
+        ...this.relationWhereStages(after),
+        { $count: "count" },
+      ])
+      .exec();
+    return { count: result?.count ?? 0 };
   }
 
   // PUT dataset

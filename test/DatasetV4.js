@@ -2399,14 +2399,9 @@ describe("2500: Datasets v4 tests", () => {
       );
     });
 
-    it("1110: should reject relation conditions on count", async () => {
-      return request(appUrl)
-        .get("/api/v4/datasets/count")
-        .query({
-          filter: JSON.stringify({ where: { "proposals.pi_email": piA } }),
-        })
-        .auth(accessTokenAdminIngestor, { type: "bearer" })
-        .expect(TestData.BadRequestStatusCode);
+    it("1110: should count datasets with at least one matching relation", async () => {
+      const count = await getCount({ "proposals.pi_email": piA });
+      count.should.equal(2);
     });
 
     it("1111: should reject relation conditions on unknown relation fields", async () => {
@@ -2419,6 +2414,155 @@ describe("2500: Datasets v4 tests", () => {
       return getDatasets({
         proposals: { $size: 1 },
       }).expect(TestData.BadRequestStatusCode);
+    });
+
+    const getCount = (where, token) =>
+      request(appUrl)
+        .get("/api/v4/datasets/count")
+        .query({
+          filter: JSON.stringify({
+            where: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] }, ...where },
+          }),
+        })
+        .auth(token ?? accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => res.body.count);
+
+    const getFacet = (mode) =>
+      request(appUrl)
+        .get("/api/v4/datasets/fullfacet")
+        .query({
+          fields: JSON.stringify({
+            mode: { pid: { $in: [pidOnlyA, pidAAndB, pidOnlyB] }, ...mode },
+          }),
+          facets: JSON.stringify([]),
+        })
+        .auth(accessTokenAdminIngestor, { type: "bearer" });
+
+    const getFacetTotal = (mode) =>
+      getFacet(mode)
+        .expect(TestData.SuccessfulGetStatusCode)
+        .then((res) => res.body[0].all[0]?.totalSets ?? 0);
+
+    it("1113: should count datasets whose relations all match", async () => {
+      const count = await getCount({
+        proposals: {
+          $ne: [],
+          $not: { $elemMatch: { pi_email: { $ne: piA } } },
+        },
+      });
+      count.should.equal(1);
+    });
+
+    it("1114: should count datasets without relation conditions as before", async () => {
+      const count = await getCount({});
+      count.should.equal(3);
+    });
+
+    it("1115: should only count relations the user can access", async () => {
+      const count = await getCount(
+        { proposals: { $ne: [] } },
+        accessTokenUser1,
+      );
+      count.should.equal(2);
+    });
+
+    it("1116: should facet datasets with at least one matching relation", async () => {
+      const total = await getFacetTotal({ "proposals.pi_email": piA });
+      total.should.equal(2);
+    });
+
+    it("1117: should facet datasets whose relations all match", async () => {
+      const total = await getFacetTotal({
+        proposals: {
+          $ne: [],
+          $not: { $elemMatch: { pi_email: { $ne: piA } } },
+        },
+      });
+      total.should.equal(1);
+    });
+
+    it("1118: should facet datasets without relation conditions as before", async () => {
+      const total = await getFacetTotal({});
+      total.should.equal(3);
+    });
+
+    describe("public endpoints", () => {
+      const publishedProposal = `relation-where-pub-${uuidv4()}`;
+      const unpublishedProposal = `relation-where-unpub-${uuidv4()}`;
+      let publicPids;
+
+      const publicWhere = (where) => ({
+        pid: { $in: publicPids },
+        ...where,
+      });
+
+      before(async () => {
+        for (const proposalId of [publishedProposal, unpublishedProposal]) {
+          await request(appUrl)
+            .post("/api/v3/proposals")
+            .send({ ...TestData.ProposalCorrectMin, proposalId, pi_email: piA })
+            .auth(accessTokenAdminIngestor, { type: "bearer" })
+            .expect(TestData.EntryCreatedStatusCode);
+        }
+        // proposals cannot be published through the api
+        await db
+          .collection("Proposal")
+          .updateOne(
+            { proposalId: publishedProposal },
+            { $set: { isPublished: true } },
+          );
+
+        publicPids = [];
+        for (const proposalIds of [
+          [publishedProposal],
+          [unpublishedProposal],
+          [publishedProposal, unpublishedProposal],
+        ]) {
+          const res = await request(appUrl)
+            .post("/api/v4/datasets")
+            .send({
+              ...TestData.DerivedCorrectMinV4,
+              isPublished: true,
+              proposalIds,
+            })
+            .auth(accessTokenAdminIngestor, { type: "bearer" })
+            .expect(TestData.EntryCreatedStatusCode);
+          publicPids.push(res.body.pid);
+        }
+      });
+
+      after(async () => {
+        await processArray(publicPids.map((pid) => ({ pid })));
+        await db.collection("Proposal").deleteMany({
+          proposalId: { $in: [publishedProposal, unpublishedProposal] },
+        });
+      });
+
+      it("1119: should only count published relations on public count", async () => {
+        return request(appUrl)
+          .get("/api/v4/datasets/public/count")
+          .query({
+            filter: JSON.stringify({
+              where: publicWhere({ proposals: { $ne: [] } }),
+            }),
+          })
+          .expect(TestData.SuccessfulGetStatusCode)
+          .then((res) => res.body.count.should.equal(2));
+      });
+
+      it("1120: should only facet published relations on public fullfacet", async () => {
+        return request(appUrl)
+          .get("/api/v4/datasets/public/fullfacet")
+          .query({
+            fields: JSON.stringify({
+              mode: publicWhere({ proposals: { $ne: [] } }),
+            }),
+            facets: JSON.stringify([]),
+          })
+          .expect(TestData.SuccessfulGetStatusCode)
+          .then((res) => res.body[0].all[0].totalSets.should.equal(2));
+      });
     });
   });
 });

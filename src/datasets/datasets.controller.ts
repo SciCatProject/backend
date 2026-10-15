@@ -951,6 +951,9 @@ export class DatasetsController {
   ): Promise<Record<string, unknown>[]> {
     const user: JWTUser = request.user as JWTUser;
     const fields: IDatasetFields = JSON.parse(filters.fields ?? "{}");
+    new NoRelationWhereValidationPipe().transform(
+      JSON.stringify({ where: fields.mode }),
+    );
 
     const ability = this.caslAbilityFactory.datasetAccess(user);
     const canViewAny = ability.can(Action.AccessAny, DatasetClass);
