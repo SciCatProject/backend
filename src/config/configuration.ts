@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import { merge } from "lodash";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
+import { DatasetType } from "src/datasets/types/dataset-type.enum";
+import { load } from "js-yaml";
 import localconfiguration from "./localconfiguration";
 import { parseBoolean } from "src/common/utils";
 
@@ -71,13 +73,13 @@ const configuration = () => {
     modulePath: "./loggingProviders/defaultLogger",
     config: {},
   };
-  const jsonConfigMap: { [key: string]: object | object[] | boolean } = {
+  const jsonConfigMap: { [key: string]: unknown } = {
     datasetTypes: {},
     proposalTypes: {},
     opensearchConfig: {},
     datafilesMetadataSchema: { type: "object", additionalProperties: false },
   };
-  const jsonConfigFileList: { [key: string]: string } = {
+  const yamlConfigFileList: { [key: string]: string } = {
     frontendConfig:
       process.env.FRONTEND_CONFIG_FILE || "./src/config/frontend.config.json",
     frontendTheme:
@@ -93,12 +95,12 @@ const configuration = () => {
     datafilesMetadataSchema:
       process.env.DATAFILES_METADATA_SCHEMA || "datafilesMetadataSchema.json",
   };
-  Object.keys(jsonConfigFileList).forEach((key) => {
-    const filePath = jsonConfigFileList[key];
+  Object.keys(yamlConfigFileList).forEach((key) => {
+    const filePath = yamlConfigFileList[key];
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, "utf8");
       try {
-        jsonConfigMap[key] = JSON.parse(data);
+        jsonConfigMap[key] = load(data, { filename: filePath });
       } catch (error) {
         console.error(
           "Error json config file parsing " + filePath + " : " + error,
@@ -141,10 +143,19 @@ const configuration = () => {
     }
   });
 
-  // NOTE: Add the default proposal type here
-  Object.assign(jsonConfigMap.proposalTypes, {
-    DefaultProposal: DEFAULT_PROPOSAL_TYPE,
-  });
+  if (jsonConfigMap.datasetTypes) {
+    // NOTE: Add the default dataset types here
+    Object.assign(jsonConfigMap.datasetTypes, {
+      Raw: DatasetType.Raw,
+      Derived: DatasetType.Derived,
+    });
+  }
+  if (jsonConfigMap.proposalTypes) {
+    // NOTE: Add the default proposal type here
+    Object.assign(jsonConfigMap.proposalTypes, {
+      DefaultProposal: DEFAULT_PROPOSAL_TYPE,
+    });
+  }
 
   const oidcFrontendClients = (() => {
     const clients = ["scicat"];

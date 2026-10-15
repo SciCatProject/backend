@@ -115,11 +115,15 @@ automatically create the specified accounts on startup. If this file is not prov
 Follow the structure of [functionalAccounts.json.minimal.example](/functionalAccounts.json.minimal.example) to create
 your own _functionalAccounts.json_ file.
 
+YAML syntax is also supported. Set `FUNCTIONAL_ACCOUNTS_FILE=functionalAccounts.yaml` in your environment.
+
 ## Frontend configuration and theme
 
 The SciCat backend provides functionality to serve a configuration and theme to a connected frontend. The default files are _frontend.config.json_ and _frontend.theme.json_ located in the `/src/config` directory, locally or in the container. The file names and locations can be configured via the environment variables `FRONTEND_CONFIG_FILE` and `FRONTEND_THEME_FILE`.
 
 Follow the structure of the provided [frontend.config.json](/frontend.config.json) and [frontend.theme.json](/frontend.theme.json) to create your own files.
+
+YAML syntax is also supported. Set `FRONTEND_CONFIG_FILE=frontend.config.yaml` in your environment.
 
 ### Loggers configuration
 
@@ -127,11 +131,15 @@ Providing a file called _loggers.json_ at the root of the project, locally or in
 
 The `loggers.example.json` file in the root directory showcases the example of configuration structure for the one or multiple loggers. `logger.service.ts` file contains the configuration handling process logic, and `src/loggers/loggingProviders/grayLogger.ts` includes actual usecase of grayLogger.
 
+YAML syntax is also supported. Set `LOGGERS_CONFIG_FILE=loggers.yaml` in your environment.
+
 ### Proposal types configuration
 
 Providing a file called _proposalTypes.json_ at the root of the project, locally or in the container, will be automatically loaded into the application configuration service under property called `proposalTypes` and used for validation against proposal creation and update.
 
 The `proposalTypes.json.example` file in the root directory showcases the example of configuration structure for proposal types.
+
+YAML syntax is also supported. Set `PROPOSAL_TYPES_FILE=proposalTypes.yaml` in your environment.
 
 ### Dataset types configuration
 
@@ -144,6 +152,8 @@ The `datasetTypes.example.json` file in the root directory showcases an example 
 Providing a file called _publishedDataConfig.json_ at the root of the project, locally or in the container, will be automatically loaded into the application configuration service under property called `publishedDataConfig`. It will be used for published data metadata form generation in the frontend and metadata validation in publication and registration of the published data.
 
 The `publishedDataConfig.json.example` file in the root directory showcases the example of configuration structure for published data metadata.
+
+YAML syntax is also supported. Set `DATASET_TYPES_FILE=datasetTypes.yaml` in your environment.
 
 ## Environment variables
 
@@ -275,6 +285,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 | `HISTORY_ACCESS_ATTACHMENT_GROUPS`           | string  | Yes      | Roles in this list will be able to access history attachment records                                                                                                                                                                                                                                          | \[role1\]\[,role2\]\[,roleN\]...                                 |
 | `MASK_PERSONAL_INFO`                         | string  | Yes      | When enabled all emails and orcid from HTTP responses are masked. Values "yes" or "no".                                                                                                                                                                                                                       | "no"                                                             |
 | `SSE_TICKET_EXPIRES_IN`                      | number  | Yes      | How long, in seconds, the server sent event stream connection is valid.                                                                                                                                                                                                                                       | 60                                                               |
+| `OAI_PROVIDER_ROUTE`                         | string  | Yes      | URI to OAI provider, used for the`/publisheddata/:id/resync`endpoint.                                                                                                                                                                                                                                         |                                                                  |
 
 ## Migrating from the old SciCat Backend
 
