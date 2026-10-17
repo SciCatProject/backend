@@ -38,6 +38,7 @@ import { validate, ValidationError, ValidatorOptions } from "class-validator";
 import { Request } from "express";
 import { MongoError } from "mongodb";
 import { UpdateQuery } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CreateAttachmentV3Dto } from "src/attachments/dto-obsolete/create-attachment.v3.dto";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
@@ -1463,6 +1464,7 @@ export class DatasetsController {
 
     const currentLifecycle = foundDataset.datasetlifecycle ?? {};
     const updatedLifecycle: LifecycleClass = {
+      id: uuidv4(),
       ...currentLifecycle,
       ...updateDatasetLifecycleDto,
     };
