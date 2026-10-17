@@ -664,5 +664,32 @@ describe("0500: DatasetLifecycle: Test facet and filter queries", () => {
         .expect(TestData.AccessForbiddenStatusCode)
         .expect("Content-Type", /json/);
     });
+
+    it("0114: should return the lifecycle id when it is provided", async () => {
+      const datasetWithLifecycleId = {
+        ...TestData.RawCorrect,
+        ownerGroup: "group2",
+        datasetlifecycle: { id: "lifecycle-id-0114" },
+      };
+
+      const created = await request(appUrl)
+        .post("/api/v3/datasets")
+        .send(datasetWithLifecycleId)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.EntryCreatedStatusCode)
+        .expect("Content-Type", /json/);
+
+      return request(appUrl)
+        .get(
+          `/api/v3/datasets/${encodeURIComponent(created.body.pid)}/datasetlifecycle`,
+        )
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.SuccessfulGetStatusCode)
+        .expect("Content-Type", /json/)
+        .then((res) => {
+          res.body.should.have.property("id").and.equal("lifecycle-id-0114");
+          res.body.should.not.have.property("_id");
+        });
+    });
   });
 });

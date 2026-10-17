@@ -269,7 +269,7 @@ export class UpdateDatasetDto extends OwnableDto {
       "Describes the current status of the dataset during its lifetime with respect to the storage handling systems.",
   })
   @IsOptional()
-  readonly datasetlifecycle?: LifecycleClass;
+  readonly datasetlifecycle?: Partial<LifecycleClass>;
 
   @ApiProperty({
     type: Object,

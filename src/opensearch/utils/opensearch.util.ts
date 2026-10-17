@@ -42,7 +42,9 @@ export const flattenScientificMetadata = (sm: unknown): string[] => {
   return chunkWithOverlap([...out].join(" "));
 };
 
-export const toOpensearchDocument = <T extends Record<string, unknown>>(
+export const toOpensearchDocument = <
+  T extends { scientificMetadata?: unknown },
+>(
   doc: T,
 ) => {
   return {

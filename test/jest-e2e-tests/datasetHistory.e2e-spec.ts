@@ -69,7 +69,7 @@ describe("Test v3 history in datasetLifecycle", () => {
         expect(lifecycle.currentValue.archivable).toBe(false);
         expect(lifecycle.previousValue.retrievable).toBeDefined();
         expect(lifecycle.currentValue.retrievable).toBeDefined();
-        expect(typeof lifecycle.previousValue._id).toBe("string");
+        expect(typeof lifecycle.previousValue.id).toBe("string");
       });
   });
 
@@ -124,7 +124,7 @@ describe("Test v3 history in datasetLifecycle", () => {
         expect(lifecycle.currentValue.archivable).toBe(false);
         expect(lifecycle.previousValue.retrievable).toBeDefined();
         expect(lifecycle.currentValue.retrievable).toBeDefined();
-        expect(typeof lifecycle.previousValue._id).toBe("string");
+        expect(typeof lifecycle.previousValue.id).toBe("string");
       });
   });
 
