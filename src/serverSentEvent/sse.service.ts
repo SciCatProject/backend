@@ -89,7 +89,7 @@ export class SseService {
   }
 
   private sendHeartbeat(): void {
-    // Named event: EventSource.onmessage ignores it, so clients see no payload.
+    // Named event: onmessage only fires for unnamed events, so existing clients never run code for it.
     const message: MessageEvent = { type: "heartbeat", data: "" };
     for (const { subject } of this.clients.values()) {
       subject.next(message);
