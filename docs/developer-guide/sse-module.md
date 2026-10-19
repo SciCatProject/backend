@@ -146,9 +146,16 @@ pipeline is built from the registry keys, so no other change is needed.
 
 ## Limits and operational behaviour
 
-**Connections per user.** Five per user per instance. A sixth request returns
-`403 Forbidden`. The cap is per instance, so behind a load balancer the effective
-total is five times the number of replicas.
+**Connections per user.** Five per user per instance. A sixth request closes the
+user's oldest connection and opens the new one, so rapid reconnects never lock a
+user out when a proxy is slow to report closed streams. The cap is per instance,
+so behind a load balancer the effective total is five times the number of
+replicas.
+
+**Heartbeat.** Every 20 seconds each open stream receives a named `heartbeat`
+event with no data. It keeps proxies from timing out idle streams, and the write
+fails on a dead connection, which lets the server drop it. `EventSource.onmessage`
+does not fire for named events, so clients need no handling for it.
 
 **Reconnect on change stream failure.** If the change stream errors, the listener
 retries up to five times with exponential backoff starting at two seconds. After
