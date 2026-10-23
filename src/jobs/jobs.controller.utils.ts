@@ -12,7 +12,7 @@ import * as jmp from "json-merge-patch";
 import { JobsService } from "./jobs.service";
 import { CreateJobDto } from "./dto/create-job.dto";
 import { UpdateJobDto } from "./dto/update-job.dto";
-import { DatasetListDto } from "./dto/dataset-list.dto";
+import { DatasetListDto, uniquePids } from "./dto/dataset-list.dto";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
 import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
@@ -99,7 +99,7 @@ export class JobsControllerUtils {
         "List of passed datasets is empty.",
       );
     const maxDatasets = this.configService.get<number>("jobMaxDatasets")!;
-    if (!(datasetList.length <= maxDatasets))
+    if (datasetList.length > maxDatasets)
       throw new UnprocessableEntityException(
         `List of passed datasets exceeds the maximum of ${maxDatasets}.`,
       );
@@ -138,7 +138,7 @@ export class JobsControllerUtils {
    * Check that the dataset pids are valid
    */
   async checkDatasetPids(datasetList: DatasetListDto[]): Promise<void> {
-    const datasetIds = [...new Set(datasetList.map((x) => x.pid))];
+    const datasetIds = uniquePids(datasetList);
     const filter: FilterQuery<DatasetClass> = {
       where: {
         pid: { $in: datasetIds },
@@ -415,7 +415,7 @@ export class JobsControllerUtils {
       throw new UnprocessableEntityException(
         "Dataset ids list was not provided in jobParams",
       );
-    const datasetIds = [...new Set(datasetList.map((x) => x.pid))];
+    const datasetIds = uniquePids(datasetList);
     const datasetsWhere: { where: Condition<DatasetClass> } = {
       where: {
         pid: { $in: datasetIds },

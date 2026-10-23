@@ -7,7 +7,7 @@ import { JSONPathOptions } from "jsonpath-plus";
 import { makeHttpException } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
-import { DatasetListDto } from "src/jobs/dto/dataset-list.dto";
+import { DatasetListDto, uniquePids } from "src/jobs/dto/dataset-list.dto";
 import { JobParams } from "src/jobs/types/job-types.enum";
 import { JobDto, JobValidateContext } from "../jobconfig.interface";
 import { MakeOptional } from "src/common/utils";
@@ -81,7 +81,7 @@ export async function loadDatasets<T extends JobDto>(
       datasetList = [];
     }
     if (datasetList.length > 0) {
-      const datasetIds = [...new Set(datasetList.map((x) => x.pid))];
+      const datasetIds = uniquePids(datasetList);
 
       // Load linked datasets
       const filter = {
