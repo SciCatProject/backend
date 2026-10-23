@@ -119,12 +119,13 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     if ("ownerGroup" in jobParams) return jobParams.ownerGroup as string;
     const datasetList = jobParams.datasetList;
     if (datasetList.length === 0) return undefined;
-    const datasetPid = datasetList.map((datasetDto) => datasetDto.pid);
+    const datasetPid = [
+      ...new Set(datasetList.map((datasetDto) => datasetDto.pid)),
+    ];
     if (jobConfigCreateAuth === CreateJobAuth.DatasetPublic) return undefined;
     const datasetsFilter: FilterQuery<DatasetDocument> = {
       where: { pid: { $in: datasetPid } },
       fields: ["ownerGroup"],
-      limits: { limit: datasetPid.length },
     };
     const isAdmin = jobUserCurrentGroups?.some((group) =>
       this.adminUsers.has(group),
@@ -140,20 +141,22 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
         { ownerGroup: { $in: jobUserCurrentGroups ?? [] } },
         { accessGroups: { $in: jobUserCurrentGroups ?? [] } },
       ];
-      datasetsFilter.fields.push("isPublished", "accessGroups");
     }
-    const datasets = await this.datasetsService.findAll(datasetsFilter);
-    if (datasets.length !== datasetList.length) return undefined;
-    if (datasets.length === 0) return undefined;
+    const { count } = await this.datasetsService.count(datasetsFilter);
+    if (count !== datasetPid.length) return undefined;
+    if (count === 0) return undefined;
+    const nonPublishedDataset = await this.datasetsService.findOne({
+      ...datasetsFilter,
+      where: { ...datasetsFilter.where, isPublished: { $ne: true } },
+    });
+    if (nonPublishedDataset) return nonPublishedDataset.ownerGroup;
     if (
-      (jobConfigCreateAuth === CreateJobAuth.DatasetAccess ||
-        jobConfigCreateAuth === CreateJobAuth.DatasetAccessAndProposalPI) &&
-      datasets.every((dataset) => dataset?.isPublished)
+      jobConfigCreateAuth === CreateJobAuth.DatasetAccess ||
+      jobConfigCreateAuth === CreateJobAuth.DatasetAccessAndProposalPI
     )
       return jobUserCurrentGroups?.[0];
-    const nonPublishedDatasets = datasets.filter(
-      (dataset) => !dataset?.isPublished,
-    );
-    return nonPublishedDatasets[0].ownerGroup;
+    // all datasets are published: fall back to the owner group of any of them
+    const dataset = await this.datasetsService.findOne(datasetsFilter);
+    return dataset?.ownerGroup;
   }
 }

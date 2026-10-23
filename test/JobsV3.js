@@ -252,7 +252,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Datasets with pid test do not exist.");
+          .and.be.equal("1 of 1 requested datasets do not exist.");
       });
   });
 
@@ -1262,6 +1262,62 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.have
           .property("message")
           .and.be.equal("Invalid new job. Owner group should be specified.");
+      });
+  });
+
+  it("0366: Add via /api/v3 an owner_access job with only published datasets owned by the user's group", async () => {
+    const newJob = {
+      ...jobOwnerAccess,
+      datasetList: [{ pid: datasetPid2, files: [] }],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("jobStatusMessage")
+          .to.be.equal("jobSubmitted");
+        return request(appUrl)
+          .get(`/api/v4/Jobs/${encodeURIComponent(res.body["id"])}`)
+          .set("Accept", "application/json")
+          .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+          .expect(TestData.SuccessfulGetStatusCode);
+      })
+      .then((res) => {
+        res.body.should.have
+          .property("ownerGroup")
+          .to.be.equal(dataset2.ownerGroup);
+      });
+  });
+
+  it("0367: Add via /api/v3 a dataset_access job as user5.1 with the same dataset listed twice", async () => {
+    const newJob = {
+      ...jobDatasetAccess,
+      jobParams: {
+        username: TestData.Accounts["user5.1"]["username"],
+      },
+      datasetList: [
+        { pid: datasetPid1, files: [] },
+        { pid: datasetPid1, files: [] },
+      ],
+    };
+
+    return request(appUrl)
+      .post("/api/v3/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have
+          .property("jobStatusMessage")
+          .to.be.equal("jobSubmitted");
       });
   });
 

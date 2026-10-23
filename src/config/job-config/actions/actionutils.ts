@@ -81,7 +81,7 @@ export async function loadDatasets<T extends JobDto>(
       datasetList = [];
     }
     if (datasetList.length > 0) {
-      const datasetIds = datasetList.map((x) => x.pid);
+      const datasetIds = [...new Set(datasetList.map((x) => x.pid))];
 
       // Load linked datasets
       const filter = {

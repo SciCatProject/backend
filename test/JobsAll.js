@@ -206,7 +206,7 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("Datasets with pid fakeID,fakeID2 do not exist.");
+          .and.be.equal("2 of 2 requested datasets do not exist.");
       });
   });
 
