@@ -10,6 +10,8 @@ import {
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
+  const defaultJobMaxDatasets = 500;
+  const jobMaxDatasets = Number(process.env.JOB_MAX_DATASETS);
   const accessGroupsStaticValues =
     process.env.ACCESS_GROUPS_STATIC_VALUES || "";
   const adminGroups = process.env.ADMIN_GROUPS || "";
@@ -228,6 +230,10 @@ const configuration = () => {
     jobDefaultStatusCode: process.env.JOB_DEFAULT_STATUS_CODE || "jobSubmitted",
     jobDefaultStatusMessage:
       process.env.JOB_DEFAULT_STATUS_MESSAGE || "Job submitted.",
+    jobMaxDatasets:
+      Number.isInteger(jobMaxDatasets) && jobMaxDatasets > 0
+        ? jobMaxDatasets
+        : defaultJobMaxDatasets,
     loggerConfigs: jsonConfigMap.loggers || [defaultLogger],
     trackables: (process.env.TRACKABLES?.split(",") || []).map((t) => t.trim()),
     trackableStrategy:

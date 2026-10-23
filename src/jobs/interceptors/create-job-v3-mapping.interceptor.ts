@@ -126,6 +126,7 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     const datasetsFilter: FilterQuery<DatasetDocument> = {
       where: { pid: { $in: datasetPid } },
       fields: ["ownerGroup"],
+      limits: { limit: datasetPid.length },
     };
     const isAdmin = jobUserCurrentGroups?.some((group) =>
       this.adminUsers.has(group),
@@ -141,22 +142,20 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
         { ownerGroup: { $in: jobUserCurrentGroups ?? [] } },
         { accessGroups: { $in: jobUserCurrentGroups ?? [] } },
       ];
+      datasetsFilter.fields.push("isPublished", "accessGroups");
     }
-    const { count } = await this.datasetsService.count(datasetsFilter);
-    if (count !== datasetPid.length) return undefined;
-    if (count === 0) return undefined;
-    const nonPublishedDataset = await this.datasetsService.findOne({
-      ...datasetsFilter,
-      where: { ...datasetsFilter.where, isPublished: { $ne: true } },
-    });
-    if (nonPublishedDataset) return nonPublishedDataset.ownerGroup;
+    const datasets = await this.datasetsService.findAll(datasetsFilter);
+    if (datasets.length !== datasetPid.length) return undefined;
+    if (datasets.length === 0) return undefined;
     if (
-      jobConfigCreateAuth === CreateJobAuth.DatasetAccess ||
-      jobConfigCreateAuth === CreateJobAuth.DatasetAccessAndProposalPI
+      (jobConfigCreateAuth === CreateJobAuth.DatasetAccess ||
+        jobConfigCreateAuth === CreateJobAuth.DatasetAccessAndProposalPI) &&
+      datasets.every((dataset) => dataset?.isPublished)
     )
       return jobUserCurrentGroups?.[0];
-    // all datasets are published: fall back to the owner group of any of them
-    const dataset = await this.datasetsService.findOne(datasetsFilter);
-    return dataset?.ownerGroup;
+    const nonPublishedDatasets = datasets.filter(
+      (dataset) => !dataset?.isPublished,
+    );
+    return nonPublishedDatasets[0].ownerGroup;
   }
 }

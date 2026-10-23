@@ -252,7 +252,7 @@ describe("1191: Jobs: Test Backwards Compatibility", () => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("1 of 1 requested datasets do not exist.");
+          .and.be.equal("Datasets with pid test do not exist.");
       });
   });
 

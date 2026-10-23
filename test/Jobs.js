@@ -443,7 +443,7 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
         res.body.should.not.have.property("id");
         res.body.should.have
           .property("message")
-          .and.be.equal("1 of 2 requested datasets do not exist.");
+          .and.be.equal("Datasets with pid unknown-pid do not exist.");
       });
   });
 

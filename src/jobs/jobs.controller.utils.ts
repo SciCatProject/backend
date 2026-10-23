@@ -98,6 +98,11 @@ export class JobsControllerUtils {
       throw new UnprocessableEntityException(
         "List of passed datasets is empty.",
       );
+    const maxDatasets = this.configService.get<number>("jobMaxDatasets")!;
+    if (!(datasetList.length <= maxDatasets))
+      throw new UnprocessableEntityException(
+        `List of passed datasets exceeds the maximum of ${maxDatasets}.`,
+      );
 
     // check that datasetList is of type DatasetListDto[]
     const datasetListDtos: DatasetListDto[] = plainToInstance(
@@ -134,12 +139,21 @@ export class JobsControllerUtils {
    */
   async checkDatasetPids(datasetList: DatasetListDto[]): Promise<void> {
     const datasetIds = [...new Set(datasetList.map((x) => x.pid))];
-    const { count } = await this.datasetsService.count({
-      where: { pid: { $in: datasetIds } },
-    });
-    if (count === datasetIds.length) return;
+    const filter: FilterQuery<DatasetClass> = {
+      where: {
+        pid: { $in: datasetIds },
+      },
+      fields: ["pid"],
+      limits: { limit: datasetIds.length },
+    };
+
+    const datasets = await this.datasetsService.findAll(filter);
+    const findIds = new Set(datasets.map(({ pid }) => pid));
+    const nonExistIds = datasetIds.filter((x) => !findIds.has(x));
+
+    if (nonExistIds.length == 0) return;
     throw new UnprocessableEntityException(
-      `${datasetIds.length - count} of ${datasetIds.length} requested datasets do not exist.`,
+      `Datasets with pid ${nonExistIds} do not exist.`,
     );
   }
 
