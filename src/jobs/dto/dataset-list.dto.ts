@@ -18,3 +18,7 @@ export class DatasetListDto {
   @Expose()
   readonly files: string[];
 }
+
+export const uniquePids = (datasetList: Pick<DatasetListDto, "pid">[]) => [
+  ...new Set(datasetList.map(({ pid }) => pid)),
+];

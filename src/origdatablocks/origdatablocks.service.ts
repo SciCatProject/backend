@@ -397,6 +397,41 @@ export class OrigDatablocksService {
     return { count: result?.count ?? 0 };
   }
 
+  /**
+   * Count how many of the requested (dataset, file path) pairs exist in the
+   * origdatablocks. Each distinct pair is counted once.
+   */
+  async countExistingFilePaths(
+    datasetFiles: { pid: string; files: string[] }[],
+  ): Promise<number> {
+    // creates a list of ORs each with a datasetId and a
+    // list of file paths to match against
+    const match = {
+      $or: datasetFiles.map(({ pid, files }) => ({
+        datasetId: pid,
+        "dataFileList.path": { $in: files },
+      })),
+    };
+    const pipeline: PipelineStage[] = [
+      { $match: match },
+      { $project: { datasetId: 1, "dataFileList.path": 1 } },
+      // unwind and later match is necessary because $in matches
+      // any item in the array, not all
+      { $unwind: "$dataFileList" },
+      { $match: match },
+      {
+        $group: {
+          _id: { datasetId: "$datasetId", path: "$dataFileList.path" },
+        },
+      },
+      { $count: "count" },
+    ];
+    const [result] = await this.origDatablockModel
+      .aggregate<{ count: number }>(pipeline)
+      .exec();
+    return result?.count ?? 0;
+  }
+
   async createAndUpdateDatasetSizeAndFileCount(
     createDatablockDto: CreateOrigDatablockDto,
   ): Promise<OrigDatablock> {

@@ -10,7 +10,7 @@ import { Observable } from "rxjs";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { CreateJobDtoV3 } from "../dto/create-job.v3.dto";
 import { CreateJobDto } from "../dto/create-job.dto";
-import { DatasetListDto } from "../dto/dataset-list.dto";
+import { DatasetListDto, uniquePids } from "../dto/dataset-list.dto";
 import { UsersService } from "src/users/users.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
@@ -119,11 +119,12 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
     if ("ownerGroup" in jobParams) return jobParams.ownerGroup as string;
     const datasetList = jobParams.datasetList;
     if (datasetList.length === 0) return undefined;
-    const datasetPid = datasetList.map((datasetDto) => datasetDto.pid);
+    const datasetPid = uniquePids(datasetList);
     if (jobConfigCreateAuth === CreateJobAuth.DatasetPublic) return undefined;
     const datasetsFilter: FilterQuery<DatasetDocument> = {
       where: { pid: { $in: datasetPid } },
       fields: ["ownerGroup"],
+      limits: { limit: datasetPid.length },
     };
     const isAdmin = jobUserCurrentGroups?.some((group) =>
       this.adminUsers.has(group),
@@ -142,7 +143,7 @@ export class CreateJobV3MappingInterceptor implements NestInterceptor {
       datasetsFilter.fields.push("isPublished", "accessGroups");
     }
     const datasets = await this.datasetsService.findAll(datasetsFilter);
-    if (datasets.length !== datasetList.length) return undefined;
+    if (datasets.length !== datasetPid.length) return undefined;
     if (datasets.length === 0) return undefined;
     if (
       (jobConfigCreateAuth === CreateJobAuth.DatasetAccess ||
