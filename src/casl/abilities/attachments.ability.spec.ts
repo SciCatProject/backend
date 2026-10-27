@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { AttachmentAbility } from "./attachments.ability";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
 import {

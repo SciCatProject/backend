@@ -31,10 +31,12 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { ProposalClass, ProposalDocument } from "./schemas/proposal.schema";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
@@ -203,9 +205,11 @@ export class ProposalsController {
   }
 
   // POST /proposals
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Create, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Create, ProposalClass),
+    ),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -251,9 +255,11 @@ export class ProposalsController {
     return this.proposalsService.create(proposalDTO);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Create, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Create, ProposalClass),
+    ),
   )
   @HttpCode(HttpStatus.OK)
   @Post("/isValid")
@@ -290,9 +296,11 @@ export class ProposalsController {
   }
 
   // GET /proposals
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -335,9 +343,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/count
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get("/count")
   @ApiOperation({
@@ -382,9 +392,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/fullquery
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get("/fullquery")
   @ApiOperation({
@@ -443,9 +455,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/fullfacet
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get("/fullfacet")
   @ApiQuery({
@@ -497,9 +511,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/:pid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get("/:pid")
   @ApiOperation({
@@ -531,9 +547,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/:pid/authorization
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Read, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Read, ProposalClass),
+    ),
   )
   @Get("/:pid/authorization")
   @ApiOperation({
@@ -565,9 +583,11 @@ export class ProposalsController {
   }
 
   // PATCH /proposals/:pid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Update, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Update, ProposalClass),
+    ),
   )
   @UseInterceptors(
     new MultiUTCTimeInterceptor<ProposalClass, MeasurementPeriodClass>(
@@ -613,9 +633,11 @@ export class ProposalsController {
   }
 
   // DELETE /proposals/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.Delete, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.Delete, ProposalClass),
+    ),
   )
   @Delete("/:pid")
   @ApiOperation({
@@ -640,9 +662,11 @@ export class ProposalsController {
   }
 
   // POST /proposals/:id/attachments
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalAttachmentCreate, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.ProposalAttachmentCreate, ProposalClass),
+    ),
   )
   @Post("/:pid/attachments")
   @ApiOperation({
@@ -685,9 +709,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/:pid/attachments
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalAttachmentRead, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.ProposalAttachmentRead, ProposalClass),
+    ),
   )
   @Get("/:pid/attachments")
   @ApiOperation({
@@ -721,9 +747,11 @@ export class ProposalsController {
   }
 
   // PATCH /proposals/:pid/attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalAttachmentUpdate, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.ProposalAttachmentUpdate, ProposalClass),
+    ),
   )
   @Patch("/:pid/attachments/:aid")
   @ApiOperation({
@@ -768,9 +796,11 @@ export class ProposalsController {
   }
 
   // DELETE /proposals/:pid/attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalAttachmentDelete, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.ProposalAttachmentDelete, ProposalClass),
+    ),
   )
   @Delete("/:pid/attachments/:aid")
   @ApiOperation({
@@ -812,9 +842,11 @@ export class ProposalsController {
   }
 
   // GET /proposals/:id/datasets
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("proposals", (ability: AppAbility) =>
-    ability.can(Action.ProposalDatasetRead, ProposalClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("proposals", (ability: AppAbility) =>
+      ability.can(Action.ProposalDatasetRead, ProposalClass),
+    ),
   )
   @Get("/:pid/datasets")
   @ApiOperation({

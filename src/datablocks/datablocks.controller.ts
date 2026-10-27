@@ -26,10 +26,12 @@ import {
 import { Request } from "express";
 import { MongoError } from "mongodb";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { IFilters } from "src/common/interfaces/common.interface";
 import { CountApiResponse } from "src/common/types";
 import { DatasetClass } from "src/datasets//schemas/dataset.schema";
@@ -118,9 +120,11 @@ export class DatablocksController {
     return dataset;
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Create, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Create, Datablock),
+    ),
   )
   @Post()
   async create(
@@ -156,9 +160,11 @@ export class DatablocksController {
     }
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, Datablock),
+    ),
   )
   @ApiQuery({
     name: "filter",
@@ -186,9 +192,11 @@ export class DatablocksController {
     return this.datablocksService.findAll(datablockFilter);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, Datablock),
+    ),
   )
   @Get("/count")
   @ApiOperation({
@@ -255,9 +263,11 @@ export class DatablocksController {
     return this.datablocksService.count(datablockFilter);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, Datablock),
+    ),
   )
   @Get(":id")
   async findById(
@@ -277,9 +287,11 @@ export class DatablocksController {
     return datablockInstance;
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Update, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Update, Datablock),
+    ),
   )
   @Patch(":id")
   async update(
@@ -319,9 +331,11 @@ export class DatablocksController {
     }
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datablocks", (ability: AppAbility) =>
-    ability.can(Action.Delete, Datablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datablocks", (ability: AppAbility) =>
+      ability.can(Action.Delete, Datablock),
+    ),
   )
   @Delete(":id")
   async remove(

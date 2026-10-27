@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { RuntimeConfigAbility } from "./runtime-config.ability";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import {

@@ -6,7 +6,7 @@ import { accessibleBy } from "@casl/mongoose";
 import { MetadataKeysV4Controller } from "./metadatakeys.v4.controller";
 import { MetadataKeysService } from "./metadatakeys.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { Action } from "src/casl/types/action.enum";
 import { MetadataKeyClass } from "./schemas/metadatakey.schema";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 

@@ -3,10 +3,10 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from "@nestjs/common";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { EndpointGuard } from "./endpoint.guard";
 
-export class AuthenticatedPoliciesGuard
-  extends PoliciesGuard
+export class AuthenticatedEndpointGuard
+  extends EndpointGuard
   implements CanActivate
 {
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -14,7 +14,7 @@ export class AuthenticatedPoliciesGuard
     const user = req.user;
 
     if (!user) {
-      throw new UnauthorizedException("Unauthenticated");
+      throw new UnauthorizedException("Unauthenticated user");
     }
 
     return super.canActivate(context);

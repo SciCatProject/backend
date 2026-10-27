@@ -16,10 +16,11 @@ import { Request } from "express";
 import { JobsService } from "./jobs.service";
 import { CreateJobDto } from "./dto/create-job.dto";
 import { UpdateJobDto } from "./dto/update-job.dto";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { JobClass } from "./schemas/job.schema";
 import {
   ApiBearerAuth,
@@ -62,9 +63,11 @@ export class JobsV4Controller {
   /**
    * Create job v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Create, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Create, JobClass),
+    ),
   )
   @Post()
   @ApiOperation({
@@ -91,9 +94,11 @@ export class JobsV4Controller {
   /**
    * Update job v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Update, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Update, JobClass),
+    ),
   )
   @Patch(":id")
   @ApiOperation({
@@ -133,9 +138,11 @@ export class JobsV4Controller {
   /**
    * Get fullquery v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("/fullquery")
   @ApiOperation({
@@ -180,9 +187,11 @@ export class JobsV4Controller {
   /**
    * Get fullfacet v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("/fullfacet")
   @ApiOperation({
@@ -223,9 +232,11 @@ export class JobsV4Controller {
   /**
    * Get jobs details v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("/datasetDetails")
   @ApiOperation({
@@ -279,9 +290,11 @@ export class JobsV4Controller {
   /**
    * Get job by id v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get(":id")
   @ApiOperation({
@@ -345,9 +358,11 @@ export class JobsV4Controller {
    * Get jobs v4
    * GET /api/v4/jobs
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -388,9 +403,11 @@ export class JobsV4Controller {
   /**
    * Delete a job v4
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Delete, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Delete, JobClass),
+    ),
   )
   @Delete(":id")
   @ApiOperation({

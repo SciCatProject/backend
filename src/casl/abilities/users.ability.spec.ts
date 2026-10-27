@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { UserAbility } from "./users.ability";
 import { User } from "src/users/schemas/user.schema";
 import {

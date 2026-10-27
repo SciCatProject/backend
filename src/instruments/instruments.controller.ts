@@ -26,10 +26,11 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { Instrument, InstrumentDocument } from "./schemas/instrument.schema";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { IFilters } from "src/common/interfaces/common.interface";
@@ -43,9 +44,11 @@ import { FilterPipe } from "src/common/pipes/filter.pipe";
 export class InstrumentsController {
   constructor(private readonly instrumentsService: InstrumentsService) {}
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Create, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Create, Instrument),
+    ),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<Instrument>("customMetadata"),
@@ -72,9 +75,11 @@ export class InstrumentsController {
     }
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Read, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Read, Instrument),
+    ),
   )
   @Get()
   @ApiQuery({
@@ -89,9 +94,11 @@ export class InstrumentsController {
     return this.instrumentsService.findAll(instrumentFilter);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Read, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Read, Instrument),
+    ),
   )
   @Get("/count")
   @ApiQuery({
@@ -107,9 +114,11 @@ export class InstrumentsController {
   }
 
   // GET /instrument/findOne
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Read, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Read, Instrument),
+    ),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -139,18 +148,22 @@ export class InstrumentsController {
     return this.instrumentsService.findOne(instrumentFilters);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Read, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Read, Instrument),
+    ),
   )
   @Get(":id")
   async findById(@Param("id") pid: string): Promise<Instrument | null> {
     return this.instrumentsService.findOne({ where: { _id: pid } });
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Update, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Update, Instrument),
+    ),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<Instrument>("customMetadata"),
@@ -189,9 +202,11 @@ export class InstrumentsController {
     }
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("instruments", (ability: AppAbility) =>
-    ability.can(Action.Delete, Instrument),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("instruments", (ability: AppAbility) =>
+      ability.can(Action.Delete, Instrument),
+    ),
   )
   @Delete(":id")
   async remove(@Param("id") id: string): Promise<unknown> {

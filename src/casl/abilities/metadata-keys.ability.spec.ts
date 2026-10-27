@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { MetadataKeyAbility } from "./metadata-keys.ability";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import {

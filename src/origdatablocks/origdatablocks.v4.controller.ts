@@ -32,10 +32,12 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import {
   OrigDatablock,
   OrigDatablockDocument,
@@ -285,9 +287,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // POST /origdatablocks
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Create, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Create, OrigDatablock),
+    ),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.CREATED)
@@ -336,9 +340,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // POST /origdatablocks/isValid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Create, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Create, OrigDatablock),
+    ),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @HttpCode(HttpStatus.OK)
@@ -383,9 +389,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // GET /origdatablocks
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -431,9 +439,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // GET /origdatablocks/files
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get("/files")
   @ApiOperation({
@@ -479,9 +489,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // GET /origdatablocks/fullfacet
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get("/fullfacet")
   @ApiQuery({
@@ -526,9 +538,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // GET /origdatablocks/fullfacet/files
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get("/fullfacet/files")
   @ApiQuery({
@@ -571,9 +585,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // GET /origdatablocks/files/count
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get("/files/count")
   @ApiOperation({
@@ -625,9 +641,11 @@ export class OrigDatablocksV4Controller {
     return this.origDatablocksService.countFiles(mergedFilter);
   }
   // GET /origdatablocks/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Read, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Read, OrigDatablock),
+    ),
   )
   @Get("/:id")
   @ApiOperation({
@@ -672,9 +690,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // PATCH /origdatablocks/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Update, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Update, OrigDatablock),
+    ),
   )
   @UsePipes(DatafilesMetadataValidationPipe)
   @Patch("/:id")
@@ -717,9 +737,11 @@ export class OrigDatablocksV4Controller {
   }
 
   // DELETE /origdatablocks/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("origdatablocks", (ability: AppAbility) =>
-    ability.can(Action.Delete, OrigDatablock),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("origdatablocks", (ability: AppAbility) =>
+      ability.can(Action.Delete, OrigDatablock),
+    ),
   )
   @Delete("/:id")
   @ApiOperation({

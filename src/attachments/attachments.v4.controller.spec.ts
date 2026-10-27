@@ -10,7 +10,7 @@ import { PartialUpdateAttachmentV4Dto } from "./dto/update-attachment.v4.dto";
 import { Attachment } from "./schemas/attachment.schema";
 import * as jmp from "json-merge-patch";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
 import { Request } from "express";
 
 describe("AttachmentsController - findOneAndUpdate", () => {
@@ -59,7 +59,7 @@ describe("AttachmentsController - findOneAndUpdate", () => {
           provide: CaslAbilityFactory,
           useValue: mockCaslAbilityFactory,
         },
-        PoliciesGuard,
+        EndpointGuard,
       ],
     }).compile();
 

@@ -1,4 +1,4 @@
-import { InferSubjects, MongoQuery } from "@casl/ability";
+import { InferSubjects, MongoAbility, MongoQuery } from "@casl/ability";
 import { Attachment } from "src/attachments/schemas/attachment.schema";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
@@ -13,7 +13,7 @@ import { SampleClass } from "src/samples/schemas/sample.schema";
 import { UserIdentity } from "src/users/schemas/user-identity.schema";
 import { UserSettings } from "src/users/schemas/user-settings.schema";
 import { User } from "src/users/schemas/user.schema";
-import { Action } from "../action.enum";
+import { Action } from "./action.enum";
 import { RuntimeConfig } from "src/config/runtime-config/schemas/runtime-config.schema";
 import { MetadataKeyClass } from "src/metadata-keys/schemas/metadatakey.schema";
 import { Opensearch } from "src/opensearch/opensearch.subject";
@@ -48,3 +48,5 @@ export type Subjects =
 export type PossibleAbilities = [Action, Subjects];
 
 export type Conditions = MongoQuery;
+
+export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;

@@ -1,17 +1,17 @@
 import {
   AbilityBuilder,
   ExtractSubjectType,
-  MongoAbility,
   createMongoAbility,
 } from "@casl/ability";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AccessGroupsType } from "src/config/configuration";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import {
   Subjects,
   PossibleAbilities,
   Conditions,
+  AppAbility,
 } from "../types/casl-subjects";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { GenericHistory } from "src/common/schemas/generic-history.schema";
@@ -33,9 +33,7 @@ export class HistoryAbility {
       ({} as AccessGroupsType);
   }
 
-  buildAbility(
-    user: JWTUser | null,
-  ): MongoAbility<PossibleAbilities, Conditions> {
+  buildAbility(user: JWTUser | null): AppAbility {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );

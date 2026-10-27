@@ -14,7 +14,7 @@ import { CreateJobDto } from "./dto/create-job.dto";
 import { UpdateJobDto } from "./dto/update-job.dto";
 import { DatasetListDto } from "./dto/dataset-list.dto";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { Action } from "src/casl/types/action.enum";
 import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
 import { JobClass, JobDocument } from "./schemas/job.schema";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
