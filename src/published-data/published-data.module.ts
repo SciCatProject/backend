@@ -1,5 +1,5 @@
 import { HttpModule } from "@nestjs/axios";
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AttachmentsModule } from "src/attachments/attachments.module";
@@ -23,9 +23,10 @@ import { ValidatorService } from "./validator.service";
 @Module({
   imports: [
     CaslModule,
-    AttachmentsModule,
-    DatasetsModule,
     ConfigModule,
+    forwardRef(() => AttachmentsModule),
+    forwardRef(() => DatasetsModule),
+    forwardRef(() => ProposalsModule),
     MongooseModule.forFeature([
       {
         name: GenericHistory.name,
@@ -63,8 +64,8 @@ import { ValidatorService } from "./validator.service";
         },
       },
     ]),
-    ProposalsModule,
   ],
+  exports: [PublishedDataService],
   controllers: [PublishedDataController, PublishedDataV4Controller],
   providers: [PublishedDataService, ValidatorService],
 })

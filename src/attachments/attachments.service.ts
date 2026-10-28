@@ -168,17 +168,17 @@ export class AttachmentsService {
     if ("sampleId" in filter) {
       whereFilter = {
         "relationships.targetId": filter.sampleId,
-        "relationships.targetType": AttachmentRelationTargetType.SAMPLE,
+        "relationships.targetType": AttachmentRelationTargetType.Sample,
       };
     } else if ("datasetId" in filter) {
       whereFilter = {
         "relationships.targetId": filter.datasetId,
-        "relationships.targetType": AttachmentRelationTargetType.DATASET,
+        "relationships.targetType": AttachmentRelationTargetType.Dataset,
       };
     } else if ("proposalId" in filter) {
       whereFilter = {
         "relationships.targetId": filter.proposalId,
-        "relationships.targetType": AttachmentRelationTargetType.PROPOSAL,
+        "relationships.targetType": AttachmentRelationTargetType.Proposal,
       };
     } else {
       // If no legacy keys are present, return the original filter.
@@ -211,7 +211,7 @@ export class AttachmentsService {
     if ("datasetId" in converted && converted.datasetId) {
       converted.relationships.push({
         targetId: converted.datasetId,
-        targetType: AttachmentRelationTargetType.DATASET,
+        targetType: AttachmentRelationTargetType.Dataset,
         relationType: "is attached to",
       });
       delete converted.datasetId;
@@ -219,7 +219,7 @@ export class AttachmentsService {
     if ("sampleId" in converted && converted.sampleId) {
       converted.relationships.push({
         targetId: converted.sampleId,
-        targetType: AttachmentRelationTargetType.SAMPLE,
+        targetType: AttachmentRelationTargetType.Sample,
         relationType: "is attached to",
       });
       delete converted.sampleId;
@@ -227,7 +227,7 @@ export class AttachmentsService {
     if ("proposalId" in converted && converted.proposalId) {
       converted.relationships.push({
         targetId: converted.proposalId,
-        targetType: AttachmentRelationTargetType.PROPOSAL,
+        targetType: AttachmentRelationTargetType.Proposal,
         relationType: "is attached to",
       });
       delete converted.proposalId;
@@ -246,13 +246,13 @@ export class AttachmentsService {
 
     for (const relation of reverted.relationships) {
       switch (relation.targetType) {
-        case AttachmentRelationTargetType.DATASET:
+        case AttachmentRelationTargetType.Dataset:
           reverted.datasetId = relation.targetId || "";
           break;
-        case AttachmentRelationTargetType.SAMPLE:
+        case AttachmentRelationTargetType.Sample:
           reverted.sampleId = relation.targetId || "";
           break;
-        case AttachmentRelationTargetType.PROPOSAL:
+        case AttachmentRelationTargetType.Proposal:
           reverted.proposalId = relation.targetId || "";
           break;
       }

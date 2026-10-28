@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AttachmentsModule } from "src/attachments/attachments.module";
@@ -17,10 +17,10 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 @Module({
   imports: [
     CaslModule,
-    AttachmentsModule,
-    DatasetsModule,
     ConfigModule,
     MetadataKeysModule,
+    forwardRef(() => AttachmentsModule),
+    forwardRef(() => DatasetsModule),
     MongooseModule.forFeatureAsync([
       {
         name: SampleClass.name,
@@ -51,6 +51,7 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
       },
     ]),
   ],
+  exports: [SamplesService],
   controllers: [SamplesController],
   providers: [SamplesService],
 })
