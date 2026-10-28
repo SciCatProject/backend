@@ -214,7 +214,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.Proposal:
           const proposal = await this.proposalService.findOne({
-            where: { proposalId: relation.targetId },
+            proposalId: relation.targetId,
           });
           if (!proposal) {
             throw new NotFoundException(
@@ -240,7 +240,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.PublishedData:
           const publishedData = await this.publishedDataService.findOne({
-            where: { doi: relation.targetId },
+            doi: relation.targetId,
           });
           if (!publishedData) {
             throw new NotFoundException(
@@ -251,7 +251,7 @@ export class AttachmentsV4Controller {
 
         case AttachmentRelationTargetType.Sample:
           const sample = await this.sampleService.findOne({
-            where: { sampleId: relation.targetId },
+            sampleId: relation.targetId,
           });
           if (!sample) {
             throw new NotFoundException(
