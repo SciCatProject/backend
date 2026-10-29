@@ -1,210 +1,151 @@
-const SOURCE_COLLECTIONS = ["Dataset"];
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { randomUUID } = require("crypto");
+const {
+  createMetadataKeysInstance,
+  decodeURIComponentExtended,
+} = require("../dist/common/utils");
+
+// The fields createMetadataKeysInstance reads the metadata from
+const SOURCES = [{ collection: "Dataset", field: "scientificMetadata" }];
 const BATCH_SIZE = 10000;
 
-function buildPipeline(sourceType) {
-  return [
-    {
-      $project: {
-        datasetId: "$_id",
-        ownerGroup: 1,
-        accessGroups: 1,
-        isPublished: 1,
-        metaArr: { $objectToArray: "$scientificMetadata" },
+// Adds the keys of one source document to the batch totals, the same way
+// MetadataKeysService.upsertMany counts them.
+function accumulate(totals, { userGroups, isPublished, metadata }) {
+  for (const [rawKey, entry] of Object.entries(metadata)) {
+    // In the sources these keys are field names, so they're URL-encoded for Mongo
+    // field-name rules. Store them decoded here so incoming queries — from the frontend
+    // or other services hitting scicat directly — match without re-encoding first.
+    const key = decodeURIComponentExtended(rawKey);
+    const humanReadableName =
+      typeof entry?.human_name === "string" ? entry.human_name : "";
+    const id = JSON.stringify([key, humanReadableName]);
+
+    let total = totals.get(id);
+    if (!total) {
+      total = {
+        key,
+        humanReadableName,
+        usageCount: 0,
+        isPublished: false,
+        userGroupCounts: {},
+      };
+      totals.set(id, total);
+    }
+    total.usageCount += 1;
+    total.isPublished ||= isPublished;
+    for (const group of userGroups) {
+      total.userGroupCounts[group] = (total.userGroupCounts[group] ?? 0) + 1;
+    }
+  }
+}
+
+function toUpsert(sourceType, total, now) {
+  const id = randomUUID();
+  return {
+    updateOne: {
+      filter: {
+        sourceType,
+        key: total.key,
+        humanReadableName: total.humanReadableName,
       },
-    },
-    { $unwind: "$metaArr" },
-    {
-      $project: {
-        datasetId: 1,
-        key: "$metaArr.k",
-        isPublished: 1,
-        humanReadableName: {
-          $cond: [
-            { $eq: [{ $type: "$metaArr.v.human_name" }, "string"] },
-            "$metaArr.v.human_name",
-            "",
-          ],
+      update: {
+        $set: { updatedAt: now },
+        $inc: {
+          usageCount: total.usageCount,
+          ...Object.fromEntries(
+            Object.entries(total.userGroupCounts).map(([group, count]) => [
+              `userGroupCounts.${group}`,
+              count,
+            ]),
+          ),
         },
-        userGroups: {
-          $setUnion: [["$ownerGroup"], { $ifNull: ["$accessGroups", []] }],
+        $max: { isPublished: total.isPublished },
+        $addToSet: {
+          userGroups: { $each: Object.keys(total.userGroupCounts) },
         },
-      },
-    },
-    {
-      $unwind: {
-        path: "$userGroups",
-      },
-    },
-    {
-      $group: {
-        _id: {
-          metaKeyId: {
-            $concat: [`${sourceType}_`, "$key", "_", "$humanReadableName"],
-          },
-          group: "$userGroups",
-        },
-        key: { $first: "$key" },
-        humanReadableName: { $first: "$humanReadableName" },
-        isPublished: { $max: "$isPublished" },
-        groupCount: { $sum: 1 },
-        datasetIds: { $addToSet: "$datasetId" },
-      },
-    },
-    {
-      $group: {
-        _id: "$_id.metaKeyId",
-        key: { $first: "$key" },
-        humanReadableName: { $first: "$humanReadableName" },
-        isPublished: { $max: "$isPublished" },
-        userGroups: { $push: "$_id.group" },
-        userGroupCountsArr: {
-          $push: { k: "$_id.group", v: "$groupCount" },
-        },
-        datasetIdSets: { $push: "$datasetIds" },
-      },
-    },
-    {
-      $addFields: {
-        metaKeyId: "$_id",
-        generatedId: {
-          $function: {
-            body: "function() { return UUID().toString().replace('UUID(\"', '').replace('\")', ''); }",
-            args: [],
-            lang: "js",
-          },
+        $setOnInsert: {
+          _id: id,
+          id,
+          createdBy: "migration",
+          updatedBy: "migration",
+          createdAt: now,
         },
       },
+      upsert: true,
     },
-    {
-      $project: {
-        _id: "$generatedId",
-        metaKeyId: 1,
-        key: 1,
-        sourceType: { $literal: sourceType },
-        humanReadableName: 1,
-        isPublished: 1,
-        userGroups: 1,
-        userGroupCounts: { $arrayToObject: "$userGroupCountsArr" },
-        usageCount: { $size: { $setUnion: "$datasetIdSets" } },
-        createdBy: { $literal: "migration" },
-        createdAt: { $toDate: "$$NOW" },
-      },
-    },
-    {
-      $merge: {
-        into: "MetadataKeys",
-        on: "metaKeyId",
-        whenMatched: [
-          {
-            $replaceWith: {
-              $mergeObjects: ["$$new", { _id: "$_id" }],
-            },
-          },
-        ],
-        whenNotMatched: "insert",
-      },
-    },
-  ];
+  };
 }
 
 module.exports = {
   async up(db) {
     const start = Date.now();
     const elapsed = () => `${((Date.now() - start) / 1000).toFixed(1)}s`;
+    const metadataKeys = db.collection("MetadataKeys");
 
     // Wipe MetadataKeys collection first to ensure a clean state
-    const deleted = await db.collection("MetadataKeys").deleteMany({});
-
-    await db
-      .collection("MetadataKeys")
-      .createIndex({ metaKeyId: 1 }, { unique: true });
-
+    const deleted = await metadataKeys.deleteMany({});
     console.log(
       `[${elapsed()}] Cleared ${deleted.deletedCount} existing MetadataKeys`,
     );
 
-    for (const collection of SOURCE_COLLECTIONS) {
-      const total = await db.collection(collection).countDocuments({
-        scientificMetadata: { $exists: true, $type: "object" },
-      });
+    // same index as the app schema, so every upsert finds its key via an index
+    await metadataKeys.createIndex({ sourceType: 1, key: 1 });
+
+    for (const source of SOURCES) {
+      const match = { [source.field]: { $type: "object" } };
+      const total = await db
+        .collection(source.collection)
+        .countDocuments(match);
 
       if (total === 0) {
         console.log(
-          `[${elapsed()}] No documents with scientificMetadata in ${collection}, skipping...`,
+          `[${elapsed()}] No documents with ${source.field} in ${source.collection}, skipping...`,
         );
         continue;
       }
 
       console.log(
-        `[${elapsed()}] Processing ${total.toLocaleString()} documents from ${collection}...`,
+        `[${elapsed()}] Processing ${total.toLocaleString()} documents from ${source.collection}...`,
       );
 
-      let lastId = null;
+      const cursor = db
+        .collection(source.collection)
+        .find(match)
+        .project({
+          ownerGroup: 1,
+          accessGroups: 1,
+          isPublished: 1,
+          [source.field]: 1,
+        })
+        .batchSize(BATCH_SIZE);
+
+      let totals = new Map();
       let processed = 0;
-
-      while (true) {
-        const match = {
-          scientificMetadata: { $exists: true, $type: "object" },
-          ...(lastId && { _id: { $gt: lastId } }),
-        };
-
-        const batch = await db
-          .collection(collection)
-          .find(match)
-          .sort({ _id: 1 })
-          .limit(BATCH_SIZE)
-          .project({ _id: 1 })
-          .toArray();
-
-        if (batch.length === 0) break;
-
-        const batchIds = batch.map((d) => d._id);
-
-        await db
-          .collection(collection)
-          .aggregate(
-            [
-              { $match: { _id: { $in: batchIds } } },
-              ...buildPipeline(collection),
-            ],
-            { allowDiskUse: true, maxTimeMS: 0 },
-          )
-          .toArray();
-
-        lastId = batch[batch.length - 1]._id;
-        processed += batch.length;
-
-        console.log(
-          `[${elapsed()}] ${collection}: ${processed.toLocaleString()}/${total.toLocaleString()}`,
+      const flush = async () => {
+        if (totals.size === 0) return;
+        const now = new Date();
+        await metadataKeys.bulkWrite(
+          [...totals.values()].map((t) => toUpsert(source.collection, t, now)),
+          { ordered: false },
         );
-      }
+        totals = new Map();
+        console.log(
+          `[${elapsed()}] ${source.collection}: ${processed.toLocaleString()}/${total.toLocaleString()}`,
+        );
+      };
 
-      console.log(`[${elapsed()}] ✅ ${collection} done`);
+      for await (const doc of cursor) {
+        accumulate(totals, createMetadataKeysInstance(source.collection, doc));
+        processed += 1;
+        if (processed % BATCH_SIZE === 0) await flush();
+      }
+      await flush();
+
+      console.log(`[${elapsed()}] ✅ ${source.collection} done`);
     }
 
-    await db.collection("MetadataKeys").dropIndex("metaKeyId_1");
-    await db
-      .collection("MetadataKeys")
-      .updateMany({}, [{ $set: { id: "$_id" } }, { $unset: ["metaKeyId"] }]);
-
-    // In the datasets.scientificMetadata these keys are field names, so they're URL-encoded for
-    // Mongo field-name rules. Store them decoded here so incoming queries — from the frontend or other
-    // services hitting scicat directly — match without re-encoding every query value first.
-    await db.collection("MetadataKeys").updateMany({ key: /%/ }, [
-      {
-        $set: {
-          key: {
-            $function: {
-              body: "function(k) { try { return decodeURIComponent(k); } catch (e) { return k; } }",
-              args: ["$key"],
-              lang: "js",
-            },
-          },
-        },
-      },
-    ]);
-
-    const result = await db.collection("MetadataKeys").countDocuments();
+    const result = await metadataKeys.countDocuments();
     console.log(
       `[${elapsed()}] Migration completed — Total MetadataKeys: ${result.toLocaleString()}`,
     );
