@@ -8,6 +8,7 @@ const {
 // The fields createMetadataKeysInstance reads the metadata from
 const SOURCES = [{ collection: "Dataset", field: "scientificMetadata" }];
 const BATCH_SIZE = 10000;
+const INVALID_GROUP = /\.|^\$/;
 
 // Adds the keys of one source document to the batch totals, the same way
 // MetadataKeysService.upsertMany counts them.
@@ -28,7 +29,8 @@ function accumulate(totals, { userGroups, isPublished, metadata }) {
         humanReadableName,
         usageCount: 0,
         isPublished: false,
-        userGroupCounts: {},
+        // no prototype, so groups like "constructor" or "__proto__" are own counters
+        userGroupCounts: Object.create(null),
       };
       totals.set(id, total);
     }
@@ -83,11 +85,43 @@ module.exports = {
     const elapsed = () => `${((Date.now() - start) / 1000).toFixed(1)}s`;
     const metadataKeys = db.collection("MetadataKeys");
 
-    // Wipe MetadataKeys collection first to ensure a clean state
-    const deleted = await metadataKeys.deleteMany({});
+    // Group names are used as `userGroupCounts.<group>` update paths (as in
+    // MetadataKeysService), so a "." would nest the count and a leading "$" is
+    // rejected. Stop before wiping anything rather than storing corrupted counts.
+    for (const source of SOURCES) {
+      const invalidGroups = [];
+      for (const field of ["ownerGroup", "accessGroups"]) {
+        const values = await db
+          .collection(source.collection)
+          .distinct(field, { [field]: INVALID_GROUP });
+        invalidGroups.push(...values.filter((g) => INVALID_GROUP.test(g)));
+      }
+      if (invalidGroups.length > 0) {
+        throw new Error(
+          `${source.collection} has groups that cannot be used as MetadataKeys userGroupCounts keys: ${[...new Set(invalidGroups)].join(", ")}`,
+        );
+      }
+    }
+
+    // Clear the keys rebuilt here and the obsolete one-per-source entries
+    // (identified by sourceId), keeping current keys of the other source types
+    const deleted = await metadataKeys.deleteMany({
+      $or: [
+        { sourceType: { $in: SOURCES.map((s) => s.collection) } },
+        { sourceId: { $exists: true } },
+      ],
+    });
     console.log(
       `[${elapsed()}] Cleared ${deleted.deletedCount} existing MetadataKeys`,
     );
+
+    // A failed run of the previous version of this migration can leave its
+    // unique metaKeyId index behind, which rejects every key after the first
+    await metadataKeys.dropIndex("metaKeyId_1").catch((error) => {
+      if (!["IndexNotFound", "NamespaceNotFound"].includes(error.codeName)) {
+        throw error;
+      }
+    });
 
     // same index as the app schema, so every upsert finds its key via an index
     await metadataKeys.createIndex({ sourceType: 1, key: 1 });

@@ -2,9 +2,11 @@
 
 ## What this migration does
 
-Rebuilds the `MetadataKeys` collection from scratch by scanning all `Dataset` documents and extracting every key found in `scientificMetadata`.
+Rebuilds the `Dataset` entries of the `MetadataKeys` collection by scanning all `Dataset` documents and extracting every key found in `scientificMetadata`.
 
 Each unique `(sourceType, key, humanReadableName)` combination becomes one `MetadataKey` document. If the same key appears across multiple datasets, their `userGroups` and counts are merged into a single entry.
+
+Keys of the other source types (`Proposal`, `Sample`, `Instrument`) are not rebuilt here, and their current entries are left untouched.
 
 ---
 
@@ -53,442 +55,116 @@ Each `MetadataKey` document tracks:
   userGroups: ["group-1", "group-2"],
   userGroupCounts: { "group-1": 2, "group-2": 1 },
   createdBy: "migration",
-  createdAt: ISODate("...")
+  updatedBy: "migration",
+  createdAt: ISODate("..."),
+  updatedAt: ISODate("...")
 }
 ```
 
 ---
 
-## Migration Pipeline walkthrough
+## How it works
 
-It builds a MetadataKeys collection by extracting and aggregating scientific metadata keys from datasets. Each document in MetadataKeys represents one unique metadata key, enriched with access group membership, usage counts, and publication status.
+The migration reads datasets in batches, adds up the counts per key in Node, and writes each batch with one `bulkWrite` of upserts. The upserts use the same filter and update operators as `MetadataKeysService.upsertMany`, so the result matches what the app would have built by creating every dataset through the API.
 
----
+It reuses `createMetadataKeysInstance` and `decodeURIComponentExtended` from `dist/common/utils`, so `dist/` must be built before it runs.
 
-### Stage 1 — Flatten scientificMetadata into an array
+### Step 1 — Check group names
+
+Every `ownerGroup` and `accessGroups` value is checked before anything is deleted. Group names become `userGroupCounts.<group>` update paths (as in the app), so a name containing `.` would be stored as a nested field and a name starting with `$` would be rejected by MongoDB.
+
+If such names exist, the migration stops with an error listing them and leaves `MetadataKeys` untouched:
+
+```
+Dataset has groups that cannot be used as MetadataKeys userGroupCounts keys: team.alpha, $weird
+```
+
+### Step 2 — Clear the entries being rebuilt
+
+```js
+deleteMany({
+  $or: [{ sourceType: { $in: ["Dataset"] } }, { sourceId: { $exists: true } }],
+});
+```
+
+Deletes the `Dataset` keys, which are rebuilt below, and the obsolete one-entry-per-source documents of the previous schema (identified by `sourceId`), whatever their source type. Current keys of the other source types are kept.
+
+### Step 3 — Prepare indexes
+
+- Drops `metaKeyId_1` if it exists. A failed run of the previous version of this migration could leave this unique index behind, and it would reject every key after the first.
+- Creates `{ sourceType: 1, key: 1 }` (the same index as the app schema), so each upsert finds its key through an index.
+
+### Step 4 — Add up the counts per key, in batches of 10,000 datasets
+
+Each dataset is passed through `createMetadataKeysInstance`, the same function the app uses. It returns the dataset's `userGroups` (`ownerGroup` plus `accessGroups`, deduplicated, empty values dropped), `isPublished` and `metadata`. Then for every metadata key:
+
+- the key is decoded with `decodeURIComponentExtended` (keys are URL-encoded in `scientificMetadata` to satisfy Mongo field-name rules; if decoding fails the key is kept as it is),
+- `humanReadableName` is `human_name` when it is a string, otherwise `""`,
+- the totals for `(key, humanReadableName)` are updated: `usageCount + 1`, `isPublished` OR-ed, and `userGroupCounts[group] + 1` for each of the dataset's groups.
+
+**Input (one batch)**
+
+```js
+{ "_id": "ds1", "ownerGroup": "groupA", "accessGroups": ["groupB"], "isPublished": false,
+  "scientificMetadata": { "temperature": { "human_name": "Temperature" }, "pressure": {} } }
+{ "_id": "ds2", "ownerGroup": "groupA", "isPublished": true,
+  "scientificMetadata": { "temperature": { "human_name": "Temperature" } } }
+```
+
+**Batch totals**
+
+```js
+["temperature", "Temperature"] → { usageCount: 2, isPublished: true,  userGroupCounts: { groupA: 2, groupB: 1 } }
+["pressure", ""]               → { usageCount: 1, isPublished: false, userGroupCounts: { groupA: 1, groupB: 1 } }
+```
+
+### Step 5 — Upsert the batch
+
+After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert:
 
 ```js
 {
-  $project: {
-    datasetId: "$_id",
-    ownerGroup: 1,
-    accessGroups: 1,
-    isPublished: 1,
-    metaArr: { $objectToArray: "$scientificMetadata" },
-  },
-}
-```
-
-**What it does:** Converts the scientificMetadata object into an array of {k, v} pairs so it can be unwound in the next stage. Preserves \_id as datasetId for later use in usage counting.
-
-**Input**
-
-```js
-{
-  "_id": "ds1",
-  "ownerGroup": "groupA",
-  "accessGroups": ["groupB"],
-  "isPublished": false,
-  "scientificMetadata": {
-    "temperature": { "human_name": "Temperature", "value": 100 },
-    "pressure": { "human_name": "Pressure", "value": 200 }
-  }
-}
-```
-
-**Output**
-
-```js
-{
-  "datasetId": "ds1",
-  "ownerGroup": "groupA",
-  "accessGroups": ["groupB"],
-  "isPublished": false,
-  "metaArr": [
-    { "k": "temperature", "v": { "human_name": "Temperature", "value": 100 } },
-    { "k": "pressure",    "v": { "human_name": "Pressure",    "value": 200 } }
-  ]
-}
-```
-
----
-
-### Stage 2 — One document per metadata key
-
-```js
-{
-  $unwind: "$metaArr";
-}
-```
-
-**What it does:** Produces one document per metadata key entry. A dataset with N metadata keys becomes N documents.
-
-**Input (from stage1)**
-
-```js
-{
-  "datasetId": "ds1",
-  "metaArr": [
-    { "k": "temperature", "v": { "human_name": "Temperature" } },
-    { "k": "pressure",    "v": { "human_name": "Pressure" } }
-  ]
-}
-```
-
-**Output**
-
-```js
-{ "datasetId": "ds1", "metaArr": { "k": "temperature", "v": { "human_name": "Temperature" } } }
-{ "datasetId": "ds1", "metaArr": { "k": "pressure",    "v": { "human_name": "Pressure" } } }
-```
-
----
-
-### Stage 3 — Shape each document (datasetId+key) with HRM and userGroups
-
-```js
-{
-  $project: {
-    datasetId: 1,
-    key: "$metaArr.k",
-    isPublished: 1,
-    humanReadableName: {
-      $cond: [
-        { $eq: [{ $type: "$metaArr.v.human_name" }, "string"] },
-        "$metaArr.v.human_name",
-        "",
-      ],
+  updateOne: {
+    filter: { sourceType: "Dataset", key: "temperature", humanReadableName: "Temperature" },
+    update: {
+      $set: { updatedAt: now },
+      $inc: { usageCount: 2, "userGroupCounts.groupA": 2, "userGroupCounts.groupB": 1 },
+      $max: { isPublished: true },
+      $addToSet: { userGroups: { $each: ["groupA", "groupB"] } },
+      $setOnInsert: { _id: uuid, id: uuid, createdBy: "migration", updatedBy: "migration", createdAt: now },
     },
-    userGroups: {
-      $setUnion: [["$ownerGroup"], { $ifNull: ["$accessGroups", []] }],
-    },
+    upsert: true,
   },
 }
 ```
 
-**What it does:** Extracts the key name and human-readable name. Computes userGroups as the union of ownerGroup and accessGroups — every group that has access to this dataset.
-
-**Input (from stage2)**
-
-```js
-{
-  "datasetId": "ds1",
-  "ownerGroup": "groupA",
-  "accessGroups": ["groupB"],
-  "isPublished": false,
-  "metaArr": { "k": "temperature", "v": { "human_name": "Temperature" } }
-}
-```
-
-**output**
-
-```js
-{
-  "datasetId": "ds1",
-  "key": "temperature",
-  "humanReadableName": "Temperature",
-  "isPublished": false,
-  "userGroups": ["groupA", "groupB"]
-}
-```
+Because the counts are applied with `$inc`, a key that appears in several batches adds up across them; no batch overwrites another. Batches never share a dataset, so adding the per-batch counts gives the correct totals. `now` is taken once per batch; `createdAt` keeps the time of the batch that first inserted the key.
 
 ---
-
-### Stage 4 — One document per (dataset+key+group)
-
-```js
-{
-  $unwind: {
-    path: "$userGroups",
-  },
-}
-```
-
-**What it does:** Split userGroups so each group gets its own document. This allows grouping by (key, group) in Stage 6.
-
-**Input (from stage3)**
-
-```js
-{
-  "datasetId": "ds1",
-  "key": "temperature",
-  "userGroups": ["groupA", "groupB"]
-}
-```
-
-**output**
-
-```js
-{ "datasetId": "ds1", "key": "temperature", "userGroups": "groupA" }
-{ "datasetId": "ds1", "key": "temperature", "userGroups": "groupB" }
-```
-
----
-
-### Stage 5 — Group by (metaKeyId, group)
-
-```js
-{
-  $group: {
-    _id: {
-      metaKeyId: { $concat: [`${sourceType}_`, "$key", "_", "$humanReadableName"] },
-      group: "$userGroups",
-    },
-    key: { $first: "$key" },
-    humanReadableName: { $first: "$humanReadableName" },
-    isPublished: { $max: "$isPublished" },
-    groupCount: { $sum: 1 },
-    datasetIds: { $addToSet: "$datasetId" },
-  },
-}
-```
-
-**What it does:** Groups by (metadata key, group) pair. Computes:
-
-- `metaKeyId` is a stable, deterministic identifier derived from `${sourceType}_${key}_${humanReadableName}` used as the merge key in Stage 9 to prevent duplicate documents across pipeline runs.
-- `groupCount` indicates how many datasets with this group use this key
-- `datasetIds` includes distinct dataset IDs for this group, used later to count unique datasets across all groups without double-counting
-
-**Input (from stage4)**
-
-```js
-{ "datasetId": "ds1", "key": "temperature", "humanReadableName": "Temperature", "userGroups": "groupA", "isPublished": false }
-{ "datasetId": "ds2", "key": "temperature", "humanReadableName": "Temperature", "userGroups": "groupA", "isPublished": true }
-{ "datasetId": "ds1", "key": "temperature", "humanReadableName": "Temperature", "userGroups": "groupB", "isPublished": false }
-```
-
-**Output**
-
-```js
-{
-  "_id": { "metaKeyId": "dataset_temperature_Temperature", "group": "groupA" },
-  "key": "temperature",
-  "humanReadableName": "Temperature",
-  "isPublished": true,
-  "groupCount": 2,
-  "datasetIds": ["ds1", "ds2"]
-}
-{
-  "_id": { "metaKeyId": "dataset_temperature_Temperature", "group": "groupB" },
-  "key": "temperature",
-  "humanReadableName": "Temperature",
-  "isPublished": false,
-  "groupCount": 1,
-  "datasetIds": ["ds1"]
-}
-```
-
----
-
-### Stage 6 — Group by metaKeyId
-
-```js
-{
-  $group: {
-    _id: "$_id.metaKeyId",
-    key: { $first: "$key" },
-    humanReadableName: { $first: "$humanReadableName" },
-    isPublished: { $max: "$isPublished" },
-    userGroups: { $push: "$_id.group" },
-    userGroupCountsArr: { $push: { k: "$_id.group", v: "$groupCount" } },
-    datasetIdSets: { $push: "$datasetIds" },
-  },
-}
-```
-
-**What it does:** Reassembles one document per metadata key by collecting all per-group data. datasetIdSets is a list of per-group dataset ID sets — merged in Stage 8 to compute total unique dataset count.
-
-**Input (from stage5)**
-
-```js
-{ "_id": { "metaKeyId": "dataset_temperature_Temperature", "group": "groupA" }, "groupCount": 2, "datasetIds": ["ds1", "ds2"] }
-{ "_id": { "metaKeyId": "dataset_temperature_Temperature", "group": "groupB" }, "groupCount": 1, "datasetIds": ["ds1"] }
-```
-
-**Output**
-
-```js
-{
-  "_id": "dataset_temperature_Temperature",
-  "key": "temperature",
-  "humanReadableName": "Temperature",
-  "isPublished": true,
-  "userGroups": ["groupA", "groupB"],
-  "userGroupCountsArr": [
-    { "k": "groupA", "v": 2 },
-    { "k": "groupB", "v": 1 }
-  ],
-  "datasetIdSets": [["ds1", "ds2"], ["ds1"]]
-}
-```
-
----
-
-### Stage 7 — Add generated UUID
-
-```js
-{
-  $addFields: {
-    metaKeyId: "$_id",
-    generatedId: {
-      $function: {
-        body: "function() { return UUID().toString().replace('UUID(\"', '').replace('\")', ''); }",
-        args: [],
-        lang: "js",
-      },
-    },
-  },
-}
-```
-
-**What it does:** Saves `_id` which at this point is `${sourceType}_${key}_${humanReadableName}` as metaKeyId before it gets replaced. Generates a UUID for \_id to support future document splitting when a document approaches MongoDB's 16MB size limit, while metaKeyId remains the stable merge key for Stage 8.
-
-**Input (from stage7)**
-
-```json
-{ "_id": "dataset_temperature_Temperature", ... }
-```
-
-**Output**
-
-```json
-{
-  "_id": "dataset_temperature_Temperature",
-  "metaKeyId": "dataset_temperature_Temperature",
-  "generatedId": "550e8400-e29b-41d4-a716-446655440000",
-  ...
-}
-```
-
----
-
-### Stage 8 — Project final document shape
-
-```js
-{
-  $project: {
-    _id: "$generatedId",
-    metaKeyId: 1,
-    key: 1,
-    sourceType: { $literal: sourceType },
-    humanReadableName: 1,
-    isPublished: 1,
-    userGroups: 1,
-    userGroupCounts: { $arrayToObject: "$userGroupCountsArr" },
-    usageCount: { $size: { $setUnion: "$datasetIdSets" } },
-    createdBy: { $literal: "migration" },
-    createdAt: { $toDate: "$$NOW" },
-  },
-}
-```
-
-**What it does:** Produces the final document shape for MetadataKeys. Converts userGroupCountsArr to an object map. Computes usageCount by merging all per-group datasetIdSets into a single set and counting — this avoids double-counting datasets that belong to multiple groups.
-
-**Why set union for usageCount:**
-
-```js
-datasetIds: ["ds1", "ds2"]; //groupA
-datasetIds: ["ds1"]; // groupB
-union: ["ds1", "ds2"]; // usageCount = 2  (not 3)
-```
-
-**Input (from stage7)**
-
-```js
-{
-  "generatedId": "550e8400-e29b-41d4-a716-446655440000",
-  "metaKeyId": "dataset_temperature_Temperature",
-  "userGroupCountsArr": [{ "k": "groupA", "v": 2 }, { "k": "groupB", "v": 1 }],
-  "datasetIdSets": [["ds1", "ds2"], ["ds1"]]
-}
-```
-
-**Output**
-
-```js
-{
-  "_id": "550e8400-e29b-41d4-a716-446655440000",
-  "metaKeyId": "dataset_temperature_Temperature",
-  "key": "temperature",
-  "sourceType": "dataset",
-  "humanReadableName": "Temperature",
-  "isPublished": true,
-  "userGroups": ["groupA", "groupB"],
-  "userGroupCounts": { "groupA": 2, "groupB": 1 },
-  "usageCount": 2,
-  "createdBy": "migration",
-  "createdAt": "2026-05-07T00:00:00.000Z"
-}
-```
-
----
-
-### Stage 9 — Merge into MetadataKeys
-
-```js
-{
-  $merge: {
-    into: "MetadataKeys",
-    on: "metaKeyId",
-    whenMatched: [
-      {
-        $replaceWith: {
-          $mergeObjects: [
-            "$$new",
-            { _id: "$_id" }
-          ]
-        }
-      }
-    ],
-    whenNotMatched: "insert",
-  },
-}
-```
-
-**What it does:** Upserts each document into `MetadataKeys` using `metaKeyId` as the match key. On match, replaces the existing document entirely with the incoming one, preserving only `_id` since MongoDB does not allow changing it.
-
-**Input (from Stage 9)**
-
-```json
-{
-  "_id": "550e8400-e29b-41d4-a716-446655440000",
-  "metaKeyId": "dataset_temperature_Temperature",
-  "userGroups": ["groupA", "groupB"],
-  "userGroupCounts": { "groupA": 2, "groupB": 1 },
-  "usageCount": 2,
-  "isPublished": true
-}
-```
-
-**Output (inserted or replaced):**
-
-```json
-{
-  "_id": "550e8400-e29b-41d4-a716-446655440000",
-  "metaKeyId": "dataset_temperature_Temperature",
-  "userGroups": ["groupA", "groupB"],
-  "userGroupCounts": { "groupA": 2, "groupB": 1 },
-  "usageCount": 2,
-  "isPublished": true
-}
-```
 
 ## Running the migration
 
 ```bash
-# Run manually in production — ideally during low-traffic hours.
-# The migration is slow but non-blocking: the app continues to serve
-# requests while it runs. However, MetadataKeys will be unavailable
-# for the duration since the collection is wiped at the start.
+# The migration does not block the app: it keeps serving requests while
+# this runs. However, the Dataset keys are cleared at the start and rebuilt
+# batch by batch, so until it finishes searches see only part of the keys,
+# and datasets created, updated or deleted during the run can leave
+# inconsistent counts and userGroups. For consistent results, stop the API
+# or at least ingestion while it runs, ideally during low-traffic hours.
+
+# dist/ must be built first (it already is in the Docker image)
+npm run build
 npm run migrate:db:up
+# or, locally, build and migrate in one step
+npm run migrate:db:up:dev
 
 # verify
-db.MetadataKeys.countDocuments({ userGroupCounts: { $exists: true } })
+db.MetadataKeys.countDocuments({ sourceType: "Dataset", userGroupCounts: { $exists: true } })
 # should equal
-db.MetadataKeys.countDocuments()
+db.MetadataKeys.countDocuments({ sourceType: "Dataset" })
 ```
 
-> ⚠️ **Do not interrupt.** The migration wipes `MetadataKeys` at the start with `deleteMany`. If interrupted, re-run `migrate:db:up` — the wipe ensures a clean slate on retry.
+> ⚠️ **If it fails or is interrupted**, migrate-mongo does not record it as applied. Re-run `migrate:db:up`: the migration clears the `Dataset` keys again and rebuilds them, so a rerun gives the same result as a single successful run.
 
 ---
 
@@ -498,7 +174,7 @@ db.MetadataKeys.countDocuments()
 npm run migrate:db:down
 ```
 
-Wipes the entire `MetadataKeys` collection. The collection will be repopulated on the next `migrate:db:up`.
+Wipes the entire `MetadataKeys` collection, including keys of the other source types. The `Dataset` keys will be repopulated on the next `migrate:db:up`.
 
 Verify the rollback succeeded by checking the migration status:
 
