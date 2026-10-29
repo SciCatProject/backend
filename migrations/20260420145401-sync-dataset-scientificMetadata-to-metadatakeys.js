@@ -8,6 +8,9 @@ const {
 // The fields createMetadataKeysInstance reads the metadata from
 const SOURCES = [{ collection: "Dataset", field: "scientificMetadata" }];
 const BATCH_SIZE = 10000;
+// Also flush early when a batch has many distinct keys (e.g. keys unique per
+// dataset), so memory is bounded by keys and not only by datasets
+const MAX_KEYS_PER_FLUSH = 10000;
 const INVALID_GROUP = /\.|^\$/;
 
 // Adds the keys of one source document to the batch totals, the same way
@@ -172,7 +175,9 @@ module.exports = {
       for await (const doc of cursor) {
         accumulate(totals, createMetadataKeysInstance(source.collection, doc));
         processed += 1;
-        if (processed % BATCH_SIZE === 0) await flush();
+        if (processed % BATCH_SIZE === 0 || totals.size >= MAX_KEYS_PER_FLUSH) {
+          await flush();
+        }
       }
       await flush();
 
