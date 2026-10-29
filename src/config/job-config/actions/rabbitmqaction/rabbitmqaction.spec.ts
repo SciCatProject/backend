@@ -52,7 +52,7 @@ describe("RabbitMQJobAction", () => {
   it("should connect and send a message to the queue", async () => {
     const job = { id: "12345" } as JobClass;
 
-    const context = { request: job, job, env: {} };
+    const context = { request: job, job, env: {}, datasets: [] };
     await action.perform(context);
 
     expect(mockRabbitMQService.sendMessage).toHaveBeenCalledWith(
@@ -60,6 +60,7 @@ describe("RabbitMQJobAction", () => {
       options.exchange,
       options.key,
       JSON.stringify(job),
+      undefined,
     );
   });
 
@@ -122,5 +123,19 @@ describe("RabbitMQJobAction", () => {
     }).toThrow(
       'Invalid options for rabbitmq action: {"actionType":"rabbitmq","queue":"testQueue","exchange":"testExchange"}',
     );
+  });
+
+  it("should throw an error if queue arguments are not an object", async () => {
+    const rabbitMQJobActionCreator = new RabbitMQJobActionCreator(
+      mockConfigService as unknown as ConfigService,
+      mockRabbitMQService as unknown as RabbitMQService,
+    );
+
+    expect(() => {
+      rabbitMQJobActionCreator.create({
+        ...options,
+        queueArguments: ["x-dead-letter-exchange"],
+      } as unknown as RabbitMQJobActionOptions);
+    }).toThrow("Invalid options for rabbitmq action");
   });
 });
