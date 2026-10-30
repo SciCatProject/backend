@@ -118,7 +118,7 @@ module.exports = {
       `[${elapsed()}] Cleared ${deleted.deletedCount} existing MetadataKeys`,
     );
 
-    // A failed run of the previous version of this migration can leave its
+    // A failed run of the replaced 20260420145401 migration can leave its
     // unique metaKeyId index behind, which rejects every key after the first
     await metadataKeys.dropIndex("metaKeyId_1").catch((error) => {
       if (!["IndexNotFound", "NamespaceNotFound"].includes(error.codeName)) {

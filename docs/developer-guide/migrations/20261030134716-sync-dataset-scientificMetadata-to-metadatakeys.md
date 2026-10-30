@@ -1,4 +1,4 @@
-# 20260420145401 — Sync Dataset scientificMetadata to MetadataKeys
+# 20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
 
 ## What this migration does
 
@@ -7,6 +7,8 @@ Rebuilds the `Dataset` entries of the `MetadataKeys` collection by scanning all 
 Each unique `(sourceType, key, humanReadableName)` combination becomes one `MetadataKey` document. If the same key appears across multiple datasets, their `userGroups` and counts are merged into a single entry.
 
 Keys of the other source types (`Proposal`, `Sample`, `Instrument`) are not rebuilt here, and their current entries are left untouched.
+
+It replaces `20260420145401-sync-dataset-scientificMetadata-to-metadatakeys`, which produced wrong counts and groups on databases with more than 10,000 datasets. Sites that already applied that migration run this one as well, which rebuilds their `Dataset` keys correctly.
 
 ---
 
@@ -91,7 +93,7 @@ Deletes the `Dataset` keys, which are rebuilt below, and the obsolete one-entry-
 
 ### Step 3 — Prepare indexes
 
-- Drops `metaKeyId_1` if it exists. A failed run of the previous version of this migration could leave this unique index behind, and it would reject every key after the first.
+- Drops `metaKeyId_1` if it exists. A failed run of the replaced 20260420145401 migration could leave this unique index behind, and it would reject every key after the first.
 - Creates `{ sourceType: 1, key: 1 }` (the same index as the app schema), so each upsert finds its key through an index.
 
 ### Step 4 — Add up the counts per key, in batches of 10,000 datasets

@@ -183,8 +183,8 @@ Partial search on `humanReadableName`:
 
 The `MetadataKeys` collection is populated by a migration script that must be run manually before the service is deployed for the first time.
 
-See: `migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.js`
+See: `migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.js`
 
-Documentation: `migrations/20260420145401-sync-dataset-scientificMetadata-to-metadatakeys.md`
+Documentation: `docs/developer-guide/migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.md`
 
 > ⚠️ The application will start normally without the migration, but the MetadataKeys service will return empty results until it is run.
