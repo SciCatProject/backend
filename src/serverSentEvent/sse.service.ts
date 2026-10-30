@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  ServiceUnavailableException,
-} from "@nestjs/common";
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { Subject, Observable, finalize } from "rxjs";
 import { MessageEvent } from "@nestjs/common";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
@@ -19,7 +15,10 @@ import {
 @Injectable()
 export class SseService {
   private static readonly MAX_CONNECTIONS_PER_USER_PER_INSTANCE = 5;
+  // Below typical proxy idle timeouts (60s); writes also surface closed sockets the proxy never reported.
+  private static readonly HEARTBEAT_INTERVAL_MS = 20_000;
   private readonly clients = new Map<string, SseClient>();
+  private heartbeatTimer?: NodeJS.Timeout;
   private accessGroups?: AccessGroupsType;
   public sseEnabled = false;
 
@@ -29,17 +28,20 @@ export class SseService {
   }
   enable(): void {
     this.sseEnabled = true;
+    this.heartbeatTimer ??= setInterval(
+      () => this.sendHeartbeat(),
+      SseService.HEARTBEAT_INTERVAL_MS,
+    ).unref();
   }
   getEvents(user: JWTUser): Observable<MessageEvent> {
     this.checkEnabled();
 
-    if (
+    // Rejecting at the limit would lock users out while a proxy still holds closed streams, so drop the oldest instead.
+    while (
       this.getCurrentUserConnectionsCount(user) >=
       SseService.MAX_CONNECTIONS_PER_USER_PER_INSTANCE
     ) {
-      throw new ForbiddenException(
-        `Maximum number of ${SseService.MAX_CONNECTIONS_PER_USER_PER_INSTANCE} open connections reached for user: ${user.username}`,
-      );
+      this.evictOldestConnection(user);
     }
 
     const subject = new Subject<MessageEvent>();
@@ -79,10 +81,29 @@ export class SseService {
   }
 
   onModuleDestroy(): void {
+    clearInterval(this.heartbeatTimer);
     for (const { subject } of this.clients.values()) {
       subject.complete();
     }
     this.clients.clear();
+  }
+
+  private sendHeartbeat(): void {
+    // Named event: onmessage only fires for unnamed events, so existing clients never run code for it.
+    const message: MessageEvent = { type: "heartbeat", data: "" };
+    for (const { subject } of this.clients.values()) {
+      subject.next(message);
+    }
+  }
+
+  private evictOldestConnection(user: JWTUser): void {
+    for (const [connectionId, client] of this.clients) {
+      if (client.user._id === user._id) {
+        this.clients.delete(connectionId);
+        client.subject.complete();
+        return;
+      }
+    }
   }
 
   private checkEnabled(): void {
