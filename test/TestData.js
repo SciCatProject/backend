@@ -1357,7 +1357,118 @@ const TestData = {
       resourceType: "raw",
       landingPage: "doi.ess.eu/detail/",
     },
+    datasetPids: ["test-dataset-pid-1"],
+    proposalIds: ["test-proposal-123"],
+    sampleIds: ["test-sample-456"],
+    instrumentIds: ["test-instrument-789"],
+  },
+
+  // PublishedDataV4 test data variants for validation testing
+  PublishedDataV4WithDatasetPidsOnly: {
+    title: "Published data with datasetPids only",
+    abstract: "Test data with only datasetPids",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: ["dataset-only-123"],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4WithProposalIdsOnly: {
+    title: "Published data with proposalIds only",
+    abstract: "Test data with only proposalIds",
+    metadata: { publisher: { name: "ESS" } },
     datasetPids: [],
+    proposalIds: ["proposal-only-456"],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4WithSampleIdsOnly: {
+    title: "Published data with sampleIds only",
+    abstract: "Test data with only sampleIds",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: [],
+    proposalIds: [],
+    sampleIds: ["sample-only-789"],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4WithInstrumentIdsOnly: {
+    title: "Published data with instrumentIds only",
+    abstract: "Test data with only instrumentIds",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: [],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: ["instrument-only-abc"],
+  },
+
+  PublishedDataV4WithMultipleIdFields: {
+    title: "Published data with multiple ID fields",
+    abstract: "Test data with multiple ID fields",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: ["dataset-1", "dataset-2"],
+    proposalIds: ["proposal-1", "proposal-2"],
+    sampleIds: ["sample-1", "sample-2"],
+    instrumentIds: ["instrument-1", "instrument-2"],
+  },
+
+  PublishedDataV4InvalidEmptyArrays: {
+    title: "Invalid published data - empty arrays",
+    abstract: "Should fail validation",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: [],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4InvalidEmptyArrays: {
+    title: "Invalid published data - empty arrays",
+    abstract: "Should fail validation",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: [],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4InvalidEmptyStrings: {
+    title: "Invalid published data - empty strings",
+    abstract: "Should fail validation",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: ["", ""],
+    proposalIds: ["", ""],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4InvalidWhitespace: {
+    title: "Invalid published data - whitespace only",
+    abstract: "Should fail validation",
+    metadata: { publisher: { name: "ESS" } },
+    datasetPids: ["   ", "\t"],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: [],
+  },
+
+  PublishedDataV4PartialUpdate1: {
+    datasetPids: ["updated-dataset-1"],
+    title: "Updated title and datasetPids",
+  },
+
+  PublishedDataV4PartialUpdate2: {
+    title: "Updated only title",
+  },
+
+  PublishedDataV4PartialUpdate3: {
+    datasetPids: [],
+    proposalIds: [],
+    sampleIds: ["this-sample-ids"],
+    instrumentIds: [],
+    title: "Updated title and all id fields",
   },
 
   InstrumentCorrect1: {

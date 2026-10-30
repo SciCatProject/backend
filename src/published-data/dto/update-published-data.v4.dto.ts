@@ -6,8 +6,13 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { PartialType } from "@nestjs/swagger";
+import { PartialType, ApiPropertyOptional } from "@nestjs/swagger";
+import { Transform } from "class-transformer";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
+import { IsNonBlankResourceIdArray } from "../pipes/resource-id.validation";
+
+const normalizeResourceIds = ({ value }: { value: unknown }): unknown =>
+  value === null ? [] : value;
 
 export class UpdatePublishedDataV4Dto {
   /**
@@ -26,12 +31,71 @@ export class UpdatePublishedDataV4Dto {
   @IsString()
   readonly abstract: string;
 
+  // ========== RESOURCE ID ARRAYS (ALL OPTIONAL FOR v4) ==========
+
   /**
-   * Array of one or more Dataset persistent identifier (pid) values that make up the published data.
+   * Array of Dataset persistent identifier (pid) values that make up the published data.
    */
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Array of Dataset persistent identifier (pid) values that make up the published data. Entries must be non-blank; null is normalized to an empty array.",
+    example: ["dataset1", "dataset2"],
+  })
+  @IsOptional()
+  @Transform(normalizeResourceIds)
   @IsArray()
   @IsString({ each: true })
-  readonly datasetPids: string[];
+  @IsNonBlankResourceIdArray()
+  readonly datasetPids?: string[];
+
+  /**
+   * Array of Proposal persistent identifier (pid) values associated with the published data.
+   */
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Array of Proposal persistent identifier (pid) values associated with the published data. Entries must be non-blank; null is normalized to an empty array.",
+    example: ["proposal123", "proposal456"],
+  })
+  @IsOptional()
+  @Transform(normalizeResourceIds)
+  @IsArray()
+  @IsString({ each: true })
+  @IsNonBlankResourceIdArray()
+  readonly proposalIds?: string[];
+
+  /**
+   * Array of Sample persistent identifier (pid) values associated with the published data.
+   */
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Array of Sample persistent identifier (pid) values associated with the published data. Entries must be non-blank; null is normalized to an empty array.",
+    example: ["sample789", "sample012"],
+  })
+  @IsOptional()
+  @Transform(normalizeResourceIds)
+  @IsArray()
+  @IsString({ each: true })
+  @IsNonBlankResourceIdArray()
+  readonly sampleIds?: string[];
+
+  /**
+   * Array of Instrument persistent identifier (pid) values associated with the published data.
+   */
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Array of Instrument persistent identifier (pid) values associated with the published data. Entries must be non-blank; null is normalized to an empty array.",
+    example: ["instrumentA", "instrumentB"],
+  })
+  @IsOptional()
+  @Transform(normalizeResourceIds)
+  @IsArray()
+  @IsString({ each: true })
+  @IsNonBlankResourceIdArray()
+  readonly instrumentIds?: string[];
 
   /**
    * Time when doi is successfully registered
