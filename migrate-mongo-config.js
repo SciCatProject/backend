@@ -1,5 +1,6 @@
 // In this file you can configure migrate-mongo
-const MONGODB_URI = require("dotenv").config().parsed.MONGODB_URI;
+require("dotenv").config()
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error("Environment variable MONGODB_URI not set");
