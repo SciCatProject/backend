@@ -1,0 +1,1799 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../contributing/release-guidelines/">
+      
+      
+        <link rel="next" href="../../../frontend-config-guide/default-list-settings/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>20261030134716 — Sync Dataset scientificMetadata to MetadataKeys - SciCat Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#20261030134716-sync-dataset-scientificmetadata-to-metadatakeys" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden="">
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="SciCat Documentation" class="md-header__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SciCat Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="SciCat Documentation" class="md-nav__button md-logo" aria-label="SciCat Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/SciCat-logo-icon.png" alt="logo">
+
+    </a>
+    SciCat Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SciCat Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About SciCat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ajv-extensions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extending Ajv
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../datafiles_metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datafile Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../metadatakeys-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MetadataKeys Synchronization Service Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../opensearch-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenSearch Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New Release Version Bump Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runtime-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Configuration System Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sse-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server-Sent Events (SSE)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8">
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authorization
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Authorization
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/datablocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datablocks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/instruments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instruments Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jobs Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/logbooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logbooks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/metadata-keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Metadata Keys Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/opensearch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OPensearch Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/origdatablocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Origdatablocks Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/policies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Policies Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/proposals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/published-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Published Data Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/runtime-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Config Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Samples Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/sse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SSE Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authorization/users/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Users Authorization Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_9">
+        
+          
+          <label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/release-guidelines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Versioning Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#what-this-migration-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this migration does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-data-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source data shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadatakey-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetadataKey shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-check-group-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Check group names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-clear-the-entries-being-rebuilt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Clear the entries being rebuilt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-prepare-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Prepare indexes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Add up the counts per key, in batches of 10,000 datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-upsert-the-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Upsert the batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend config guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Frontend config guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../frontend-config-guide/dynamic-dataset-detail-component/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dynamic Dataset Detail Component - Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../frontend-config-guide/frontend-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frontend Configuration Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#what-this-migration-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this migration does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-data-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source data shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadatakey-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetadataKey shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-check-group-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Check group names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-clear-the-entries-being-rebuilt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Clear the entries being rebuilt
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-prepare-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Prepare indexes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Add up the counts per key, in batches of 10,000 datasets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5-upsert-the-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5 — Upsert the batch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the migration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="20261030134716-sync-dataset-scientificmetadata-to-metadatakeys">20261030134716 — Sync Dataset scientificMetadata to MetadataKeys<a class="headerlink" href="#20261030134716-sync-dataset-scientificmetadata-to-metadatakeys" title="Permanent link">¶</a></h1>
+<h2 id="what-this-migration-does">What this migration does<a class="headerlink" href="#what-this-migration-does" title="Permanent link">¶</a></h2>
+<p>Rebuilds the <code>Dataset</code> entries of the <code>MetadataKeys</code> collection by scanning all <code>Dataset</code> documents and extracting every key found in <code>scientificMetadata</code>.</p>
+<p>Each unique <code>(sourceType, key, humanReadableName)</code> combination becomes one <code>MetadataKey</code> document. If the same key appears across multiple datasets, their <code>userGroups</code> and counts are merged into a single entry.</p>
+<p>Keys of the other source types (<code>Proposal</code>, <code>Sample</code>, <code>Instrument</code>) are not rebuilt here, and their current entries are left untouched.</p>
+<p>It replaces <code>20260420145401-sync-dataset-scientificMetadata-to-metadatakeys</code>, which produced wrong counts and groups on databases with more than 10,000 datasets. Sites that already applied that migration run this one as well, which rebuilds their <code>Dataset</code> keys correctly.</p>
+<hr>
+<h2 id="why-it-exists">Why it exists<a class="headerlink" href="#why-it-exists" title="Permanent link">¶</a></h2>
+<p>The <code>MetadataKeys</code> collection powers metadata key search and access control. This is the initial population of the collection — it must be run once before the service can operate.</p>
+<p>Each <code>MetadataKey</code> document tracks:</p>
+<ul>
+<li><code>userGroupCounts: Map&lt;string, number&gt;</code> — how many datasets per group reference this key, enabling safe atomic group removal when a dataset is updated or deleted</li>
+<li><code>usageCount: number</code> — total datasets referencing this key regardless of groups, used as the authoritative deletion signal</li>
+</ul>
+<hr>
+<h2 id="source-data-shape">Source data shape<a class="headerlink" href="#source-data-shape" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1">// Dataset document</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="p">...,</span>
+<span class="w">  </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"uuid-A"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">ownerGroup</span><span class="o">:</span><span class="w"> </span><span class="s2">"group-1"</span><span class="p">,</span><span class="w">       </span><span class="c1">// mandatory</span>
+<span class="w">  </span><span class="nx">accessGroups</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"group-2"</span><span class="p">],</span><span class="w">   </span><span class="c1">// optional</span>
+<span class="w">  </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">scientificMetadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">temperature</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span><span class="w"> </span><span class="nx">unit</span><span class="o">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w"> </span><span class="nx">human_name</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">pressure</span><span class="o">:</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w">   </span><span class="nx">unit</span><span class="o">:</span><span class="w"> </span><span class="s2">"bar"</span><span class="w"> </span><span class="p">},</span><span class="w">   </span><span class="c1">// no human_name</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h2 id="metadatakey-shape">MetadataKey shape<a class="headerlink" href="#metadatakey-shape" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1">// MetadataKey document</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="s2">"550e8400-e29b-41d4-a716-446655440000"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"group-1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"group-2"</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"group-1"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"group-2"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">createdBy</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">updatedBy</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">createdAt</span><span class="o">:</span><span class="w"> </span><span class="nx">ISODate</span><span class="p">(</span><span class="s2">"..."</span><span class="p">),</span>
+<span class="w">  </span><span class="nx">updatedAt</span><span class="o">:</span><span class="w"> </span><span class="nx">ISODate</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h2>
+<p>The migration reads datasets in batches, adds up the counts per key in Node, and writes each batch with one <code>bulkWrite</code> of upserts. The upserts use the same filter and update operators as <code>MetadataKeysService.upsertMany</code>, so the result matches what the app would have built by creating every dataset through the API.</p>
+<p>It reuses <code>createMetadataKeysInstance</code> and <code>decodeURIComponentExtended</code> from <code>dist/common/utils</code>, so <code>dist/</code> must be built before it runs.</p>
+<h3 id="step-1-check-group-names">Step 1 — Check group names<a class="headerlink" href="#step-1-check-group-names" title="Permanent link">¶</a></h3>
+<p>Every <code>ownerGroup</code> and <code>accessGroups</code> value is checked before anything is deleted. Group names become <code>userGroupCounts.&lt;group&gt;</code> update paths (as in the app), so a name containing <code>.</code> would be stored as a nested field and a name starting with <code>$</code> would be rejected by MongoDB.</p>
+<p>If such names exist, the migration stops with an error listing them and leaves <code>MetadataKeys</code> untouched:</p>
+<div class="highlight"><pre><span></span><code>Dataset has groups that cannot be used as MetadataKeys userGroupCounts keys: team.alpha, $weird
+</code></pre></div>
+<h3 id="step-2-clear-the-entries-being-rebuilt">Step 2 — Clear the entries being rebuilt<a class="headerlink" href="#step-2-clear-the-entries-being-rebuilt" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nx">deleteMany</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">$or</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$in</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Dataset"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sourceId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$exists</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}],</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Deletes the <code>Dataset</code> keys, which are rebuilt below, and the obsolete one-entry-per-source documents of the previous schema (identified by <code>sourceId</code>), whatever their source type. Current keys of the other source types are kept.</p>
+<h3 id="step-3-prepare-indexes">Step 3 — Prepare indexes<a class="headerlink" href="#step-3-prepare-indexes" title="Permanent link">¶</a></h3>
+<ul>
+<li>Drops <code>metaKeyId_1</code> if it exists. A failed run of the replaced 20260420145401 migration could leave this unique index behind, and it would reject every key after the first.</li>
+<li>Creates <code>{ sourceType: 1, key: 1 }</code> (the same index as the app schema), so each upsert finds its key through an index.</li>
+</ul>
+<h3 id="step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets">Step 4 — Add up the counts per key, in batches of 10,000 datasets<a class="headerlink" href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" title="Permanent link">¶</a></h3>
+<p>Each dataset is passed through <code>createMetadataKeysInstance</code>, the same function the app uses. It returns the dataset's <code>userGroups</code> (<code>ownerGroup</code> plus <code>accessGroups</code>, deduplicated, empty values dropped), <code>isPublished</code> and <code>metadata</code>. Then for every metadata key:</p>
+<ul>
+<li>the key is decoded with <code>decodeURIComponentExtended</code> (keys are URL-encoded in <code>scientificMetadata</code> to satisfy Mongo field-name rules; if decoding fails the key is kept as it is),</li>
+<li><code>humanReadableName</code> is <code>human_name</code> when it is a string, otherwise <code>""</code>,</li>
+<li>the totals for <code>(key, humanReadableName)</code> are updated: <code>usageCount + 1</code>, <code>isPublished</code> OR-ed, and <code>userGroupCounts[group] + 1</code> for each of the dataset's groups.</li>
+</ul>
+<p><strong>Input (one batch)</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ownerGroup"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"accessGroups"</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupB"</span><span class="p">],</span><span class="w"> </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"scientificMetadata"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"temperature"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s2">"pressure"</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"_id"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ds2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ownerGroup"</span><span class="o">:</span><span class="w"> </span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"isPublished"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"scientificMetadata"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"temperature"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"human_name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Batch totals</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">]</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">  </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupA</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="nx">groupB</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">[</span><span class="s2">"pressure"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">]</span><span class="w">               </span><span class="err">→</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupA</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">groupB</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<h3 id="step-5-upsert-the-batch">Step 5 — Upsert the batch<a class="headerlink" href="#step-5-upsert-the-batch" title="Permanent link">¶</a></h3>
+<p>After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">updateOne</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">update</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">$set</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">updatedAt</span><span class="o">:</span><span class="w"> </span><span class="nx">now</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">$inc</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroupCounts.groupA"</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"userGroupCounts.groupB"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">$max</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">$addToSet</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">userGroups</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$each</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"groupA"</span><span class="p">,</span><span class="w"> </span><span class="s2">"groupB"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">$setOnInsert</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="nx">uuid</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">uuid</span><span class="p">,</span><span class="w"> </span><span class="nx">createdBy</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span><span class="w"> </span><span class="nx">updatedBy</span><span class="o">:</span><span class="w"> </span><span class="s2">"migration"</span><span class="p">,</span><span class="w"> </span><span class="nx">createdAt</span><span class="o">:</span><span class="w"> </span><span class="nx">now</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">upsert</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Because the counts are applied with <code>$inc</code>, a key that appears in several batches adds up across them; no batch overwrites another. Batches never share a dataset, so adding the per-batch counts gives the correct totals. <code>now</code> is taken once per batch; <code>createdAt</code> keeps the time of the batch that first inserted the key.</p>
+<hr>
+<h2 id="running-the-migration">Running the migration<a class="headerlink" href="#running-the-migration" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># The migration does not block the app: it keeps serving requests while</span>
+<span class="c1"># this runs. However, the Dataset keys are cleared at the start and rebuilt</span>
+<span class="c1"># batch by batch, so until it finishes searches see only part of the keys,</span>
+<span class="c1"># and datasets created, updated or deleted during the run can leave</span>
+<span class="c1"># inconsistent counts and userGroups. For consistent results, stop the API</span>
+<span class="c1"># or at least ingestion while it runs, ideally during low-traffic hours.</span>
+
+<span class="c1"># dist/ must be built first (it already is in the Docker image)</span>
+npm<span class="w"> </span>run<span class="w"> </span>build
+npm<span class="w"> </span>run<span class="w"> </span>migrate:db:up
+<span class="c1"># or, locally, build and migrate in one step</span>
+npm<span class="w"> </span>run<span class="w"> </span>migrate:db:up:dev
+
+<span class="c1"># verify</span>
+db.MetadataKeys.countDocuments<span class="o">({</span><span class="w"> </span>sourceType:<span class="w"> </span><span class="s2">"Dataset"</span>,<span class="w"> </span>userGroupCounts:<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nv">$exists</span>:<span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="o">}</span><span class="w"> </span><span class="o">})</span>
+<span class="c1"># should equal</span>
+db.MetadataKeys.countDocuments<span class="o">({</span><span class="w"> </span>sourceType:<span class="w"> </span><span class="s2">"Dataset"</span><span class="w"> </span><span class="o">})</span>
+</code></pre></div>
+<blockquote>
+<p>⚠️ <strong>If it fails or is interrupted</strong>, migrate-mongo does not record it as applied. Re-run <code>migrate:db:up</code>: the migration clears the <code>Dataset</code> keys again and rebuilds them, so a rerun gives the same result as a single successful run.</p>
+</blockquote>
+<hr>
+<h2 id="rollback">Rollback<a class="headerlink" href="#rollback" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>migrate:db:down
+</code></pre></div>
+<p>Wipes the entire <code>MetadataKeys</code> collection, including keys of the other source types. The <code>Dataset</code> keys will be repopulated on the next <code>migrate:db:up</code>.</p>
+<p>Verify the rollback succeeded by checking the migration status:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>migrate:db:status
+</code></pre></div>
+<p>If the migration shows as <code>pending</code> it means the rollback was successful and the migration has not been run yet.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["instant"], "search": "../../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
