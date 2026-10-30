@@ -2,6 +2,17 @@
 
 This folder contains all the information and files related to Proposals models and their endpoints .
 
+## V4 query relationships
+
+Proposal v4 `include` supports the following relationship options:
+
+- `samples`: related records from the `Sample` collection matched by `proposalId`.
+- `instruments`: related records from the `Instrument` collection matched by the proposal's `instrumentIds`.
+- `datasets`: related records from the `Dataset` collection whose `proposalIds` contains the proposal ID.
+- `all`: returns `samples`, `instruments`, and `datasets`.
+
+The `all` option is independent of the order of include values and does not produce duplicate relationship results.
+
 ## Data Models
 
 ### __Proposal__

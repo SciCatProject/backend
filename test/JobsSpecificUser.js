@@ -53,8 +53,8 @@ const jobUser51 = {
 
 describe("1190: Jobs: Test New Job Model Authorization for user_access type: configuration set to a specific user: USER5.1", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -87,9 +87,9 @@ describe("1190: Jobs: Test New Job Model Authorization for user_access type: con
     });
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
   });
 
   it("0010: Add dataset 1 as Admin Ingestor", async () => {

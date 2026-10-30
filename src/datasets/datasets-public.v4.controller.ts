@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  HttpStatus,
+  NotFoundException,
+} from "@nestjs/common";
 import {
   ApiExtraModels,
   ApiOperation,
@@ -297,6 +304,10 @@ export class DatasetsPublicV4Controller {
     isArray: false,
     description: "Return public dataset with pid specified",
   })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: "Public dataset with the pid specified not found",
+  })
   @ApiQuery({
     name: "include",
     enum: DatasetLookupKeysEnum,
@@ -317,6 +328,10 @@ export class DatasetsPublicV4Controller {
       where: { pid: id, isPublished: true },
       include: includeArray,
     });
+
+    if (!dataset) {
+      throw new NotFoundException(`Public dataset ${id} not found`);
+    }
 
     return dataset;
   }

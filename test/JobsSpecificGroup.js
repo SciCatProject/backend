@@ -57,8 +57,8 @@ const jobGroup5 = {
 
 describe("1180: Jobs: Test New Job Model Authorization for group_access type: configuration set to a specific group - @group5", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -100,9 +100,9 @@ describe("1180: Jobs: Test New Job Model Authorization for group_access type: co
     });
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
   });
 
   it("0010: Add dataset 1 as Admin Ingestor", async () => {

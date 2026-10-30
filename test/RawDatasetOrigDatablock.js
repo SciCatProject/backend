@@ -19,8 +19,8 @@ const origDatablockWithValidChkAlg = { ...TestData.OrigDataBlockCorrect3 };
 
 describe("2000: RawDatasetOrigDatablock: Test OrigDatablocks and their relation to raw Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
