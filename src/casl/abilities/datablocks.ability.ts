@@ -55,22 +55,42 @@ export class DatablockAbility {
     can(Action.Read, Datablock, ifAccess);
     can(Action.Read, Datablock, ifPublished);
 
-    can(Action.Update, Datablock, ifOwner);
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDataset?.includes(g),
+      ) ||
+      this.accessGroups?.createDataset?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_GROUPS
+       */
+      can(Action.Create, Datablock, ifOwner);
+      can(Action.Update, Datablock, ifOwner);
+    }
 
     if (
-      user.currentGroups.some(
-        (g) =>
-          this.accessGroups?.createDatasetPrivileged?.includes(g) ||
-          this.accessGroups?.createDatasetWithPid?.includes(g) ||
-          this.accessGroups?.createDataset?.includes(g),
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetWithPid?.includes(g),
+      ) ||
+      this.accessGroups?.createDatasetWithPid?.includes("#all")
+    ) {
+      /**
+       * User belonging to CREATE_DATASET_WITH_PID_GROUPS
+       */
+      can(Action.Create, Datablock, ifOwner);
+      can(Action.Update, Datablock, ifOwner);
+    }
+
+    if (
+      user.currentGroups.some((g) =>
+        this.accessGroups?.createDatasetPrivileged?.includes(g),
       )
     ) {
       /**
-       * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS,
-       * CREATE_DATASET_WITH_PID_GROUPS or CREATE_DATASET_GROUPS
+       * User belonging to CREATE_DATASET_PRIVILEGED_GROUPS
        */
       can(Action.Create, Datablock);
-      can(Action.Update, Datablock);
+      can(Action.Update, Datablock, ifOwner);
     }
 
     if (user.currentGroups.some((g) => this.accessGroups?.admin?.includes(g))) {
@@ -90,8 +110,6 @@ export class DatablockAbility {
       /**
        * User belonging to DELETE_GROUPS
        */
-      can(Action.Read, Datablock);
-      can(Action.Update, Datablock);
       can(Action.Delete, Datablock);
     }
 
