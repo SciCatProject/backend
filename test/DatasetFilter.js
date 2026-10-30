@@ -1234,4 +1234,27 @@ describe("0400: DatasetFilter: Test retrieving datasets using filtering capabili
         res.body.should.be.an("array").to.have.lengthOf(0);
       });
   });
+
+  it("0740: should reject conditions on relations", async () => {
+    const filter = {
+      where: { "proposals.pi_email": "pi@example.com" },
+      include: [{ relation: "proposals" }],
+    };
+    return request(appUrl)
+      .get("/api/v3/Datasets")
+      .query({ filter: JSON.stringify(filter) })
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .set("Accept", "application/json")
+      .expect(TestData.BadRequestStatusCode);
+  });
+
+  it("0750: should reject conditions on relations when counting", async () => {
+    const filter = { where: { "proposals.pi_email": "pi@example.com" } };
+    return request(appUrl)
+      .get("/api/v3/Datasets/count")
+      .query({ filter: JSON.stringify(filter) })
+      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+      .set("Accept", "application/json")
+      .expect(TestData.BadRequestStatusCode);
+  });
 });
