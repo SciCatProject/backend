@@ -395,7 +395,9 @@ export class UsersService implements OnModuleInit {
     }
 
     const payload = {
-      username: accessToken._id,
+      id: accessToken._id,
+      username: accessToken.username,
+      email: accessToken.email,
       groups: accessToken.currentGroups,
     };
     const jwtString = this.jwtService.sign(payload, {
