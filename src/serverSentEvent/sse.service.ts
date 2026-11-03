@@ -100,6 +100,8 @@ export class SseService {
     for (const [connectionId, client] of this.clients) {
       if (client.user._id === user._id) {
         this.clients.delete(connectionId);
+        // Named event so the client closes its EventSource itself instead of auto-reconnecting and evicting another tab.
+        client.subject.next({ type: "evicted", data: "max-connections" });
         client.subject.complete();
         return;
       }

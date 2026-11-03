@@ -148,7 +148,10 @@ pipeline is built from the registry keys, so no other change is needed.
 
 **Connections per user.** Five per user per instance. A sixth request closes the
 user's oldest connection and opens the new one, so rapid reconnects never lock a
-user out when a proxy is slow to report closed streams. The cap is per instance,
+user out when a proxy is slow to report closed streams. Before closing it, the
+server sends a named `evicted` event (data `max-connections`). Clients must listen for it, close their
+`EventSource` and not reconnect; otherwise with more than five open tabs the
+tabs keep evicting each other. The cap is per instance,
 so behind a load balancer the effective total is five times the number of
 replicas.
 

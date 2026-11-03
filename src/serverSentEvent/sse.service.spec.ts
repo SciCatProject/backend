@@ -69,6 +69,20 @@ describe("SseService", () => {
     expect(service.getAllConnections().connections).toBe(5);
   });
 
+  it("sends an evicted event before closing the evicted stream", () => {
+    const user = makeUser("a");
+    const received: MessageEvent[][] = [];
+    for (let i = 0; i < 5; i++) {
+      received[i] = [];
+      service.getEvents(user).subscribe((m) => received[i].push(m));
+    }
+
+    service.getEvents(user).subscribe();
+
+    expect(received[0]).toEqual([{ type: "evicted", data: "max-connections" }]);
+    expect(received.slice(1).every((r) => r.length === 0)).toBe(true);
+  });
+
   it("does not close other users' connections when evicting", () => {
     const other = makeUser("b");
     let otherCompleted = false;
