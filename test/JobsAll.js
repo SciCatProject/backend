@@ -210,6 +210,37 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
       });
   });
 
+  it("0055: Add a new job as a user from ADMIN_GROUPS for himself/herself in '#all' configuration with more datasets than JOB_MAX_DATASETS, which should fail", async () => {
+    const maxDatasets = parseInt(process.env.JOB_MAX_DATASETS, 10);
+    const newJob = {
+      ...jobAll,
+      ownerUser: "admin",
+      ownerGroup: "admin",
+      jobParams: {
+        datasetList: Array.from({ length: maxDatasets + 1 }, (_, i) => ({
+          pid: `fakeID${i}`,
+          files: [],
+        })),
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal(
+            `List of passed datasets exceeds the maximum of ${maxDatasets}.`,
+          );
+      });
+  });
+
   it("0060: Add a new job as a user from ADMIN_GROUPS for himself/herself in '#datasetPublic' configuration with no jobParams parameter, which should fail", async () => {
     const newJob = {
       type: "all_access",
