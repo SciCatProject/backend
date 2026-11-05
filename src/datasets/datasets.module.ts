@@ -21,6 +21,7 @@ import {
 } from "src/common/schemas/generic-history.schema";
 import { ConditionalModule, ConfigModule, ConfigService } from "@nestjs/config";
 import { applyHistoryPluginOnce } from "src/common/mongoose/plugins/history.plugin.util";
+import { applyDatasetPolicyHookOnce } from "./dataset-policy-hook.util";
 import { ProposalsModule } from "src/proposals/proposals.module";
 import { HistoryModule } from "src/history/history.module";
 import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
@@ -61,32 +62,7 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
         ) => {
           const schema = DatasetSchema;
 
-          schema.pre<DatasetClass>("save", async function (next) {
-            // if _id is empty or differnet than pid,
-            // set _id to pid
-            if (!this._id) {
-              this._id = this.pid;
-            }
-            const policy = await policyService.findOne({
-              ownerGroup: this.ownerGroup,
-            });
-            let av: string;
-            if (policy) {
-              av = policy.tapeRedundancy || "low";
-            } else {
-              const regexLiteral = /(?<=AV\=)(.*?)(?=\,)/g;
-              av = (regexLiteral.exec(this.classification ?? "") || ["low"])[0];
-              await policyService.addDefaultPolicy(
-                this.ownerGroup,
-                this.accessGroups,
-                this.ownerEmail ?? "",
-                av,
-                this.createdBy,
-              );
-            }
-            this.classification = `IN=medium,AV=${av},CO=low`;
-            next();
-          });
+          applyDatasetPolicyHookOnce(schema, policyService);
 
           // Apply history plugin once if schema name matches TRACKABLES config
           applyHistoryPluginOnce(schema, configService);
