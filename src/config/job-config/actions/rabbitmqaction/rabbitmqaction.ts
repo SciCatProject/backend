@@ -18,6 +18,7 @@ export class RabbitMQJobAction<T extends JobDto> implements JobAction<T> {
   private queue: string;
   private exchange: string;
   private key: string;
+  private queueArguments?: Record<string, unknown>;
 
   getActionType(): string {
     return actionType;
@@ -36,6 +37,7 @@ export class RabbitMQJobAction<T extends JobDto> implements JobAction<T> {
     this.queue = options.queue;
     this.exchange = options.exchange;
     this.key = options.key;
+    this.queueArguments = options.queueArguments;
   }
 
   async perform(context: JobPerformContext<T>) {
@@ -48,6 +50,7 @@ export class RabbitMQJobAction<T extends JobDto> implements JobAction<T> {
       this.exchange,
       this.key,
       JSON.stringify(context.job),
+      this.queueArguments,
     );
   }
 }

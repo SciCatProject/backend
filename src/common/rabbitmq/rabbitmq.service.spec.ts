@@ -117,6 +117,16 @@ describe("RabbitMQService", () => {
     expect(mockChannel.bindQueue).toHaveBeenCalledWith("q", "ex", "key");
   });
 
+  it("should bindQueue with queue arguments", async () => {
+    await rabbitMQService["connect"]();
+    const queueArguments = { "x-dead-letter-exchange": "ex.retry" };
+    await rabbitMQService["bindQueue"]("q", "ex", "key", queueArguments);
+    expect(mockChannel.assertQueue).toHaveBeenCalledWith("q", {
+      durable: true,
+      arguments: queueArguments,
+    });
+  });
+
   it("should bindQueue but throw error", async () => {
     mockChannel.assertQueue.mockRejectedValueOnce(new Error("Queue error"));
     await expect(
@@ -139,6 +149,17 @@ describe("RabbitMQService", () => {
       Buffer.from("msg"),
       { persistent: true },
     );
+  });
+
+  it("should sendMessage with queue arguments", async () => {
+    await rabbitMQService["connect"]();
+    const bindQueue = jest
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn<any, string>(rabbitMQService, "bindQueue")
+      .mockResolvedValue(undefined);
+    const queueArguments = { "x-dead-letter-exchange": "ex.retry" };
+    await rabbitMQService.sendMessage("q", "ex", "key", "msg", queueArguments);
+    expect(bindQueue).toHaveBeenCalledWith("q", "ex", "key", queueArguments);
   });
 
   it("should sendMessage but throw error", async () => {
