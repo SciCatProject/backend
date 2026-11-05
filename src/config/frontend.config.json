@@ -39,9 +39,6 @@
   "fileDownloadEnabled": true,
   "gettingStarted": null,
   "ingestManual": null,
-  "ingestorComponent" : {
-    "ingestorEnabled": true
-  },
   "jobsEnabled": true,
   "jsonMetadataEnabled": true,
   "landingPage": "doi.ess.eu/detail/",
@@ -106,16 +103,16 @@
       "type": "form",
       "url": "https://zip.scicatproject.org/download/all",
       "target": "_blank",
-      "variables" : {
+      "variables": {
         "pid": "#Dataset0Pid",
         "files": "#Dataset0FilesPath",
         "totalSize": "#Dataset0FilesTotalSize",
         "folder": "#Dataset0SourceFolder"
       },
       "enabled": "#MaxDownloadableSize(@totalSize)",
-      "inputs" : {
-        "item[]" : "@pid",
-        "directory[]" : "@folder",
+      "inputs": {
+        "item[]": "@pid",
+        "directory[]": "@folder",
         "files[]": "@files"
       },
       "authorization": ["#datasetAccess", "#datasetPublic"]
@@ -148,7 +145,7 @@
       "authorization": ["#datasetAccess", "#datasetPublic"]
     },
     {
-     "id": "4f974f0e-4364-11ef-9c63-03d19f813f4e",
+      "id": "4f974f0e-4364-11ef-9c63-03d19f813f4e",
       "description": "This action let users download jupyter notebook properly populated with dataset pid and all files using an instance of sciwyrm",
       "order": 3,
       "label": "Notebook All (Form)",
@@ -415,12 +412,6 @@
       },
       {
         "name": "numberOfFiles",
-        "order": 5,
-        "type": "standard",
-        "enabled": true
-      },
-      {
-        "name": "numberOfFiles",
         "type": "standard",
         "width": 120,
         "enabled": false
@@ -509,12 +500,6 @@
         "type": "standard",
         "width": 200,
         "enabled": false
-      },
-      {
-        "name": "proposalId",
-        "type": "standard",
-        "width": 200,
-        "enabled": true
       },
       {
         "name": "proposalIds",
@@ -776,23 +761,14 @@
       "runNumber": "Run Number",
       "sourceFolder": "Source Folder",
       "size": "Dataset Size",
-      "creationTime": "Record Creation Time",
       "image": "Thumbnail",
       "proposalId": "Proposal Id",
       "metadata": "Metadata",
-      "ownerGroup": "Permission: Owner Group",
       "dataStatus": "Dataset Status",
       "principalInvestigator": "Principal Investigator",
       "creationTime": "Creation Time",
       "scientificMetadata": "Scientific Metadata",
       "metadataJsonView": "Metadata JsonView",
-      "datasetName": "Dataset Name",
-      "runNumber": "Run Number",
-      "sourceFolder": "Source Folder",
-      "size": "Size",
-      "type": "Dataset Type",
-      "image": "Thumbnail",
-      "proposalId": "Proposal Id",
       "scientificMetadata.run_number.value": "Run Number",
       "scientificMetadata.start_time": "Start Time",
       "startTime": "Start Time",
@@ -825,11 +801,6 @@
       "Main Proposer": "Proposal Submitted By",
       "Principal Investigator": "Principal Investigator",
       "Metadata": "Additional Information",
-      "proposalId": "Proposal Id",
-      "startTime": "Start Date",
-      "title": "Proposal Title",
-      "abstract": "Abstract",
-      "pi_lastname": "PI Last Name",
       "pi_firstname": "PI First Name",
       "pi_email": "PI Email",
       "firstname": "Proposer First Name",
@@ -1031,7 +1002,7 @@
         "col": 10,
         "row": 5,
         "options": {
-         "size": "medium"
+          "size": "medium"
         }
       },
       {
