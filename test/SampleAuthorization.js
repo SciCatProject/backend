@@ -35,7 +35,7 @@ let accessTokenAdminIngestor = null,
 
 describe("2250: Sample Authorization", () => {
   before(async () => {
-    db.collection("Sample").deleteMany({});
+    await db.collection("Sample").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

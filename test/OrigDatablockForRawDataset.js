@@ -20,8 +20,8 @@ let accessTokenAdminIngestor = null,
 
 describe("1200: OrigDatablockForRawDataset: Test OrigDatablocks and their relation to raw Datasets using origdatablocks endpoint", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

@@ -49,7 +49,7 @@ const proposal3 = {
 
 describe("1400: ProposalAuthorization: Test access to proposal", () => {
   before(async () => {
-    db.collection("Proposal").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
