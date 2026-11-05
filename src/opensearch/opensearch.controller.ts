@@ -16,10 +16,11 @@ import {
   ApiBody,
   ApiOperation,
 } from "@nestjs/swagger";
-import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { CreateIndexDto } from "./dto/create-index.dto";
 
@@ -36,9 +37,11 @@ export class OpensearchController {
     private readonly datasetService: DatasetsService,
   ) {}
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("opensearch", (ability: AppAbility) =>
+      ability.can(Action.Manage, Opensearch),
+    ),
   )
   @HttpCode(HttpStatus.CREATED)
   @ApiBody({
@@ -56,9 +59,11 @@ export class OpensearchController {
     return this.opensearchService.createIndex(createIndexDto);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("opensearch", (ability: AppAbility) =>
+      ability.can(Action.Manage, Opensearch),
+    ),
   )
   @ApiOperation({
     summary: "Sync data from MongoDB to OpenSearch",
@@ -85,9 +90,11 @@ export class OpensearchController {
     return await this.datasetService.syncDatasetsToOpensearch(esIndex);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("opensearch", (ability: AppAbility) =>
+      ability.can(Action.Manage, Opensearch),
+    ),
   )
   @HttpCode(HttpStatus.OK)
   @ApiQuery({
@@ -105,9 +112,11 @@ export class OpensearchController {
     return this.opensearchService.deleteIndex(index.trim());
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("opensearch", (ability: AppAbility) =>
+      ability.can(Action.Manage, Opensearch),
+    ),
   )
   @HttpCode(HttpStatus.OK)
   @ApiQuery({
@@ -125,9 +134,11 @@ export class OpensearchController {
     return this.opensearchService.getIndexConfig(index.trim());
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("opensearch", (ability: AppAbility) =>
-    ability.can(Action.Manage, Opensearch),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("opensearch", (ability: AppAbility) =>
+      ability.can(Action.Manage, Opensearch),
+    ),
   )
   @HttpCode(HttpStatus.OK)
   @ApiBody({

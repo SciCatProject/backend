@@ -16,15 +16,17 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { AuthenticatedEndpointGuard } from "src/casl/guards/authenticated.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { UserIdentity } from "./schemas/user-identity.schema";
 import { UserIdentitiesService } from "./user-identities.service";
 import { Request } from "express";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { User } from "./schemas/user.schema";
-import { AuthenticatedPoliciesGuard } from "../casl/guards/auth-check.guard";
 import {
   filterUserIdentityDescription,
   filterUserIdentityExample,
@@ -39,9 +41,11 @@ export class UserIdentitiesController {
     private caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/findOne")
   @ApiQuery({
@@ -111,9 +115,11 @@ export class UserIdentitiesController {
     return identity;
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.AccessAny, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.AccessAny, User),
+    ),
   )
   @Get("/isValidEmail")
   @ApiOperation({

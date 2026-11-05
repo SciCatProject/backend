@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { JobAbility } from "./jobs.ability";
 import { JobClass } from "src/jobs/schemas/job.schema";
 import {

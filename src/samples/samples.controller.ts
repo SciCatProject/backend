@@ -34,10 +34,14 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { AuthenticatedEndpointGuard } from "src/casl/guards/authenticated.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import {
   SampleClass,
   SampleDocument,
@@ -64,10 +68,8 @@ import {
   samplesFullQueryExampleFields,
 } from "src/common/utils";
 import { Request } from "express";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { IDatasetFields } from "src/datasets/interfaces/dataset-filters.interface";
 import { CreateSubAttachmentV3Dto } from "src/attachments/dto-obsolete/create-sub-attachment.v3.dto";
-import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
 import { CountApiResponse } from "src/common/types";
 import { OutputAttachmentV3Dto } from "src/attachments/dto-obsolete/output-attachment.v3.dto";
 import { OutputSampleDto } from "./dto/output-sample.dto";
@@ -205,9 +207,11 @@ export class SamplesController {
     return mergedFilters;
   }
   // POST /samples
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Create, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Create, SampleClass),
+    ),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<SampleClass>(
@@ -251,9 +255,11 @@ export class SamplesController {
   }
 
   // GET /samples
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get()
   @SerializeOptions({
@@ -294,9 +300,11 @@ export class SamplesController {
   }
 
   // GET /samples/count
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/count")
   @ApiOperation({
@@ -338,9 +346,11 @@ export class SamplesController {
   }
 
   // GET /samples/fullquery
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/fullquery")
   @SerializeOptions({
@@ -410,9 +420,11 @@ export class SamplesController {
   }
 
   // GET /samples/metadataKeys
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/metadataKeys")
   @ApiOperation({
@@ -470,9 +482,11 @@ export class SamplesController {
   }
 
   // GET /samples/findOne
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -529,9 +543,11 @@ export class SamplesController {
   }
 
   // GET /samples/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/:id")
   @Header("content-type", "application/json")
@@ -567,9 +583,11 @@ export class SamplesController {
   }
 
   // GET /samples/:id/authorization
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/:id/authorization")
   @ApiParam({
@@ -593,9 +611,11 @@ export class SamplesController {
   }
 
   // PATCH /samples/:id
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Update, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Update, SampleClass),
+    ),
   )
   @UseInterceptors(
     new FormatPhysicalQuantitiesInterceptor<SampleClass>(
@@ -649,9 +669,11 @@ export class SamplesController {
   }
 
   // DELETE /samples/:id
-  @UseGuards()
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Delete, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Delete, SampleClass),
+    ),
   )
   @Delete("/:id")
   @ApiOperation({
@@ -676,9 +698,11 @@ export class SamplesController {
   }
 
   // POST /samples/:id/attachments
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleAttachmentDelete, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.SampleAttachmentDelete, SampleClass),
+    ),
   )
   @Post("/:id/attachments")
   @ApiOperation({
@@ -728,9 +752,11 @@ export class SamplesController {
   }
 
   // GET /samples/:id/attachments
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleAttachmentRead, SampleClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.SampleAttachmentRead, SampleClass),
+    ),
   )
   @Get("/:id/attachments")
   @ApiOperation({
@@ -762,9 +788,11 @@ export class SamplesController {
   }
 
   // GET /samples/:id/attachments/:fk
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleAttachmentRead, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.SampleAttachmentRead, SampleClass),
+    ),
   )
   @Get("/:id/attachments/:fk")
   @ApiOperation({
@@ -805,9 +833,11 @@ export class SamplesController {
   }
 
   // DELETE /samples/:id/attachments/:fk
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.SampleAttachmentDelete, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.SampleAttachmentDelete, SampleClass),
+    ),
   )
   @Delete("/:id/attachments/:fk")
   @ApiOperation({
@@ -860,9 +890,11 @@ export class SamplesController {
  */
 
   // GET /samples/:id/datasets
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("samples", (ability: AppAbility) =>
-    ability.can(Action.Read, SampleClass),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("samples", (ability: AppAbility) =>
+      ability.can(Action.Read, SampleClass),
+    ),
   )
   @Get("/:id/datasets")
   @ApiOperation({

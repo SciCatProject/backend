@@ -4143,14 +4143,14 @@ describe("2250: Sample Authorization", () => {
     return request(appUrl)
       .delete("/api/v3/samples/" + sampleId1)
       .set("Accept", "application/json")
-      .expect(TestData.DeleteForbiddenStatusCode);
+      .expect(TestData.UnauthorizedStatusCode);
   });
 
   it("5140: delete public sample 10 as Unauthenticated User, which should fail", async () => {
     return request(appUrl)
       .delete("/api/v3/samples/" + sampleId10)
       .set("Accept", "application/json")
-      .expect(TestData.DeleteForbiddenStatusCode);
+      .expect(TestData.UnauthorizedStatusCode);
   });
 
   it("5150: delete sample 1 as Archive Manager", async () => {
