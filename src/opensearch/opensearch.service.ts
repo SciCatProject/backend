@@ -12,10 +12,8 @@ import {
   SearchQueryService,
 } from "./providers/query-builder.service";
 
-import {
-  DatasetClass,
-  DatasetDocument,
-} from "src/datasets/schemas/dataset.schema";
+import { DatasetClass } from "src/datasets/schemas/dataset.schema";
+import { DatasetOpenSearchDto } from "./dto/dataset-opensearch.dto";
 import { ConfigService } from "@nestjs/config";
 import { sleep } from "src/common/utils";
 
@@ -359,7 +357,7 @@ export class OpensearchService implements OnModuleInit {
     };
   }
 
-  async updateInsertDocument(data: Partial<DatasetDocument>) {
+  async updateInsertDocument(data: DatasetOpenSearchDto & { _id?: unknown }) {
     delete data._id;
 
     try {
