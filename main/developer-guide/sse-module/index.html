@@ -1698,9 +1698,18 @@ pipeline is built from the registry keys, so no other change is needed.</p>
 </tbody>
 </table>
 <h2 id="limits-and-operational-behaviour">Limits and operational behaviour<a class="headerlink" href="#limits-and-operational-behaviour" title="Permanent link">¶</a></h2>
-<p><strong>Connections per user.</strong> Five per user per instance. A sixth request returns
-<code>403 Forbidden</code>. The cap is per instance, so behind a load balancer the effective
-total is five times the number of replicas.</p>
+<p><strong>Connections per user.</strong> Five per user per instance. A sixth request closes the
+user's oldest connection and opens the new one, so rapid reconnects never lock a
+user out when a proxy is slow to report closed streams. Before closing it, the
+server sends a named <code>evicted</code> event (data <code>max-connections</code>). Clients must listen for it, close their
+<code>EventSource</code> and not reconnect; otherwise with more than five open tabs the
+tabs keep evicting each other. The cap is per instance,
+so behind a load balancer the effective total is five times the number of
+replicas.</p>
+<p><strong>Heartbeat.</strong> Every 20 seconds each open stream receives a named <code>heartbeat</code>
+event with no data. It keeps proxies from timing out idle streams, and the write
+fails on a dead connection, which lets the server drop it. <code>EventSource.onmessage</code>
+does not fire for named events, so clients need no handling for it.</p>
 <p><strong>Reconnect on change stream failure.</strong> If the change stream errors, the listener
 retries up to five times with exponential backoff starting at two seconds. After
 that it stops and logs an error, and SSE stays down until the process restarts.
