@@ -1601,17 +1601,19 @@
 <p>An unauthenticated user may read datablocks only if the datablock is public.
 Unauthenticated users do not have write access.</p>
 <h3 id="authenticated">Authenticated<a class="headerlink" href="#authenticated" title="Permanent link">¶</a></h3>
-<p>An authenticated user may read datablocks if the datablock is public or if they are a member of the datablock's <code>ownerGroup</code> or one of the <code>accessGroups</code>. They are permitted to update datablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
+<p>An authenticated user may read datablocks if the datablock is public or if they are a member of the datablock's <code>ownerGroup</code> or one of the <code>accessGroups</code>. Authenticated users do not have write access by default.</p>
 <h3 id="create_dataset_groups">CREATE_DATASET_GROUPS<a class="headerlink" href="#create_dataset_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create and update datablocks for any <code>ownerGroup</code>.</p>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create and update datablocks if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>. Importantly, it is not necessary that <code>ownerGroup</code> be in <code>CREATE_DATASET_GROUPS</code>.</p>
+<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_GROUPS</code> in configuration.</p>
 <h3 id="create_dataset_with_pid_groups">CREATE_DATASET_WITH_PID_GROUPS<a class="headerlink" href="#create_dataset_with_pid_groups" title="Permanent link">¶</a></h3>
 <p>These groups have the same permissions as <code>CREATE_DATASET_GROUPS</code>.</p>
+<p>This permission can be extended to all authenticated users by providing the token <code>#all</code> under <code>CREATE_DATASET_WITH_PID_GROUPS</code> in configuration.</p>
 <h3 id="create_dataset_privileged_groups">CREATE_DATASET_PRIVILEGED_GROUPS<a class="headerlink" href="#create_dataset_privileged_groups" title="Permanent link">¶</a></h3>
-<p>These groups have the same permissions as <code>CREATE_DATASET_GROUPS</code>.</p>
+<p>If a user is part of a group listed in configuration as part of <code>CREATE_DATASET_PRIVILEGED_GROUPS</code>, in addition to the permissions granted to authenticated users, they are permitted to create datablocks for any <code>ownerGroup</code>. They may update datablocks only if the <code>ownerGroup</code> matches one of the user's <code>currentGroups</code>.</p>
 <h3 id="admin_groups">ADMIN_GROUPS<a class="headerlink" href="#admin_groups" title="Permanent link">¶</a></h3>
 <p>If a user is part of a group listed in configuration as part of <code>ADMIN_GROUPS</code>, they have unrestricted create, read, and update access to all datablocks in the database.</p>
 <h3 id="delete_groups">DELETE_GROUPS<a class="headerlink" href="#delete_groups" title="Permanent link">¶</a></h3>
-<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted read, update and delete access to all datablocks in the database.</p>
+<p>If a user is part of a group listed in configuration as part of <code>DELETE_GROUPS</code>, they have unrestricted delete access to all datablocks in the database.</p>
 <h2 id="permission-matrix">Permission Matrix<a class="headerlink" href="#permission-matrix" title="Permanent link">¶</a></h2>
 <p>Table of the different permission classes defined in casl. For all special permission groups, the full list includes the relevant permissions passed on from generic authenticated user permissions.</p>
 <table>
@@ -1632,8 +1634,8 @@ Unauthenticated users do not have write access.</p>
 <td><code>Create</code></td>
 <td>-</td>
 <td>-</td>
-<td>any</td>
-<td>any</td>
+<td>owner</td>
+<td>owner</td>
 <td>any</td>
 <td>any</td>
 <td>-</td>
@@ -1646,17 +1648,17 @@ Unauthenticated users do not have write access.</p>
 <td>public/owner/access</td>
 <td>public/owner/access</td>
 <td>any</td>
-<td>any</td>
+<td>public/owner/access</td>
 </tr>
 <tr>
 <td><code>Update</code></td>
 <td>-</td>
+<td>-</td>
+<td>owner</td>
+<td>owner</td>
 <td>owner</td>
 <td>any</td>
-<td>any</td>
-<td>any</td>
-<td>any</td>
-<td>any</td>
+<td>-</td>
 </tr>
 <tr>
 <td><code>Delete</code></td>
