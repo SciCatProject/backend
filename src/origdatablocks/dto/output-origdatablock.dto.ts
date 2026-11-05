@@ -1,6 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { CreateOrigDatablockDto } from "./create-origdatablock.dto";
-import { IsDateString, IsString } from "class-validator";
+import { IsDateString, IsOptional, IsString } from "class-validator";
 
 export class OutputOrigDatablockDto extends CreateOrigDatablockDto {
   @ApiProperty({
@@ -41,12 +41,13 @@ export class OutputOrigDatablockDto extends CreateOrigDatablockDto {
 
   @ApiProperty({
     type: String,
-    required: true,
+    required: false,
     description:
       "Version of the API used when the origdatablock was created or last updated. API version is defined in code for each release. Managed by the system.",
   })
+  @IsOptional()
   @IsString()
-  version: string;
+  version?: string;
 }
 
 export class PartialOutputOrigDatablockDto extends PartialType(

@@ -29,7 +29,9 @@ export class IncludeValidationPipe implements PipeTransform<
       ? inValue
       : isJsonString(inValue)
         ? JSON.parse(inValue ?? "{}").include
-        : Array(inValue);
+        : inValue.includes(",")
+          ? IncludeValidationPipe.splitCsv(inValue)
+          : Array(inValue);
 
     includeValueParsed?.map((field) => {
       let relationField = field;
@@ -45,5 +47,16 @@ export class IncludeValidationPipe implements PipeTransform<
     });
 
     return inValue;
+  }
+
+  /**
+   * Split a comma-separated string into individual relation values.
+   * Handles CSV-style serialization used by some OpenAPI client generators.
+   */
+  static splitCsv(inValue: string): string[] {
+    return inValue
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 }
