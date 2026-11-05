@@ -1,6 +1,11 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
+import {
+  getPolicyPublicationShiftInYears,
+  getPolicyRetentionShiftInYears,
+  todayShiftedByYears,
+} from "src/config/policy-times";
 
 export type LifecycleDocument = LifecycleClass & Document;
 
@@ -42,24 +47,20 @@ export class LifecycleClass {
     description:
       "Day when dataset will be removed from disk, assuming that is already stored on tape.",
   })
-  @Prop({ type: Date, default: Date.now(), required: false })
+  @Prop({ type: Date, default: () => new Date(), required: false })
   dateOfDiskPurging?: Date;
 
   @ApiProperty({
     type: Date,
     required: false,
     description:
-      "Day when the dataset's future fate will be evaluated again, e.g. to decide if the dataset can be deleted from archive.",
+      "Day when the dataset's future fate will be evaluated again, e.g. to decide if the dataset can be deleted from archive. Not set when the data is retained indefinitely.",
   })
   @Prop({
     type: Date,
     default: function retentionTime() {
-      const now = new Date();
-      return new Date(
-        now.getFullYear() + Number(process.env.POLICY_RETENTION_SHIFT || 0),
-        now.getMonth(),
-        now.getDay(),
-      );
+      const years = getPolicyRetentionShiftInYears();
+      return years < 0 ? undefined : todayShiftedByYears(years);
     },
     required: false,
   })
@@ -74,12 +75,7 @@ export class LifecycleClass {
   @Prop({
     type: Date,
     default: function publishingDate() {
-      const now = new Date();
-      return new Date(
-        now.getFullYear() + Number(process.env.POLICY_PUBLICATION_SHIFT || 0),
-        now.getMonth(),
-        now.getDay(),
-      );
+      return todayShiftedByYears(getPolicyPublicationShiftInYears());
     },
     required: false,
   })
@@ -90,7 +86,7 @@ export class LifecycleClass {
     required: false,
     description: "Day when dataset was published.",
   })
-  @Prop({ type: Date, default: Date.now(), required: false })
+  @Prop({ type: Date, default: () => new Date(), required: false })
   publishedOn?: Date;
 
   @ApiProperty({
