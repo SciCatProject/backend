@@ -16,13 +16,17 @@ keywords = [
 
 // Computes the sum of all datasets size in DataCite format
 async function computeTotalSize(ctx) {
-  const datasets = await ctx.datasetsService.findAll({
-    where: {
-      $or: ctx.publishedData.datasetPids.map((p) => ({
-        pid: p,
-      })),
-    },
-  });
+  const datasetPids = ctx.publishedData.datasetPids ?? [];
+  const datasets =
+    datasetPids.length === 0
+      ? []
+      : await ctx.datasetsService.findAll({
+          where: {
+            $or: datasetPids.map((p) => ({
+              pid: p,
+            })),
+          },
+        });
 
   return () => {
     if (!datasets) return;

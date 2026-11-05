@@ -100,15 +100,47 @@ export class PublishedData extends QueryableClass {
   @Prop({ type: Number, required: false })
   sizeOfArchive?: number;
 
+  // ========== RESOURCE ID ARRAYS (ALL OPTIONAL FOR v4) ==========
+
   @ApiProperty({
     type: [String],
-    required: true,
+    required: false,
     description:
-      "Array of one or more Dataset persistent identifier (pid) values that" +
-      " make up the published data.",
+      "Array of Dataset persistent identifier (pid) values that make up the published data.",
+    example: ["dataset1", "dataset2"],
   })
-  @Prop({ type: [String], required: true })
-  datasetPids: string[];
+  @Prop({ type: [String], required: false, default: [] })
+  datasetPids?: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of Proposal persistent identifier (pid) values associated with the published data.",
+    example: ["proposal123", "proposal456"],
+  })
+  @Prop({ type: [String], required: false, default: [] })
+  proposalIds?: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of Sample persistent identifier (pid) values associated with the published data.",
+    example: ["sample789", "sample012"],
+  })
+  @Prop({ type: [String], required: false, default: [] })
+  sampleIds?: string[];
+
+  @ApiProperty({
+    type: [String],
+    required: false,
+    description:
+      "Array of Instrument persistent identifier (pid) values associated with the published data.",
+    example: ["instrumentA", "instrumentB"],
+  })
+  @Prop({ type: [String], required: false, default: [] })
+  instrumentIds?: string[];
 
   @ApiProperty({
     type: Date,
@@ -145,3 +177,9 @@ export class PublishedData extends QueryableClass {
 export const PublishedDataSchema = SchemaFactory.createForClass(PublishedData);
 
 PublishedDataSchema.index({ "$**": "text" });
+
+// Add indexes for performance on ID fields
+PublishedDataSchema.index({ datasetPids: 1 });
+PublishedDataSchema.index({ proposalIds: 1 });
+PublishedDataSchema.index({ sampleIds: 1 });
+PublishedDataSchema.index({ instrumentIds: 1 });

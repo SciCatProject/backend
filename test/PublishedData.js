@@ -1,868 +1,485 @@
 "use strict";
+
 const utils = require("./LoginUtils");
 const { TestData } = require("./TestData");
-const sandbox = require("sinon").createSandbox();
 
-let accessTokenArchiveManager = null,
-  accessTokenAdminIngestor = null,
-  idOrigDatablock = null,
-  pid = null,
-  pidnonpublic = null,
-  attachmentId = null,
-  doi = null;
+const clone = (value) => JSON.parse(JSON.stringify(value));
 
-const publishedData = { ...TestData.PublishedData };
+const datasetPath = (pid) => `/api/v3/Datasets/${encodeURIComponent(pid)}`;
+const publishedDataPath = (doi) =>
+  `/api/v3/PublishedData/${encodeURIComponent(doi)}`;
 
-const defaultStatus = "pending_registration";
-
-const origDataBlock = { ...TestData.OrigDataBlockCorrect1 };
-
-const testdataset = {
-  ...TestData.RawCorrect,
-  isPublished: true,
+const requestWithToken = (method, path, token) => {
+  const req = request(appUrl)[method](path).set("Accept", "application/json");
+  return token ? req.set({ Authorization: `Bearer ${token}` }) : req;
 };
 
-const nonpublictestdataset = {
-  ...TestData.RawCorrect,
-  ownerGroup: "examplenonpublicgroup",
-};
+describe("1600: PublishedData v3 lifecycle", () => {
+  let accessTokenAdmin;
+  let accessTokenAdminIngestor;
+  let accessTokenArchiveManager;
+  let accessTokenUser1;
+  let accessTokenUser2;
+  let associatedDatasetPids = [];
+  let unrelatedDatasetPid;
+  let publishedDataDoi;
 
-describe("1600: PublishedData: Test of access to published data", () => {
+  const createDataset = async (payload) => {
+    const response = await requestWithToken(
+      "post",
+      "/api/v3/Datasets",
+      accessTokenAdminIngestor,
+    )
+      .send(payload)
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/);
+
+    response.body.should.have.property("pid").and.be.string;
+    return response.body.pid;
+  };
+
+  const expectDatasetAccessible = async (pid, token) => {
+    const response = await requestWithToken(
+      "get",
+      datasetPath(pid),
+      token,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    response.body.should.have.property("pid").and.equal(pid);
+    return response.body;
+  };
+
+  const expectDatasetInaccessible = async (pid, token) => {
+    await requestWithToken("get", datasetPath(pid), token).expect(
+      TestData.AccessForbiddenStatusCode,
+    );
+  };
+
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("PublishedData").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("PublishedData").deleteMany({});
 
+    accessTokenAdmin = await utils.getToken(appUrl, {
+      username: "admin",
+      password: TestData.Accounts.admin.password,
+    });
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
-      password: TestData.Accounts["adminIngestor"]["password"],
+      password: TestData.Accounts.adminIngestor.password,
     });
-
     accessTokenArchiveManager = await utils.getToken(appUrl, {
       username: "archiveManager",
-      password: TestData.Accounts["archiveManager"]["password"],
+      password: TestData.Accounts.archiveManager.password,
+    });
+    accessTokenUser1 = await utils.getToken(appUrl, {
+      username: "user1",
+      password: TestData.Accounts.user1.password,
+    });
+    accessTokenUser2 = await utils.getToken(appUrl, {
+      username: "user2",
+      password: TestData.Accounts.user2.password,
     });
   });
 
-  afterEach((done) => {
-    sandbox.restore();
-    done();
+  after(async () => {
+    if (publishedDataDoi) {
+      await requestWithToken(
+        "delete",
+        publishedDataPath(publishedDataDoi),
+        accessTokenArchiveManager,
+      ).expect(TestData.SuccessfulDeleteStatusCode);
+    }
+
+    for (const pid of [...associatedDatasetPids, unrelatedDatasetPid]) {
+      if (pid) {
+        await requestWithToken(
+          "delete",
+          datasetPath(pid),
+          accessTokenArchiveManager,
+        ).expect(TestData.SuccessfulDeleteStatusCode);
+      }
+    }
   });
 
-  it("0010: adds a published data", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData")
-      .send(publishedData)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+  it("0010: rejects published data without associated datasets", async () => {
+    const payload = {
+      ...clone(TestData.PublishedData),
+      pidArray: [],
+      title: "Published data without associated datasets",
+    };
+
+    await requestWithToken(
+      "post",
+      "/api/v3/PublishedData",
+      accessTokenAdminIngestor,
+    )
+      .send(payload)
+      .expect(TestData.BadRequestStatusCode)
+      .expect("Content-Type", /json/);
+
+    const records = await db
+      .collection("PublishedData")
+      .find({ title: payload.title })
+      .toArray();
+    records.should.have.length(0);
+  });
+
+  it("0020: creates the first associated dataset", async () => {
+    const payload = {
+      ...clone(TestData.RawCorrect),
+      datasetName: "published-data-test-dataset-1",
+    };
+
+    const pid = await createDataset(payload);
+    associatedDatasetPids.push(pid);
+
+    const dataset = await expectDatasetAccessible(
+      pid,
+      accessTokenAdminIngestor,
+    );
+    dataset.should.have.property("isPublished").and.equal(false);
+  });
+
+  it("0030: creates the second associated dataset", async () => {
+    const payload = {
+      ...clone(TestData.RawCorrect),
+      datasetName: "published-data-test-dataset-2",
+    };
+
+    const pid = await createDataset(payload);
+    associatedDatasetPids.push(pid);
+    associatedDatasetPids.should.have.length(2);
+    associatedDatasetPids[0].should.not.equal(associatedDatasetPids[1]);
+
+    const dataset = await expectDatasetAccessible(
+      pid,
+      accessTokenAdminIngestor,
+    );
+    dataset.should.have.property("isPublished").and.equal(false);
+  });
+
+  it("0040: creates a third restricted dataset outside the record", async () => {
+    const payload = {
+      ...clone(TestData.RawCorrect),
+      datasetName: "published-data-test-dataset-3-restricted",
+      ownerGroup: "examplenonpublicgroup",
+      accessGroups: [],
+    };
+
+    unrelatedDatasetPid = await createDataset(payload);
+    const dataset = await expectDatasetAccessible(
+      unrelatedDatasetPid,
+      accessTokenAdminIngestor,
+    );
+    dataset.should.have.property("isPublished").and.equal(false);
+  });
+
+  it("0050: creates published data referencing only the first two datasets", async () => {
+    const payload = {
+      ...clone(TestData.PublishedData),
+      pidArray: [...associatedDatasetPids],
+      title: "Published data with two associated datasets",
+    };
+
+    const response = await requestWithToken(
+      "post",
+      "/api/v3/PublishedData",
+      accessTokenAdminIngestor,
+    )
+      .send(payload)
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have
-          .property("affiliation")
-          .and.equal(publishedData.affiliation);
-        res.body.should.have
-          .property("creator")
-          .and.deep.equal(publishedData.creator);
-        res.body.should.have
-          .property("publisher")
-          .and.equal(publishedData.publisher);
-        res.body.should.have
-          .property("publicationYear")
-          .and.equal(publishedData.publicationYear);
-        res.body.should.have.property("title").and.equal(publishedData.title);
-        res.body.should.have.property("url").and.equal(publishedData.url);
-        res.body.should.have
-          .property("abstract")
-          .and.equal(publishedData.abstract);
-        res.body.should.have
-          .property("dataDescription")
-          .and.equal(publishedData.dataDescription);
-        res.body.should.have
-          .property("resourceType")
-          .and.equal(publishedData.resourceType);
-        res.body.should.have
-          .property("numberOfFiles")
-          .and.equal(publishedData.numberOfFiles);
-        res.body.should.have
-          .property("sizeOfArchive")
-          .and.equal(publishedData.sizeOfArchive);
-        res.body.should.have
-          .property("pidArray")
-          .and.deep.equal(publishedData.pidArray);
-        res.body.should.have
-          .property("authors")
-          .and.deep.equal(publishedData.authors);
-        res.body.should.have
-          .property("scicatUser")
-          .and.equal(publishedData.scicatUser);
-        res.body.should.have
-          .property("thumbnail")
-          .and.equal(publishedData.thumbnail);
-        res.body.should.have
-          .property("relatedPublications")
-          .and.deep.equal(publishedData.relatedPublications);
-        res.body.should.have
-          .property("downloadLink")
-          .and.equal(publishedData.downloadLink);
-        res.body.should.have.property("status").and.equal(publishedData.status);
-        doi = encodeURIComponent(res.body["doi"]);
-      });
+      .expect("Content-Type", /json/);
+
+    response.body.should.have
+      .property("pidArray")
+      .and.deep.equal(associatedDatasetPids);
+    response.body.pidArray.should.not.include(unrelatedDatasetPid);
+    response.body.should.have
+      .property("status")
+      .and.equal("pending_registration");
+    response.body.should.have.property("doi").and.be.string;
+    publishedDataDoi = response.body.doi;
   });
 
-  it("0015: adds a published data without specifying a status should assign the default status", async () => {
-    delete publishedData.status;
-    return request(appUrl)
-      .post("/api/v3/PublishedData")
-      .send({ ...publishedData, creator: ["New Creator"] })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+  it("0055: accepts a legacy scalar pidArray and returns it as an array", async () => {
+    const payload = {
+      ...clone(TestData.PublishedData),
+      pidArray: "legacy-scalar-dataset-pid",
+      title: "Published data with scalar legacy pidArray",
+    };
+
+    const response = await requestWithToken(
+      "post",
+      "/api/v3/PublishedData",
+      accessTokenAdminIngestor,
+    )
+      .send(payload)
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("status").and.equal(defaultStatus);
-      });
+      .expect("Content-Type", /json/);
+
+    response.body.should.have
+      .property("pidArray")
+      .and.deep.equal([payload.pidArray]);
+
+    await requestWithToken(
+      "delete",
+      publishedDataPath(response.body.doi),
+      accessTokenArchiveManager,
+    ).expect(TestData.SuccessfulDeleteStatusCode);
   });
 
-  it("0020: should fetch this new published data without authorization", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .expect(TestData.NotFoundStatusCode)
+  it("0060: allows the dataset owner to access both associated datasets before registration", async () => {
+    for (const pid of associatedDatasetPids) {
+      const dataset = await expectDatasetAccessible(
+        pid,
+        accessTokenAdminIngestor,
+      );
+      dataset.should.have.property("isPublished").and.equal(false);
+    }
+  });
+
+  it("0070: allows an admin to access both associated datasets before registration", async () => {
+    for (const pid of associatedDatasetPids) {
+      const dataset = await expectDatasetAccessible(pid, accessTokenAdmin);
+      dataset.should.have.property("isPublished").and.equal(false);
+    }
+  });
+
+  it("0080: rejects regular users without dataset permission before registration", async () => {
+    for (const token of [accessTokenUser1, accessTokenUser2]) {
+      for (const pid of [...associatedDatasetPids, unrelatedDatasetPid]) {
+        await expectDatasetInaccessible(pid, token);
+      }
+    }
+  });
+
+  it("0090: rejects anonymous access to unpublished datasets before registration", async () => {
+    for (const pid of [...associatedDatasetPids, unrelatedDatasetPid]) {
+      await expectDatasetInaccessible(pid);
+    }
+  });
+
+  it("0100: rejects unauthorized access to the third dataset before registration", async () => {
+    for (const token of [accessTokenUser1, accessTokenUser2]) {
+      await expectDatasetInaccessible(unrelatedDatasetPid, token);
+    }
+    await expectDatasetInaccessible(unrelatedDatasetPid);
+  });
+
+  it("0110: allows the owner to retrieve private published data", async () => {
+    const response = await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+      accessTokenAdminIngestor,
+    )
+      .expect(TestData.SuccessfulGetStatusCode)
+      .expect("Content-Type", /json/);
+
+    response.body.should.have
+      .property("pidArray")
+      .and.deep.equal(associatedDatasetPids);
+    response.body.should.have
+      .property("status")
+      .and.equal("pending_registration");
+  });
+
+  it("0120: allows an admin to retrieve private published data", async () => {
+    await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+      accessTokenAdmin,
+    )
+      .expect(TestData.SuccessfulGetStatusCode)
       .expect("Content-Type", /json/);
   });
 
-  it("0030: should fetch this new published data", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("publisher").and.equal("ESS");
-        res.body.should.have
-          .property("status")
-          .and.equal("pending_registration");
-      });
+  it("0130: rejects anonymous access to private published data", async () => {
+    await requestWithToken("get", publishedDataPath(publishedDataDoi)).expect(
+      TestData.NotFoundStatusCode,
+    );
   });
 
-  // NOTE: This is added because we need dataset for registering published data
-  it("0040: adds a new raw dataset", async () => {
-    return request(appUrl)
-      .post("/api/v3/Datasets")
-      .send(testdataset)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        // store link to this dataset in datablocks
-        pid = encodeURIComponent(res.body["pid"]);
-        publishedData.pidArray.push(res.body["pid"]);
-        origDataBlock.datasetId = res.body["pid"];
-        origDataBlock.ownerGroup = res.body.ownerGroup;
-      });
-  });
-
-  it("0050: should register this new published data", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData/" + doi + "/register")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+  it("0140: registers the published data through the configured DataCite test service", async () => {
+    const registerUrl = `${publishedDataPath(publishedDataDoi)}/register`;
+    console.log(registerUrl);
+    await requestWithToken("post", registerUrl, accessTokenAdminIngestor)
       .expect(TestData.SuccessfulPostStatusCode)
       .expect("Content-Type", /json/);
   });
 
-  it("0060: should fetch this new published data", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("status").and.equal("registered");
-      });
+  it("0150: verifies the published data is registered", async () => {
+    const response = await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    response.body.should.have.property("status").and.equal("registered");
   });
 
-  it("0061: should fetch this new published data without authentication", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("status").and.equal("registered");
-      });
+  it("0160: allows anonymous users to retrieve registered published data", async () => {
+    const response = await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    response.body.should.have.property("status").and.equal("registered");
   });
 
-  it("0062: should fetch all published data", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.length.should.equal(2);
-      });
+  it("0165: lists and counts registered published data for authenticated users", async () => {
+    const listResponse = await requestWithToken(
+      "get",
+      "/api/v3/PublishedData",
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    listResponse.body.should.be.instanceof(Array);
+    listResponse.body.should.have.length(1);
+    listResponse.body[0].should.have
+      .property("doi")
+      .and.equal(publishedDataDoi);
+
+    const countResponse = await requestWithToken(
+      "get",
+      "/api/v3/PublishedData/count",
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    countResponse.body.should.have.property("count").and.equal(1);
   });
 
-  it("0063: should fetch all published data without authentication", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.length.should.equal(1);
-      });
+  it("0166: lists and counts only registered published data anonymously", async () => {
+    const listResponse = await requestWithToken(
+      "get",
+      "/api/v3/PublishedData",
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    listResponse.body.should.be.instanceof(Array);
+    listResponse.body.should.have.length(1);
+
+    const countResponse = await requestWithToken(
+      "get",
+      "/api/v3/PublishedData/count",
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    countResponse.body.should.have.property("count").and.equal(1);
   });
 
-  it("0064: should count all published data", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/count")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.count.should.equal(2);
-      });
-  });
+  it("0167: supports V3 filters through the query and header", async () => {
+    const filter = { where: { creator: "ESS" } };
 
-  it("0065: should count all published data without authentication", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/count")
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.count.should.equal(1);
-      });
-  });
+    const queryResponse = await requestWithToken(
+      "get",
+      `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
 
-  it("0066: should fetch published data with filter", async () => {
-    const filter = { where: { creator: "New Creator" } };
-    await request(appUrl)
-      .get(
-        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
-      )
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.length.should.equal(1);
-        res.body[0].should.have
-          .property("creator")
-          .and.deep.equal(["New Creator"]);
-        res.body[0].should.have.property("thumbnail");
-      });
-    return request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
+    queryResponse.body.should.have.length(1);
+    queryResponse.body[0].should.have
+      .property("creator")
+      .and.deep.equal(["ESS"]);
+
+    const headerResponse = await requestWithToken(
+      "get",
+      "/api/v3/PublishedData",
+      accessTokenAdminIngestor,
+    )
       .set({ filter: JSON.stringify(filter) })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.length.should.equal(1);
-        res.body[0].should.have
-          .property("creator")
-          .and.deep.equal(["New Creator"]);
-        res.body[0].should.have.property("thumbnail");
-      });
+      .expect(TestData.SuccessfulGetStatusCode);
+
+    headerResponse.body.should.have.length(1);
+    headerResponse.body[0].should.have
+      .property("creator")
+      .and.deep.equal(["ESS"]);
   });
 
-  it("0067: should fetch published data excluding thumbnail using list", async () => {
-    const filter = {
-      where: { creator: "New Creator" },
-      fields: { thumbnail: 0, creator: 1 },
-    };
-    return request(appUrl)
-      .get(
-        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
-      )
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body[0].should.have.property("creator");
-        res.body[0].should.not.have.property("thumbnail");
-      });
+  it("0168: supports V3 field projection for list responses", async () => {
+    const objectFieldsResponse = await requestWithToken(
+      "get",
+      `/api/v3/PublishedData?filter=${encodeURIComponent(
+        JSON.stringify({ fields: { creator: 1 } }),
+      )}`,
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    objectFieldsResponse.body[0].should.have.property("creator");
+    objectFieldsResponse.body[0].should.not.have.property("thumbnail");
+
+    const arrayFieldsResponse = await requestWithToken(
+      "get",
+      `/api/v3/PublishedData?filter=${encodeURIComponent(
+        JSON.stringify({ fields: ["creator"] }),
+      )}`,
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
+
+    arrayFieldsResponse.body[0].should.have.property("creator");
+    arrayFieldsResponse.body[0].should.not.have.property("thumbnail");
   });
 
-  it("0068: should fetch published data including creator only", async () => {
-    const filter = { where: { creator: "New Creator" } };
-    filter.fields = { creator: 1 };
-    await request(appUrl)
-      .get(
-        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
-      )
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body[0].should.have.property("creator");
-        res.body[0].should.not.have.property("thumbnail");
-      });
-    filter.fields = ["creator"];
-    return request(appUrl)
-      .get(
-        `/api/v3/PublishedData?filter=${encodeURIComponent(JSON.stringify(filter))}`,
-      )
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body[0].should.have.property("creator");
-        res.body[0].should.not.have.property("thumbnail");
-      });
+  it("0170: allows the owner to retrieve registered published data", async () => {
+    await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+      accessTokenAdminIngestor,
+    ).expect(TestData.SuccessfulGetStatusCode);
   });
 
-  // NOTE: This one was commented in the old backend as well
-  // it("should resync this new published data", async (done) => {
-  //   return request(appUrl)
-  //     .post("/api/v3/PublishedData/" + doi + "/resync")
-  //     .send(modifiedPublishedData)
-  //     .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-  //     .set("Accept", "application/json")
-  //     .expect(201)
-  //     .expect("Content-Type", /json/)
-  //     .then((res, err) => {
-  //       if (err) {
-  //         return done(err);
-  //       }
-
-  //       done();
-  //     });
-  // });
-
-  it("0070: should fetch this new published data", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/);
+  it("0180: allows an admin to retrieve registered published data", async () => {
+    await requestWithToken(
+      "get",
+      publishedDataPath(publishedDataDoi),
+      accessTokenAdmin,
+    ).expect(TestData.SuccessfulGetStatusCode);
   });
 
-  it("0080: adds a new nonpublic dataset", async () => {
-    return request(appUrl)
-      .post("/api/v3/Datasets")
-      .send(nonpublictestdataset)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("isPublished").and.equal(false);
-        res.body.should.have.property("pid").and.be.string;
-        res.body.should.have.property("datasetName").and.be.string;
-        pidnonpublic = encodeURIComponent(res.body["pid"]);
-      });
+  it("0190: allows regular users to retrieve registered published data", async () => {
+    for (const token of [accessTokenUser1, accessTokenUser2]) {
+      await requestWithToken(
+        "get",
+        publishedDataPath(publishedDataDoi),
+        token,
+      ).expect(TestData.SuccessfulGetStatusCode);
+    }
   });
 
-  it("0090: should delete this published data", async () => {
-    return request(appUrl)
-      .delete("/api/v3/PublishedData/" + doi)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
-      .expect("Content-Type", /json/);
+  it("0200: allows anonymous users to access both associated datasets after registration", async () => {
+    for (const pid of associatedDatasetPids) {
+      const dataset = await expectDatasetAccessible(pid);
+      dataset.should.have.property("isPublished").and.equal(true);
+    }
   });
 
-  it("0100: should fetch this new dataset", async () => {
-    return request(appUrl)
-      .get("/api/v3/Datasets/" + pid)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("isPublished").and.equal(true);
-      });
+  it("0210: allows the owner to access both associated datasets after registration", async () => {
+    for (const pid of associatedDatasetPids) {
+      const dataset = await expectDatasetAccessible(
+        pid,
+        accessTokenAdminIngestor,
+      );
+      dataset.should.have.property("isPublished").and.equal(true);
+    }
   });
 
-  it("0110: should fetch the non public dataset as ingestor", async () => {
-    return request(appUrl)
-      .get("/api/v3/Datasets/" + pidnonpublic)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("isPublished").and.equal(false);
-      });
+  it("0220: allows an admin to access both associated datasets after registration", async () => {
+    for (const pid of associatedDatasetPids) {
+      const dataset = await expectDatasetAccessible(pid, accessTokenAdmin);
+      dataset.should.have.property("isPublished").and.equal(true);
+    }
   });
 
-  it("0120: adds a new origDatablock", async () => {
-    return request(appUrl)
-      .post("/api/v3/OrigDatablocks")
-      .send(origDataBlock)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("size").and.equal(41780189);
-        res.body.should.have.property("id").and.be.string;
-        idOrigDatablock = res.body["id"];
-      });
+  it("0230: allows regular users to access both associated datasets after registration", async () => {
+    for (const token of [accessTokenUser1, accessTokenUser2]) {
+      for (const pid of associatedDatasetPids) {
+        const dataset = await expectDatasetAccessible(pid, token);
+        dataset.should.have.property("isPublished").and.equal(true);
+      }
+    }
   });
 
-  it("0130: should add a new attachment to this dataset", async () => {
-    const testAttachment = {
-      thumbnail: "data/abc123",
-      caption: "Some caption",
-      datasetId: decodeURIComponent(pid),
-      ownerGroup: testdataset.ownerGroup,
-      accessGroups: ["loki", "odin"],
-    };
-    return request(appUrl)
-      .post("/api/v3/Datasets/" + pid + "/attachments")
-      .send(testAttachment)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have
-          .property("thumbnail")
-          .and.equal(testAttachment.thumbnail);
-        res.body.should.have
-          .property("caption")
-          .and.equal(testAttachment.caption);
-        res.body.should.have
-          .property("ownerGroup")
-          .and.equal(testAttachment.ownerGroup);
-        res.body.should.have.property("accessGroups");
-        res.body.should.have.property("createdBy");
-        res.body.should.have.property("updatedBy").and.be.string;
-        res.body.should.have.property("createdAt");
-        res.body.should.have.property("id").and.be.string;
-        res.body.should.have
-          .property("datasetId")
-          .and.equal(testAttachment.datasetId);
-        attachmentId = res.body["id"];
-      });
-  });
-
-  // NOTE: Getting dataset attachment by id is missing but we modify the test little bit and check if created attachment is part of the array of attachments returned by /datasets/{id}/attachments
-  it("0140: should fetch this dataset attachment", async () => {
-    return request(appUrl)
-      .get("/api/v3/Datasets/" + pid + "/attachments")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.length(1);
-        res.body[0].should.have.property("id").and.equal(attachmentId);
-      });
-  });
-
-  it("0150: should fetch some published datasets anonymously", async () => {
-    var fields = {
-      ownerGroup: ["p13388"],
-    };
-    var limits = {
-      skip: 0,
-      limit: 2,
-    };
-    return request(appUrl)
-      .get(
-        "/api/v3/Datasets/fullquery" +
-          "?fields=" +
-          encodeURIComponent(JSON.stringify(fields)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
-      )
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body[0].should.have.property("isPublished").and.equal(true);
-      });
-  });
-
-  it("0160: should fail to fetch non-public dataset anonymously", async () => {
-    var fields = {
-      ownerGroup: [nonpublictestdataset.ownerGroup],
-    };
-    var limits = {
-      skip: 0,
-      limit: 2,
-    };
-    return request(appUrl)
-      .get(
-        "/api/v3/Datasets/fullquery" +
-          "?fields=" +
-          encodeURIComponent(JSON.stringify(fields)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
-      )
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.be.instanceof(Array).and.to.have.length(0);
-      });
-  });
-
-  it("0170: should fetch one dataset including related data anonymously", async () => {
-    var limits = {
-      skip: 0,
-      limit: 2,
-    };
-    var filter = {
-      where: {
-        ownerGroup: "p13388",
-      },
-      include: [
-        {
-          relation: "origdatablocks",
-        },
-        {
-          relation: "datablocks",
-        },
-        {
-          relation: "attachments",
-        },
-      ],
-    };
-
-    return request(appUrl)
-      .get(
-        "/api/v3/Datasets/findOne" +
-          "?filter=" +
-          encodeURIComponent(JSON.stringify(filter)) +
-          "&limits=" +
-          encodeURIComponent(JSON.stringify(limits)),
-      )
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.origdatablocks[0].should.have
-          .property("ownerGroup")
-          .and.equal("p13388");
-      });
-  });
-
-  it("0180: should delete this dataset attachment", async () => {
-    return request(appUrl)
-      .delete("/api/v3/Datasets/" + pid + "/attachments/" + attachmentId)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
-      .expect(TestData.SuccessfulDeleteStatusCode);
-  });
-
-  it("0190: should delete a OrigDatablock", async () => {
-    return request(appUrl)
-      .delete("/api/v3/OrigDatablocks/" + idOrigDatablock)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("id").and.equal(idOrigDatablock);
-      });
-  });
-
-  it("0200: should delete the nonpublic dataset", async () => {
-    return request(appUrl)
-      .delete("/api/v3/Datasets/" + pidnonpublic)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0210: should delete this dataset", async () => {
-    return request(appUrl)
-      .delete("/api/v3/Datasets/" + pid)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenArchiveManager}` })
-      .expect(TestData.SuccessfulDeleteStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0220: should return 404", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/non-existing-id")
-      .set("Accept", "application/json")
-      .expect(TestData.NotFoundStatusCode)
-      .expect("Content-Type", /json/);
-  });
-});
-
-describe("1601: PublishedData: Test of access scope and update guard on v3 endpoints", () => {
-  let accessTokenAdmin = null,
-    accessTokenUser1 = null,
-    accessTokenUser2 = null,
-    doiUser1 = null,
-    doiUser1Registered = null,
-    doiAdminRegistered = null;
-
-  const user1PublishedData = {
-    ...TestData.PublishedData,
-    pidArray: [],
-    title: "User1 published data",
-  };
-
-  before(async () => {
-    db.collection("PublishedData").deleteMany({});
-
-    accessTokenAdmin = await utils.getToken(appUrl, {
-      username: "admin",
-      password: TestData.Accounts["admin"]["password"],
-    });
-
-    accessTokenUser1 = await utils.getToken(appUrl, {
-      username: "user1",
-      password: TestData.Accounts["user1"]["password"],
-    });
-
-    accessTokenUser2 = await utils.getToken(appUrl, {
-      username: "user2",
-      password: TestData.Accounts["user2"]["password"],
-    });
-  });
-
-  afterEach((done) => {
-    sandbox.restore();
-    done();
-  });
-
-  it("0010: adds a published data as user1", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData")
-      .send(user1PublishedData)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("status").and.equal(defaultStatus);
-        doiUser1 = encodeURIComponent(res.body["doi"]);
-      });
-  });
-
-  it("0020: should fetch the published data as its owner", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doiUser1)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have
-          .property("title")
-          .and.equal(user1PublishedData.title);
-      });
-  });
-
-  it("0030: should not fetch the published data of another user in private state", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doiUser1)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.NotFoundStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0040: should fetch the published data of another user as admin", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doiUser1)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0050: should not list or count the published data of another user in private state", async () => {
-    await request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.be.instanceof(Array).and.to.have.length(0);
-      });
-    return request(appUrl)
-      .get("/api/v3/PublishedData/count")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.count.should.equal(0);
-      });
-  });
-
-  it("0060: should list and count own published data in private state", async () => {
-    await request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.be.instanceof(Array).and.to.have.length(1);
-        res.body[0].should.have
-          .property("title")
-          .and.equal(user1PublishedData.title);
-      });
-    return request(appUrl)
-      .get("/api/v3/PublishedData/count")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.count.should.equal(1);
-      });
-  });
-
-  it("0070: should not update the published data of another user", async () => {
-    await request(appUrl)
-      .patch("/api/v3/PublishedData/" + doiUser1)
-      .send({ title: "Updated by user2" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.NotFoundStatusCode)
-      .expect("Content-Type", /json/);
-    return request(appUrl)
-      .get("/api/v3/PublishedData/" + doiUser1)
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.SuccessfulGetStatusCode)
-      .then((res) => {
-        res.body.should.have
-          .property("title")
-          .and.equal(user1PublishedData.title);
-      });
-  });
-
-  it("0080: should update own published data in private state", async () => {
-    return request(appUrl)
-      .patch("/api/v3/PublishedData/" + doiUser1)
-      .send({ title: "Updated by user1" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.SuccessfulPatchStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("title").and.equal("Updated by user1");
-      });
-  });
-
-  it("0090: should not register the published data of another user", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData/" + doiUser1 + "/register")
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.NotFoundStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0100: should not resync the published data of another user", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData/" + doiUser1 + "/resync")
-      .send({ ...user1PublishedData, title: "Resynced by user2" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser2}` })
-      .expect(TestData.NotFoundStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0110: adds a published data in registered state as user1", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData")
-      .send({
-        ...user1PublishedData,
-        title: "User1 registered published data",
-        status: "registered",
-      })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("status").and.equal("registered");
-        doiUser1Registered = encodeURIComponent(res.body["doi"]);
-      });
-  });
-
-  it("0120: should not update own published data that is not in private state", async () => {
-    return request(appUrl)
-      .patch("/api/v3/PublishedData/" + doiUser1Registered)
-      .send({ title: "Updated by user1" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenUser1}` })
-      .expect(TestData.BadRequestStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0130: adds a published data in registered state as admin", async () => {
-    return request(appUrl)
-      .post("/api/v3/PublishedData")
-      .send({
-        ...user1PublishedData,
-        title: "Admin registered published data",
-        status: "registered",
-      })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        doiAdminRegistered = encodeURIComponent(res.body["doi"]);
-      });
-  });
-
-  it("0140: should not update a registered published data as admin", async () => {
-    return request(appUrl)
-      .patch("/api/v3/PublishedData/" + doiAdminRegistered)
-      .send({ title: "Updated by admin" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.BadRequestStatusCode)
-      .expect("Content-Type", /json/);
-  });
-
-  it("0150: should update the published data of another user in private state as admin", async () => {
-    return request(appUrl)
-      .patch("/api/v3/PublishedData/" + doiUser1)
-      .send({ title: "Updated by admin" })
-      .set("Accept", "application/json")
-      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
-      .expect(TestData.SuccessfulPatchStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.have.property("title").and.equal("Updated by admin");
-      });
-  });
-
-  it("0160: should only expose registered published data anonymously", async () => {
-    return request(appUrl)
-      .get("/api/v3/PublishedData")
-      .set("Accept", "application/json")
-      .expect(TestData.SuccessfulGetStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        res.body.should.be.instanceof(Array).and.to.have.length(2);
-        res.body.forEach((publishedDataItem) => {
-          publishedDataItem.should.have
-            .property("status")
-            .and.equal("registered");
-        });
-      });
+  it("0240: keeps the third dataset inaccessible after registration", async () => {
+    for (const token of [accessTokenUser1, accessTokenUser2]) {
+      await expectDatasetInaccessible(unrelatedDatasetPid, token);
+    }
+    await expectDatasetInaccessible(unrelatedDatasetPid);
   });
 });

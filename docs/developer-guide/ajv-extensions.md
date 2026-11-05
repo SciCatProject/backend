@@ -59,13 +59,17 @@ export const dynamicDefaults = new Map([
     async (ctx) => {
       // Make async DB access
       // This will be executed by the ValidatorService
-      const datasets = await ctx.datasetsService.findAll({
-        where: {
-          $or: ctx.publishedData.datasetPids.map((p) => ({
-            pid: p,
-          })),
-        },
-      });
+      const datasetPids = ctx.publishedData.datasetPids ?? [];
+      const datasets =
+        datasetPids.length === 0
+          ? []
+          : await ctx.datasetsService.findAll({
+              where: {
+                $or: datasetPids.map((p) => ({
+                  pid: p,
+                })),
+              },
+            });
 
       // Return a synchronous function processing data fetched from the DB
       // This will be executed by ajv
