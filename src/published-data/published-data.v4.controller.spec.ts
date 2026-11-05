@@ -1,11 +1,15 @@
 import { HttpService } from "@nestjs/axios";
+import { HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
+import { Request } from "express";
+import { throwError } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
 import { ProposalsService } from "src/proposals/proposals.service";
+import { PublishedDataStatus } from "./interfaces/published-data.interface";
 import { PublishedDataService } from "./published-data.service";
 import { PublishedDataV4Controller } from "./published-data.v4.controller";
 import { PublishedData } from "./schemas/published-data.schema";
@@ -14,30 +18,44 @@ import { ValidatorService } from "./validator.service";
 class AttachmentsServiceMock {}
 
 class DatasetsServiceMock {}
-class DatasetsControllerMock {}
+class DatasetsControllerMock {
+  findByIdAndUpdate = jest.fn().mockResolvedValue({});
+}
 
-class HttpServiceMock {}
+class HttpServiceMock {
+  request = jest.fn();
+}
 
 class ProposalsServiceMock {}
 
-class PublishedDataServiceMock {}
+class PublishedDataServiceMock {
+  findOne = jest.fn();
+  update = jest.fn();
+}
 
-class CaslAbilityFactoryMock {}
+class CaslAbilityFactoryMock {
+  publishedDataAccess = jest.fn().mockReturnValue({ cannot: () => false });
+}
 
-class ValidatorServiceMock {}
+class ValidatorServiceMock {
+  validate = jest.fn().mockResolvedValue(undefined);
+}
+
+const defaultConfig: Record<string, unknown> = {
+  publicURLprefix: "https://doi.ess.eu/detail/",
+};
+let config: Record<string, unknown> = { ...defaultConfig };
 
 class ConfigServiceMock {
   get(key: string) {
-    const config = {
-      publicURLprefix: "https://doi.ess.eu/detail/",
-    } as Record<string, unknown>;
-
     return config[key];
   }
 }
 
 describe("PublishedDataController", () => {
   let controller: PublishedDataV4Controller;
+  let httpService: HttpServiceMock;
+  let publishedDataService: PublishedDataServiceMock;
   const defaultUrl: PublishedData = {
     doi: "10.9999/7d01b382-3198-48f8-af43-8aaa13be388a",
     _id: "",
@@ -60,6 +78,7 @@ describe("PublishedDataController", () => {
   };
 
   beforeEach(async () => {
+    config = { ...defaultConfig };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PublishedDataV4Controller],
       imports: [ConfigModule],
@@ -79,6 +98,12 @@ describe("PublishedDataController", () => {
     controller = await module.resolve<PublishedDataV4Controller>(
       PublishedDataV4Controller,
     );
+    httpService = module.get(HttpService);
+    publishedDataService = module.get(PublishedDataService);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("should be defined", () => {
@@ -106,5 +131,70 @@ describe("PublishedDataController", () => {
       "data.attributes.url",
       `${customLandingPageWithProtocol.metadata!.landingPage}${encodeURIComponent(customLandingPageWithProtocol.doi)}`,
     );
+  });
+
+  it("should throw and log an error if neither 'landingPage' nor public URL prefix is set", () => {
+    config.publicURLprefix = undefined;
+    const loggerSpy = jest.spyOn(Logger, "error").mockImplementation();
+
+    expect(() => controller.doiRegistrationJSON(defaultUrl)).toThrow(
+      HttpException,
+    );
+    expect(loggerSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "neither metadata.landingPage nor PUBLIC_URL_PREFIX is set",
+      ),
+      expect.any(String),
+    );
+  });
+
+  describe("register", () => {
+    const request = { headers: {}, user: {} } as unknown as Request;
+    const toRegister = () => ({
+      ...defaultUrl,
+      datasetPids: ["pid1"],
+      status: PublishedDataStatus.PUBLIC,
+    });
+
+    beforeEach(() => {
+      config.registerDoiUri = "https://api.datacite.test/dois";
+      config.doiUsername = "user";
+      config.doiPassword = "pass";
+    });
+
+    it("should log the DataCite error and throw FAILED_DEPENDENCY", async () => {
+      publishedDataService.findOne.mockResolvedValue(toRegister());
+      httpService.request.mockReturnValue(
+        throwError(() => ({
+          message: "Request failed with status code 422",
+          response: {
+            status: 422,
+            data: {
+              errors: [{ source: "url", title: "Can't be blank" }],
+            },
+            headers: {},
+          },
+          config: {},
+        })),
+      );
+      const loggerSpy = jest.spyOn(Logger, "error").mockImplementation();
+      jest.spyOn(Logger, "verbose").mockImplementation();
+
+      const promise = controller.register(request, defaultUrl.doi);
+
+      await expect(promise).rejects.toThrow(HttpException);
+      await promise.catch((err: HttpException) => {
+        expect(err.getStatus()).toBe(HttpStatus.FAILED_DEPENDENCY);
+      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          JSON.stringify({
+            errors: [{ source: "url", title: "Can't be blank" }],
+          }),
+        ),
+        "PublishedDataController.register",
+      );
+      expect(publishedDataService.update).not.toHaveBeenCalled();
+    });
   });
 });
