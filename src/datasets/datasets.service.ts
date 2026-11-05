@@ -60,6 +60,7 @@ import {
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
 import {
   DATASET_LOOKUP_FIELDS,
+  DATASET_RELATIONS,
   DatasetLookupKeysEnum,
 } from "./types/dataset-lookup";
 import { ProposalsService } from "src/proposals/proposals.service";
@@ -73,6 +74,10 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
+import {
+  findRelationsInWhere,
+  splitWhereByRelations,
+} from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -175,6 +180,22 @@ export class DatasetsService {
     return { scopes, relations };
   }
 
+  /**
+   * Stages matching the conditions a where has on relations: the relations
+   * it refers to are looked up, matched and removed again, independently of
+   * what is included.
+   */
+  private relationWhereStages(
+    after: FilterQuery<DatasetDocument>,
+  ): PipelineStage[] {
+    if (isEmpty(after)) return [];
+    const used = findRelationsInWhere(after, DATASET_RELATIONS);
+    const stages: PipelineStage[] = [];
+    this.addLookupFields(stages, used);
+    stages.push({ $match: after }, { $unset: used });
+    return stages;
+  }
+
   async create(createDatasetDto: CreateDatasetDto): Promise<DatasetDocument> {
     const username = (this.request.user as JWTUser).username;
     // Add version to the datasets based on the apiVersion extracted from the route path or use default one
@@ -245,8 +266,13 @@ export class DatasetsService {
       applyDefaults ? { ...filterDefaults, ...filter.limits } : filter.limits,
     );
 
+    const { before, after } = splitWhereByRelations(
+      castWhereFilter(whereFilter),
+      DATASET_RELATIONS,
+    );
     const pipeline: PipelineStage[] = [
-      { $match: castWhereFilter(whereFilter) },
+      { $match: before },
+      ...this.relationWhereStages(after),
     ];
     const addedRelations = this.addLookupFields(
       pipeline,
