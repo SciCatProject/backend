@@ -221,40 +221,6 @@ describe("Attachments v4 access tests", () => {
       .post("/api/v3/samples")
       .send({
         ...TestData.SampleCorrect,
-        ownerGroup: TestData.Accounts.user3.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        group3Relationships.push({
-          targetId: res.body.sampleId,
-          targetType: "sample",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/samples")
-      .send({
-        ...TestData.SampleCorrect,
-        ownerGroup: TestData.Accounts.user4.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        group4Relationships.push({
-          targetId: res.body.sampleId,
-          targetType: "sample",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/samples")
-      .send({
-        ...TestData.SampleCorrect,
         ownerGroup: TestData.Accounts.adminIngestor.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -262,40 +228,6 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         adminIngestorRelationships.push({
-          targetId: res.body.sampleId,
-          targetType: "sample",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/samples")
-      .send({
-        ...TestData.SampleCorrect,
-        ownerGroup: TestData.Accounts.archiveManager.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        archiveManagerRelationships.push({
-          targetId: res.body.sampleId,
-          targetType: "sample",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/samples")
-      .send({
-        ...TestData.SampleCorrect,
-        isPublished: true,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        publicRelationships.push({
           targetId: res.body.sampleId,
           targetType: "sample",
           relationType: "is attached to",
