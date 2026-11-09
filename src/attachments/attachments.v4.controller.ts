@@ -210,7 +210,7 @@ export class AttachmentsV4Controller {
               `Unauthorized to ${group} an attachment to dataset ${relation.targetId}`,
             );
           }
-          return;
+          break;
 
         case AttachmentRelationTargetType.Proposal:
           const proposal = await this.proposalService.findOne({
@@ -236,7 +236,7 @@ export class AttachmentsV4Controller {
               `Unauthorized to ${group} an attachment to proposal ${relation.targetId}`,
             );
           }
-          return;
+          break;
 
         case AttachmentRelationTargetType.PublishedData:
           const publishedData = await this.publishedDataService.findOne({
@@ -247,7 +247,7 @@ export class AttachmentsV4Controller {
               `PublishedData ${relation.targetId} not found for linking an attachment`,
             );
           }
-          return;
+          break;
 
         case AttachmentRelationTargetType.Sample:
           const sample = await this.sampleService.findOne({
@@ -273,7 +273,7 @@ export class AttachmentsV4Controller {
               `Unauthorized to ${group} an attachment to sample ${relation.targetId}`,
             );
           }
-          return;
+          break;
       }
     }
     return;
