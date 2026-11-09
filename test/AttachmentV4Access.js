@@ -148,60 +148,6 @@ describe("Attachments v4 access tests", () => {
       .send({
         ...TestData.ProposalCorrectComplete,
         proposalId: uuidv4(),
-        ownerGroup: TestData.Accounts.user1.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        group1Relationships.push({
-          targetId: res.body.proposalId,
-          targetType: "proposal",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/proposals")
-      .send({
-        ...TestData.ProposalCorrectComplete,
-        proposalId: uuidv4(),
-        ownerGroup: TestData.Accounts.user3.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        group3Relationships.push({
-          targetId: res.body.proposalId,
-          targetType: "proposal",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/proposals")
-      .send({
-        ...TestData.ProposalCorrectComplete,
-        proposalId: uuidv4(),
-        ownerGroup: TestData.Accounts.user4.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        group4Relationships.push({
-          targetId: res.body.proposalId,
-          targetType: "proposal",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/proposals")
-      .send({
-        ...TestData.ProposalCorrectComplete,
-        proposalId: uuidv4(),
         ownerGroup: TestData.Accounts.adminIngestor.role,
       })
       .auth(accessTokenAdminIngestor, { type: "bearer" })
@@ -209,41 +155,6 @@ describe("Attachments v4 access tests", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         adminIngestorRelationships.push({
-          targetId: res.body.proposalId,
-          targetType: "proposal",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/proposals")
-      .send({
-        ...TestData.ProposalCorrectComplete,
-        proposalId: uuidv4(),
-        ownerGroup: TestData.Accounts.archiveManager.role,
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        archiveManagerRelationships.push({
-          targetId: res.body.proposalId,
-          targetType: "proposal",
-          relationType: "is attached to",
-        });
-      });
-
-    await request(appUrl)
-      .post("/api/v3/proposals")
-      .send({
-        ...TestData.ProposalCorrectComplete,
-        proposalId: uuidv4(),
-      })
-      .auth(accessTokenAdminIngestor, { type: "bearer" })
-      .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/)
-      .then((res) => {
-        publicRelationships.push({
           targetId: res.body.proposalId,
           targetType: "proposal",
           relationType: "is attached to",
