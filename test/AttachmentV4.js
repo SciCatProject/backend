@@ -10,7 +10,8 @@ let accessTokenAdminIngestor = null,
   sampleId = null,
   privateAttachmentId = null,
   publicAttachmentId = null,
-  attachmentCorrect = null;
+  attachmentCorrect = null,
+  attachmentPartialWrong = null;
 
 describe("Attachments v4 endpoint functionality tests", () => {
   before(async () => {
@@ -98,6 +99,18 @@ describe("Attachments v4 endpoint functionality tests", () => {
         },
       ],
     };
+
+    attachmentPartialWrong = {
+      ...TestData.AttachmentWrongTargetV4,
+      relationships: [
+        ...TestData.AttachmentWrongTargetV4.relationships,
+        {
+          targetId: datasetId,
+          targetType: "dataset",
+          relationType: "is attached to",
+        },
+      ],
+    };
   });
 
   describe("Endpoint: POST /api/v4/attachments", () => {
@@ -130,7 +143,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
         });
     });
 
-    it("0102: should not create attachment with non-existent relation target", async () => {
+    it("0102: should not create attachment with all non-existent relation targets", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(TestData.AttachmentWrongTargetV4)
@@ -139,7 +152,16 @@ describe("Attachments v4 endpoint functionality tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0103: should not create attachment with invalid relation target type", async () => {
+    it("0103: should not create attachment with some non-existent relation targets", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments")
+        .send(attachmentPartialWrong)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.NotFoundStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0104: should not create attachment with invalid relation target type", async () => {
       return request(appUrl)
         .post("/api/v4/attachments")
         .send(TestData.AttachmentWrongTypeV4)
@@ -174,7 +196,7 @@ describe("Attachments v4 endpoint functionality tests", () => {
         });
     });
 
-    it("0202: should not validate attachment with non-existent relation target and throw", async () => {
+    it("0202: should not validate attachment with all non-existent relation targets and throw", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTargetV4)
@@ -183,7 +205,16 @@ describe("Attachments v4 endpoint functionality tests", () => {
         .expect("Content-Type", /json/);
     });
 
-    it("0203: should not validate attachment with invalid relation target type", async () => {
+    it("0203: should not validate attachment with some non-existent relation targets and throw", async () => {
+      return request(appUrl)
+        .post("/api/v4/attachments/isValid")
+        .send(attachmentPartialWrong)
+        .auth(accessTokenAdminIngestor, { type: "bearer" })
+        .expect(TestData.NotFoundStatusCode)
+        .expect("Content-Type", /json/);
+    });
+
+    it("0204: should not validate attachment with invalid relation target type", async () => {
       return request(appUrl)
         .post("/api/v4/attachments/isValid")
         .send(TestData.AttachmentWrongTypeV4)
