@@ -36,40 +36,40 @@ export const DATASET_LOOKUP_FIELDS: Record<
     $lookup: {
       from: "Instrument",
       as: "",
-      let: { instrumentIds: { $ifNull: ["$instrumentIds", []] } },
-      pipeline: [{ $match: { $expr: { $in: ["$pid", "$$instrumentIds"] } } }],
+      localField: "instrumentIds",
+      foreignField: "pid",
     },
   },
   proposals: {
     $lookup: {
       from: "Proposal",
       as: "",
-      let: { proposalIds: { $ifNull: ["$proposalIds", []] } },
-      pipeline: [
-        { $match: { $expr: { $in: ["$proposalId", "$$proposalIds"] } } },
-      ],
+      localField: "proposalIds",
+      foreignField: "proposalId",
     },
   },
   origdatablocks: {
     $lookup: {
       from: "OrigDatablock",
       as: "",
-      let: { pid: "$pid" },
-      pipeline: [{ $match: { $expr: { $eq: ["$datasetId", "$$pid"] } } }],
+      localField: "pid",
+      foreignField: "datasetId",
     },
   },
   datablocks: {
     $lookup: {
       from: "Datablock",
       as: "",
-      let: { pid: "$pid" },
-      pipeline: [{ $match: { $expr: { $eq: ["$datasetId", "$$pid"] } } }],
+      localField: "pid",
+      foreignField: "datasetId",
     },
   },
   attachments: {
     $lookup: {
       from: "Attachment",
       as: "",
+      localField: "pid",
+      foreignField: "relationships.targetId",
       let: { pid: "$pid" },
       pipeline: [
         {
@@ -97,8 +97,8 @@ export const DATASET_LOOKUP_FIELDS: Record<
     $lookup: {
       from: "Sample",
       as: "",
-      let: { sampleIds: { $ifNull: ["$sampleIds", []] } },
-      pipeline: [{ $match: { $expr: { $in: ["$sampleId", "$$sampleIds"] } } }],
+      localField: "sampleIds",
+      foreignField: "sampleId",
     },
   },
   all: undefined,

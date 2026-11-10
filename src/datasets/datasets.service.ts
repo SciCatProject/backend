@@ -14,6 +14,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Request } from "express";
 import { isEmpty } from "lodash";
 import {
+  Aggregate,
   FilterQuery,
   Model,
   PipelineStage,
@@ -79,6 +80,11 @@ import {
   splitWhereByRelations,
 } from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
+
+// MongoDB error code when an operation exceeds its maxTimeMS
+const MAX_TIME_MS_EXPIRED = 50;
+const isMaxTimeExpired = (error: unknown) =>
+  (error as { code?: number } | null)?.code === MAX_TIME_MS_EXPIRED;
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -178,6 +184,17 @@ export class DatasetsService {
         ) as DatasetLookupKeysEnum[])
       : fieldsList;
     return { scopes, relations };
+  }
+
+  /**
+   * Bounds the time an aggregation may run, as lookups on relations can
+   * touch most of the collection when the dataset conditions are weak.
+   */
+  private withMaxTime<T>(aggregate: Aggregate<T>): Aggregate<T> {
+    const maxTimeMS = this.configService.get<number>("datasetQueryMaxTimeMs");
+    return maxTimeMS && maxTimeMS > 0
+      ? aggregate.option({ maxTimeMS })
+      : aggregate;
   }
 
   /**
@@ -297,12 +314,16 @@ export class DatasetsService {
 
     pipeline.push({ $limit: limits.limit || 10 });
     try {
-      const data = await this.datasetModel
-        .aggregate<PartialOutputDatasetDto>(pipeline)
-        .exec();
+      const data = await this.withMaxTime(
+        this.datasetModel.aggregate<PartialOutputDatasetDto>(pipeline),
+      ).exec();
 
       return data;
     } catch (error) {
+      if (isMaxTimeExpired(error))
+        throw new BadRequestException(
+          "The query took too long, please narrow down the filter",
+        );
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
