@@ -69,19 +69,9 @@ Each `MetadataKey` document tracks:
 
 The migration reads datasets in batches, adds up the counts per key in Node, and writes each batch with one `bulkWrite` of upserts. The upserts use the same filter and update operators as `MetadataKeysService.upsertMany`, so the result matches what the app would have built by creating every dataset through the API.
 
-It reuses `createMetadataKeysInstance` and `decodeURIComponentExtended` from `dist/common/utils`, so `dist/` must be built before it runs.
+It reuses `createMetadataKeysInstance`, `decodeURIComponentExtended` and `encodeURIComponentExtended` from `dist/common/utils`, so `dist/` must be built before it runs.
 
-### Step 1 — Check group names
-
-Every `ownerGroup` and `accessGroups` value is checked before anything is deleted. Group names become `userGroupCounts.<group>` update paths (as in the app), so a name containing `.` would be stored as a nested field and a name starting with `$` would be rejected by MongoDB.
-
-If such names exist, the migration stops with an error listing them and leaves `MetadataKeys` untouched:
-
-```
-Dataset has groups that cannot be used as MetadataKeys userGroupCounts keys: team.alpha, $weird
-```
-
-### Step 2 — Clear the entries being rebuilt
+### Step 1 — Clear the entries being rebuilt
 
 ```js
 deleteMany({
@@ -91,12 +81,12 @@ deleteMany({
 
 Deletes the `Dataset` keys, which are rebuilt below, and the obsolete one-entry-per-source documents of the previous schema (identified by `sourceId`), whatever their source type. Current keys of the other source types are kept.
 
-### Step 3 — Prepare indexes
+### Step 2 — Prepare indexes
 
 - Drops `metaKeyId_1` if it exists. A failed run of the replaced 20260420145401 migration could leave this unique index behind, and it would reject every key after the first.
 - Creates `{ sourceType: 1, key: 1 }` (the same index as the app schema), so each upsert finds its key through an index.
 
-### Step 4 — Add up the counts per key, in batches of 10,000 datasets
+### Step 3 — Add up the counts per key, in batches of 10,000 datasets
 
 Each dataset is passed through `createMetadataKeysInstance`, the same function the app uses. It returns the dataset's `userGroups` (`ownerGroup` plus `accessGroups`, deduplicated, empty values dropped), `isPublished` and `metadata`. Then for every metadata key:
 
@@ -120,9 +110,9 @@ Each dataset is passed through `createMetadataKeysInstance`, the same function t
 ["pressure", ""]               → { usageCount: 1, isPublished: false, userGroupCounts: { groupA: 1, groupB: 1 } }
 ```
 
-### Step 5 — Upsert the batch
+### Step 4 — Upsert the batch
 
-After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert:
+After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert. As in the app, group names are encoded with `encodeURIComponentExtended` in the `userGroupCounts.<group>` paths, so a group like `p21.2` is counted under `"p21%2E2"` instead of creating a nested field; `userGroups` keeps the plain names:
 
 ```js
 {

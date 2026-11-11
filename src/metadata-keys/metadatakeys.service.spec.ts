@@ -98,6 +98,20 @@ describe("MetadataKeysService", () => {
       );
     });
 
+    it("returns decoded userGroupCounts keys", async () => {
+      modelMock.aggregate.mockReturnValueOnce({
+        exec: jest
+          .fn()
+          .mockResolvedValue([
+            { key: "k", userGroupCounts: { "p21%2E2": 2, "%24x": 1, g: 3 } },
+          ]),
+      });
+
+      const [doc] = await service.findAll({}, {});
+
+      expect(doc.userGroupCounts).toEqual({ "p21.2": 2, $x: 1, g: 3 });
+    });
+
     it("applies default sort when limits provided without sort", async () => {
       await service.findAll({ limits: { limit: 10, skip: 0 } }, {});
 
@@ -266,8 +280,9 @@ describe("MetadataKeysService", () => {
 
     it("runs operations in order: decrement → prune groups → delete", async () => {
       const callOrder: string[] = [];
-      modelMock.bulkWrite.mockImplementation(() => {
-        callOrder.push("bulkWrite");
+      // label each bulkWrite by its ops: updateOne = decrement, updateMany = prune
+      modelMock.bulkWrite.mockImplementation((ops: any[]) => {
+        callOrder.push(ops[0].updateOne ? "decrement" : "prune");
         return Promise.resolve({});
       });
       modelMock.deleteMany.mockImplementation(() => {
@@ -277,7 +292,7 @@ describe("MetadataKeysService", () => {
 
       await service.deleteMany(BASE_DOC);
 
-      expect(callOrder).toEqual(["bulkWrite", "bulkWrite", "deleteMany"]);
+      expect(callOrder).toEqual(["decrement", "prune", "deleteMany"]);
     });
 
     it("decrements usageCount and per-group counts", async () => {

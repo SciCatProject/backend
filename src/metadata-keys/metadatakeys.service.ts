@@ -8,6 +8,7 @@ import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { isEmpty } from "lodash";
 import {
   addCreatedByFields,
+  decodeURIComponentExtended,
   encodeURIComponentExtended,
   parsePipelineProjection,
   parsePipelineSort,
@@ -74,7 +75,19 @@ export class MetadataKeysService {
       .aggregate<MetadataKeyClass>(pipeline)
       .exec();
 
-    return data;
+    return data.map((doc) =>
+      doc.userGroupCounts
+        ? {
+            ...doc,
+            userGroupCounts: Object.fromEntries(
+              Object.entries(doc.userGroupCounts).map(([group, count]) => [
+                decodeURIComponentExtended(group),
+                count,
+              ]),
+            ) as unknown as Map<string, number>,
+          }
+        : doc,
+    );
   }
 
   async insertManyFromSource(doc: MetadataSourceDoc): Promise<void> {
