@@ -3,6 +3,7 @@ const { randomUUID } = require("crypto");
 const {
   createMetadataKeysInstance,
   decodeURIComponentExtended,
+  encodeURIComponentExtended,
 } = require("../dist/common/utils");
 
 // The fields createMetadataKeysInstance reads the metadata from
@@ -11,7 +12,6 @@ const BATCH_SIZE = 10000;
 // Also flush early when a batch has many distinct keys (e.g. keys unique per
 // dataset), so memory is bounded by keys and not only by datasets
 const MAX_KEYS_PER_FLUSH = 10000;
-const INVALID_GROUP = /\.|^\$/;
 
 // Adds the keys of one source document to the batch totals, the same way
 // MetadataKeysService.upsertMany counts them.
@@ -60,7 +60,7 @@ function toUpsert(sourceType, total, now) {
           usageCount: total.usageCount,
           ...Object.fromEntries(
             Object.entries(total.userGroupCounts).map(([group, count]) => [
-              `userGroupCounts.${group}`,
+              `userGroupCounts.${encodeURIComponentExtended(group)}`,
               count,
             ]),
           ),
@@ -87,24 +87,6 @@ module.exports = {
     const start = Date.now();
     const elapsed = () => `${((Date.now() - start) / 1000).toFixed(1)}s`;
     const metadataKeys = db.collection("MetadataKeys");
-
-    // Group names are used as `userGroupCounts.<group>` update paths (as in
-    // MetadataKeysService), so a "." would nest the count and a leading "$" is
-    // rejected. Stop before wiping anything rather than storing corrupted counts.
-    for (const source of SOURCES) {
-      const invalidGroups = [];
-      for (const field of ["ownerGroup", "accessGroups"]) {
-        const values = await db
-          .collection(source.collection)
-          .distinct(field, { [field]: INVALID_GROUP });
-        invalidGroups.push(...values.filter((g) => INVALID_GROUP.test(g)));
-      }
-      if (invalidGroups.length > 0) {
-        throw new Error(
-          `${source.collection} has groups that cannot be used as MetadataKeys userGroupCounts keys: ${[...new Set(invalidGroups)].join(", ")}`,
-        );
-      }
-    }
 
     // Clear the keys rebuilt here and the obsolete one-per-source entries
     // (identified by sourceId), keeping current keys of the other source types

@@ -8,6 +8,7 @@ import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { isEmpty } from "lodash";
 import {
   addCreatedByFields,
+  encodeURIComponentExtended,
   parsePipelineProjection,
   parsePipelineSort,
 } from "src/common/utils";
@@ -23,33 +24,9 @@ export type MetadataSourceDoc = {
   metadata: Record<string, unknown>;
 };
 
-// Recomputes the userGroups string array from userGroupCounts after a decrement.
-// Retains only group names whose reference count is still above zero.
-const RECOMPUTE_USER_GROUPS_STAGE = [
-  {
-    $set: {
-      userGroupCounts: {
-        $arrayToObject: {
-          $filter: {
-            input: { $objectToArray: "$userGroupCounts" },
-            cond: { $gt: ["$$this.v", 0] },
-          },
-        },
-      },
-    },
-  },
-  {
-    $set: {
-      userGroups: {
-        $map: {
-          input: { $objectToArray: "$userGroupCounts" },
-          as: "entry",
-          in: "$$entry.k",
-        },
-      },
-    },
-  },
-];
+// userGroupCounts keys are group names encoded with encodeURIComponentExtended,
+// since raw names may contain "." (would nest the counter) or start with "$".
+const groupCountKey = (group: string) => encodeURIComponentExtended(group);
 
 @Injectable({ scope: Scope.REQUEST })
 export class MetadataKeysService {
@@ -165,12 +142,24 @@ export class MetadataKeysService {
     await this.metadataKeyModel.bulkWrite(ops);
 
     if (delta === -1) {
-      // UpdateMany is necessary here because the bulkWrite above only decrements userGroupCounts
-      // but cannot remove zero-count groups from userGroups in the same operation.
-      await this.metadataKeyModel.updateMany(
-        queryFilter,
-        RECOMPUTE_USER_GROUPS_STAGE,
-      );
+      // The decrement above cannot also drop groups whose count reached zero,
+      // so remove those from userGroups and userGroupCounts here.
+      if (userGroups.length > 0) {
+        await this.metadataKeyModel.bulkWrite(
+          userGroups.map((group) => {
+            const countField = `userGroupCounts.${groupCountKey(group)}`;
+            return {
+              updateMany: {
+                filter: { ...queryFilter, [countField]: { $lte: 0 } },
+                update: {
+                  $pull: { userGroups: group },
+                  $unset: { [countField]: "" },
+                },
+              },
+            };
+          }),
+        );
+      }
 
       await this.metadataKeyModel.deleteMany({
         $and: [queryFilter, { usageCount: { $lte: 0 } }],
@@ -187,7 +176,7 @@ export class MetadataKeysService {
     delta: 1 | -1,
   ): Record<string, number> {
     return Object.fromEntries(
-      groups.map((g) => [`userGroupCounts.${g}`, delta]),
+      groups.map((g) => [`userGroupCounts.${groupCountKey(g)}`, delta]),
     );
   }
 }

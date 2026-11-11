@@ -201,6 +201,24 @@ describe("MetadataKeysService", () => {
       expect(update.$inc["userGroupCounts.group-2"]).toBe(1);
     });
 
+    it("escapes group names that are not valid field names", async () => {
+      await service.insertManyFromSource({
+        ...BASE_DOC,
+        userGroups: ["p21.2", "$grp", "a%2Eb"],
+      });
+
+      const [ops] = modelMock.bulkWrite.mock.calls[0];
+      const { update } = ops[0].updateOne;
+      expect(update.$inc["userGroupCounts.p21%2E2"]).toBe(1);
+      expect(update.$inc["userGroupCounts.%24grp"]).toBe(1);
+      expect(update.$inc["userGroupCounts.a%252Eb"]).toBe(1);
+      expect(update.$addToSet.userGroups.$each).toEqual([
+        "p21.2",
+        "$grp",
+        "a%2Eb",
+      ]);
+    });
+
     it("adds userGroups via $addToSet", async () => {
       await service.insertManyFromSource(BASE_DOC);
 
@@ -246,14 +264,10 @@ describe("MetadataKeysService", () => {
       expect(modelMock.deleteMany).not.toHaveBeenCalled();
     });
 
-    it("runs operations in order: decrement → recompute → delete", async () => {
+    it("runs operations in order: decrement → prune groups → delete", async () => {
       const callOrder: string[] = [];
       modelMock.bulkWrite.mockImplementation(() => {
         callOrder.push("bulkWrite");
-        return Promise.resolve({});
-      });
-      modelMock.updateMany.mockImplementation(() => {
-        callOrder.push("updateMany");
         return Promise.resolve({});
       });
       modelMock.deleteMany.mockImplementation(() => {
@@ -263,7 +277,7 @@ describe("MetadataKeysService", () => {
 
       await service.deleteMany(BASE_DOC);
 
-      expect(callOrder).toEqual(["bulkWrite", "updateMany", "deleteMany"]);
+      expect(callOrder).toEqual(["bulkWrite", "bulkWrite", "deleteMany"]);
     });
 
     it("decrements usageCount and per-group counts", async () => {
@@ -279,7 +293,8 @@ describe("MetadataKeysService", () => {
     it("targets correct filter based on metadata keys and humanReadableName", async () => {
       await service.deleteMany(BASE_DOC);
 
-      const [firstFilter] = modelMock.updateMany.mock.calls[0];
+      const [deleteFilter] = modelMock.deleteMany.mock.calls[0];
+      const firstFilter = deleteFilter.$and[0];
       expect(firstFilter.$or).toContainEqual({
         sourceType: "Dataset",
         key: "temperature",
@@ -299,11 +314,30 @@ describe("MetadataKeysService", () => {
       expect(deleteFilter.$and[1].usageCount).toEqual({ $lte: 0 });
     });
 
-    it("recompute stage uses $set with userGroups defined", async () => {
-      await service.deleteMany(BASE_DOC);
+    it("removes groups whose count reached zero", async () => {
+      await service.deleteMany({ ...BASE_DOC, userGroups: ["p21.2", "$x"] });
 
-      const [, recomputeStage] = modelMock.updateMany.mock.calls[0];
-      expect(recomputeStage[1].$set.userGroups).toBeDefined();
+      const [ops] = modelMock.bulkWrite.mock.calls[1];
+      expect(ops.map((op: any) => op.updateMany)).toEqual([
+        {
+          filter: expect.objectContaining({
+            "userGroupCounts.p21%2E2": { $lte: 0 },
+          }),
+          update: {
+            $pull: { userGroups: "p21.2" },
+            $unset: { "userGroupCounts.p21%2E2": "" },
+          },
+        },
+        {
+          filter: expect.objectContaining({
+            "userGroupCounts.%24x": { $lte: 0 },
+          }),
+          update: {
+            $pull: { userGroups: "$x" },
+            $unset: { "userGroupCounts.%24x": "" },
+          },
+        },
+      ]);
     });
 
     it("does not set upsert on decrement ops", async () => {
@@ -355,9 +389,9 @@ describe("MetadataKeysService", () => {
 
       await service.replaceManyFromSource(doc, doc);
 
-      const allOps = modelMock.bulkWrite.mock.calls.flatMap(
-        ([ops]: any) => ops,
-      );
+      const allOps = modelMock.bulkWrite.mock.calls
+        .flatMap(([ops]: any) => ops)
+        .filter((op: any) => op.updateOne); // skip the group-pruning ops
       const totalUsageCountDelta = allOps.reduce(
         (sum: number, op: any) => sum + op.updateOne.update.$inc.usageCount,
         0,
