@@ -2487,6 +2487,26 @@ describe("2500: Datasets v4 tests", () => {
       total.should.equal(3);
     });
 
+    it("1118a: should cast plain dataset values next to relation conditions", async () => {
+      const where = {
+        "proposals.pi_email": piA,
+        createdAt: { $gte: "2000-01-01" },
+        size: { $gte: "0" },
+      };
+      (await getCount(where)).should.equal(2);
+      (await getFacetTotal(where)).should.equal(2);
+    });
+
+    it("1118b: should cast plain values in relation conditions", async () => {
+      const where = {
+        "proposals.pi_email": piA,
+        "proposals.createdAt": { $gte: "2000-01-01" },
+      };
+      (await getCount(where)).should.equal(2);
+      (await getFacetTotal(where)).should.equal(2);
+      return expectPids(where, [pidOnlyA, pidAAndB]);
+    });
+
     describe("public endpoints", () => {
       const publishedProposal = `relation-where-pub-${uuidv4()}`;
       const unpublishedProposal = `relation-where-unpub-${uuidv4()}`;
