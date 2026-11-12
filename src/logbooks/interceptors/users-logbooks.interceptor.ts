@@ -7,7 +7,7 @@ import {
 import { map, Observable } from "rxjs";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { Logbook } from "../schemas/logbook.schema";
-import { Role } from "src/auth/role.enum";
+
 @Injectable()
 export class UsersLogbooksInterceptor implements NestInterceptor {
   constructor(private readonly proposalsService: ProposalsService) {}
@@ -17,7 +17,7 @@ export class UsersLogbooksInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<Logbook | Logbook[] | null>> {
     const usersGroups = context.getArgs()[1].req.user.currentGroups;
-    const isAdmin = usersGroups.includes(Role.Admin);
+    const isAdmin = usersGroups.includes("admin");
     const proposals = await this.proposalsService.findAll({
       where: { ownerGroup: { $in: usersGroups } },
     });
