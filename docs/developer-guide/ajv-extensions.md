@@ -24,9 +24,46 @@ It should export two symbols:
 
 see [the example file](../../ajvCustomDefinitions.example.js).
 
+### Validation context
+
+Every validation is run with a context object containing:
+- `publishedData`: the `PublishedData` instance being validated
+- `proposalService`, `datasetsService`, `attachmentsService`: read-only access to the corresponding services
+
+Currently only the following methods are supported on read-only services:
+- `findOne`
+- `findAll`
+- `count`
+
+### Keywords
+
+Keywords receive the context as `this`, using ajv's [`passContext`](https://ajv.js.org/options.html#passcontext) option.
+
+Example:
+```js
+export const keywords = [
+  {
+    keyword: "proposalExists",
+    async: true,
+    schema: true,
+    schemaType: "boolean",
+    validate: async function (schema, data) {
+      if (!schema) return true;
+
+      const proposal = await this.proposalService.findOne({
+        where: { proposalId: data },
+      });
+      return proposal !== null;
+    },
+  },
+];
+```
+
+### dynamicDefaults
+
 ⚠️ Ajv expects higher-order functions (i.e., a function that returns another function).
 
-### Synchronous functions
+#### Synchronous functions
 
 If a function is synchronous, it will simply be registered in ajv and its execution is entirely delegated to the library.
 
@@ -37,19 +74,12 @@ export const dynamicDefaults = new Map([
 ]);
 ```
 
-### Asynchronous functions
+#### Asynchronous functions
 
-If you need to execute asynchronous code, you should declare your function `async` (only supported for dynamicDefaults).
-It should return a synchronous function as ajv will not resolve any `Promise` returned by custom code.
+If you need to execute asynchronous code in a dynamicDefaults function, you should declare your function `async`.
+It should return a synchronous function as ajv will not resolve any `Promise` returned by dynamicDefaults functions.
 
-Asynchronous functions have access to additional context via the `ctx` argument:
-- The `PublishedData` instance being validated
-- Read-only access to the following services: `ProposalsService`, `DatasetsService` and `AttachmentsService`
-
-Currently only the following methods are supported on read-only services:
-- `findOne`
-- `findAll`
-- `count`
+Asynchronous dynamicDefaults functions receive the validation context via the `ctx` argument.
 
 Example:
 ```js
