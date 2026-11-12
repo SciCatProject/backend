@@ -29,18 +29,18 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
 @Module({
   imports: [
     CaslModule,
-    AttachmentsModule,
     DatablocksModule,
-    OrigDatablocksModule,
     InitialDatasetsModule,
     HistoryModule,
     MetadataKeysModule,
+    OrigDatablocksModule,
+    ProposalsModule,
+    forwardRef(() => AttachmentsModule),
+    forwardRef(() => LogbooksModule),
     ConditionalModule.registerWhen(
       OpensearchModule,
       (env: NodeJS.ProcessEnv) => env.OPENSEARCH_ENABLED === "yes",
     ),
-    ProposalsModule,
-    forwardRef(() => LogbooksModule),
     MongooseModule.forFeatureAsync([
       {
         name: DatasetClass.name,

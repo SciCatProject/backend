@@ -147,12 +147,13 @@ const TestData = {
     ownerGroup: faker.string.alphanumeric(6),
     caption: faker.lorem.words(10),
     isPublished: true,
+    relationships: [],
   },
 
   AttachmentCorrectV4: {
     thumbnail: "data/abc123",
     caption: "Some caption",
-    isPublished: true,
+    isPublished: false,
     ownerGroup: "ess",
     accessGroups: ["loki", "odin"],
     relationships: [
@@ -169,7 +170,7 @@ const TestData = {
     ],
   },
 
-  AttachmentWrongV4: {
+  AttachmentWrongTypeV4: {
     thumbnail: "data/abc123",
     caption: "Some caption",
     isPublished: true,
@@ -178,6 +179,20 @@ const TestData = {
       {
         targetId: faker.string.numeric(8),
         targetType: "wrong_type",
+        relationType: "is attached to",
+      },
+    ],
+  },
+
+  AttachmentWrongTargetV4: {
+    thumbnail: "data/abc123",
+    caption: "Some caption",
+    isPublished: true,
+    ownerGroup: "ess",
+    relationships: [
+      {
+        targetId: faker.string.numeric(8),
+        targetType: "dataset",
         relationType: "is attached to",
       },
     ],

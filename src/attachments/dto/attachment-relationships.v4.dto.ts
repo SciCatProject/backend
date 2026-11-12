@@ -14,7 +14,7 @@ export class AttachmentRelationshipsV4Dto {
   @ApiProperty({
     enum: Object.values(AttachmentRelationTargetType),
     description:
-      "Type of entity target. Can be one of the following: 'dataset','proposal','sample'.",
+      "Type of entity target. Can be one of the following: 'dataset','proposal','sample','published_data'.",
   })
   targetType: AttachmentRelationTargetType;
 
