@@ -99,9 +99,17 @@ export class RabbitMQService
   }
 
   @OnError()
-  private async bindQueue(queue: string, exchange: string, key: string) {
+  private async bindQueue(
+    queue: string,
+    exchange: string,
+    key: string,
+    queueArguments?: Record<string, unknown>,
+  ) {
     this._error = `Could not connect to RabbitMQ queue ${queue} with exchange ${exchange} and key ${key}.`;
-    await this.channel.assertQueue(queue, { durable: true });
+    await this.channel.assertQueue(queue, {
+      durable: true,
+      ...(queueArguments && { arguments: queueArguments }),
+    });
     await this.channel.assertExchange(exchange, "topic", {
       durable: true,
     });
@@ -114,9 +122,10 @@ export class RabbitMQService
     exchange: string,
     key: string,
     message: string,
+    queueArguments?: Record<string, unknown>,
   ) {
     this._error = `Could not send message to RabbitMQ queue ${queue}.`;
-    await this.bindQueue(queue, exchange, key);
+    await this.bindQueue(queue, exchange, key, queueArguments);
     this.channel.publish(exchange, key, Buffer.from(message), {
       persistent: true,
     });
