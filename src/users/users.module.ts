@@ -7,8 +7,7 @@ import {
   UserIdentity,
   UserIdentitySchema,
 } from "./schemas/user-identity.schema";
-import { RolesService } from "./roles.service";
-import { Role, RoleSchema } from "./schemas/role.schema";
+import { UserRolesService } from "./user-roles.service";
 import { UserRole, UserRoleSchema } from "./schemas/user-role.schema";
 import { ConfigModule } from "@nestjs/config";
 import { CaslModule } from "src/casl/casl.module";
@@ -40,10 +39,6 @@ import { accessGroupServiceFactory } from "src/auth/access-group-provider/access
         schema: UserIdentitySchema,
       },
       {
-        name: Role.name,
-        schema: RoleSchema,
-      },
-      {
         name: User.name,
         schema: UserSchema,
       },
@@ -61,10 +56,10 @@ import { accessGroupServiceFactory } from "src/auth/access-group-provider/access
     AuthService,
     UsersService,
     UserIdentitiesService,
-    RolesService,
+    UserRolesService,
     accessGroupServiceFactory,
   ],
-  exports: [UsersService, RolesService, UserIdentitiesService],
+  exports: [UsersService, UserRolesService, UserIdentitiesService],
   controllers: [UsersController, UserIdentitiesController],
 })
 export class UsersModule {}

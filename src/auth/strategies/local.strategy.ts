@@ -6,15 +6,13 @@ import { User } from "src/users/schemas/user.schema";
 import { UserPayload } from "../interfaces/userPayload.interface";
 import { UsersService } from "src/users/users.service";
 import { AccessGroupService } from "../access-group-provider/access-group.service";
-import { RolesService } from "src/users/roles.service";
-import { Role } from "src/users/schemas/role.schema";
-import { UserRole } from "src/users/schemas/user-role.schema";
+import { UserRolesService } from "src/users/user-roles.service";
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private authService: AuthService,
-    private rolesService: RolesService,
+    private userRolesService: UserRolesService,
     private usersService: UsersService,
     private accessGroupService: AccessGroupService,
   ) {
@@ -30,15 +28,10 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const userRoles = (await this.rolesService.findAllUserRoles({
+    const userRoles = await this.userRolesService.findAll({
       userId: user._id,
-    })) as UserRole[];
-    const roles: Role[] = (await Promise.all(
-      userRoles.map((r) => {
-        return this.rolesService.findOne({ _id: r.roleId });
-      }),
-    )) as Role[];
-    const roleGroups: string[] = roles
+    });
+    const roleGroups: string[] = (userRoles ?? [])
       .filter((r) => r)
       .map((r) => {
         return r.name as string;
