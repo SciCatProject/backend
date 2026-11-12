@@ -3,7 +3,8 @@ import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import configuration from "src/config/configuration";
 import { JobConfigService } from "src/config/job-config/jobconfig.service";
 import { DatasetClass } from "src/datasets/schemas/dataset.schema";
-import { Action } from "./action.enum";
+import { Action } from "./types/action.enum";
+import { CaslCollection } from "./types/casl-collection.enum";
 import { CaslAbilityFactory } from "./casl-ability.factory";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
@@ -108,7 +109,10 @@ describe("CaslAbilityFactory", () => {
       delete process.env.UPDATE_DATASET_LIFECYCLE_GROUPS;
 
       const factory = buildFactory(accessGroups?.updateDatasetLifecycle);
-      const ability = factory.endpointAccess("datasets", userInSubstringGroup);
+      const ability = factory.collectionAccess(
+        CaslCollection.Dataset,
+        userInSubstringGroup,
+      );
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );
@@ -116,7 +120,10 @@ describe("CaslAbilityFactory", () => {
 
     it("grants DatasetLifecycleUpdate to a user in an exactly matching group", () => {
       const factory = buildFactory(["lifecycle-managers"]);
-      const ability = factory.endpointAccess("datasets", userInExactGroup);
+      const ability = factory.collectionAccess(
+        CaslCollection.Dataset,
+        userInExactGroup,
+      );
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         true,
       );
@@ -124,7 +131,10 @@ describe("CaslAbilityFactory", () => {
 
     it("denies DatasetLifecycleUpdate to a user whose group does not match any configured group", () => {
       const factory = buildFactory(["lifecycle-managers"]);
-      const ability = factory.endpointAccess("datasets", userInSubstringGroup);
+      const ability = factory.collectionAccess(
+        CaslCollection.Dataset,
+        userInSubstringGroup,
+      );
       expect(ability.can(Action.DatasetLifecycleUpdate, DatasetClass)).toBe(
         false,
       );

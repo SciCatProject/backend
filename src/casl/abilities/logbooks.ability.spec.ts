@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { LogbookAbility } from "./logbooks.ability";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
 import {

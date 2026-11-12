@@ -1,24 +1,22 @@
 import {
   AbilityBuilder,
   ExtractSubjectType,
-  MongoAbility,
   createMongoAbility,
 } from "@casl/ability";
 import { Injectable } from "@nestjs/common";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import {
   Subjects,
   PossibleAbilities,
   Conditions,
+  AppAbility,
 } from "../types/casl-subjects";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import { Logbook } from "src/logbooks/schemas/logbook.schema";
 
 @Injectable()
 export class LogbookAbility {
-  buildAbility(
-    user: JWTUser | null,
-  ): MongoAbility<PossibleAbilities, Conditions> {
+  buildAbility(user: JWTUser | null): AppAbility {
     const { can, build } = new AbilityBuilder(
       createMongoAbility<PossibleAbilities, Conditions>,
     );

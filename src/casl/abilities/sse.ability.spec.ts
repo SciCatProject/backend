@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { SseAbility } from "./sse.ability";
 import { SseClass } from "src/serverSentEvent/interfaces/sse-event.interface";
 import {

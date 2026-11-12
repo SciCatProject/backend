@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { ProposalAbility } from "./proposals.ability";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import {

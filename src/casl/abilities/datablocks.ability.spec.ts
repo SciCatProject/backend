@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { DatablockAbility } from "./datablocks.ability";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import {

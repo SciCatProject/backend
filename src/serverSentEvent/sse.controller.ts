@@ -16,11 +16,12 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { SseService } from "./sse.service";
 import { AuthService } from "src/auth/auth.service";
 import { SseClass } from "./interfaces/sse-event.interface";
@@ -35,9 +36,11 @@ export class SseController {
   ) {}
 
   @Sse("stream")
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("sse", (ability: AppAbility) =>
-    ability.can(Action.Read, SseClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("sse", (ability: AppAbility) =>
+      ability.can(Action.Read, SseClass),
+    ),
   )
   @ApiOperation({
     summary: "Subscribe to server-sent events.",
@@ -56,9 +59,11 @@ export class SseController {
   }
 
   @Get("connections")
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("sse", (ability: AppAbility) =>
-    ability.can(Action.AccessAny, SseClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("sse", (ability: AppAbility) =>
+      ability.can(Action.AccessAny, SseClass),
+    ),
   )
   @ApiOperation({
     summary: "List active SSE connections on this instance.",
@@ -67,9 +72,11 @@ export class SseController {
     return this.sseService.getAllConnections();
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("sse", (ability: AppAbility) =>
-    ability.can(Action.Read, SseClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("sse", (ability: AppAbility) =>
+      ability.can(Action.Read, SseClass),
+    ),
   )
   @Post("ticket")
   async createTicket(@Req() request: Request): Promise<{ ticket: string }> {

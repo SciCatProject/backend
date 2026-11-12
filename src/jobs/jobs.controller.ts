@@ -21,10 +21,11 @@ import { CreateJobDto } from "./dto/create-job.dto";
 import { UpdateJobDto } from "./dto/update-job.dto";
 import { CreateJobDtoV3 } from "./dto/create-job.v3.dto";
 import { UpdateJobDtoV3 } from "./dto/update-job.v3.dto";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { JobClass } from "./schemas/job.schema";
 import { OutputJobV3Dto } from "./dto/output-job-v3.dto";
 import {
@@ -73,9 +74,11 @@ export class JobsController {
   /**
    * Create job v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Create, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Create, JobClass),
+    ),
   )
   @UseInterceptors(CreateJobV3MappingInterceptor)
   @Post()
@@ -105,9 +108,11 @@ export class JobsController {
   /**
    * Update job v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Update, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Update, JobClass),
+    ),
   )
   @UseInterceptors(UpdateJobV3MappingInterceptor)
   @Patch(":id")
@@ -148,9 +153,11 @@ export class JobsController {
   /**
    * Get fullquery v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("/fullquery")
   @ApiOperation({
@@ -196,9 +203,11 @@ export class JobsController {
   /**
    * Get fullfacet v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("/fullfacet")
   @ApiOperation({
@@ -240,9 +249,11 @@ export class JobsController {
   /**
    * Get datasetDetails of a job by id v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get("datasetDetails")
   @ApiOperation({
@@ -381,9 +392,11 @@ export class JobsController {
   /**
    * Get job by id v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get(":id")
   @ApiOperation({
@@ -415,9 +428,11 @@ export class JobsController {
   /**
    * Get jobs v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Read, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Read, JobClass),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -469,9 +484,11 @@ export class JobsController {
   /**
    * Delete a job v3
    */
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("jobs", (ability: AppAbility) =>
-    ability.can(Action.Delete, JobClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("jobs", (ability: AppAbility) =>
+      ability.can(Action.Delete, JobClass),
+    ),
   )
   @Delete(":id")
   @ApiOperation({

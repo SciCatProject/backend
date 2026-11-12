@@ -1,7 +1,7 @@
-import { MongoAbility } from "@casl/ability";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { PossibleAbilities, Conditions } from "./types/casl-subjects";
+import { AppAbility } from "./types/casl-subjects";
+import { CaslCollection } from "./types/casl-collection.enum";
 import { AttachmentAbility } from "./abilities/attachments.ability";
 import { DatablockAbility } from "./abilities/datablocks.ability";
 import { DatasetAbility } from "./abilities/datasets.ability";
@@ -19,8 +19,6 @@ import { RuntimeConfigAbility } from "./abilities/runtime-config.ability";
 import { SampleAbility } from "./abilities/samples.ability";
 import { SseAbility } from "./abilities/sse.ability";
 import { UserAbility } from "./abilities/users.ability";
-
-export type AppAbility = MongoAbility<PossibleAbilities, Conditions>;
 
 @Injectable()
 export class CaslAbilityFactory {
@@ -44,8 +42,8 @@ export class CaslAbilityFactory {
     private userAbility: UserAbility,
   ) {}
 
-  private endpointAccessors: {
-    [endpoint: string]: (user: JWTUser) => AppAbility;
+  private accessors: {
+    [collection in CaslCollection]: (user: JWTUser | null) => AppAbility;
   } = {
     attachments: this.attachmentAccess,
     datablocks: this.datablockAccess,
@@ -66,11 +64,11 @@ export class CaslAbilityFactory {
     users: this.userAccess,
   };
 
-  endpointAccess(endpoint: string, user: JWTUser) {
-    const accessFunction = this.endpointAccessors[endpoint];
+  collectionAccess(collection: CaslCollection, user: JWTUser | null) {
+    const accessFunction = this.accessors[collection];
     if (!accessFunction) {
       throw new InternalServerErrorException(
-        `No endpoint access policies defined for subject: ${endpoint}`,
+        `No endpoint access policies defined for subject: ${collection}`,
       );
     }
     return accessFunction.call(this, user);
