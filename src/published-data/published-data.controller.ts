@@ -520,7 +520,7 @@ export class PublishedDataController {
       } as Request;
 
       await Promise.all(
-        publishedDataObsolete.pidArray.map(async (pid) => {
+        (publishedDataObsolete.pidArray ?? []).map(async (pid) => {
           await this.datasetsController.findByIdAndUpdate(
             mergePatchRequest,
             pid,
