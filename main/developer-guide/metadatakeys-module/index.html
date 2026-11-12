@@ -1310,14 +1310,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
+      <a href="../migrations/20261112120000-sync-dataset-scientificMetadata-to-metadatakeys/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+    20261112120000 — Sync Dataset scientificMetadata to MetadataKeys
   
 
     
@@ -1724,7 +1724,7 @@
 <p>Runs three sequential steps:</p>
 <ol>
 <li>Decrements <code>usageCount</code> and per-group counts in <code>userGroupCounts</code></li>
-<li>Recomputes the <code>userGroups</code> array from the updated counts — drops any group whose count reached zero</li>
+<li>For each of the source's groups, on keys where its count reached zero: removes the group from <code>userGroups</code> (<code>$pull</code>) and its counter from <code>userGroupCounts</code> (<code>$unset</code>)</li>
 <li>Deletes <code>MetadataKey</code> documents where <code>usageCount &lt;= 0</code>
    <code>usageCount</code> is the authoritative deletion signal. A dataset with no <code>userGroups</code> and <code>isPublished: false</code> would be invisible to both <code>userGroupCounts</code> and <code>isPublished</code> checks, so neither alone can substitute for it.</li>
 </ol>
@@ -1780,7 +1780,7 @@
 <tr>
 <td><code>userGroupCounts</code></td>
 <td><code>Map&lt;string, number&gt;</code></td>
-<td>Per-group reference counts — source of truth for safe group removal</td>
+<td>Per-group reference counts, keyed by group name encoded with <code>encodeURIComponentExtended</code> (decoded in API responses)</td>
 </tr>
 <tr>
 <td><code>usageCount</code></td>
@@ -1794,6 +1794,7 @@
 </tr>
 </tbody>
 </table>
+<p>The keys are encoded because group names become field names there, where <code>.</code> would create a nested field and a leading <code>$</code> is rejected by MongoDB; e.g. group <code>p21.2</code> is counted under <code>"p21%2E2"</code>. <code>userGroups</code> holds the plain names.</p>
 <p><code>userGroups</code> and <code>userGroupCounts</code> are intentionally redundant. <code>userGroupCounts</code> owns the truth and enables safe atomic decrements. <code>userGroups</code> is a denormalized array kept for query performance — MongoDB's multikey index on <code>userGroups</code> makes <code>{ userGroups: { $in: [...] } }</code> efficient in a way that querying Map keys directly is not.</p>
 <hr>
 <h2 id="filter-examples">Filter Examples<a class="headerlink" href="#filter-examples" title="Permanent link">¶</a></h2>
@@ -1851,8 +1852,8 @@
 <hr>
 <h2 id="initial-migration">Initial Migration<a class="headerlink" href="#initial-migration" title="Permanent link">¶</a></h2>
 <p>The <code>MetadataKeys</code> collection is populated by a migration script that must be run manually before the service is deployed for the first time.</p>
-<p>See: <code>migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.js</code></p>
-<p>Documentation: <code>docs/developer-guide/migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.md</code></p>
+<p>See: <code>migrations/20261112120000-sync-dataset-scientificMetadata-to-metadatakeys.js</code></p>
+<p>Documentation: <code>docs/developer-guide/migrations/20261112120000-sync-dataset-scientificMetadata-to-metadatakeys.md</code></p>
 <blockquote>
 <p>⚠️ The application will start normally without the migration, but the MetadataKeys service will return empty results until it is run.</p>
 </blockquote>

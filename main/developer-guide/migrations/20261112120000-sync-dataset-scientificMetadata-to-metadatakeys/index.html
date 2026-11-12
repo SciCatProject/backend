@@ -20,7 +20,7 @@
     
     
       
-        <title>20261030134716 — Sync Dataset scientificMetadata to MetadataKeys - SciCat Documentation</title>
+        <title>20261112120000 — Sync Dataset scientificMetadata to MetadataKeys - SciCat Documentation</title>
       
     
     
@@ -81,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#20261030134716-sync-dataset-scientificmetadata-to-metadatakeys" class="md-skip">
+        <a href="#20261112120000-sync-dataset-scientificmetadata-to-metadatakeys" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+              20261112120000 — Sync Dataset scientificMetadata to MetadataKeys
             
           </span>
         </div>
@@ -1116,7 +1116,7 @@
   <span class="md-ellipsis">
     
   
-    20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+    20261112120000 — Sync Dataset scientificMetadata to MetadataKeys
   
 
     
@@ -1134,7 +1134,7 @@
   <span class="md-ellipsis">
     
   
-    20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+    20261112120000 — Sync Dataset scientificMetadata to MetadataKeys
   
 
     
@@ -1216,10 +1216,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-check-group-names" class="md-nav__link">
+  <a href="#step-1-clear-the-entries-being-rebuilt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1 — Check group names
+        Step 1 — Clear the entries being rebuilt
       
     </span>
   </a>
@@ -1227,10 +1227,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-clear-the-entries-being-rebuilt" class="md-nav__link">
+  <a href="#step-2-prepare-indexes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2 — Clear the entries being rebuilt
+        Step 2 — Prepare indexes
       
     </span>
   </a>
@@ -1238,10 +1238,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-prepare-indexes" class="md-nav__link">
+  <a href="#step-3-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3 — Prepare indexes
+        Step 3 — Add up the counts per key, in batches of 10,000 datasets
       
     </span>
   </a>
@@ -1249,21 +1249,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
+  <a href="#step-4-upsert-the-batch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4 — Add up the counts per key, in batches of 10,000 datasets
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-5-upsert-the-batch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 5 — Upsert the batch
+        Step 4 — Upsert the batch
       
     </span>
   </a>
@@ -1506,10 +1495,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-check-group-names" class="md-nav__link">
+  <a href="#step-1-clear-the-entries-being-rebuilt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1 — Check group names
+        Step 1 — Clear the entries being rebuilt
       
     </span>
   </a>
@@ -1517,10 +1506,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-clear-the-entries-being-rebuilt" class="md-nav__link">
+  <a href="#step-2-prepare-indexes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2 — Clear the entries being rebuilt
+        Step 2 — Prepare indexes
       
     </span>
   </a>
@@ -1528,10 +1517,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-prepare-indexes" class="md-nav__link">
+  <a href="#step-3-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3 — Prepare indexes
+        Step 3 — Add up the counts per key, in batches of 10,000 datasets
       
     </span>
   </a>
@@ -1539,21 +1528,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" class="md-nav__link">
+  <a href="#step-4-upsert-the-batch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4 — Add up the counts per key, in batches of 10,000 datasets
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-5-upsert-the-batch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 5 — Upsert the batch
+        Step 4 — Upsert the batch
       
     </span>
   </a>
@@ -1604,12 +1582,13 @@
 
 
 
-<h1 id="20261030134716-sync-dataset-scientificmetadata-to-metadatakeys">20261030134716 — Sync Dataset scientificMetadata to MetadataKeys<a class="headerlink" href="#20261030134716-sync-dataset-scientificmetadata-to-metadatakeys" title="Permanent link">¶</a></h1>
+<h1 id="20261112120000-sync-dataset-scientificmetadata-to-metadatakeys">20261112120000 — Sync Dataset scientificMetadata to MetadataKeys<a class="headerlink" href="#20261112120000-sync-dataset-scientificmetadata-to-metadatakeys" title="Permanent link">¶</a></h1>
 <h2 id="what-this-migration-does">What this migration does<a class="headerlink" href="#what-this-migration-does" title="Permanent link">¶</a></h2>
 <p>Rebuilds the <code>Dataset</code> entries of the <code>MetadataKeys</code> collection by scanning all <code>Dataset</code> documents and extracting every key found in <code>scientificMetadata</code>.</p>
 <p>Each unique <code>(sourceType, key, humanReadableName)</code> combination becomes one <code>MetadataKey</code> document. If the same key appears across multiple datasets, their <code>userGroups</code> and counts are merged into a single entry.</p>
 <p>Keys of the other source types (<code>Proposal</code>, <code>Sample</code>, <code>Instrument</code>) are not rebuilt here, and their current entries are left untouched.</p>
 <p>It replaces <code>20260420145401-sync-dataset-scientificMetadata-to-metadatakeys</code>, which produced wrong counts and groups on databases with more than 10,000 datasets. Sites that already applied that migration run this one as well, which rebuilds their <code>Dataset</code> keys correctly.</p>
+<p>It also replaces <code>20261030134716-sync-dataset-scientificMetadata-to-metadatakeys</code>, which stored <code>userGroupCounts</code> under raw group names (and stopped on names containing <code>.</code> or starting with <code>$</code>). Sites that already applied it run this one too, so their counters are rebuilt with the encoded group names the app now uses.</p>
 <hr>
 <h2 id="why-it-exists">Why it exists<a class="headerlink" href="#why-it-exists" title="Permanent link">¶</a></h2>
 <p>The <code>MetadataKeys</code> collection powers metadata key search and access control. This is the initial population of the collection — it must be run once before the service can operate.</p>
@@ -1655,24 +1634,19 @@
 <hr>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h2>
 <p>The migration reads datasets in batches, adds up the counts per key in Node, and writes each batch with one <code>bulkWrite</code> of upserts. The upserts use the same filter and update operators as <code>MetadataKeysService.upsertMany</code>, so the result matches what the app would have built by creating every dataset through the API.</p>
-<p>It reuses <code>createMetadataKeysInstance</code> and <code>decodeURIComponentExtended</code> from <code>dist/common/utils</code>, so <code>dist/</code> must be built before it runs.</p>
-<h3 id="step-1-check-group-names">Step 1 — Check group names<a class="headerlink" href="#step-1-check-group-names" title="Permanent link">¶</a></h3>
-<p>Every <code>ownerGroup</code> and <code>accessGroups</code> value is checked before anything is deleted. Group names become <code>userGroupCounts.&lt;group&gt;</code> update paths (as in the app), so a name containing <code>.</code> would be stored as a nested field and a name starting with <code>$</code> would be rejected by MongoDB.</p>
-<p>If such names exist, the migration stops with an error listing them and leaves <code>MetadataKeys</code> untouched:</p>
-<div class="highlight"><pre><span></span><code>Dataset has groups that cannot be used as MetadataKeys userGroupCounts keys: team.alpha, $weird
-</code></pre></div>
-<h3 id="step-2-clear-the-entries-being-rebuilt">Step 2 — Clear the entries being rebuilt<a class="headerlink" href="#step-2-clear-the-entries-being-rebuilt" title="Permanent link">¶</a></h3>
+<p>It reuses <code>createMetadataKeysInstance</code>, <code>decodeURIComponentExtended</code> and <code>encodeURIComponentExtended</code> from <code>dist/common/utils</code>, so <code>dist/</code> must be built before it runs.</p>
+<h3 id="step-1-clear-the-entries-being-rebuilt">Step 1 — Clear the entries being rebuilt<a class="headerlink" href="#step-1-clear-the-entries-being-rebuilt" title="Permanent link">¶</a></h3>
 <div class="highlight"><pre><span></span><code><span class="nx">deleteMany</span><span class="p">({</span>
 <span class="w">  </span><span class="nx">$or</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$in</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Dataset"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sourceId</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">$exists</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}],</span>
 <span class="p">});</span>
 </code></pre></div>
 <p>Deletes the <code>Dataset</code> keys, which are rebuilt below, and the obsolete one-entry-per-source documents of the previous schema (identified by <code>sourceId</code>), whatever their source type. Current keys of the other source types are kept.</p>
-<h3 id="step-3-prepare-indexes">Step 3 — Prepare indexes<a class="headerlink" href="#step-3-prepare-indexes" title="Permanent link">¶</a></h3>
+<h3 id="step-2-prepare-indexes">Step 2 — Prepare indexes<a class="headerlink" href="#step-2-prepare-indexes" title="Permanent link">¶</a></h3>
 <ul>
 <li>Drops <code>metaKeyId_1</code> if it exists. A failed run of the replaced 20260420145401 migration could leave this unique index behind, and it would reject every key after the first.</li>
 <li>Creates <code>{ sourceType: 1, key: 1 }</code> (the same index as the app schema), so each upsert finds its key through an index.</li>
 </ul>
-<h3 id="step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets">Step 4 — Add up the counts per key, in batches of 10,000 datasets<a class="headerlink" href="#step-4-add-up-the-counts-per-key-in-batches-of-10000-datasets" title="Permanent link">¶</a></h3>
+<h3 id="step-3-add-up-the-counts-per-key-in-batches-of-10000-datasets">Step 3 — Add up the counts per key, in batches of 10,000 datasets<a class="headerlink" href="#step-3-add-up-the-counts-per-key-in-batches-of-10000-datasets" title="Permanent link">¶</a></h3>
 <p>Each dataset is passed through <code>createMetadataKeysInstance</code>, the same function the app uses. It returns the dataset's <code>userGroups</code> (<code>ownerGroup</code> plus <code>accessGroups</code>, deduplicated, empty values dropped), <code>isPublished</code> and <code>metadata</code>. Then for every metadata key:</p>
 <ul>
 <li>the key is decoded with <code>decodeURIComponentExtended</code> (keys are URL-encoded in <code>scientificMetadata</code> to satisfy Mongo field-name rules; if decoding fails the key is kept as it is),</li>
@@ -1689,8 +1663,8 @@
 <div class="highlight"><pre><span></span><code><span class="p">[</span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="p">]</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">  </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupA</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="nx">groupB</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 <span class="p">[</span><span class="s2">"pressure"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">]</span><span class="w">               </span><span class="err">→</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">usageCount</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">isPublished</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nx">userGroupCounts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupA</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">groupB</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
 </code></pre></div>
-<h3 id="step-5-upsert-the-batch">Step 5 — Upsert the batch<a class="headerlink" href="#step-5-upsert-the-batch" title="Permanent link">¶</a></h3>
-<p>After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert:</p>
+<h3 id="step-4-upsert-the-batch">Step 4 — Upsert the batch<a class="headerlink" href="#step-4-upsert-the-batch" title="Permanent link">¶</a></h3>
+<p>After every 10,000 datasets (and once at the end), each key in the batch totals becomes one upsert. As in the app, group names are encoded with <code>encodeURIComponentExtended</code> in the <code>userGroupCounts.&lt;group&gt;</code> paths, so a group like <code>p21.2</code> is counted under <code>"p21%2E2"</code> instead of creating a nested field; <code>userGroups</code> keeps the plain names:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nx">updateOne</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sourceType</span><span class="o">:</span><span class="w"> </span><span class="s2">"Dataset"</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s2">"temperature"</span><span class="p">,</span><span class="w"> </span><span class="nx">humanReadableName</span><span class="o">:</span><span class="w"> </span><span class="s2">"Temperature"</span><span class="w"> </span><span class="p">},</span>
