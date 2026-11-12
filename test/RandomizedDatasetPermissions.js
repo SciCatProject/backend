@@ -183,7 +183,7 @@ async function removeAllDatasets() {
 
 describe("1700: Randomized Datasets: permission test with bigger amount of data", async () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

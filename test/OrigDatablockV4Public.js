@@ -11,8 +11,8 @@ let accessTokenArchiveManager = null,
 
 describe("2900: OrigDatablock v4 public endpoint tests", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
