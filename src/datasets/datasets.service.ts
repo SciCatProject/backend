@@ -75,6 +75,7 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
+import { castDatasetWhere } from "./utils/cast-where.util";
 import {
   findRelationsInWhere,
   splitWhereByRelations,
@@ -196,6 +197,12 @@ export class DatasetsService {
       ? aggregate.option({ maxTimeMS })
       : aggregate;
   }
+  private splitWhere(where?: FilterQuery<DatasetDocument>) {
+    return splitWhereByRelations(
+      castDatasetWhere(where ?? {}),
+      DATASET_RELATIONS,
+    );
+  }
 
   /**
    * Stages matching the conditions a where has on relations: the relations
@@ -283,10 +290,7 @@ export class DatasetsService {
       applyDefaults ? { ...filterDefaults, ...filter.limits } : filter.limits,
     );
 
-    const { before, after } = splitWhereByRelations(
-      castWhereFilter(whereFilter),
-      DATASET_RELATIONS,
-    );
+    const { before, after } = this.splitWhere(whereFilter);
     const pipeline: PipelineStage[] = [
       { $match: before },
       ...this.relationWhereStages(after),
@@ -402,12 +406,21 @@ export class DatasetsService {
     const fields = filters.fields ?? {};
     const facets = filters.facets ?? [];
 
+    const { before, after } = this.splitWhere(fields.mode);
+    delete fields.mode;
+
     const pipeline = createFullfacetPipeline<DatasetDocument, IDatasetFields>(
       this.datasetModel,
       "pid",
       fields,
       facets,
       "",
+    );
+    pipeline.splice(
+      pipeline.length - 1,
+      0,
+      ...(isEmpty(before) ? [] : [{ $match: before }]),
+      ...this.relationWhereStages(after),
     );
 
     return await this.datasetModel.aggregate(pipeline).exec();
@@ -487,11 +500,20 @@ export class DatasetsService {
   async count(
     filter: FilterQuery<DatasetDocument>,
   ): Promise<{ count: number }> {
-    const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
-    let count = 0;
-    count = await this.datasetModel.countDocuments(whereFilter).exec();
+    const { before, after } = this.splitWhere(filter.where);
+    if (isEmpty(after)) {
+      const count = await this.datasetModel.countDocuments(before).exec();
+      return { count };
+    }
 
-    return { count };
+    const [result] = await this.datasetModel
+      .aggregate<{ count: number }>([
+        { $match: before },
+        ...this.relationWhereStages(after),
+        { $count: "count" },
+      ])
+      .exec();
+    return { count: result?.count ?? 0 };
   }
 
   // PUT dataset
