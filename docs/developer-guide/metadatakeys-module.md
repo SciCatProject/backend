@@ -74,7 +74,7 @@ Called when a dataset is **deleted** or **loses metadata keys**.
 Runs three sequential steps:
 
 1. Decrements `usageCount` and per-group counts in `userGroupCounts`
-2. Recomputes the `userGroups` array from the updated counts — drops any group whose count reached zero
+2. For each of the source's groups, on keys where its count reached zero: removes the group from `userGroups` (`$pull`) and its counter from `userGroupCounts` (`$unset`)
 3. Deletes `MetadataKey` documents where `usageCount <= 0`
    `usageCount` is the authoritative deletion signal. A dataset with no `userGroups` and `isPublished: false` would be invisible to both `userGroupCounts` and `isPublished` checks, so neither alone can substitute for it.
 
@@ -97,16 +97,18 @@ This sequential approach ensures all changes to `usageCount`, `userGroupCounts`,
 
 Each `MetadataKey` document has the following key fields:
 
-| Field               | Type                  | Description                                                                              |
-| ------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `_id`               | `ObjectId`            | Generated UUID; logical identity is `(sourceType, key, humanReadableName)`               |
-| `key`               | `string`              | The raw metadata key name                                                                |
-| `humanReadableName` | `string`              | Human-readable label from `human_name`, empty string if absent                           |
-| `sourceType`        | `string`              | Source collection: `Dataset`, `Proposal`, `Sample`, etc.                                 |
-| `userGroups`        | `string[]`            | Groups that can see this key — kept in sync with `userGroupCounts` for query performance |
-| `userGroupCounts`   | `Map<string, number>` | Per-group reference counts — source of truth for safe group removal                      |
-| `usageCount`        | `number`              | Total datasets referencing this key — authoritative deletion signal                      |
-| `isPublished`       | `boolean`             | True if any contributing dataset is published                                            |
+| Field               | Type                  | Description                                                                                                          |
+| ------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `_id`               | `ObjectId`            | Generated UUID; logical identity is `(sourceType, key, humanReadableName)`                                           |
+| `key`               | `string`              | The raw metadata key name                                                                                            |
+| `humanReadableName` | `string`              | Human-readable label from `human_name`, empty string if absent                                                       |
+| `sourceType`        | `string`              | Source collection: `Dataset`, `Proposal`, `Sample`, etc.                                                             |
+| `userGroups`        | `string[]`            | Groups that can see this key — kept in sync with `userGroupCounts` for query performance                             |
+| `userGroupCounts`   | `Map<string, number>` | Per-group reference counts, keyed by group name encoded with `encodeURIComponentExtended` (decoded in API responses) |
+| `usageCount`        | `number`              | Total datasets referencing this key — authoritative deletion signal                                                  |
+| `isPublished`       | `boolean`             | True if any contributing dataset is published                                                                        |
+
+The keys are encoded because group names become field names there, where `.` would create a nested field and a leading `$` is rejected by MongoDB; e.g. group `p21.2` is counted under `"p21%2E2"`. `userGroups` holds the plain names.
 
 `userGroups` and `userGroupCounts` are intentionally redundant. `userGroupCounts` owns the truth and enables safe atomic decrements. `userGroups` is a denormalized array kept for query performance — MongoDB's multikey index on `userGroups` makes `{ userGroups: { $in: [...] } }` efficient in a way that querying Map keys directly is not.
 
@@ -183,8 +185,8 @@ Partial search on `humanReadableName`:
 
 The `MetadataKeys` collection is populated by a migration script that must be run manually before the service is deployed for the first time.
 
-See: `migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.js`
+See: `migrations/20261112120000-sync-dataset-scientificMetadata-to-metadatakeys.js`
 
-Documentation: `docs/developer-guide/migrations/20261030134716-sync-dataset-scientificMetadata-to-metadatakeys.md`
+Documentation: `docs/developer-guide/migrations/20261112120000-sync-dataset-scientificMetadata-to-metadatakeys.md`
 
 > ⚠️ The application will start normally without the migration, but the MetadataKeys service will return empty results until it is run.
