@@ -100,16 +100,22 @@ describe("MetadataKeysService", () => {
 
     it("returns decoded userGroupCounts keys", async () => {
       modelMock.aggregate.mockReturnValueOnce({
-        exec: jest
-          .fn()
-          .mockResolvedValue([
-            { key: "k", userGroupCounts: { "p21%2E2": 2, "%24x": 1, g: 3 } },
-          ]),
+        exec: jest.fn().mockResolvedValue([
+          {
+            key: "k",
+            userGroupCounts: { "p21%2E2": 2, "%24x": 1, "a%252Eb": 4, g: 3 },
+          },
+        ]),
       });
 
       const [doc] = await service.findAll({}, {});
 
-      expect(doc.userGroupCounts).toEqual({ "p21.2": 2, $x: 1, g: 3 });
+      expect(doc.userGroupCounts).toEqual({
+        "p21.2": 2,
+        $x: 1,
+        "a%2Eb": 4,
+        g: 3,
+      });
     });
 
     it("applies default sort when limits provided without sort", async () => {

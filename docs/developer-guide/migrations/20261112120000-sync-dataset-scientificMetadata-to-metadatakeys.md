@@ -1,4 +1,4 @@
-# 20261030134716 — Sync Dataset scientificMetadata to MetadataKeys
+# 20261112120000 — Sync Dataset scientificMetadata to MetadataKeys
 
 ## What this migration does
 
@@ -9,6 +9,8 @@ Each unique `(sourceType, key, humanReadableName)` combination becomes one `Meta
 Keys of the other source types (`Proposal`, `Sample`, `Instrument`) are not rebuilt here, and their current entries are left untouched.
 
 It replaces `20260420145401-sync-dataset-scientificMetadata-to-metadatakeys`, which produced wrong counts and groups on databases with more than 10,000 datasets. Sites that already applied that migration run this one as well, which rebuilds their `Dataset` keys correctly.
+
+It also replaces `20261030134716-sync-dataset-scientificMetadata-to-metadatakeys`, which stored `userGroupCounts` under raw group names (and stopped on names containing `.` or starting with `$`). Sites that already applied it run this one too, so their counters are rebuilt with the encoded group names the app now uses.
 
 ---
 

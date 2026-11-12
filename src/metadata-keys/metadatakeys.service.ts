@@ -8,7 +8,6 @@ import { FilterQuery, Model, PipelineStage, QueryOptions } from "mongoose";
 import { isEmpty } from "lodash";
 import {
   addCreatedByFields,
-  decodeURIComponentExtended,
   encodeURIComponentExtended,
   parsePipelineProjection,
   parsePipelineSort,
@@ -24,10 +23,6 @@ export type MetadataSourceDoc = {
   isPublished: boolean;
   metadata: Record<string, unknown>;
 };
-
-// userGroupCounts keys are group names encoded with encodeURIComponentExtended,
-// since raw names may contain "." (would nest the counter) or start with "$".
-const groupCountKey = (group: string) => encodeURIComponentExtended(group);
 
 @Injectable({ scope: Scope.REQUEST })
 export class MetadataKeysService {
@@ -75,13 +70,16 @@ export class MetadataKeysService {
       .aggregate<MetadataKeyClass>(pipeline)
       .exec();
 
+    // userGroupCounts keys are group names encoded with encodeURIComponentExtended,
+    // since raw names may contain "." or start with "$". decodeURIComponent is
+    // its exact inverse.
     return data.map((doc) =>
       doc.userGroupCounts
         ? {
             ...doc,
             userGroupCounts: Object.fromEntries(
               Object.entries(doc.userGroupCounts).map(([group, count]) => [
-                decodeURIComponentExtended(group),
+                decodeURIComponent(group),
                 count,
               ]),
             ) as unknown as Map<string, number>,
@@ -160,7 +158,7 @@ export class MetadataKeysService {
       if (userGroups.length > 0) {
         await this.metadataKeyModel.bulkWrite(
           userGroups.map((group) => {
-            const countField = `userGroupCounts.${groupCountKey(group)}`;
+            const countField = `userGroupCounts.${encodeURIComponentExtended(group)}`;
             return {
               updateMany: {
                 filter: { ...queryFilter, [countField]: { $lte: 0 } },
@@ -189,7 +187,10 @@ export class MetadataKeysService {
     delta: 1 | -1,
   ): Record<string, number> {
     return Object.fromEntries(
-      groups.map((g) => [`userGroupCounts.${groupCountKey(g)}`, delta]),
+      groups.map((g) => [
+        `userGroupCounts.${encodeURIComponentExtended(g)}`,
+        delta,
+      ]),
     );
   }
 }
