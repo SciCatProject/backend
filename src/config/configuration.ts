@@ -407,6 +407,11 @@ const configuration = () => {
       .METADATA_PARENT_INSTANCES_RETURN_LIMIT
       ? parseInt(process.env.METADATA_PARENT_INSTANCES_RETURN_LIMIT, 10)
       : undefined,
+    // limit for the dataset aggregations, 0 disables it
+    datasetQueryMaxTimeMs: parseInt(
+      process.env.DATASET_QUERY_MAX_TIME_MS ?? "30000",
+      10,
+    ),
     mongodbUri: process.env.MONGODB_URI,
     pidPrefix: process.env.PID_PREFIX,
     port: parseInt(process.env.PORT || "3000", 10),

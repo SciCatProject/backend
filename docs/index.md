@@ -164,6 +164,7 @@ Valid environment variables for the .env file. See [.env.example](/.env.example)
 |`LOGBOOK_BASE_URL`| string | Yes | The base URL to the Logbook API. Only required if Logbook is enabled. | |
 |`METADATA_KEYS_RETURN_LIMIT`| number | Yes | The return limit for the`/Datasets/metadataKeys`endpoint. | |
 |`METADATA_PARENT_INSTANCES_RETURN_LIMIT`| number | Yes | The return limit of Datasets to extract metadata keys from for the`/Datasets/metadataKeys`endpoint. | |
+|`DATASET_QUERY_MAX_TIME_MS`| number | Yes | Maximum time in milliseconds a dataset query may run in MongoDB (`maxTimeMS`) before it is aborted with a 400. 0 disables the limit. | 30000 |
 |`MONGODB_URI`| string | | The URI for your MongoDB instance. | |
 |`PID_PREFIX`| string | | The facility PID prefix, with trailing slash. | |
 |`PUBLIC_URL_PREFIX`| string | | The base URL to the facility Landing Page. | |

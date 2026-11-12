@@ -14,6 +14,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Request } from "express";
 import { isEmpty } from "lodash";
 import {
+  Aggregate,
   FilterQuery,
   Model,
   PipelineStage,
@@ -60,6 +61,7 @@ import {
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
 import {
   DATASET_LOOKUP_FIELDS,
+  DATASET_RELATIONS,
   DatasetLookupKeysEnum,
 } from "./types/dataset-lookup";
 import { ProposalsService } from "src/proposals/proposals.service";
@@ -73,7 +75,16 @@ import { withOCCFilter } from "./utils/occ-util";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { castWhereFilter } from "./utils/pipeline.util";
+import {
+  findRelationsInWhere,
+  splitWhereByRelations,
+} from "./utils/relation-where.util";
 import { toOpensearchDocument } from "src/opensearch/utils/opensearch.util";
+
+// MongoDB error code when an operation exceeds its maxTimeMS
+const MAX_TIME_MS_EXPIRED = 50;
+const isMaxTimeExpired = (error: unknown) =>
+  (error as { code?: number } | null)?.code === MAX_TIME_MS_EXPIRED;
 
 @Injectable({ scope: Scope.REQUEST })
 export class DatasetsService {
@@ -175,6 +186,33 @@ export class DatasetsService {
     return { scopes, relations };
   }
 
+  /**
+   * Bounds the time an aggregation may run, as lookups on relations can
+   * touch most of the collection when the dataset conditions are weak.
+   */
+  private withMaxTime<T>(aggregate: Aggregate<T>): Aggregate<T> {
+    const maxTimeMS = this.configService.get<number>("datasetQueryMaxTimeMs");
+    return maxTimeMS && maxTimeMS > 0
+      ? aggregate.option({ maxTimeMS })
+      : aggregate;
+  }
+
+  /**
+   * Stages matching the conditions a where has on relations: the relations
+   * it refers to are looked up, matched and removed again, independently of
+   * what is included.
+   */
+  private relationWhereStages(
+    after: FilterQuery<DatasetDocument>,
+  ): PipelineStage[] {
+    if (isEmpty(after)) return [];
+    const used = findRelationsInWhere(after, DATASET_RELATIONS);
+    const stages: PipelineStage[] = [];
+    this.addLookupFields(stages, used);
+    stages.push({ $match: after }, { $unset: used });
+    return stages;
+  }
+
   async create(createDatasetDto: CreateDatasetDto): Promise<DatasetDocument> {
     const username = (this.request.user as JWTUser).username;
     // Add version to the datasets based on the apiVersion extracted from the route path or use default one
@@ -245,8 +283,13 @@ export class DatasetsService {
       applyDefaults ? { ...filterDefaults, ...filter.limits } : filter.limits,
     );
 
+    const { before, after } = splitWhereByRelations(
+      castWhereFilter(whereFilter),
+      DATASET_RELATIONS,
+    );
     const pipeline: PipelineStage[] = [
-      { $match: castWhereFilter(whereFilter) },
+      { $match: before },
+      ...this.relationWhereStages(after),
     ];
     const addedRelations = this.addLookupFields(
       pipeline,
@@ -271,12 +314,16 @@ export class DatasetsService {
 
     pipeline.push({ $limit: limits.limit || 10 });
     try {
-      const data = await this.datasetModel
-        .aggregate<PartialOutputDatasetDto>(pipeline)
-        .exec();
+      const data = await this.withMaxTime(
+        this.datasetModel.aggregate<PartialOutputDatasetDto>(pipeline),
+      ).exec();
 
       return data;
     } catch (error) {
+      if (isMaxTimeExpired(error))
+        throw new BadRequestException(
+          "The query took too long, please narrow down the filter",
+        );
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
