@@ -1,6 +1,7 @@
 import { Module, NestModule } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { RequestContextModule } from "./common/modules/request-context.module";
+import { MongoTransactionModule } from "./common/modules/mongo-transaction.module";
 import { DatasetsModule } from "./datasets/datasets.module";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
@@ -164,6 +165,7 @@ import type { MailerOptions } from "@nestjs-modules/mailer";
     AdminModule,
     HealthModule,
     RequestContextModule,
+    MongoTransactionModule,
     HistoryModule,
     ConditionalModule.registerWhen(
       MaskSensitiveDataInterceptorModule,
