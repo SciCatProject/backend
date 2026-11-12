@@ -469,7 +469,10 @@ export class PublishedDataV4Controller {
 
     return this.publishedDataService.update(
       { doi: id },
-      { status: PublishedDataStatus.PUBLIC },
+      {
+        ...publishedData,
+        status: PublishedDataStatus.PUBLIC,
+      },
     );
   }
 
@@ -659,7 +662,11 @@ export class PublishedDataV4Controller {
 
     const res = await this.publishedDataService.update(
       { doi: publishedData.doi },
-      { status: PublishedDataStatus.REGISTERED, registeredTime: new Date() },
+      {
+        ...publishedData,
+        status: PublishedDataStatus.REGISTERED,
+        registeredTime: new Date(),
+      },
     );
 
     return res;
