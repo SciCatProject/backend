@@ -2,7 +2,7 @@ const ObjectId = require('bson').ObjectId;
 
 module.exports = {
   async up(db, client) {
-    await db
+    const userRoles = await db
       .collection("UserRole")
       .aggregate([
         { $match: { roleId: { $exists: true } } },
@@ -24,25 +24,26 @@ module.exports = {
         },
         { $unset: [ "role", "roleId" ] },
       ])
-      .toArray()
-      .then(res => res.forEach(
-        async (userRole) => {
-          const update = {
-            _id: userRole._id,
-            userId: userRole.userId,
-            name: userRole.name,
-            created: userRole.created,
-            modified: userRole.modified,
-            __v: userRole.__v,
-          };
-          await db
-            .collection("UserRole")
-            .replaceOne(
-              { _id: update._id },
-              update,
-            );
-        }
-      ));
+      .toArray();
+    
+    await Promise.all(userRoles.map(
+      async (userRole) => {
+        const update = {
+          _id: userRole._id,
+          userId: userRole.userId,
+          name: userRole.name,
+          created: userRole.created,
+          modified: userRole.modified,
+          __v: userRole.__v,
+        };
+        return db
+          .collection("UserRole")
+          .replaceOne(
+            { _id: update._id },
+            update,
+          );
+      }
+    ));
 
     await db
       .collection("Role")
@@ -70,44 +71,46 @@ module.exports = {
       ])
       .toArray();
     
-    for (const group of groups) {
-      const role = {
-        _id: new ObjectId(),
-        name: group.name,
-        created: group.created,
-        modified: group.modified,
-        __v: group.__v,
-      };
+    await Promise.all(groups.map(
+      async (group) => {
+        const role = {
+          _id: new ObjectId(),
+          name: group.name,
+          created: group.created,
+          modified: group.modified,
+          __v: group.__v,
+        };
 
-      await db
-        .collection("Role")
-        .insertOne(role);
+        await db
+          .collection("Role")
+          .insertOne(role);
 
-      await db
-        .collection("UserRole")
-        .aggregate([
-          { $match: { name: role.name } },
-          { $unset: [ "name", "created", "modified" ] },
-          { $set: { roleId: role._id } },
-        ])
-        .toArray()
-        .then(res => res.forEach(
-          async (userRole) => {
-            // Preserve pre-migration field ordering
-            const update = {
-              _id: userRole._id,
-              userId: userRole.userId,
-              roleId: userRole.roleId,
-              __v: userRole.__v,
-            };
-            await db
-              .collection("UserRole")
-              .replaceOne(
-                { _id: update._id },
-                update,
-              );
-          }
-        ));
-    }
+        await db
+          .collection("UserRole")
+          .aggregate([
+            { $match: { name: role.name } },
+            { $unset: [ "name", "created", "modified" ] },
+            { $set: { roleId: role._id } },
+          ])
+          .toArray()
+          .then(res => Promise.all(res.map(
+            async (userRole) => {
+              // Preserve pre-migration field ordering
+              const update = {
+                _id: userRole._id,
+                userId: userRole.userId,
+                roleId: userRole.roleId,
+                __v: userRole.__v,
+              };
+              await db
+                .collection("UserRole")
+                .replaceOne(
+                  { _id: update._id },
+                  update,
+                );
+            }
+          )));
+      }
+    ));
   },
 };
