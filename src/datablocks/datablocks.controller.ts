@@ -56,6 +56,8 @@ export class DatablocksController {
     const instance = new Datablock();
     instance.accessGroups = datablock?.accessGroups || [];
     instance.ownerGroup = datablock?.ownerGroup || "";
+    instance.isPublished =
+      datablock && "isPublished" in datablock ? datablock.isPublished : false;
 
     return instance;
   }
