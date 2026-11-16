@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-
 /**
  * Migration: Add optional resource ID fields to PublishedData.
  *
