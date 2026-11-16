@@ -110,6 +110,7 @@ export class PublishedDataController {
   ): Promise<PublishedDataObsoleteDto> {
     const createdPublishedData = await this.publishedDataService.create(
       createPublishedDataDto as unknown as CreatePublishedDataV4Dto,
+      { requireResourceId: false },
     );
 
     return createdPublishedData as unknown as PublishedDataObsoleteDto;

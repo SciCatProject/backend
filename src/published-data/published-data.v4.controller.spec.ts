@@ -1,9 +1,6 @@
 import { HttpService } from "@nestjs/axios";
-import { BadRequestException } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Request } from "express";
-import { of } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -118,76 +115,6 @@ describe("PublishedDataController", () => {
       "data.attributes.url",
       `https://${customLandingPage.metadata!.landingPage}${encodeURIComponent(customLandingPage.doi)}`,
     );
-  });
-
-  it("preflights legacy registration before contacting the DOI provider", async () => {
-    const legacyPublishedData = {
-      ...defaultUrl,
-      datasetPids: [],
-      proposalIds: [],
-      sampleIds: [],
-      instrumentIds: [],
-      status: "private" as const,
-    } as PublishedData;
-    const publishedDataService = (
-      controller as unknown as {
-        publishedDataService: PublishedDataServiceMock;
-      }
-    ).publishedDataService;
-    const validatorService = (
-      controller as unknown as { validatorService: ValidatorServiceMock }
-    ).validatorService;
-    const httpService = (
-      controller as unknown as { httpService: HttpServiceMock }
-    ).httpService;
-    const request = {
-      user: { username: "test-user" },
-      headers: {},
-    } as unknown as Request;
-
-    publishedDataService.findOne.mockResolvedValue(legacyPublishedData);
-    publishedDataService.update.mockResolvedValue(legacyPublishedData);
-    validatorService.validate.mockResolvedValue(null);
-    httpService.request.mockReturnValue(of({ data: {} }));
-
-    await expect(
-      controller.register(request, legacyPublishedData.doi),
-    ).resolves.toEqual(legacyPublishedData);
-
-    expect(publishedDataService.validateUpdate).toHaveBeenCalled();
-    expect(httpService.request).toHaveBeenCalled();
-    expect(
-      publishedDataService.validateUpdate.mock.invocationCallOrder[0],
-    ).toBeLessThan(httpService.request.mock.invocationCallOrder[0]);
-  });
-
-  it("does not contact the DOI provider when preflight validation fails", async () => {
-    const publishedDataService = (
-      controller as unknown as {
-        publishedDataService: PublishedDataServiceMock;
-      }
-    ).publishedDataService;
-    const validatorService = (
-      controller as unknown as { validatorService: ValidatorServiceMock }
-    ).validatorService;
-    const httpService = (
-      controller as unknown as { httpService: HttpServiceMock }
-    ).httpService;
-    const request = {
-      user: { username: "test-user" },
-      headers: {},
-    } as unknown as Request;
-
-    publishedDataService.findOne.mockResolvedValue(defaultUrl);
-    validatorService.validate.mockResolvedValue(null);
-    publishedDataService.validateUpdate.mockImplementation(() => {
-      throw new BadRequestException({ code: "NO_RESOURCE_IDS_PROVIDED" });
-    });
-
-    await expect(
-      controller.register(request, defaultUrl.doi),
-    ).rejects.toBeInstanceOf(BadRequestException);
-    expect(httpService.request).not.toHaveBeenCalled();
   });
 
   it("should not double-prefix https:// when 'landingPage' already includes a protocol", () => {

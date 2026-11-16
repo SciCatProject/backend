@@ -419,8 +419,15 @@ export class PublishedDataV4Controller {
       publishedData,
       updatePublishedDataDto,
     );
+    const updateWithComputedMetadata =
+      merged.metadata === undefined
+        ? updatePublishedDataDto
+        : { ...updatePublishedDataDto, metadata: merged.metadata };
 
-    return this.publishedDataService.update({ doi: id }, merged);
+    return this.publishedDataService.update(
+      { doi: id },
+      updateWithComputedMetadata,
+    );
   }
 
   // POST /publisheddata/:id/publish
@@ -458,10 +465,6 @@ export class PublishedDataV4Controller {
     if (validationErrors) {
       throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
     }
-
-    this.publishedDataService.validateUpdate(publishedData, {
-      status: PublishedDataStatus.PUBLIC,
-    });
 
     // Make datasets in publishedData datasetPids array public
     const datasetPids = publishedData.datasetPids ?? [];
@@ -522,10 +525,6 @@ export class PublishedDataV4Controller {
     }
 
     // TODO: Check if there is any other change needed before amending
-
-    this.publishedDataService.validateUpdate(publishedData, {
-      status: PublishedDataStatus.AMENDED,
-    });
 
     return this.publishedDataService.update(
       { doi: id },
@@ -606,11 +605,6 @@ export class PublishedDataV4Controller {
     if (validationErrors) {
       throw new HttpException(validationErrors, HttpStatus.BAD_REQUEST);
     }
-
-    this.publishedDataService.validateUpdate(publishedData, {
-      status: PublishedDataStatus.REGISTERED,
-      registeredTime: data.registeredTime,
-    });
 
     const mergePatchRequest = cloneDeep(request);
     mergePatchRequest.headers["content-type"] = "application/merge-patch+json";
@@ -745,8 +739,15 @@ export class PublishedDataV4Controller {
     }
 
     const merged = await this.validateMergedUpdate(publishedData, data);
+    const updateWithComputedMetadata =
+      merged.metadata === undefined
+        ? data
+        : { ...data, metadata: merged.metadata };
 
-    const res = await this.publishedDataService.update({ doi: id }, merged);
+    const res = await this.publishedDataService.update(
+      { doi: id },
+      updateWithComputedMetadata,
+    );
     return res ? { doi: res.doi } : null;
   }
 

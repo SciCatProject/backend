@@ -101,27 +101,24 @@ describe("1600: PublishedData v3 lifecycle", () => {
     }
   });
 
-  it("0010: rejects published data without associated datasets", async () => {
+  it("0010: preserves v3 compatibility without associated datasets", async () => {
     const payload = {
       ...clone(TestData.PublishedData),
       pidArray: [],
       title: "Published data without associated datasets",
     };
 
-    await requestWithToken(
+    const response = await requestWithToken(
       "post",
       "/api/v3/PublishedData",
       accessTokenAdminIngestor,
     )
       .send(payload)
-      .expect(TestData.BadRequestStatusCode)
+      .expect(TestData.EntryCreatedStatusCode)
       .expect("Content-Type", /json/);
 
-    const records = await db
-      .collection("PublishedData")
-      .find({ title: payload.title })
-      .toArray();
-    records.should.have.length(0);
+    response.body.should.have.property("doi").and.be.string;
+    publishedDataDoi = response.body.doi;
   });
 
   it("0020: creates the first associated dataset", async () => {

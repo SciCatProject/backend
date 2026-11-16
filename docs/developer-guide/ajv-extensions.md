@@ -8,6 +8,19 @@ Ajv provides mechanisms to overcome some limitations of JSON Schema by allowing 
 
 SciCat backend can load an external javascript module containing facility-specific code at runtime and execute it during validation.
 
+## Published Data resource associations
+
+Published Data v4 accepts `datasetPids`, `proposalIds`, `sampleIds`, and
+`instrumentIds`. At least one of these arrays must contain a non-blank
+identifier when creating a v4 record. The identifiers are stored as
+associations; publication and DOI registration do not currently resolve the
+proposal, sample, or instrument records or perform additional access checks on
+them. Dataset publication behavior remains unchanged for `datasetPids`.
+
+The v3 Published Data endpoint is deprecated and retains its legacy behavior,
+including accepting an empty `pidArray` for compatibility with existing
+clients.
+
 Supported features:
 - registering new [keywords](https://ajv.js.org/keywords.html)
 - registering new [dynamicDefaults functions](https://ajv.js.org/packages/ajv-keywords.html#dynamicdefaults)

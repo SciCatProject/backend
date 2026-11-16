@@ -31,7 +31,7 @@ describe("UpdatePublishedDataV4Dto", () => {
     expect(errors.map((error) => error.property)).toContain("datasetPids");
   });
 
-  it("rejects blank entries in resource ID arrays", async () => {
+  it("leaves blank-entry business validation to the resource validation layer", async () => {
     const dto = plainToInstance(UpdatePublishedDataV4Dto, {
       title: "Example",
       abstract: "Example abstract",
@@ -43,9 +43,7 @@ describe("UpdatePublishedDataV4Dto", () => {
 
     const errors = await validate(dto);
 
-    expect(errors.map((error) => error.property)).toEqual(
-      expect.arrayContaining(["datasetPids", "proposalIds", "sampleIds"]),
-    );
+    expect(errors).toHaveLength(0);
   });
 
   it("keeps omitted resource ID arrays undefined", () => {

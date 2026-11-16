@@ -110,7 +110,7 @@ export class PublishedData extends QueryableClass {
     example: ["dataset1", "dataset2"],
   })
   @Prop({ type: [String], required: false, default: [] })
-  datasetPids?: string[];
+  datasetPids: string[];
 
   @ApiProperty({
     type: [String],
@@ -120,7 +120,7 @@ export class PublishedData extends QueryableClass {
     example: ["proposal123", "proposal456"],
   })
   @Prop({ type: [String], required: false, default: [] })
-  proposalIds?: string[];
+  proposalIds: string[];
 
   @ApiProperty({
     type: [String],
@@ -130,7 +130,7 @@ export class PublishedData extends QueryableClass {
     example: ["sample789", "sample012"],
   })
   @Prop({ type: [String], required: false, default: [] })
-  sampleIds?: string[];
+  sampleIds: string[];
 
   @ApiProperty({
     type: [String],
@@ -140,7 +140,7 @@ export class PublishedData extends QueryableClass {
     example: ["instrumentA", "instrumentB"],
   })
   @Prop({ type: [String], required: false, default: [] })
-  instrumentIds?: string[];
+  instrumentIds: string[];
 
   @ApiProperty({
     type: Date,

@@ -99,6 +99,60 @@ describe("PublishedDataService", () => {
     expect(findOne).not.toHaveBeenCalled();
   });
 
+  it("allows non-resource updates on legacy documents", async () => {
+    const findOneAndUpdate = model.findOneAndUpdate as jest.Mock;
+    const legacyPublishedData = {
+      ...mockPublishedData,
+      datasetPids: [],
+      proposalIds: [],
+      sampleIds: [],
+      instrumentIds: [],
+    };
+
+    findOneAndUpdate.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(legacyPublishedData),
+    });
+
+    await expect(
+      service.update(
+        { doi: legacyPublishedData.doi },
+        { title: "Updated title" },
+      ),
+    ).resolves.toEqual(legacyPublishedData);
+
+    expect(findOneAndUpdate).toHaveBeenCalledWith(
+      { doi: legacyPublishedData.doi },
+      expect.objectContaining({
+        $set: expect.objectContaining({ title: "Updated title" }),
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("reports a conflict when an atomic update loses a race", async () => {
+    const findOneAndUpdate = model.findOneAndUpdate as jest.Mock;
+    const findOne = model.findOne as jest.Mock;
+
+    findOneAndUpdate.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(null),
+    });
+    findOne.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(mockPublishedData),
+    });
+
+    await expect(
+      service.update(
+        { doi: mockPublishedData.doi },
+        { datasetPids: ["new-dataset-pid"] },
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      response: {
+        message: expect.stringContaining("modified concurrently"),
+      },
+    });
+  });
+
   it("adds an atomic guard when clearing a resource ID field", async () => {
     const findOneAndUpdate = model.findOneAndUpdate as jest.Mock;
     const findOne = model.findOne as jest.Mock;

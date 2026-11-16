@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, Scope } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  Scope,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { InjectModel } from "@nestjs/mongoose";
@@ -19,6 +25,7 @@ import {
 import {
   createNoResourceIdsProvidedError,
   hasAtLeastOneResourceId,
+  hasOnlyBlankResourceIds,
   hasOnlyNonBlankResourceIds,
   normalizeResourceIdArrays,
   RESOURCE_ID_FIELD_NAMES,
@@ -44,22 +51,23 @@ export class PublishedDataService {
   }
 
   /**
-   * Validates that at least one ID field is present and non-empty.
-   * This provides defense-in-depth validation at the service level.
-   *
-   * @param datasetPids - Array of dataset persistent identifiers
-   * @param proposalIds - Array of proposal persistent identifiers
-   * @param sampleIds - Array of sample persistent identifiers
-   * @param instrumentIds - Array of instrument persistent identifiers
-   * @throws BadRequestException if no ID fields are provided
+   * Validates the resource-ID arrays without enforcing that one is populated.
+   * The latter rule is applied separately so legacy status-only updates remain
+   * possible.
    */
   private validateResourceIdArrays(value: ResourceIdFields): void {
-    if (!hasOnlyNonBlankResourceIds(value)) {
-      throw new BadRequestException({
-        message: "Resource ID arrays must contain only non-blank strings",
-        code: "INVALID_RESOURCE_IDS",
-      });
+    if (hasOnlyNonBlankResourceIds(value)) {
+      return;
     }
+
+    if (hasOnlyBlankResourceIds(value)) {
+      throw new BadRequestException(createNoResourceIdsProvidedError());
+    }
+
+    throw new BadRequestException({
+      message: "Resource ID arrays must contain only non-blank strings",
+      code: "INVALID_RESOURCE_IDS",
+    });
   }
 
   private validateAtLeastOneIdField(
@@ -82,17 +90,20 @@ export class PublishedDataService {
 
   async create(
     createPublishedDataDto: CreatePublishedDataV4Dto,
+    options: { requireResourceId?: boolean } = {},
   ): Promise<PublishedData> {
     const normalizedDto = normalizeResourceIdArrays(createPublishedDataDto);
 
     // Service-level validation (defense-in-depth)
     this.validateResourceIdArrays(normalizedDto);
-    this.validateAtLeastOneIdField(
-      normalizedDto.datasetPids,
-      normalizedDto.proposalIds,
-      normalizedDto.sampleIds,
-      normalizedDto.instrumentIds,
-    );
+    if (options.requireResourceId ?? true) {
+      this.validateAtLeastOneIdField(
+        normalizedDto.datasetPids,
+        normalizedDto.proposalIds,
+        normalizedDto.sampleIds,
+        normalizedDto.instrumentIds,
+      );
+    }
 
     const username = (this.request.user as JWTUser).username;
     const createdPublished = new this.publishedDataModel(
@@ -235,11 +246,14 @@ export class PublishedDataService {
     // this change invalid. Check only on the failure path to preserve the
     // existing validation error while keeping successful updates atomic.
     const existing = await this.publishedDataModel.findOne(filter).exec();
-    if (existing) {
-      this.validateUpdate(existing, normalizedDto);
+    if (!existing) {
+      return null;
     }
 
-    return null;
+    this.validateUpdate(existing, normalizedDto);
+    throw new ConflictException(
+      "Published data was modified concurrently; please retry the update.",
+    );
   }
 
   /**

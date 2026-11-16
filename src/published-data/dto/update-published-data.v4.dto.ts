@@ -9,7 +9,6 @@ import {
 import { PartialType, ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { PublishedDataStatus } from "../interfaces/published-data.interface";
-import { IsNonBlankResourceIdArray } from "../pipes/resource-id.validation";
 
 const normalizeResourceIds = ({ value }: { value: unknown }): unknown =>
   value === null ? [] : value;
@@ -46,7 +45,6 @@ export class UpdatePublishedDataV4Dto {
   @Transform(normalizeResourceIds)
   @IsArray()
   @IsString({ each: true })
-  @IsNonBlankResourceIdArray()
   readonly datasetPids?: string[];
 
   /**
@@ -62,7 +60,6 @@ export class UpdatePublishedDataV4Dto {
   @Transform(normalizeResourceIds)
   @IsArray()
   @IsString({ each: true })
-  @IsNonBlankResourceIdArray()
   readonly proposalIds?: string[];
 
   /**
@@ -78,7 +75,6 @@ export class UpdatePublishedDataV4Dto {
   @Transform(normalizeResourceIds)
   @IsArray()
   @IsString({ each: true })
-  @IsNonBlankResourceIdArray()
   readonly sampleIds?: string[];
 
   /**
@@ -94,7 +90,6 @@ export class UpdatePublishedDataV4Dto {
   @Transform(normalizeResourceIds)
   @IsArray()
   @IsString({ each: true })
-  @IsNonBlankResourceIdArray()
   readonly instrumentIds?: string[];
 
   /**
