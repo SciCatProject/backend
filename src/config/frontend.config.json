@@ -6,6 +6,7 @@
   "datasetDetailsTabsInclude": {
     "details": ["proposals", "instruments", "samples", "attachments"]
   },
+  "sideFilterEnabled": false,
   "statusBannerMessage": "",
   "statusBannerCode": "INFO",
   "realTimeUpdatesEnabled": false,
