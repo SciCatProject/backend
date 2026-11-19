@@ -6,7 +6,12 @@ import {
   SwaggerModule,
 } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
-import { Logger, ValidationPipe, VersioningType } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  ValidationPipe,
+  VersioningType,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AllExceptionsFilter, ScicatLogger } from "./loggers/logger.service";
 import { NestExpressApplication } from "@nestjs/platform-express";
@@ -104,6 +109,15 @@ async function bootstrap() {
   await app.listen(port);
 }
 bootstrap().catch((error) => {
-  Logger.error("Failed to bootstrap the application", error, "Main");
+  // Logs are buffered (bufferLogs) until app.listen() succeeds, and ScicatLogger
+  // only gets its loggers in its own onModuleInit. A failure in another
+  // onModuleInit hook (e.g. RabbitMQ unreachable) would otherwise exit silently.
+  Logger.overrideLogger(new ConsoleLogger());
+  Logger.flush();
+  Logger.error(
+    `Failed to bootstrap the application: ${(error as Error)?.message}`,
+    (error as Error)?.stack,
+    "Main",
+  );
   process.exit(1);
 });

@@ -105,6 +105,47 @@ describe("RabbitMQService", () => {
     );
   });
 
+  describe("connect failure message", () => {
+    beforeEach(() => rabbitMQService.parseConfig());
+
+    it("should include host, port and the driver error, and keep the cause", async () => {
+      const driverError = new Error("Connection error");
+      (amqplibConnect as jest.Mock).mockRejectedValueOnce(driverError);
+      const error = await rabbitMQService["connect"]().catch((e) => e);
+      expect(error.message).toBe(
+        "Cannot connect to RabbitMQ at localhost:5672: Connection error",
+      );
+      expect(error.cause).toBe(driverError);
+    });
+
+    it("should use the inner errors of an AggregateError with an empty message", async () => {
+      (amqplibConnect as jest.Mock).mockRejectedValueOnce(
+        new AggregateError([
+          new Error("connect ECONNREFUSED ::1:5672"),
+          new Error("connect ECONNREFUSED 127.0.0.1:5672"),
+        ]),
+      );
+      await expect(rabbitMQService["connect"]()).rejects.toThrow(
+        "Cannot connect to RabbitMQ at localhost:5672: connect ECONNREFUSED ::1:5672, connect ECONNREFUSED 127.0.0.1:5672",
+      );
+    });
+
+    it("should fall back to the error code", async () => {
+      (amqplibConnect as jest.Mock).mockRejectedValueOnce(
+        Object.assign(new Error(""), { code: "ECONNREFUSED" }),
+      );
+      await expect(rabbitMQService["connect"]()).rejects.toThrow(
+        "Cannot connect to RabbitMQ at localhost:5672: ECONNREFUSED",
+      );
+    });
+
+    it("should not include the password", async () => {
+      (amqplibConnect as jest.Mock).mockRejectedValueOnce(new Error("refused"));
+      const error = await rabbitMQService["connect"]().catch((e) => e);
+      expect(error.message).not.toContain("guest");
+    });
+  });
+
   it("should bindQueue", async () => {
     await rabbitMQService["connect"]();
     await rabbitMQService["bindQueue"]("q", "ex", "key");
