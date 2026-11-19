@@ -5,13 +5,12 @@ import { genSalt, hash } from "bcrypt";
 import { FilterQuery, Model } from "mongoose";
 import { CreateUserIdentityDto } from "./dto/create-user-identity.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { RolesService } from "./roles.service";
+import { UserRolesService } from "./user-roles.service";
 import {
   UserIdentity,
   UserIdentityDocument,
 } from "./schemas/user-identity.schema";
 import { User, UserDocument } from "./schemas/user.schema";
-import { CreateRoleDto } from "./dto/create-role.dto";
 import { CreateUserRoleDto } from "./dto/create-user-role.dto";
 import { CreateUserJWT } from "./dto/create-user-jwt.dto";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
@@ -37,7 +36,7 @@ export class UsersService implements OnModuleInit {
   constructor(
     private configService: ConfigService,
     private jwtService: JwtService,
-    private rolesService: RolesService,
+    private userRolesService: UserRolesService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(UserIdentity.name)
     private userIdentityModel: Model<UserIdentityDocument>,
@@ -137,18 +136,16 @@ export class UsersService implements OnModuleInit {
       }, {});
       if (roles) {
         for (const [role, userIds] of Object.entries(roles)) {
-          const createRole: CreateRoleDto = {
-            name: role,
-          };
-          const createdRole = await this.rolesService.findOrCreate(createRole);
-          if (createdRole && userIds) {
+          if (userIds) {
             await Promise.all(
               userIds.map(async (userId) => {
                 const createUserRole: CreateUserRoleDto = {
                   userId: userId,
-                  roleId: createdRole._id,
+                  name: role,
                 };
-                await this.rolesService.findOrCreateUserRole(createUserRole);
+                await this.userRolesService.findOrCreateUserRole(
+                  createUserRole,
+                );
               }),
             );
           }

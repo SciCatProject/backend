@@ -2,7 +2,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
-import { RolesService } from "src/users/roles.service";
+import { UserRolesService } from "src/users/user-roles.service";
 import { UsersService } from "src/users/users.service";
 import { JWTUser } from "../interfaces/jwt-user.interface";
 import { User } from "src/users/schemas/user.schema";
@@ -17,7 +17,7 @@ import {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private rolesService: RolesService,
+    private userRolesService: UserRolesService,
     private usersService: UsersService,
   ) {
     super({
@@ -41,7 +41,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const roles = await this.rolesService.find({ userId: payload._id });
+    const userRoles = await this.userRolesService.findAll({
+      userId: payload._id,
+    });
 
     const userIdentity = await this.usersService.findByIdUserIdentity(
       payload._id,
@@ -49,8 +51,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     let currentGroups: string[] = [];
 
-    if (roles) {
-      const roleNames = roles
+    if (userRoles) {
+      const roleNames = userRoles
         .map((role) => (role ? role.name : ""))
         .filter((name) => name.length > 0);
       currentGroups = currentGroups.concat(roleNames);
