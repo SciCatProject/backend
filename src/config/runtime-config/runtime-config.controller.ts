@@ -21,14 +21,16 @@ import {
 import { Request } from "express";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { OutputRuntimeConfigDto } from "./dto/output-runtime-config.dto";
 import { RuntimeConfigService } from "./runtime-config.service";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { Action } from "src/casl/action.enum";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { RuntimeConfig } from "./schemas/runtime-config.schema";
 import { UpdateRuntimeConfigDto } from "./dto/update-runtime-config.dto";
+
 @ApiBearerAuth()
 @ApiTags("runtime configurations")
 @Controller("runtime-config")
@@ -54,9 +56,11 @@ export class RuntimeConfigController {
     return config;
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("runtimeconfig", (ability: AppAbility) =>
-    ability.can(Action.Update, RuntimeConfig),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("runtimeconfig", (ability: AppAbility) =>
+      ability.can(Action.Update, RuntimeConfig),
+    ),
   )
   @Put(":id")
   @ApiParam({

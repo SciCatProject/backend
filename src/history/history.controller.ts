@@ -20,10 +20,12 @@ import {
 import { Request } from "express";
 import { FilterQuery } from "mongoose";
 import { JWTUser } from "../auth/interfaces/jwt-user.interface";
-import { Action } from "../casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "../casl/casl-ability.factory";
-import { CheckPolicies } from "../casl/decorators/check-policies.decorator";
-import { AuthenticatedPoliciesGuard } from "../casl/guards/auth-check.guard";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { AuthenticatedEndpointGuard } from "src/casl/guards/authenticated.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import {
   GenericHistory,
   GenericHistoryDocument,
@@ -62,9 +64,11 @@ export class HistoryController {
     Sample: SampleClass,
   };
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryRead, GenericHistory),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("history", (ability: AppAbility) =>
+      ability.can(Action.HistoryRead, GenericHistory),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -156,9 +160,11 @@ export class HistoryController {
     };
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryRead, GenericHistory),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("history", (ability: AppAbility) =>
+      ability.can(Action.HistoryRead, GenericHistory),
+    ),
   )
   @Get("count")
   @ApiOperation({
@@ -215,9 +221,11 @@ export class HistoryController {
   }
 
   // Keep the existing endpoint for backward compatibility
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("history", (ability: AppAbility) =>
-    ability.can(Action.HistoryRead, GenericHistory),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("history", (ability: AppAbility) =>
+      ability.can(Action.HistoryRead, GenericHistory),
+    ),
   )
   @Get("collection/:subsystem")
   @ApiOperation({

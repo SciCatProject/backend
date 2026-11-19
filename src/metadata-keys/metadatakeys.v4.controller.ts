@@ -13,17 +13,18 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { MetadataKeysService } from "./metadatakeys.service";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { OutputMetadataKeyDto } from "./dto/output-metadata-key.dto";
-
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
+import { MetadataKeysService } from "./metadatakeys.service";
+import { OutputMetadataKeyDto } from "./dto/output-metadata-key.dto";
 import { Request } from "express";
 import { getSwaggerMetadatakeysFilterContent } from "./types/metadatakeys-filter-content";
 import { MetadataKeyClass } from "./schemas/metadatakey.schema";
-import { Action } from "src/casl/action.enum";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
 import { FilterValidationPipe } from "src/common/pipes/filter-validation.pipe";
 import {
   ALLOWED_METADATAKEYS_FILTER_KEYS,
@@ -40,9 +41,11 @@ export class MetadataKeysV4Controller {
     private caslAbilityFactory: CaslAbilityFactory,
   ) {}
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("metadataKeys", (ability: AppAbility) =>
-    ability.can(Action.Read, MetadataKeyClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("metadataKeys", (ability: AppAbility) =>
+      ability.can(Action.Read, MetadataKeyClass),
+    ),
   )
   @Get()
   @ApiOperation({ summary: "List metadata keys by text query" })

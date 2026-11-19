@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { PublishedDataAbility } from "./published-data.ability";
 import { PublishedData } from "src/published-data/schemas/published-data.schema";
 import {

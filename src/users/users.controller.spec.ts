@@ -6,7 +6,7 @@ import { UsersService } from "./users.service";
 import { UpdateUserSettingsDto } from "./dto/update-user-settings.dto";
 import { Request } from "express";
 import { UserSettings } from "./schemas/user-settings.schema";
-import { Action } from "src/casl/action.enum";
+import { Action } from "src/casl/types/action.enum";
 import { User } from "./schemas/user.schema";
 import { ReturnedUserDto } from "./dto/returned-user.dto";
 

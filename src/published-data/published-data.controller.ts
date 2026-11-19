@@ -34,10 +34,13 @@ import { FilterQuery, QueryOptions } from "mongoose";
 import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { DatasetsV4Controller } from "src/datasets/datasets.v4.controller";
@@ -71,7 +74,6 @@ import { V3_FILTER_PIPE } from "./pipes/filter.pipe";
 import { Filter } from "src/datasets/decorators/filter.decorator";
 import { V3_TO_V4_DTO_BODY_PIPE } from "./pipes/body-dto.pipe";
 import { Request } from "express";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 
 @ApiBearerAuth()
 @ApiTags("published data")
@@ -90,9 +92,11 @@ export class PublishedDataController {
   ) {}
 
   // POST /publisheddata
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Create, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Create, PublishedData),
+    ),
   )
   @ApiOperation({
     deprecated: true,
@@ -204,9 +208,11 @@ export class PublishedDataController {
   }
 
   // GET /publisheddata/formpopulate
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Read, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Read, PublishedData),
+    ),
   )
   @Get("/formpopulate")
   @ApiOperation({
@@ -322,9 +328,11 @@ export class PublishedDataController {
   }
 
   // PATCH /publisheddata/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiOperation({
     deprecated: true,
@@ -437,9 +445,11 @@ export class PublishedDataController {
   }
 
   // DELETE /publisheddata/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Delete, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Delete, PublishedData),
+    ),
   )
   @ApiOperation({
     deprecated: true,
@@ -468,9 +478,11 @@ export class PublishedDataController {
   }
 
   // POST /publisheddata/:id/register
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiOperation({
     deprecated: true,
@@ -619,9 +631,11 @@ export class PublishedDataController {
   }
 
   // POST /publisheddata/:id/resync
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiOperation({
     summary: "Edits published data",
