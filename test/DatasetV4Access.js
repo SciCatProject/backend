@@ -153,6 +153,7 @@ describe("2700: Datasets v4 access tests", () => {
 
     const attachment = {
       ...TestData.AttachmentCorrectV4,
+      isPublished: true,
       relationships: [
         {
           targetId: derivedDatasetMinPid,
