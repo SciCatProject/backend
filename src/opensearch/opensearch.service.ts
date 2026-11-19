@@ -93,10 +93,13 @@ export class OpensearchService implements OnModuleInit {
     this.maxResultWindow = Number(
       this.osConfigs?.settings?.index?.max_result_window || 10000,
     );
-    if (!this.host || !this.username || !this.password || !this.defaultIndex) {
+    // Only name the missing settings; never log their values (password).
+    const missing = (
+      ["host", "username", "password", "defaultIndex"] as const
+    ).filter((key) => !this[key]);
+    if (missing.length > 0) {
       Logger.warn(
-        `Missing Opensearch configuration for host: ${this.host}, username: ${this.username}, 
-        password: ${this.password} or defaultIndex: ${this.defaultIndex}`,
+        `Missing Opensearch configuration: ${missing.join(", ")}`,
         "Opensearch",
       );
     }
