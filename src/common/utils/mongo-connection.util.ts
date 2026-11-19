@@ -1,4 +1,6 @@
 import { Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { MongooseModuleFactoryOptions } from "@nestjs/mongoose";
 import { Connection, MongooseError } from "mongoose";
 
 const LOG_CONTEXT = "MongoDB";
@@ -15,6 +17,20 @@ export function getMongoHostsForLogging(uri: string | undefined): string {
   return hosts || "<unknown host>";
 }
 
+// The app opens more than one connection to the same database (AppModule and
+// HealthModule), so identical reports within this window are logged only once.
+const REPORT_DEDUPE_MS = 5000;
+const lastReported = new Map<string, number>();
+
+function reportStartupFailure(message: string): void {
+  const now = Date.now();
+  if (now - (lastReported.get(message) ?? -Infinity) < REPORT_DEDUPE_MS) return;
+  lastReported.set(message, now);
+  // Print the buffered bootstrap logs now instead of after all retries fail.
+  Logger.flush();
+  Logger.error(message, LOG_CONTEXT);
+}
+
 /**
  * Logs MongoDB connectivity problems as soon as the driver sees them.
  *
@@ -27,26 +43,24 @@ export function attachMongoConnectionDiagnostics(
   uri: string | undefined,
 ): void {
   const hosts = getMongoHostsForLogging(uri);
-  let reportedUnreachable = false;
-
-  connection.getClient().on("serverHeartbeatFailed", (event) => {
-    if (reportedUnreachable || connection.readyState === 1) return;
-    reportedUnreachable = true;
-    // Print the buffered bootstrap logs now instead of after all retries fail.
-    Logger.flush();
-    Logger.error(
-      `Cannot connect to MongoDB at ${hosts}: ${event.failure.message}. ` +
-        "Is the database running? Still trying...",
-      LOG_CONTEXT,
-    );
-  });
-
-  // Runtime events only: failed initial attempts are already reported above
-  // and by the MongooseModule retry log.
   let connected = false;
+  // Heartbeats are per server: one failing replica-set member is not an outage,
+  // so each unreachable server is reported by its own address, once.
+  const reportedServers = new Set<string>();
+
   connection.once("connected", () => {
     connected = true;
   });
+
+  connection.getClient().on("serverHeartbeatFailed", (event) => {
+    if (connected || reportedServers.has(event.connectionId)) return;
+    reportedServers.add(event.connectionId);
+    reportStartupFailure(
+      `Cannot reach MongoDB server ${event.connectionId}: ${event.failure.message}. ` +
+        "Is the database running? Still trying...",
+    );
+  });
+
   connection.on("disconnected", () => {
     if (connected)
       Logger.warn(`Disconnected from MongoDB at ${hosts}`, LOG_CONTEXT);
@@ -59,6 +73,11 @@ export function attachMongoConnectionDiagnostics(
       Logger.error(
         `MongoDB connection error (${hosts}): ${error.message}`,
         LOG_CONTEXT,
+      );
+    } else if (reportedServers.size === 0) {
+      // Failed before any heartbeat ran (SRV/DNS lookup, authentication, ...).
+      reportStartupFailure(
+        `Cannot connect to MongoDB at ${hosts}: ${error.message}`,
       );
     }
   });
@@ -74,4 +93,18 @@ export function toMongoConnectionError(
   );
   wrapped.cause = error;
   return wrapped;
+}
+
+/** Options for MongooseModule.forRootAsync, shared by every root connection. */
+export function createMongooseOptions(
+  configService: ConfigService,
+): MongooseModuleFactoryOptions {
+  const uri = configService.get<string>("mongodbUri");
+  return {
+    uri,
+    onConnectionCreate: (connection: Connection) =>
+      attachMongoConnectionDiagnostics(connection, uri),
+    connectionErrorFactory: (error: MongooseError) =>
+      toMongoConnectionError(error, uri),
+  };
 }
