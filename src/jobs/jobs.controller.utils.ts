@@ -12,7 +12,7 @@ import * as jmp from "json-merge-patch";
 import { JobsService } from "./jobs.service";
 import { CreateJobDto } from "./dto/create-job.dto";
 import { UpdateJobDto } from "./dto/update-job.dto";
-import { DatasetListDto } from "./dto/dataset-list.dto";
+import { DatasetListDto, uniquePids } from "./dto/dataset-list.dto";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { Action } from "src/casl/action.enum";
 import { CreateJobAuth } from "src/jobs/types/jobs-auth.enum";
@@ -32,7 +32,6 @@ import {
 } from "../config/job-config/jobconfig.interface";
 import { JobParams } from "./types/job-types.enum";
 import { IJobFields } from "./interfaces/job-filters.interface";
-import { OrigDatablock } from "src/origdatablocks/schemas/origdatablock.schema";
 import { ConfigService } from "@nestjs/config";
 import { JobConfigService } from "../config/job-config/jobconfig.service";
 import { mandatoryFields } from "./types/jobs-filter-content";
@@ -55,6 +54,9 @@ import { ProposalClass } from "src/proposals/schemas/proposal.schema";
 import { accessibleBy } from "@casl/mongoose";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
+
+// Max number of missing files listed in the error returned to the user
+const MAX_REPORTED_MISSING_FILES = 10;
 
 @Injectable()
 export class JobsControllerUtils {
@@ -99,6 +101,11 @@ export class JobsControllerUtils {
       throw new UnprocessableEntityException(
         "List of passed datasets is empty.",
       );
+    const maxDatasets = this.configService.get<number>("jobMaxDatasets")!;
+    if (datasetList.length > maxDatasets)
+      throw new UnprocessableEntityException(
+        `List of passed datasets exceeds the maximum of ${maxDatasets}.`,
+      );
 
     // check that datasetList is of type DatasetListDto[]
     const datasetListDtos: DatasetListDto[] = plainToInstance(
@@ -134,12 +141,13 @@ export class JobsControllerUtils {
    * Check that the dataset pids are valid
    */
   async checkDatasetPids(datasetList: DatasetListDto[]): Promise<void> {
-    const datasetIds = datasetList.map((x) => x.pid);
+    const datasetIds = uniquePids(datasetList);
     const filter: FilterQuery<DatasetClass> = {
       where: {
         pid: { $in: datasetIds },
       },
       fields: ["pid"],
+      limits: { limit: datasetIds.length },
     };
 
     const datasets = await this.datasetsService.findAll(filter);
@@ -157,36 +165,43 @@ export class JobsControllerUtils {
    */
   async checkDatasetFiles(datasetList: DatasetListDto[]): Promise<void> {
     const datasetsToCheck = datasetList.filter((x) => x.files.length > 0);
-    const ids = datasetsToCheck.map((x) => x.pid);
-    if (ids.length == 0) return;
-    // Indexing originDataBlock with pid and create set of files for each dataset
-    const datasetOrigDatablocks: OrigDatablock[] =
-      await this.origDatablocksService.findAll({
-        where: { datasetId: { $in: ids } },
-        fields: ["datasetId", "dataFileList.path"],
-      });
+    if (datasetsToCheck.length == 0) return;
+    const existingFiles =
+      await this.origDatablocksService.findExistingFilePaths(datasetsToCheck);
 
-    const origsMappedByDatasetId = datasetOrigDatablocks.reduce(
-      (acc, orig) => {
-        const set = (acc[orig.datasetId] ??= new Set<string>());
-        orig.dataFileList.forEach((file) => set.add(file.path));
+    const filesMappedByDatasetId = existingFiles.reduce(
+      (acc, { datasetId, path }) => {
+        (acc[datasetId] ??= new Set<string>()).add(path);
         return acc;
       },
       {} as Record<string, Set<string>>,
     );
-    // Get a list of requested files that were not found
     const checkResults = datasetsToCheck
       .map(({ pid, files }) => {
-        const referenceFiles = origsMappedByDatasetId[pid] ?? new Set<string>();
+        const referenceFiles = filesMappedByDatasetId[pid] ?? new Set<string>();
         const nonExistFiles = files.filter((f) => !referenceFiles.has(f));
         return { pid, nonExistFiles };
       })
       .filter((result) => result.nonExistFiles.length > 0);
 
     if (checkResults.length == 0) return;
+    const total = checkResults.reduce(
+      (n, { nonExistFiles }) => n + nonExistFiles.length,
+      0,
+    );
+    let remaining = MAX_REPORTED_MISSING_FILES;
+    const reported = checkResults.flatMap(({ pid, nonExistFiles }) => {
+      if (remaining <= 0) return [];
+      const shown = nonExistFiles.slice(0, remaining);
+      remaining -= shown.length;
+      return [{ pid, nonExistFiles: shown }];
+    });
+    let message = "At least one requested file could not be found.";
+    if (total > MAX_REPORTED_MISSING_FILES)
+      message += ` ${total} requested files could not be found, showing the first ${MAX_REPORTED_MISSING_FILES}.`;
     throw new UnprocessableEntityException({
-      message: "At least one requested file could not be found.",
-      error: JSON.stringify(checkResults),
+      message,
+      error: JSON.stringify(reported),
     });
   }
 
@@ -426,9 +441,10 @@ export class JobsControllerUtils {
       throw new UnprocessableEntityException(
         "Dataset ids list was not provided in jobParams",
       );
+    const datasetIds = uniquePids(datasetList);
     const datasetsWhere: { where: Condition<DatasetClass> } = {
       where: {
-        pid: { $in: datasetList.map((x) => x.pid) },
+        pid: { $in: datasetIds },
       },
     };
     const isPrivilegedUser = this.isPrivilegedUser(user);
@@ -464,7 +480,7 @@ export class JobsControllerUtils {
     }
     const numberOfDatasetsWithAccess =
       await this.datasetsService.count(datasetsWhere);
-    if (numberOfDatasetsWithAccess.count < datasetList.length)
+    if (numberOfDatasetsWithAccess.count < datasetIds.length)
       throw new ForbiddenException(
         "User does not have access to all datasets, cannot create job.",
       );

@@ -7,9 +7,20 @@ import {
   getPolicyPublicationShiftInYears,
   getPolicyRetentionShiftInYears,
 } from "./policy-times";
+import { Logger } from "@nestjs/common";
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
+  const defaultJobMaxDatasets = 500;
+  let jobMaxDatasets = Number(process.env.JOB_MAX_DATASETS);
+  if (!Number.isInteger(jobMaxDatasets) || jobMaxDatasets <= 0) {
+    if (process.env.JOB_MAX_DATASETS)
+      Logger.warn(
+        `Invalid JOB_MAX_DATASETS "${process.env.JOB_MAX_DATASETS}", using default ${defaultJobMaxDatasets}`,
+        "Configuration",
+      );
+    jobMaxDatasets = defaultJobMaxDatasets;
+  }
   const accessGroupsStaticValues =
     process.env.ACCESS_GROUPS_STATIC_VALUES || "";
   const adminGroups = process.env.ADMIN_GROUPS || "";
@@ -228,6 +239,7 @@ const configuration = () => {
     jobDefaultStatusCode: process.env.JOB_DEFAULT_STATUS_CODE || "jobSubmitted",
     jobDefaultStatusMessage:
       process.env.JOB_DEFAULT_STATUS_MESSAGE || "Job submitted.",
+    jobMaxDatasets: jobMaxDatasets,
     loggerConfigs: jsonConfigMap.loggers || [defaultLogger],
     trackables: (process.env.TRACKABLES?.split(",") || []).map((t) => t.trim()),
     trackableStrategy:
