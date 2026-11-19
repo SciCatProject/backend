@@ -1,10 +1,6 @@
 import { Module, NestModule } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Connection, MongooseError } from "mongoose";
-import {
-  attachMongoConnectionDiagnostics,
-  toMongoConnectionError,
-} from "./common/utils/mongo-connection.util";
+import { createMongooseOptions } from "./common/utils/mongo-connection.util";
 import { RequestContextModule } from "./common/modules/request-context.module";
 import { DatasetsModule } from "./datasets/datasets.module";
 import { AuthModule } from "./auth/auth.module";
@@ -149,16 +145,7 @@ import type { MailerOptions } from "@nestjs-modules/mailer";
       inject: [ConfigService, HttpService],
     }),
     MongooseModule.forRootAsync({
-      useFactory: async (configService: ConfigService) => {
-        const uri = configService.get<string>("mongodbUri");
-        return {
-          uri,
-          onConnectionCreate: (connection: Connection) =>
-            attachMongoConnectionDiagnostics(connection, uri),
-          connectionErrorFactory: (error: MongooseError) =>
-            toMongoConnectionError(error, uri),
-        };
-      },
+      useFactory: createMongooseOptions,
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([
