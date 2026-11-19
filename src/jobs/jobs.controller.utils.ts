@@ -55,6 +55,9 @@ import { accessibleBy } from "@casl/mongoose";
 import { validate } from "class-validator";
 import { plainToInstance } from "class-transformer";
 
+// Max number of missing files listed in the error returned to the user
+const MAX_REPORTED_MISSING_FILES = 10;
+
 @Injectable()
 export class JobsControllerUtils {
   jobDatasetAuthorization: Array<string> = [];
@@ -162,20 +165,43 @@ export class JobsControllerUtils {
    */
   async checkDatasetFiles(datasetList: DatasetListDto[]): Promise<void> {
     const datasetsToCheck = datasetList.filter((x) => x.files.length > 0);
-    // Distinct (pid, file) pairs, as counted by the db
-    const requested = new Set(
-      datasetsToCheck.flatMap(({ pid, files }) =>
-        files.map((f) => JSON.stringify([pid, f])),
-      ),
-    ).size;
-    if (requested == 0) return;
+    if (datasetsToCheck.length == 0) return;
+    const existingFiles =
+      await this.origDatablocksService.findExistingFilePaths(datasetsToCheck);
 
-    const found =
-      await this.origDatablocksService.countExistingFilePaths(datasetsToCheck);
-    if (found === requested) return;
+    const filesMappedByDatasetId = existingFiles.reduce(
+      (acc, { datasetId, path }) => {
+        (acc[datasetId] ??= new Set<string>()).add(path);
+        return acc;
+      },
+      {} as Record<string, Set<string>>,
+    );
+    const checkResults = datasetsToCheck
+      .map(({ pid, files }) => {
+        const referenceFiles = filesMappedByDatasetId[pid] ?? new Set<string>();
+        const nonExistFiles = files.filter((f) => !referenceFiles.has(f));
+        return { pid, nonExistFiles };
+      })
+      .filter((result) => result.nonExistFiles.length > 0);
+
+    if (checkResults.length == 0) return;
+    const total = checkResults.reduce(
+      (n, { nonExistFiles }) => n + nonExistFiles.length,
+      0,
+    );
+    let remaining = MAX_REPORTED_MISSING_FILES;
+    const reported = checkResults.flatMap(({ pid, nonExistFiles }) => {
+      if (remaining <= 0) return [];
+      const shown = nonExistFiles.slice(0, remaining);
+      remaining -= shown.length;
+      return [{ pid, nonExistFiles: shown }];
+    });
+    let message = "At least one requested file could not be found.";
+    if (total > MAX_REPORTED_MISSING_FILES)
+      message += ` ${total} requested files could not be found, showing the first ${MAX_REPORTED_MISSING_FILES}.`;
     throw new UnprocessableEntityException({
-      message: "At least one requested file could not be found.",
-      error: `${requested - found} of ${requested} requested files do not exist.`,
+      message,
+      error: JSON.stringify(reported),
     });
   }
 

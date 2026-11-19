@@ -413,9 +413,52 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
         res.body.should.have
           .property("message")
           .and.be.equal("At least one requested file could not be found.");
+        res.body.should.have.property("error").and.be.equal(
+          JSON.stringify([
+            {
+              pid: datasetPid1,
+              nonExistFiles: ["unknown-file-1.tif", "unknown-file-2.tif"],
+            },
+          ]),
+        );
+      });
+  });
+
+  it("0094a: Add a new public job as a normal user himself/herself with more unknown files than reported, which should fail", async () => {
+    const unknownFiles = Array.from(
+      { length: 12 },
+      (_, i) => `unknown-file-${i}.tif`,
+    );
+    const newJob = {
+      ...publicJob,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: [{ pid: datasetPid1, files: unknownFiles }],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal(
+            "At least one requested file could not be found. 12 requested files could not be found, showing the first 10.",
+          );
         res.body.should.have
           .property("error")
-          .and.be.equal("2 of 3 requested files do not exist.");
+          .and.be.equal(
+            JSON.stringify([
+              { pid: datasetPid1, nonExistFiles: unknownFiles.slice(0, 10) },
+            ]),
+          );
       });
   });
 
