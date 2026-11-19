@@ -10,10 +10,26 @@ describe("DATASET_LOOKUP_FIELDS", () => {
     });
 
     it("keeps matching targetId and targetType on the same relationship", () => {
-      const match = JSON.stringify(lookup?.$lookup.pipeline);
-
-      expect(match).toContain("$$relationship.targetId");
-      expect(match).toContain("$$relationship.targetType");
+      expect(lookup?.$lookup.pipeline).toEqual([
+        {
+          $match: {
+            $expr: {
+              $anyElementTrue: {
+                $map: {
+                  input: "$relationships",
+                  as: "relationship",
+                  in: {
+                    $and: [
+                      { $eq: ["$$relationship.targetId", "$$pid"] },
+                      { $eq: ["$$relationship.targetType", "dataset"] },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]);
     });
   });
 });
