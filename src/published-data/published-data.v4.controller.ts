@@ -56,6 +56,7 @@ import {
 } from "./interfaces/published-data.interface";
 import { V4_FILTER_PIPE } from "./pipes/filter.pipe";
 import { RegisteredFilterPipe } from "./pipes/registered.pipe";
+import { AtLeastOneResourcePipe } from "./pipes/at-least-one-resource.pipe";
 import { PublishedDataService } from "./published-data.service";
 import {
   PublishedData,
@@ -102,7 +103,8 @@ export class PublishedDataV4Controller {
   )
   @Post()
   async create(
-    @Body() createPublishedDataDto: CreatePublishedDataV4Dto,
+    @Body(AtLeastOneResourcePipe)
+    createPublishedDataDto: CreatePublishedDataV4Dto,
   ): Promise<PublishedData> {
     await this.validatorService.validate(createPublishedDataDto);
     return this.publishedDataService.create(createPublishedDataDto);
@@ -417,8 +419,15 @@ export class PublishedDataV4Controller {
       publishedData,
       updatePublishedDataDto,
     );
+    const updateWithComputedMetadata =
+      merged.metadata === undefined
+        ? updatePublishedDataDto
+        : { ...updatePublishedDataDto, metadata: merged.metadata };
 
-    return this.publishedDataService.update({ doi: id }, merged);
+    return this.publishedDataService.update(
+      { doi: id },
+      updateWithComputedMetadata,
+    );
   }
 
   // POST /publisheddata/:id/publish
@@ -458,7 +467,7 @@ export class PublishedDataV4Controller {
     }
 
     // Make datasets in publishedData datasetPids array public
-    const datasetPids = publishedData.datasetPids;
+    const datasetPids = publishedData.datasetPids ?? [];
     await Promise.all(
       datasetPids.map(async (pid) => {
         await this.datasetsController.findByIdAndUpdate(request, pid, {
@@ -600,7 +609,7 @@ export class PublishedDataV4Controller {
     const mergePatchRequest = cloneDeep(request);
     mergePatchRequest.headers["content-type"] = "application/merge-patch+json";
     await Promise.all(
-      publishedData.datasetPids.map(async (pid) => {
+      (publishedData.datasetPids ?? []).map(async (pid) => {
         await this.datasetsController.findByIdAndUpdate(
           mergePatchRequest,
           pid,
@@ -730,8 +739,15 @@ export class PublishedDataV4Controller {
     }
 
     const merged = await this.validateMergedUpdate(publishedData, data);
+    const updateWithComputedMetadata =
+      merged.metadata === undefined
+        ? data
+        : { ...data, metadata: merged.metadata };
 
-    const res = await this.publishedDataService.update({ doi: id }, merged);
+    const res = await this.publishedDataService.update(
+      { doi: id },
+      updateWithComputedMetadata,
+    );
     return res ? { doi: res.doi } : null;
   }
 

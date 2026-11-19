@@ -17,11 +17,20 @@ class HttpServiceMock {}
 
 class ProposalsServiceMock {}
 
-class PublishedDataServiceMock {}
+class PublishedDataServiceMock {
+  findOne = jest.fn();
+  update = jest.fn();
+}
 
-class CaslAbilityFactoryMock {}
+class CaslAbilityFactoryMock {
+  publishedDataAccess = jest.fn().mockReturnValue({
+    cannot: () => false,
+  });
+}
 
-class DatasetsV4ControllerMock {}
+class DatasetsV4ControllerMock {
+  findByIdAndUpdate = jest.fn();
+}
 
 describe("PublishedDataController", () => {
   let controller: PublishedDataController;
@@ -48,5 +57,48 @@ describe("PublishedDataController", () => {
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
+  });
+
+  it("registers a legacy record with null dataset pids without crashing", async () => {
+    const publishedDataService = (
+      controller as unknown as {
+        publishedDataService: PublishedDataServiceMock;
+      }
+    ).publishedDataService;
+    const datasetsController = (
+      controller as unknown as {
+        datasetsController: DatasetsV4ControllerMock;
+      }
+    ).datasetsController;
+    const publishedData = {
+      _id: "10.9999/example",
+      doi: "10.9999/example",
+      title: "Example",
+      abstract: "Example abstract",
+      datasetPids: null,
+      proposalIds: ["proposal-1"],
+      sampleIds: [],
+      instrumentIds: [],
+      metadata: {
+        creators: [{ name: "Jane Doe" }],
+        publisher: { name: "SciCat" },
+        publicationYear: 2025,
+        resourceType: "Dataset",
+        affiliation: "ESS",
+      },
+    };
+
+    publishedDataService.findOne.mockResolvedValue(publishedData);
+    publishedDataService.update.mockResolvedValue(publishedData);
+
+    const request = {
+      user: { username: "test-user" },
+      headers: {},
+    } as never;
+
+    await expect(
+      controller.register(request, publishedData.doi),
+    ).resolves.toEqual({ doi: publishedData.doi });
+    expect(datasetsController.findByIdAndUpdate).not.toHaveBeenCalled();
   });
 });

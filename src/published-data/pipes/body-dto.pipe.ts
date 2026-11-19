@@ -16,6 +16,23 @@ const dtoV3toV4 = createDeepSetter<
       : PublishedDataStatus.PRIVATE,
 });
 
+function mapV3BodyToV4(
+  source: CreatePublishedDataDto,
+): CreatePublishedDataV4Dto {
+  const mapped = dtoV3toV4(source);
+  const pidArray = (source as unknown as { pidArray?: unknown }).pidArray;
+
+  if (typeof pidArray === "string") {
+    return { ...mapped, datasetPids: [pidArray] };
+  }
+
+  if (pidArray === null) {
+    return { ...mapped, datasetPids: [] };
+  }
+
+  return mapped;
+}
+
 @Injectable()
 export class V3ToV4MigrationPipe<S, T> implements PipeTransform {
   constructor(private readonly mapper: (source: S) => T) {}
@@ -25,4 +42,4 @@ export class V3ToV4MigrationPipe<S, T> implements PipeTransform {
   }
 }
 
-export const V3_TO_V4_DTO_BODY_PIPE = new V3ToV4MigrationPipe(dtoV3toV4);
+export const V3_TO_V4_DTO_BODY_PIPE = new V3ToV4MigrationPipe(mapV3BodyToV4);
