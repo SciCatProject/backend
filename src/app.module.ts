@@ -1,5 +1,6 @@
 import { Module, NestModule } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { createMongooseOptions } from "./common/utils/mongo-connection.util";
 import { RequestContextModule } from "./common/modules/request-context.module";
 import { DatasetsModule } from "./datasets/datasets.module";
 import { AuthModule } from "./auth/auth.module";
@@ -144,9 +145,7 @@ import type { MailerOptions } from "@nestjs-modules/mailer";
       inject: [ConfigService, HttpService],
     }),
     MongooseModule.forRootAsync({
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>("mongodbUri"),
-      }),
+      useFactory: createMongooseOptions,
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([
