@@ -14,7 +14,7 @@ let accessTokenAdminIngestor = null,
 
 describe("0200: Dataset Simple: Check different dataset types and their inheritance", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

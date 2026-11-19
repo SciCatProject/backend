@@ -15,9 +15,9 @@ let accessTokenAdmin = null,
 
 describe("1175: Jobs retrieving with sorting", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
 
     accessTokenAdmin = await utils.getToken(appUrl, {
       username: "admin",
@@ -224,10 +224,10 @@ describe("1175: Jobs retrieving with sorting", () => {
       .expect("Content-Type", /json/);
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("OrigDatablock").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("OrigDatablock").deleteMany({});
+    await db.collection("Job").deleteMany({});
   });
 
   it("0010: should sort jobs by type ascending", async () => {

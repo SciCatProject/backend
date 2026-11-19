@@ -11,8 +11,8 @@ let accessTokenAdminIngestor = null,
 
 describe("0750: DerivedDatasetDatablock: Test Datablocks and their relation to derived Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Datablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -30,8 +30,8 @@ describe("0750: DerivedDatasetDatablock: Test Datablocks and their relation to d
     });
   });
 
-  after(() => {
-    db.collection("Datablock").deleteMany({});
+  after(async () => {
+    await db.collection("Datablock").deleteMany({});
   });
 
   it("0100:adds a new derived dataset", async () => {

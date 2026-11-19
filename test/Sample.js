@@ -58,8 +58,8 @@ const SampleCorrectWithNestedMetadata = {
 
 describe("2200: Sample: Simple Sample", () => {
   before(async () => {
-    db.collection("Sample").deleteMany({});
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Sample").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

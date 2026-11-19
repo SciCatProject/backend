@@ -43,8 +43,8 @@ async function getHistoryWithRetry(
 
 describe("0500: DatasetLifecycle: Test facet and filter queries", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Policy").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Policy").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

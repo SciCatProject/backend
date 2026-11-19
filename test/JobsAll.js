@@ -55,8 +55,8 @@ const jobAll = {
 
 describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
 
     const loginResponseAdminIngestor = await utils.getTokenAndEmail(appUrl, {
       username: "adminIngestor",
@@ -101,9 +101,9 @@ describe("1120: Jobs: Test New Job Model Authorization for all_access jobs type"
     accessTokenArchiveManager = loginResponseArchiveManager.token;
   });
 
-  after(() => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Job").deleteMany({});
+  after(async () => {
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Job").deleteMany({});
   });
 
   it("0010: Add dataset 1 as Admin Ingestor", async () => {

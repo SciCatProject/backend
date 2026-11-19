@@ -10,10 +10,20 @@ let accessTokenAdminIngestor = null,
   datablockId = null,
   datablockId2 = null;
 
+// Dataset definitions for testing
+const dataset1 = {
+  ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " - Datablock 1",
+};
+const dataset2 = {
+  ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " - Datablock 2",
+};
+
 describe("Datablocks", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Datablock").deleteMany({});
+    await global.db.collection("Dataset").deleteMany({});
+    await global.db.collection("Datablock").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -31,18 +41,23 @@ describe("Datablocks", () => {
     });
   });
 
-  it("0010: adds a datablock to an existing dataset", async () => {
+  it("0010: creates first raw dataset", async () => {
     await request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.RawCorrect)
+      .send(dataset1)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
-      .expect("Content-Type", /json/);
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("pid").and.be.a("string");
+      });
+  });
 
-    await request(appUrl)
+  it("0011: creates second raw dataset and stores identifiers", async () => {
+    return request(appUrl)
       .post("/api/v3/Datasets")
-      .send(TestData.RawCorrect)
+      .send(dataset2)
       .set("Accept", "application/json")
       .set({ Authorization: `Bearer ${accessTokenAdminIngestor}` })
       .expect(TestData.EntryCreatedStatusCode)
@@ -52,7 +67,9 @@ describe("Datablocks", () => {
         datasetId = res.body["pid"];
         ownerGroup = res.body["ownerGroup"];
       });
+  });
 
+  it("0012: adds a datablock to the second dataset", async () => {
     return request(appUrl)
       .post(`/api/v3/datablocks`)
       .send({ ...TestData.DataBlockCorrect, datasetId, ownerGroup })
@@ -547,5 +564,13 @@ describe("Datablocks", () => {
         console.log(`Warning: Cleanup failed: ${error.message}`);
       }
     });
+  });
+
+  after(async () => {
+    // Remove dependent records first, then datasets. History is not deleted
+    // automatically when the tracked documents are removed.
+    await global.db.collection("Datablock").deleteMany({});
+    await global.db.collection("Dataset").deleteMany({});
+    await global.db.collection("History").deleteMany({});
   });
 });

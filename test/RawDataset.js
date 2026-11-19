@@ -13,8 +13,8 @@ let accessTokenAdminIngestor = null,
 
 describe("1900: RawDataset: Raw Datasets", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("Proposals").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("Proposals").deleteMany({});
 
     accessProposalToken = await utils.getToken(appUrl, {
       username: "proposalIngestor",

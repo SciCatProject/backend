@@ -40,8 +40,8 @@ const nonpublictestdataset = {
 
 describe("1600: PublishedDataV4: Test of access to published data v4 endpoints", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
-    db.collection("PublishedData").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
+    await db.collection("PublishedData").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",

@@ -18,7 +18,7 @@ let accessTokenProposalIngestor = null,
 
 describe("1500: Proposal: Simple Proposal", () => {
   before(async () => {
-    db.collection("Proposal").deleteMany({});
+    await db.collection("Proposal").deleteMany({});
 
     accessTokenProposalIngestor = await utils.getToken(appUrl, {
       username: "proposalIngestor",
