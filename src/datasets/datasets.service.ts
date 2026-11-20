@@ -439,10 +439,16 @@ export class DatasetsService {
 
   async count(
     filter: FilterQuery<DatasetDocument>,
+    limit?: number,
   ): Promise<{ count: number }> {
     const whereFilter: RootFilterQuery<DatasetDocument> = filter.where ?? {};
     let count = 0;
-    count = await this.datasetModel.countDocuments(whereFilter).exec();
+    count = await this.datasetModel
+      .countDocuments(
+        whereFilter,
+        limit === undefined || limit === 0 ? {} : { limit },
+      )
+      .exec();
 
     return { count };
   }

@@ -234,7 +234,7 @@ export class DatasetsPublicV4Controller {
   @ApiOperation({
     summary: "It returns the number of public datasets.",
     description:
-      "It returns a number of public datasets matching the where filter if provided.",
+      "It returns a number of public datasets matching the where filter if provided. Optional filter.limits.limit caps counting at the supplied number. Omit it or use 0 to count all matches.",
   })
   @ApiQuery({
     name: "filter",
@@ -246,7 +246,7 @@ export class DatasetsPublicV4Controller {
       where: true,
       include: false,
       fields: false,
-      limits: false,
+      limits: true,
     }),
   })
   @ApiResponse({
@@ -261,12 +261,7 @@ export class DatasetsPublicV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
-        {
-          where: true,
-          include: false,
-          fields: false,
-          limits: false,
-        },
+        { where: true, include: false, fields: false, limits: true },
       ),
     )
     queryFilter?: string,
@@ -275,7 +270,7 @@ export class DatasetsPublicV4Controller {
 
     this.addPublicFilter(parsedFilter);
 
-    return this.datasetsService.count(parsedFilter);
+    return this.datasetsService.count(parsedFilter, parsedFilter.limits?.limit);
   }
 
   // GET /datasets/public/:id
