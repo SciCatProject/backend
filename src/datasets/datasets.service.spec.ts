@@ -142,6 +142,20 @@ describe("DatasetsService", () => {
     model = module.get<Model<DatasetClass>>(getModelToken("DatasetClass"));
   });
 
+  it.each([undefined, 0, 1000])(
+    "passes count cap %s to MongoDB",
+    async (limit) => {
+      const where = { isPublished: true };
+      const exec = jest.fn().mockResolvedValue(42);
+      model.countDocuments = jest.fn().mockReturnValue({ exec });
+      expect(await service.count({ where }, limit)).toEqual({ count: 42 });
+      expect(model.countDocuments).toHaveBeenCalledWith(
+        where,
+        limit === undefined || limit === 0 ? {} : { limit },
+      );
+    },
+  );
+
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
