@@ -17,7 +17,7 @@
 **As of 2023/06/15, this repository holds the official version of SciCat backend**
 This is the only version that is officially supported. It is commonly referred to as backend, BE, v4.x or a combination of them.
 
-You can find the old backend (v3.x, loopback implementation) at (https://github.com/SciCatProject/backend).
+You can find the old backend (v3.x, loopback implementation) at (https://github.com/SciCatProject/backend-v3).
 The repo for backend v3.x is archived and read-only
 
 If you have any questions, please feel free to contact any member of the development team,
