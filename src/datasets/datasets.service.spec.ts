@@ -15,7 +15,11 @@ import { ProposalsService } from "src/proposals/proposals.service";
 import { MetadataKeysService } from "src/metadata-keys/metadatakeys.service";
 import { OpensearchService } from "src/opensearch/opensearch.service";
 import { REQUEST } from "@nestjs/core";
-import { NotFoundException, PreconditionFailedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  NotFoundException,
+  PreconditionFailedException,
+} from "@nestjs/common";
 import { Datablock } from "src/datablocks/schemas/datablock.schema";
 
 class InitialDatasetsServiceMock {}
@@ -270,6 +274,54 @@ describe("DatasetsService", () => {
       expect(model.updateOne).toHaveBeenCalledWith(
         { _id: "testPid" },
         { $inc: { packedSize: -1000, numberOfFilesArchived: -2 } },
+      );
+    });
+  });
+
+  describe("findAllComplete maxTimeMS", () => {
+    let aggregate: { option: jest.Mock; exec: jest.Mock };
+    let configService: ConfigService;
+
+    beforeEach(() => {
+      aggregate = {
+        option: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      };
+      model.aggregate = jest.fn().mockReturnValue(aggregate);
+      configService = (service as unknown as { configService: ConfigService })
+        .configService;
+    });
+
+    it("should limit the aggregation time from the configuration", async () => {
+      jest.spyOn(configService, "get").mockReturnValue(1000);
+
+      await service.findAllComplete({ where: {} }, false);
+
+      expect(aggregate.option).toHaveBeenCalledWith({ maxTimeMS: 1000 });
+    });
+
+    it("should not limit the aggregation time when disabled", async () => {
+      jest.spyOn(configService, "get").mockReturnValue(0);
+
+      await service.findAllComplete({ where: {} }, false);
+
+      expect(aggregate.option).not.toHaveBeenCalled();
+    });
+
+    it("should return a clear error when the time limit is exceeded", async () => {
+      jest.spyOn(configService, "get").mockReturnValue(1000);
+      aggregate.exec.mockRejectedValue(
+        Object.assign(new Error("operation exceeded time limit"), {
+          code: 50,
+        }),
+      );
+
+      await expect(
+        service.findAllComplete({ where: {} }, false),
+      ).rejects.toThrow(
+        new BadRequestException(
+          "The query took too long, please narrow down the filter",
+        ),
       );
     });
   });
