@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 import {
   getPolicyPublicationShiftInYears,
   getPolicyRetentionShiftInYears,
@@ -9,10 +10,14 @@ import {
 
 export type LifecycleDocument = LifecycleClass & Document;
 
-@Schema()
+@Schema({ _id: false })
 export class LifecycleClass {
-  @Prop({ required: false })
-  id?: string;
+  @Prop({
+    type: String,
+    required: true,
+    default: () => uuidv4(),
+  })
+  id: string;
 
   @ApiProperty({
     type: Boolean,
