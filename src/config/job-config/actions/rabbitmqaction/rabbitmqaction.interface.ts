@@ -7,6 +7,7 @@ export interface RabbitMQJobActionOptions extends JobActionOptions {
   exchange: string;
   queue: string;
   key: string;
+  queueArguments?: Record<string, unknown>;
 }
 
 /**
@@ -24,6 +25,10 @@ export function isRabbitMQJobActionOptions(
     opts.actionType === actionType &&
     typeof opts.exchange === "string" &&
     typeof opts.queue === "string" &&
-    typeof opts.key === "string"
+    typeof opts.key === "string" &&
+    (opts.queueArguments === undefined ||
+      (typeof opts.queueArguments === "object" &&
+        opts.queueArguments !== null &&
+        !Array.isArray(opts.queueArguments)))
   );
 }
