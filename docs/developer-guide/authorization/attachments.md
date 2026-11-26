@@ -33,10 +33,21 @@ If a user is part of a group listed in configuration as part of `ATTACHMENT_GROU
 
 This permission can be extended to all authenticated users by providing the token `#all` under `ATTACHMENT_GROUPS` in configuration.
 
+The `ATTACHMENT_GROUPS` permissions are also extended to members of `CREATE_DATASET_GROUPS`, `CREATE_DATASET_WITH_PID_GROUPS` and `SAMPLE_GROUPS` for consistent behavior between API v3 and v4.
+
+As an additional constraint, any dataset, proposal or sample linked to an attachment via an `AttachmentRelationship` must also be accessible by the user during create, update and delete operations. In particular:
+- For attachment create actions, the user must have create permissions for all relationship targets
+- For attachment update actions, the user must have update permissions for all relationship targets
+- For attachment delete actions, the user must have update or delete permissions for all relationship targets
+
 ### ATTACHMENT_PRIVILEGED_GROUPS
 
 If a user is part of a group listed in configuration as part of `ATTACHMENT_PRIVILEGED_GROUPS`, in addition to the permissions granted to authenticated users, they are permitted to create attachments for any `ownerGroup`.
 They may update and delete attachments if the `ownerGroup` matches one of the user's `currentGroups`.
+
+The `ATTACHMENT_PRIVILEGED_GROUPS` permissions are also extended to members of `CREATE_DATASET_PRIVILEGED_GROUPS`, `PROPOSAL_GROUPS` and `SAMPLE_PRIVILEGED_GROUPS` for consistent behavior between API v3 and v4.
+
+The constraint on attachment relationship targets applies the same for this group as it does for `ATTACHMENT_GROUPS`.
 
 ### ADMIN_GROUPS
 
@@ -62,6 +73,10 @@ Legend:
 - owner: attachment's `ownerGroup` must match one of the user's `currentGroups`
 - access: one of the attachment's `accessGroups` must match one of the user's `currentGroups`
 - any: unrestricted access
+
+Note:
+- `ATTACHMENT_GROUPS` in this matrix includes all members of `CREATE_DATASET_GROUPS`, `CREATE_DATASET_WITH_PID_GROUPS` and `SAMPLE_GROUPS`
+- `ATTACHMENT_PRIVILEGED_GROUPS` in this matrix includes all members of `CREATE_DATASET_PRIVILEGED_GROUPS`, `PROPOSAL_GROUPS` and `SAMPLE_PRIVILEGED_GROUPS`
 
 ## Implementation Notes
 

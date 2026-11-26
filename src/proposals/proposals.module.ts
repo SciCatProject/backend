@@ -17,8 +17,8 @@ import { MetadataKeysModule } from "src/metadata-keys/metadatakeys.module";
 @Module({
   imports: [
     CaslModule,
-    AttachmentsModule,
     MetadataKeysModule,
+    forwardRef(() => AttachmentsModule),
     forwardRef(() => DatasetsModule),
     MongooseModule.forFeature([
       {
