@@ -169,6 +169,53 @@ describe("ValidatorService", () => {
       expect(metadata.publicationYear).toBe(6);
     });
 
+    it("should handle missing datasetPids in an async dynamic default", async () => {
+      const schema = {
+        type: "object",
+        required: ["totalSize"],
+        allOf: [
+          { dynamicDefaults: { totalSize: "computeTotalSize" } },
+          { properties: { totalSize: { type: "array" } } },
+        ],
+      };
+
+      service = await createService({ metadataSchema: schema });
+      mockDataService.findAll.mockResolvedValue([{ size: 100 }, { size: 200 }]);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (service as any).dynamicDefaults.set(
+        "computeTotalSize",
+        async function (ctx: {
+          publishedData: { datasetPids?: string[] };
+          datasetsService: ReadOnlyDatasetsService;
+        }) {
+          const datasetPids = ctx.publishedData.datasetPids ?? [];
+          const datasets =
+            datasetPids.length === 0
+              ? []
+              : await ctx.datasetsService.findAll({
+                  where: {
+                    $or: datasetPids.map((pid) => ({ pid })),
+                  },
+                });
+
+          return () => [
+            datasets.reduce((total, dataset) => total + (dataset.size ?? 0), 0),
+          ];
+        },
+      );
+
+      const mockData = {
+        proposalIds: ["proposal-1"],
+        metadata: {},
+      };
+      const errors = await service.validate(mockData);
+
+      expect(errors).toBeNull();
+      expect(mockData.metadata).toEqual({ totalSize: [0] });
+      expect(mockDataService.findAll).not.toHaveBeenCalled();
+    });
+
     it("should error on unknown dynamicDefaults functions", async () => {
       const schema = {
         type: "object",

@@ -14,22 +14,37 @@ import { ValidatorService } from "./validator.service";
 class AttachmentsServiceMock {}
 
 class DatasetsServiceMock {}
-class DatasetsControllerMock {}
+class DatasetsControllerMock {
+  findByIdAndUpdate = jest.fn();
+}
 
-class HttpServiceMock {}
+class HttpServiceMock {
+  request = jest.fn();
+}
 
 class ProposalsServiceMock {}
 
-class PublishedDataServiceMock {}
+class PublishedDataServiceMock {
+  findOne = jest.fn();
+  validateUpdate = jest.fn();
+  update = jest.fn();
+}
 
-class CaslAbilityFactoryMock {}
+class CaslAbilityFactoryMock {
+  publishedDataAccess = jest.fn().mockReturnValue({
+    cannot: () => false,
+  });
+}
 
-class ValidatorServiceMock {}
+class ValidatorServiceMock {
+  validate = jest.fn();
+}
 
 class ConfigServiceMock {
   get(key: string) {
     const config = {
       publicURLprefix: "https://doi.ess.eu/detail/",
+      registerDoiUri: "https://doi.example/register",
     } as Record<string, unknown>;
 
     return config[key];
@@ -45,6 +60,9 @@ describe("PublishedDataController", () => {
     title: "",
     abstract: "",
     datasetPids: [],
+    proposalIds: [],
+    sampleIds: [],
+    instrumentIds: [],
     createdBy: "",
     updatedBy: "",
     createdAt: new Date(),

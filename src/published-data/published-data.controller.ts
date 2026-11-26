@@ -110,6 +110,7 @@ export class PublishedDataController {
   ): Promise<PublishedDataObsoleteDto> {
     const createdPublishedData = await this.publishedDataService.create(
       createPublishedDataDto as unknown as CreatePublishedDataV4Dto,
+      { requireResourceId: false },
     );
 
     return createdPublishedData as unknown as PublishedDataObsoleteDto;
@@ -520,7 +521,7 @@ export class PublishedDataController {
       } as Request;
 
       await Promise.all(
-        publishedDataObsolete.pidArray.map(async (pid) => {
+        (publishedDataObsolete.pidArray ?? []).map(async (pid) => {
           await this.datasetsController.findByIdAndUpdate(
             mergePatchRequest,
             pid,
