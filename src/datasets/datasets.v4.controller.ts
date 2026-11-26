@@ -576,7 +576,7 @@ export class DatasetsV4Controller {
   @ApiOperation({
     summary: "It returns the number of datasets.",
     description:
-      "It returns a number of datasets matching the where filter if provided.",
+      "It returns a number of datasets matching the where filter if provided. Optional filter.limits.limit caps counting at the supplied number. Omit it or use 0 to count all matches.",
   })
   @ApiQuery({
     name: "filter",
@@ -587,7 +587,7 @@ export class DatasetsV4Controller {
       where: true,
       include: false,
       fields: false,
-      limits: false,
+      limits: true,
     }),
   })
   @ApiResponse({
@@ -603,12 +603,7 @@ export class DatasetsV4Controller {
       new FilterValidationPipe(
         ALLOWED_DATASET_KEYS,
         ALLOWED_DATASET_FILTER_KEYS,
-        {
-          where: true,
-          include: false,
-          fields: false,
-          limits: false,
-        },
+        { where: true, include: false, fields: false, limits: true },
       ),
     )
     queryFilter?: string,
@@ -620,7 +615,7 @@ export class DatasetsV4Controller {
       parsedFilter,
     );
 
-    return this.datasetsService.count(finalFilters);
+    return this.datasetsService.count(finalFilters, parsedFilter.limits?.limit);
   }
 
   // GET /datasets/:id
