@@ -80,6 +80,7 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
 
   after(() => {
     db.collection("Dataset").deleteMany({});
+    db.collection("OrigDatablock").deleteMany({});
     db.collection("Job").deleteMany({});
   });
 
@@ -299,6 +300,193 @@ describe("1110: Jobs: Test New Job Model: possible real configurations", () => {
       .then((res) => {
         res.body.should.have.property("type").and.be.string;
         res.body.should.have.property("statusCode").to.be.equal("jobSubmitted");
+      });
+  });
+
+  it("0091: Add a second origdatablock to dataset 1, with one new file and one file already in the first origdatablock", async () => {
+    return request(appUrl)
+      .post("/api/v4/origdatablocks")
+      .send({
+        ...TestData.OrigDatablockV4Correct,
+        datasetId: datasetPid1,
+        dataFileList: [
+          TestData.OrigDatablockV4Correct.dataFileList[0],
+          {
+            ...TestData.OrigDatablockV4Correct.dataFileList[0],
+            path: "second-origdatablock-file.tif",
+          },
+        ],
+      })
+      .auth(accessTokenAdminIngestor, { type: "bearer" })
+      .expect(TestData.EntryCreatedStatusCode);
+  });
+
+  it("0092: Add a new public job as a normal user himself/herself choosing files spread across origdatablocks and present in more than one origdatablock", async () => {
+    const newJob = {
+      ...publicJob,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: [
+          {
+            pid: datasetPid1,
+            files: [
+              // in both origdatablocks
+              TestData.OrigDatablockV4Correct.dataFileList[0].path,
+              // only in the first origdatablock
+              TestData.OrigDatablockV4Correct.dataFileList[1].path,
+              // only in the second origdatablock
+              "second-origdatablock-file.tif",
+            ],
+          },
+        ],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("statusCode").to.be.equal("jobSubmitted");
+      });
+  });
+
+  it("0093: Add a new public job as a normal user himself/herself with duplicated files and datasets in the request", async () => {
+    const file1 = TestData.OrigDatablockV4Correct.dataFileList[0].path;
+    const file2 = TestData.OrigDatablockV4Correct.dataFileList[1].path;
+    const newJob = {
+      ...publicJob,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: [
+          { pid: datasetPid1, files: [file1, file1] },
+          { pid: datasetPid1, files: [file1, file2] },
+        ],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.EntryCreatedStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.have.property("statusCode").to.be.equal("jobSubmitted");
+      });
+  });
+
+  it("0094: Add a new public job as a normal user himself/herself with some existing and some unknown files, which should fail", async () => {
+    const newJob = {
+      ...publicJob,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: [
+          {
+            pid: datasetPid1,
+            files: [
+              TestData.OrigDatablockV4Correct.dataFileList[0].path,
+              "unknown-file-1.tif",
+              "unknown-file-2.tif",
+            ],
+          },
+        ],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal("At least one requested file could not be found.");
+        res.body.should.have.property("error").and.be.equal(
+          JSON.stringify([
+            {
+              pid: datasetPid1,
+              nonExistFiles: ["unknown-file-1.tif", "unknown-file-2.tif"],
+            },
+          ]),
+        );
+      });
+  });
+
+  it("0094a: Add a new public job as a normal user himself/herself with more unknown files than reported, which should fail", async () => {
+    const unknownFiles = Array.from(
+      { length: 12 },
+      (_, i) => `unknown-file-${i}.tif`,
+    );
+    const newJob = {
+      ...publicJob,
+      ownerUser: "user5.1",
+      ownerGroup: "group5",
+      jobParams: {
+        datasetList: [{ pid: datasetPid1, files: unknownFiles }],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenUser51}` })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal(
+            "At least one requested file could not be found. 12 requested files could not be found, showing the first 10.",
+          );
+        res.body.should.have
+          .property("error")
+          .and.be.equal(
+            JSON.stringify([
+              { pid: datasetPid1, nonExistFiles: unknownFiles.slice(0, 10) },
+            ]),
+          );
+      });
+  });
+
+  it("0095: Add a new public job as a user from ADMIN_GROUPS with one existing and one unknown dataset, which should fail", async () => {
+    const newJob = {
+      ...publicJob,
+      ownerUser: "admin",
+      ownerGroup: "admin",
+      jobParams: {
+        datasetList: [
+          { pid: datasetPid1, files: [] },
+          { pid: "unknown-pid", files: [] },
+        ],
+      },
+    };
+
+    return request(appUrl)
+      .post("/api/v4/Jobs")
+      .send(newJob)
+      .set("Accept", "application/json")
+      .set({ Authorization: `Bearer ${accessTokenAdmin}` })
+      .expect(TestData.UnprocessableEntityStatusCode)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        res.body.should.not.have.property("id");
+        res.body.should.have
+          .property("message")
+          .and.be.equal("Datasets with pid unknown-pid do not exist.");
       });
   });
 

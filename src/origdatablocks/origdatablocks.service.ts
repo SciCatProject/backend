@@ -397,6 +397,47 @@ export class OrigDatablocksService {
     return { count: result?.count ?? 0 };
   }
 
+  /**
+   * Return the requested (dataset, file path) pairs that exist in the
+   * origdatablocks, each distinct pair once. The result can never be larger
+   * than the request.
+   */
+  async findExistingFilePaths(
+    datasetFiles: { pid: string; files: string[] }[],
+  ): Promise<{ datasetId: string; path: string }[]> {
+    // creates a list of ORs each with a datasetId and a
+    // list of file paths to match against
+    const match = {
+      $or: datasetFiles.map(({ pid, files }) => ({
+        datasetId: pid,
+        "dataFileList.path": { $in: files },
+      })),
+    };
+    const pipeline: PipelineStage[] = [
+      { $match: match },
+      { $project: { datasetId: 1, "dataFileList.path": 1 } },
+      // unwind and later match is necessary because $in matches
+      // any item in the array, not all
+      { $unwind: "$dataFileList" },
+      { $match: match },
+      {
+        $group: {
+          _id: { datasetId: "$datasetId", path: "$dataFileList.path" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          datasetId: "$_id.datasetId",
+          path: "$_id.path",
+        },
+      },
+    ];
+    return this.origDatablockModel
+      .aggregate<{ datasetId: string; path: string }>(pipeline)
+      .exec();
+  }
+
   async createAndUpdateDatasetSizeAndFileCount(
     createDatablockDto: CreateOrigDatablockDto,
   ): Promise<OrigDatablock> {
