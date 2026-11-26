@@ -1,7 +1,7 @@
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Model } from "mongoose";
-import { RolesService } from "./roles.service";
+import { UserRolesService } from "./user-roles.service";
 import { UserIdentity } from "./schemas/user-identity.schema";
 import { User } from "./schemas/user.schema";
 import { UsersService } from "./users.service";
@@ -11,7 +11,7 @@ import { AccessGroupService } from "src/auth/access-group-provider/access-group.
 import { AccessGroupFromStaticValuesService } from "src/auth/access-group-provider/access-group-from-static-values.service";
 import { ConfigService } from "@nestjs/config";
 
-class RolesServiceMock {}
+class UserRolesServiceMock {}
 class JwtServiceMock {}
 
 const mockUser: User = {
@@ -130,7 +130,7 @@ describe("UsersService", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: RolesService, useClass: RolesServiceMock },
+        { provide: UserRolesService, useClass: UserRolesServiceMock },
         { provide: JwtService, useClass: JwtServiceMock },
         {
           provide: getModelToken("User"),
