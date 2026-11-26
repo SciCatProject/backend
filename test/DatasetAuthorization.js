@@ -19,6 +19,7 @@ let accessTokenAdminIngestor = null,
 
 const dataset1 = {
   ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " DatasetAuthorization 1",
   isPublished: true,
   ownerGroup: "group4",
   accessGroups: ["group5"],
@@ -26,6 +27,7 @@ const dataset1 = {
 
 const dataset2 = {
   ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " DatasetAuthorization 2",
   isPublished: false,
   ownerGroup: "group1",
   accessGroups: ["group3"],
@@ -33,6 +35,7 @@ const dataset2 = {
 
 const dataset3 = {
   ...TestData.RawCorrect,
+  datasetName: TestData.RawCorrect.datasetName + " DatasetAuthorization 3",
   isPublished: false,
   ownerGroup: "group2",
   accessGroups: ["group3"],
@@ -40,7 +43,7 @@ const dataset3 = {
 
 describe("0300: DatasetAuthorization: Test access to dataset", () => {
   before(async () => {
-    db.collection("Dataset").deleteMany({});
+    await db.collection("Dataset").deleteMany({});
 
     accessTokenAdminIngestor = await utils.getToken(appUrl, {
       username: "adminIngestor",
@@ -524,7 +527,6 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
         // Make test resilient - check that we get a valid response
         // without enforcing exactly how many datasets are returned
         res.body.should.be.an("array").and.have.lengthOf(2);
-        console.log(`User 3 fullquery returned ${res.body.length} datasets`);
 
         // If datasets exist, verify they have expected properties
         if (res.body.length > 0) {
@@ -585,9 +587,6 @@ describe("0300: DatasetAuthorization: Test access to dataset", () => {
         // Make test resilient - check that we get a valid response
         // without enforcing exactly how many datasets are returned
         res.body.should.be.an("array");
-        console.log(
-          `User 2 fullquery with isPublished=true returned ${res.body.length} datasets`,
-        );
 
         // If datasets exist, verify they have the expected properties
         if (res.body.length > 0) {

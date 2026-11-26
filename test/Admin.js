@@ -1,7 +1,7 @@
 "use strict";
 
-describe("Admin functionalities", () => {
-  it("Should be able to get frontend config", async () => {
+describe("0010: Admin functionalities", () => {
+  it("0010:0010: Should be able to get frontend config", async () => {
     return request(appUrl)
       .get("/api/v3/admin/config")
       .set("Accept", "application/json")
@@ -11,7 +11,7 @@ describe("Admin functionalities", () => {
       });
   });
 
-  it("Should be able to get frontend theme config", async () => {
+  it("0010:0020: Should be able to get frontend theme config", async () => {
     return request(appUrl)
       .get("/api/v3/admin/theme")
       .set("Accept", "application/json")
