@@ -6,7 +6,12 @@ import {
   SwaggerModule,
 } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
-import { Logger, ValidationPipe, VersioningType } from "@nestjs/common";
+import {
+  ConsoleLogger,
+  Logger,
+  ValidationPipe,
+  VersioningType,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AllExceptionsFilter, ScicatLogger } from "./loggers/logger.service";
 import { NestExpressApplication } from "@nestjs/platform-express";
@@ -99,11 +104,23 @@ async function bootstrap() {
   });
 
   const port = configService.get<number>("port") ?? 3000;
-  Logger.log("Scicat Backend listening on port: " + port, "Main");
-
   await app.listen(port);
+  Logger.log("Scicat Backend listening on port: " + port, "Main");
 }
 bootstrap().catch((error) => {
-  Logger.error("Failed to bootstrap the application", error, "Main");
-  process.exit(1);
+  // Logs are buffered (bufferLogs) until app.listen() succeeds, and ScicatLogger
+  // only gets its loggers in its own onModuleInit. A failure in another
+  // onModuleInit hook (e.g. RabbitMQ unreachable) would otherwise exit silently.
+  Logger.overrideLogger(new ConsoleLogger());
+  Logger.flush();
+  Logger.error(
+    `Failed to bootstrap the application: ${(error as Error)?.message}`,
+    (error as Error)?.stack,
+    "Main",
+  );
+  // Writes to piped stdout/stderr are asynchronous; exit only once they are
+  // written, otherwise the error above can be cut off.
+  process.stdout.write("", () =>
+    process.stderr.write("", () => process.exit(1)),
+  );
 });

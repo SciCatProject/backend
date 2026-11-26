@@ -92,8 +92,20 @@ export class RabbitMQService
 
   @OnError()
   private async connect(): Promise<void> {
-    this._error = "Cannot connect to RabbitMQ";
-    this.connection = await amqplibConnect(this.connectionOptions);
+    try {
+      this.connection = await amqplibConnect(this.connectionOptions);
+    } catch (error) {
+      const { hostname, port } = this.connectionOptions ?? {};
+      // Connection refused on "localhost" is an AggregateError with an empty message.
+      const err = error as Error & { errors?: Error[]; code?: string };
+      const reason =
+        err.message ||
+        err.errors?.map((e) => e.message).join(", ") ||
+        err.code ||
+        String(error);
+      this._error = `Cannot connect to RabbitMQ at ${hostname}:${port}: ${reason}`;
+      throw error;
+    }
     this._error = "Channel error in RabbitMQService: ";
     this.channel = await this.connection.createChannel();
   }
