@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { getModelToken } from "@nestjs/mongoose";
 import { ConfigService } from "@nestjs/config";
 import { RuntimeConfigService } from "./runtime-config.service";
@@ -90,6 +90,140 @@ describe("RuntimeConfigService", () => {
           username: "admin",
         } as JWTUser),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("patchConfig", () => {
+    it("merges patch into existing data and returns updated doc", async () => {
+      const existing = {
+        cid: "frontendConfig",
+        data: { foo: "bar", keep: "me" },
+      };
+      const updated = {
+        cid: "frontendConfig",
+        data: { foo: "newval", keep: "me" },
+        updatedBy: "admin",
+      };
+      model.findOne.mockReturnValue({ lean: () => existing });
+      model.findOneAndUpdate.mockResolvedValue(updated);
+
+      const patch = { foo: "newval" };
+      const user = { username: "admin" };
+      const res = await service.patchConfig(
+        "frontendConfig",
+        patch,
+        user as JWTUser,
+      );
+
+      expect(res).toEqual(updated);
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { cid: "frontendConfig" },
+        {
+          $set: expect.objectContaining({
+            data: { foo: "newval", keep: "me" },
+            updatedBy: "admin",
+          }),
+        },
+        { new: true },
+      );
+    });
+
+    it("removes keys with null values from existing data", async () => {
+      const existing = {
+        cid: "frontendConfig",
+        data: { foo: "bar", toRemove: "gone" },
+      };
+      const updated = {
+        cid: "frontendConfig",
+        data: { foo: "bar" },
+        updatedBy: "admin",
+      };
+      model.findOne.mockReturnValue({ lean: () => existing });
+      model.findOneAndUpdate.mockResolvedValue(updated);
+
+      const patch = { toRemove: null };
+      const user = { username: "admin" };
+      const res = await service.patchConfig(
+        "frontendConfig",
+        patch,
+        user as JWTUser,
+      );
+
+      expect(res).toEqual(updated);
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { cid: "frontendConfig" },
+        {
+          $set: expect.objectContaining({
+            data: { foo: "bar" },
+            updatedBy: "admin",
+          }),
+        },
+        { new: true },
+      );
+    });
+
+    it("throws NotFoundException when cid not found on findOne", async () => {
+      model.findOne.mockReturnValue({ lean: () => null });
+
+      await expect(
+        service.patchConfig("missing", { a: 1 }, {
+          username: "admin",
+        } as JWTUser),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it("throws BadRequestException when patch is not an object", async () => {
+      await expect(
+        service.patchConfig(
+          "frontendConfig",
+          "not-an-object" as unknown as Record<string, unknown>,
+          { username: "admin" } as JWTUser,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("throws BadRequestException when patch is an array", async () => {
+      await expect(
+        service.patchConfig(
+          "frontendConfig",
+          [] as unknown as Record<string, unknown>,
+          { username: "admin" } as JWTUser,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("recursively merges nested objects", async () => {
+      const existing = {
+        cid: "frontendConfig",
+        data: { nested: { a: 1, b: 2 }, top: "level" },
+      };
+      const updated = {
+        cid: "frontendConfig",
+        data: { nested: { a: 99, b: 2 }, top: "level" },
+        updatedBy: "admin",
+      };
+      model.findOne.mockReturnValue({ lean: () => existing });
+      model.findOneAndUpdate.mockResolvedValue(updated);
+
+      const patch = { nested: { a: 99 } };
+      const user = { username: "admin" };
+      const res = await service.patchConfig(
+        "frontendConfig",
+        patch,
+        user as JWTUser,
+      );
+
+      expect(res).toEqual(updated);
+      expect(model.findOneAndUpdate).toHaveBeenCalledWith(
+        { cid: "frontendConfig" },
+        {
+          $set: expect.objectContaining({
+            data: { nested: { a: 99, b: 2 }, top: "level" },
+            updatedBy: "admin",
+          }),
+        },
+        { new: true },
+      );
     });
   });
 
