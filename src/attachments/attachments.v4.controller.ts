@@ -29,12 +29,14 @@ import {
 } from "@nestjs/swagger";
 import { Request } from "express";
 import * as jmp from "json-merge-patch";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { Attachment, AttachmentDocument } from "./schemas/attachment.schema";
-import { Action } from "src/casl/action.enum";
 import {
   IAttachmentFields,
   IAttachmentFiltersV4,
@@ -212,9 +214,11 @@ export class AttachmentsV4Controller {
   }
 
   // GET /attachments
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Read, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Read, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It returns a list of attachments.",
@@ -306,9 +310,11 @@ export class AttachmentsV4Controller {
   }
 
   // GET /attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Read, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Read, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It returns the attachment requested.",
@@ -335,9 +341,11 @@ export class AttachmentsV4Controller {
   }
 
   // PATCH /attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Update, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Update, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It updates the attachment.",
@@ -389,9 +397,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // PUT /attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Update, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Update, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It updates the attachment.",
@@ -428,9 +438,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // POST /attachments
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Create, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Create, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It creates a new attachment.",
@@ -459,9 +471,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     return this.attachmentsService.create(createAttachmentDto);
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Create, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Create, Attachment),
+    ),
   )
   @Post("/isValid")
   @HttpCode(HttpStatus.OK)
@@ -508,9 +522,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // DELETE /attachments/:aid
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("attachments", (ability: AppAbility) =>
-    ability.can(Action.Delete, Attachment),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("attachments", (ability: AppAbility) =>
+      ability.can(Action.Delete, Attachment),
+    ),
   )
   @ApiOperation({
     summary: "It deletes the attachment.",

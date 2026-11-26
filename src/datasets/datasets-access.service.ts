@@ -3,7 +3,7 @@ import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { PipelineStage } from "mongoose";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { Action } from "src/casl/action.enum";
+import { Action } from "src/casl/types/action.enum";
 import { DatasetLookupKeysEnum } from "./types/dataset-lookup";
 import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
 import { ProposalClass } from "src/proposals/schemas/proposal.schema";

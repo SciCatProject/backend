@@ -22,15 +22,18 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
+import { AllowAny } from "src/auth/decorators/allow-any.decorator";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { AuthenticatedEndpointGuard } from "src/casl/guards/authenticated.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { UserIdentity } from "./schemas/user-identity.schema";
 import { UsersService } from "./users.service";
 import { CreateUserJWT } from "./dto/create-user-jwt.dto";
-import { AllowAny } from "src/auth/decorators/allow-any.decorator";
 import { Request } from "express";
-import { JWTUser } from "../auth/interfaces/jwt-user.interface";
 import { UserSettings } from "./schemas/user-settings.schema";
 import { CreateUserSettingsDto } from "./dto/create-user-settings.dto";
 import { PartialUpdateUserSettingsDto } from "./dto/update-user-settings.dto";
@@ -42,7 +45,6 @@ import { DatasetClass } from "src/datasets/schemas/dataset.schema";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { JwtSignOptions } from "@nestjs/jwt";
 import { CreateCustomJwt } from "./dto/create-custom-jwt.dto";
-import { AuthenticatedPoliciesGuard } from "../casl/guards/auth-check.guard";
 import { ReturnedUserDto } from "./dto/returned-user.dto";
 import { ReturnedAuthLoginDto } from "src/auth/dto/returnedLogin.dto";
 import {
@@ -97,9 +99,11 @@ export class UsersController {
     return this.usersService.createUserJWT(request.user as JWTUser);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get()
   @ApiOperation({
@@ -127,9 +131,11 @@ export class UsersController {
     return user ? [user] : [];
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Update, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Update, User),
+    ),
   )
   @Post("/password")
   @ApiBody({ type: UpdateUserPasswordDto })
@@ -201,9 +207,11 @@ export class UsersController {
     return null;
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/my/self")
   @ApiOperation({
@@ -227,9 +235,11 @@ export class UsersController {
     return this.usersService.findById(authenticatedUserId);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/my/identity")
   async getMyUserIdentity(
@@ -244,9 +254,11 @@ export class UsersController {
     return this.usersService.findByIdUserIdentity(authenticatedUserId);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/my/settings")
   async getMySettings(@Req() request: Request): Promise<UserSettings | null> {
@@ -259,9 +271,11 @@ export class UsersController {
     return this.usersService.findByIdUserSettings(authenticatedUserId);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/:id")
   async findById(
@@ -273,9 +287,11 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.AccessAny, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.AccessAny, User),
+    ),
   )
   @Patch("/:id/password")
   @ApiBody({ type: AdminUpdateUserPasswordDto })
@@ -334,9 +350,11 @@ export class UsersController {
     };
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/:id/userIdentity")
   async getUserIdentity(
@@ -348,9 +366,11 @@ export class UsersController {
     return this.usersService.findByIdUserIdentity(id);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Create, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Create, User),
+    ),
   )
   @Post("/:id/settings")
   async createSettings(
@@ -363,9 +383,11 @@ export class UsersController {
     return this.usersService.createUserSettings(id, createUserSettingsDto);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/:id/settings")
   async getSettings(
@@ -377,9 +399,11 @@ export class UsersController {
     return this.usersService.findByIdUserSettings(id);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Update, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Update, User),
+    ),
   )
   @Put("/:id/settings")
   async updateSettings(
@@ -395,9 +419,11 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Update, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Update, User),
+    ),
   )
   @Patch("/:id/settings")
   async patchSettings(
@@ -413,9 +439,11 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Update, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Update, User),
+    ),
   )
   @ApiParam({ name: "id", type: String, description: "User ID" })
   @ApiBody({
@@ -441,9 +469,11 @@ export class UsersController {
     );
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Delete, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Delete, User),
+    ),
   )
   @Delete("/:id/settings")
   async removeSettings(
@@ -455,9 +485,11 @@ export class UsersController {
     return this.usersService.findOneAndDeleteUserSettings(id);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.Read, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.Read, User),
+    ),
   )
   @Get("/:id/authorization/dataset/create")
   async canUserCreateDataset(
@@ -493,9 +525,11 @@ export class UsersController {
     return this.authService.logout(req);
   }
 
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("users", (ability: AppAbility) =>
-    ability.can(Action.UserCreateJwt, User),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("users", (ability: AppAbility) =>
+      ability.can(Action.UserCreateJwt, User),
+    ),
   )
   @Post("/:id/jwt")
   @ApiOperation({

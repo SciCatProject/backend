@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { Action } from "../action.enum";
+import { Action } from "../types/action.enum";
 import { HistoryAbility } from "./history.ability";
 import { GenericHistory } from "src/common/schemas/generic-history.schema";
 import { Attachment } from "src/attachments/schemas/attachment.schema";

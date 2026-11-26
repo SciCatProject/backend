@@ -31,11 +31,13 @@ import { firstValueFrom } from "rxjs";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { AllowAny } from "src/auth/decorators/allow-any.decorator";
 import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AuthenticatedPoliciesGuard } from "src/casl/guards/auth-check.guard";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { AuthenticatedEndpointGuard } from "src/casl/guards/authenticated.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { ILimitsFilter } from "src/common/interfaces/common.interface";
 import { handleAxiosRequestError } from "src/common/utils";
 import { DatasetsService } from "src/datasets/datasets.service";
@@ -96,9 +98,11 @@ export class PublishedDataV4Controller {
   }
 
   // POST /publisheddata
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Create, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Create, PublishedData),
+    ),
   )
   @Post()
   async create(
@@ -224,9 +228,11 @@ export class PublishedDataV4Controller {
   }
 
   // GET /publisheddata/formpopulate
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Read, PublishedData),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Read, PublishedData),
+    ),
   )
   @Get("/formpopulate")
   @ApiQuery({
@@ -365,9 +371,11 @@ export class PublishedDataV4Controller {
   }
 
   // PATCH /publisheddata/:id
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiResponse({
     status: HttpStatus.OK,
@@ -422,9 +430,11 @@ export class PublishedDataV4Controller {
   }
 
   // POST /publisheddata/:id/publish
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiResponse({
     status: HttpStatus.OK,
@@ -474,9 +484,11 @@ export class PublishedDataV4Controller {
   }
 
   // POST /publisheddata/:id/amend
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiResponse({
     status: HttpStatus.OK,
@@ -524,9 +536,11 @@ export class PublishedDataV4Controller {
   }
 
   // DELETE /publisheddata/:id
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Delete, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Delete, PublishedData),
+    ),
   )
   @Delete("/:id")
   async remove(
@@ -567,9 +581,11 @@ export class PublishedDataV4Controller {
   }
 
   // POST /publisheddata/:id/register
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @Post("/:id/register")
   async register(
@@ -666,9 +682,11 @@ export class PublishedDataV4Controller {
   }
 
   // POST /publisheddata/:id/resync
-  @UseGuards(AuthenticatedPoliciesGuard)
-  @CheckPolicies("publisheddata", (ability: AppAbility) =>
-    ability.can(Action.Update, PublishedData),
+  @UseGuards(AuthenticatedEndpointGuard)
+  @EndpointAccess(
+    accessCheck("publisheddata", (ability: AppAbility) =>
+      ability.can(Action.Update, PublishedData),
+    ),
   )
   @ApiOperation({
     summary: "Edits published data.",

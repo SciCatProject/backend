@@ -8,10 +8,11 @@ import {
 } from "@nestjs/common";
 import { LogbooksService } from "./logbooks.service";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { AppAbility } from "src/casl/casl-ability.factory";
-import { Action } from "src/casl/action.enum";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { Logbook } from "./schemas/logbook.schema";
 import { UsersLogbooksInterceptor } from "./interceptors/users-logbooks.interceptor";
 
@@ -21,9 +22,11 @@ import { UsersLogbooksInterceptor } from "./interceptors/users-logbooks.intercep
 export class LogbooksController {
   constructor(private readonly logbooksService: LogbooksService) {}
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("logbooks", (ability: AppAbility) =>
-    ability.can(Action.Read, Logbook),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("logbooks", (ability: AppAbility) =>
+      ability.can(Action.Read, Logbook),
+    ),
   )
   @UseInterceptors(UsersLogbooksInterceptor)
   @Get()
@@ -31,9 +34,11 @@ export class LogbooksController {
     return this.logbooksService.findAll();
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("logbooks", (ability: AppAbility) =>
-    ability.can(Action.Read, Logbook),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("logbooks", (ability: AppAbility) =>
+      ability.can(Action.Read, Logbook),
+    ),
   )
   @UseInterceptors(UsersLogbooksInterceptor)
   @Get("/:name")

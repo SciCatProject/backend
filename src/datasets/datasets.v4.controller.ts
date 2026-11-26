@@ -37,10 +37,13 @@ import { validate } from "class-validator";
 import { Request } from "express";
 import * as jmp from "json-merge-patch";
 import { MongoError } from "mongodb";
-import { Action } from "src/casl/action.enum";
-import { AppAbility, CaslAbilityFactory } from "src/casl/casl-ability.factory";
-import { CheckPolicies } from "src/casl/decorators/check-policies.decorator";
-import { PoliciesGuard } from "src/casl/guards/policies.guard";
+import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
+import { CaslAbilityFactory } from "src/casl/casl-ability.factory";
+import { EndpointGuard } from "src/casl/guards/endpoint.guard";
+import { EndpointAccess } from "src/casl/decorators/endpoint-access.decorator";
+import { AppAbility } from "src/casl/types/casl-subjects";
+import { Action } from "src/casl/types/action.enum";
+import { accessCheck } from "src/casl/utils/access-check.util";
 import { FormatPhysicalQuantitiesInterceptor } from "src/common/interceptors/format-physical-quantities.interceptor";
 import { UTCTimeInterceptor } from "src/common/interceptors/utc-time.interceptor";
 import { IFacets, IFilters } from "src/common/interfaces/common.interface";
@@ -54,7 +57,6 @@ import {
 import { DatasetClass, DatasetDocument } from "./schemas/dataset.schema";
 
 import { plainToInstance } from "class-transformer";
-import { JWTUser } from "src/auth/interfaces/jwt-user.interface";
 import {
   CountApiResponse,
   FullFacetFilters,
@@ -245,9 +247,11 @@ export class DatasetsV4Controller {
   }
 
   // POST /api/v4/datasets
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Create, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Create, DatasetClass),
+    ),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -306,9 +310,11 @@ export class DatasetsV4Controller {
     }
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Create, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Create, DatasetClass),
+    ),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -357,9 +363,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /datasets
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
@@ -410,9 +418,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /fullfacets
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @UseInterceptors(SubDatasetsPublicInterceptor)
   @Get("/fullfacet")
@@ -458,9 +468,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /datasets/metadataKeys
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @UseInterceptors(SubDatasetsPublicInterceptor)
   @Get("/metadataKeys")
@@ -518,9 +530,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /datasets/findOne
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @Get("/findOne")
   @ApiOperation({
@@ -568,9 +582,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /datasets/count
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @Get("/count")
   @ApiOperation({
@@ -624,10 +640,11 @@ export class DatasetsV4Controller {
   }
 
   // GET /datasets/:id
-  //@UseGuards(PoliciesGuard)
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @Get("/:pid")
   @UseInterceptors(ClassSerializerInterceptor)
@@ -679,9 +696,11 @@ export class DatasetsV4Controller {
 
   // PATCH /datasets/:id
   // body: modified fields
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Update, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Update, DatasetClass),
+    ),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -770,9 +789,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // GET /datasets/:id/datasetlifecycle
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Read, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Read, DatasetClass),
+    ),
   )
   @Get("/:pid/datasetlifecycle")
   @ApiOperation({
@@ -806,9 +827,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // PATCH /datasets/:id/datasetlifecycle
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetLifecycleUpdate, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.DatasetLifecycleUpdate, DatasetClass),
+    ),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -871,9 +894,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // PUT /datasets/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Update, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Update, DatasetClass),
+    ),
   )
   @UseInterceptors(
     new UTCTimeInterceptor<DatasetClass>(["creationTime"]),
@@ -931,9 +956,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
   }
 
   // DELETE /datasets/:id
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.Delete, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.Delete, DatasetClass),
+    ),
   )
   @Delete("/:pid")
   @ApiOperation({
@@ -966,9 +993,11 @@ Set \`content-type\` header to \`application/merge-patch+json\` if you would lik
     return removedDataset;
   }
 
-  @UseGuards(PoliciesGuard)
-  @CheckPolicies("datasets", (ability: AppAbility) =>
-    ability.can(Action.DatasetLogbookRead, DatasetClass),
+  @UseGuards(EndpointGuard)
+  @EndpointAccess(
+    accessCheck("datasets", (ability: AppAbility) =>
+      ability.can(Action.DatasetLogbookRead, DatasetClass),
+    ),
   )
   @Get("/:pid/logbook")
   @ApiOperation({
