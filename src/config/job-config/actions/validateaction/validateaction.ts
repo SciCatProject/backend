@@ -120,7 +120,7 @@ export class ValidateJobAction<T extends JobDto> implements JobAction<T> {
 
     for (const [path, schema] of Object.entries(schemaMap)) {
       // Compile the key to a JSONPath and apply it to the json data
-      const result: JSONData[] = JSONPath<JSONData[]>({ path, json });
+      const result = JSONPath({ path, json }) as JSONData[];
       if (result !== null && result?.length > 0) {
         result.forEach((entry) => {
           // check each result against the Ajv schema

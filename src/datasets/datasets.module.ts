@@ -1,4 +1,5 @@
 import { forwardRef, Module } from "@nestjs/common";
+import { ModuleRef } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { HttpModule } from "@nestjs/axios";
 import { DatasetClass, DatasetSchema } from "./schemas/dataset.schema";
@@ -54,11 +55,8 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
             },
           ]),
         ],
-        inject: [PoliciesService, ConfigService],
-        useFactory: (
-          policyService: PoliciesService,
-          configService: ConfigService,
-        ) => {
+        inject: [ModuleRef, ConfigService],
+        useFactory: (moduleRef: ModuleRef, configService: ConfigService) => {
           const schema = DatasetSchema;
 
           schema.pre<DatasetClass>("save", async function (next) {
@@ -67,6 +65,14 @@ import { OpensearchModule } from "src/opensearch/opensearch.module";
             if (!this._id) {
               this._id = this.pid;
             }
+            // PoliciesService is request-scoped: resolve it here instead of
+            // injecting it into the factory, otherwise the Dataset model becomes
+            // request-scoped and its collection is not created on startup.
+            const policyService = await moduleRef.resolve(
+              PoliciesService,
+              undefined,
+              { strict: false },
+            );
             const policy = await policyService.findOne({
               ownerGroup: this.ownerGroup,
             });

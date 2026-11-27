@@ -4,6 +4,13 @@
 
 This guide documents frontend configuration options that control various UI behaviors and features in SciCat. These settings are defined in the configuration file specified by the `FRONTEND_CONFIG_FILE` environment variable (default `src/config/frontend.config.json`).
 
+### Runtime configuration synchronization
+
+The `CONFIG_SYNC_TO_DB_RELOAD` environment variable controls whether an existing runtime configuration is synchronised from the configuration file during startup.
+
+- `true` (default): synchronise the configuration file to the database.
+- `false`: keep the existing configuration stored in the database across restarts.
+
 ## Configuration Options
 
 | **Configuration Options**                                       | **Type** | **Default Value**     | **Description**                                                                                                                                                                                  |
@@ -106,3 +113,5 @@ This guide documents frontend configuration options that control various UI beha
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`samples`       | boolean  | `true`                | Show/hide samples menu item.                                                                                                                                                                     |
 | **`defaultTab`**                                                | object   |                       | Specifies which tab is shown by default when viewing different entities.                                                                                                                         |
 | &nbsp;&nbsp;&nbsp;&nbsp;`proposal`                              | string   | `"details"`           | Default tab for proposals. Valid values: `"details"`, `"datasets"`, `"relatedProposals"`, `"logbook"`.                                                                                           |
+
+| `CONFIG_SYNC_TO_DB_RELOAD` (backend environment variable) | boolean | `true` | Reloads frontend configuration from the file into the database on backend startup. Set to false to keep existing database configuration unchanged on restart. |

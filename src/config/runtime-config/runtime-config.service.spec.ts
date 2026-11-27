@@ -122,9 +122,14 @@ describe("RuntimeConfigService", () => {
       );
     });
 
-    it("overwrites entry if existing", async () => {
+    it("overwrites existing entry when reload is enabled", async () => {
       const source = { foo: "bar" };
-      configService.get.mockReturnValue(source);
+
+      configService.get.mockImplementation((key: string) => {
+        if (key === "configSyncToDb.reload") return true;
+        return source;
+      });
+
       model.findOne.mockReturnValue({
         lean: () => ({ cid: "frontendConfig" }),
       });
@@ -136,6 +141,23 @@ describe("RuntimeConfigService", () => {
         { cid: "frontendConfig" },
         { data: source, updatedBy: "system" },
       );
+    });
+
+    it("preserves existing entry when reload is disabled", async () => {
+      const source = { foo: "bar" };
+
+      configService.get.mockImplementation((key: string) => {
+        if (key === "configSyncToDb.reload") return false;
+        return source;
+      });
+
+      model.findOne.mockReturnValue({
+        lean: () => ({ cid: "frontendConfig" }),
+      });
+
+      await service.syncConfig("frontendConfig");
+
+      expect(model.updateOne).not.toHaveBeenCalled();
     });
   });
 
