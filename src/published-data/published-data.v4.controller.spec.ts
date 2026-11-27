@@ -77,8 +77,7 @@ describe("PublishedDataController", () => {
     metadata: { landingPage: "https://custom-landingpage/" },
   };
 
-  beforeEach(async () => {
-    config = { ...defaultConfig };
+  const createController = async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PublishedDataV4Controller],
       imports: [ConfigModule],
@@ -100,6 +99,11 @@ describe("PublishedDataController", () => {
     );
     httpService = module.get(HttpService);
     publishedDataService = module.get(PublishedDataService);
+  };
+
+  beforeEach(async () => {
+    config = { ...defaultConfig };
+    await createController();
   });
 
   afterEach(() => {
@@ -133,8 +137,9 @@ describe("PublishedDataController", () => {
     );
   });
 
-  it("should throw and log an error if neither 'landingPage' nor public URL prefix is set", () => {
+  it("should throw and log an error if neither 'landingPage' nor public URL prefix is set", async () => {
     config.publicURLprefix = undefined;
+    await createController();
     const loggerSpy = jest.spyOn(Logger, "error").mockImplementation();
 
     expect(() => controller.doiRegistrationJSON(defaultUrl)).toThrow(
@@ -187,11 +192,7 @@ describe("PublishedDataController", () => {
         expect(err.getStatus()).toBe(HttpStatus.FAILED_DEPENDENCY);
       });
       expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          JSON.stringify({
-            errors: [{ source: "url", title: "Can't be blank" }],
-          }),
-        ),
+        `DataCite DOI registration failed for ${defaultUrl.doi}`,
         "PublishedDataController.register",
       );
       expect(publishedDataService.update).not.toHaveBeenCalled();
