@@ -63,6 +63,8 @@ export const DATASET_LOOKUP_FIELDS: Record<
     $lookup: {
       from: "Attachment",
       as: "",
+      localField: "pid",
+      foreignField: "relationships.targetId",
       let: { pid: "$pid" },
       pipeline: [
         {

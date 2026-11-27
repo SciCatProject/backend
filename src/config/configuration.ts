@@ -3,6 +3,10 @@ import { merge } from "lodash";
 import { DEFAULT_PROPOSAL_TYPE } from "src/proposals/schemas/proposal.schema";
 import localconfiguration from "./localconfiguration";
 import { parseBoolean } from "src/common/utils";
+import {
+  getPolicyPublicationShiftInYears,
+  getPolicyRetentionShiftInYears,
+} from "./policy-times";
 
 const configuration = () => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -202,6 +206,7 @@ const configuration = () => {
 
   const config = {
     configSyncToDb: {
+      reload: parseBoolean(process.env.CONFIG_SYNC_TO_DB_RELOAD || "true"),
       configList: process.env.CONFIG_SYNC_TO_DB_LIST
         ? [
             ...new Set([
@@ -403,7 +408,6 @@ const configuration = () => {
       ? parseInt(process.env.METADATA_PARENT_INSTANCES_RETURN_LIMIT, 10)
       : undefined,
     mongodbUri: process.env.MONGODB_URI,
-    oaiProviderRoute: process.env.OAI_PROVIDER_ROUTE,
     pidPrefix: process.env.PID_PREFIX,
     port: parseInt(process.env.PORT || "3000", 10),
     publicURLprefix: process.env.PUBLIC_URL_PREFIX,
@@ -455,8 +459,8 @@ const configuration = () => {
       },
     },
     policyTimes: {
-      policyPublicationShiftInYears: process.env.POLICY_PUBLICATION_SHIFT ?? 3,
-      policyRetentionShiftInYears: process.env.POLICY_RETENTION_SHIFT ?? -1,
+      policyPublicationShiftInYears: getPolicyPublicationShiftInYears(),
+      policyRetentionShiftInYears: getPolicyRetentionShiftInYears(),
     },
     customDatasetTypes: jsonConfigMap.datasetTypes,
     proposalTypes: jsonConfigMap.proposalTypes,

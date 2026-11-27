@@ -269,7 +269,7 @@ export class UpdateDatasetDto extends OwnableDto {
       "Describes the current status of the dataset during its lifetime with respect to the storage handling systems.",
   })
   @IsOptional()
-  readonly datasetlifecycle?: LifecycleClass;
+  readonly datasetlifecycle?: Partial<LifecycleClass>;
 
   @ApiProperty({
     type: Object,
@@ -532,7 +532,7 @@ export class UpdateDatasetLifecycleDto {
     type: Date,
     required: false,
     description:
-      "Day when the dataset's future fate will be evaluated again, e.g. to decide if the dataset can be deleted from archive.",
+      "Day when the dataset's future fate will be evaluated again, e.g. to decide if the dataset can be deleted from archive. Not set when the data is retained indefinitely.",
   })
   @IsOptional()
   @IsDateString()

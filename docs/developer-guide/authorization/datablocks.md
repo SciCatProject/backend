@@ -23,19 +23,23 @@ Unauthenticated users do not have write access.
 
 ### Authenticated
 
-An authenticated user may read datablocks if the datablock is public or if they are a member of the datablock's `ownerGroup` or one of the `accessGroups`. They are permitted to update datablocks if the `ownerGroup` matches one of the user's `currentGroups`.
+An authenticated user may read datablocks if the datablock is public or if they are a member of the datablock's `ownerGroup` or one of the `accessGroups`. Authenticated users do not have write access by default.
 
 ### CREATE_DATASET_GROUPS
 
-If a user is part of a group listed in configuration as part of `CREATE_DATASET_GROUPS`, in addition to the permissions granted to authenticated users, they are permitted to create and update datablocks for any `ownerGroup`.
+If a user is part of a group listed in configuration as part of `CREATE_DATASET_GROUPS`, in addition to the permissions granted to authenticated users, they are permitted to create and update datablocks if the `ownerGroup` matches one of the user's `currentGroups`. Importantly, it is not necessary that `ownerGroup` be in `CREATE_DATASET_GROUPS`.
+
+This permission can be extended to all authenticated users by providing the token `#all` under `CREATE_DATASET_GROUPS` in configuration.
 
 ### CREATE_DATASET_WITH_PID_GROUPS
 
 These groups have the same permissions as `CREATE_DATASET_GROUPS`.
 
+This permission can be extended to all authenticated users by providing the token `#all` under `CREATE_DATASET_WITH_PID_GROUPS` in configuration.
+
 ### CREATE_DATASET_PRIVILEGED_GROUPS
 
-These groups have the same permissions as `CREATE_DATASET_GROUPS`.
+If a user is part of a group listed in configuration as part of `CREATE_DATASET_PRIVILEGED_GROUPS`, in addition to the permissions granted to authenticated users, they are permitted to create datablocks for any `ownerGroup`. They may update datablocks only if the `ownerGroup` matches one of the user's `currentGroups`.
 
 ### ADMIN_GROUPS
 
@@ -43,7 +47,7 @@ If a user is part of a group listed in configuration as part of `ADMIN_GROUPS`, 
 
 ### DELETE_GROUPS
 
-If a user is part of a group listed in configuration as part of `DELETE_GROUPS`, they have unrestricted read, update and delete access to all datablocks in the database.
+If a user is part of a group listed in configuration as part of `DELETE_GROUPS`, they have unrestricted delete access to all datablocks in the database.
 
 ## Permission Matrix
 
@@ -51,9 +55,9 @@ Table of the different permission classes defined in casl. For all special permi
 
 | Operation | Unauthenticated | Authenticated | `CREATE_DATASET_GROUPS` | `CREATE_DATASET_WITH_PID_GROUPS` | `CREATE_DATASET_PRIVILEGED_GROUPS` | `ADMIN_GROUPS` | `DELETE_GROUPS` |
 | - | - | - | - | - | - | - | - |
-| `Create` | - | - | any | any | any | any | - |
-| `Read` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | any |
-| `Update` | - | owner | any | any | any | any | any |
+| `Create` | - | - | owner | owner | any | any | - |
+| `Read` | public | public/owner/access | public/owner/access | public/owner/access | public/owner/access | any | public/owner/access |
+| `Update` | - | - | owner | owner | owner | any | - |
 | `Delete` | - | - | - | - | - | - | any |
 
 Legend:

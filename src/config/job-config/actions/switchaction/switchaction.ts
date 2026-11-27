@@ -185,11 +185,11 @@ export class SwitchJobAction<Dto extends JobDto> implements JobAction<Dto> {
   ): Promise<JobAction<Dto>[]> {
     // Apply the JSONPath to extract matching properties
     // We might have multiple results
-    const results: JSONData[] = JSONPath<JSONData[]>({
+    const results = JSONPath({
       path: this.property,
       json: context,
       wrap: true,
-    });
+    }) as JSONData[];
     const resultSet = new Set<JSONData>(results);
 
     if (resultSet.size > 1) {
