@@ -14,11 +14,11 @@ Supported features:
 
 ## Writing your own extensions
 
-Custom code will be loaded as a [Javascript Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) by the backend.
+Custom code will be loaded by the backend with `require()`, so it must be a [CommonJS module](https://nodejs.org/api/modules.html) using `module.exports`.
 
 To load a module, define the `AJV_CUSTOM_DEFINITIONS_FILE` environment variable with the path to your module.
 
-It should export two symbols:
+It should export two properties:
 - `keywords` an array of custom keyword definitions
 - `dynamicDefaults` a map of function name / function
 
@@ -30,7 +30,7 @@ Every validation is run with a context object containing:
 - `publishedData`: the `PublishedData` instance being validated
 - `proposalService`, `datasetsService`, `attachmentsService`: read-only access to the corresponding services
 
-Currently only the following methods are supported on read-only services:
+Only the following methods are exposed on these services:
 - `findOne`
 - `findAll`
 - `count`
@@ -41,7 +41,7 @@ Keywords receive the context as `this`, using ajv's [`passContext`](https://ajv.
 
 Example:
 ```js
-export const keywords = [
+module.exports.keywords = [
   {
     keyword: "proposalExists",
     async: true,
@@ -69,7 +69,7 @@ If a function is synchronous, it will simply be registered in ajv and its execut
 
 Example:
 ```js
-export const dynamicDefaults = new Map([
+module.exports.dynamicDefaults = new Map([
     ["mySyncDynamicDefault", () => () => Math.random()]
 ]);
 ```
@@ -83,7 +83,7 @@ Asynchronous dynamicDefaults functions receive the validation context via the `c
 
 Example:
 ```js
-export const dynamicDefaults = new Map([
+module.exports.dynamicDefaults = new Map([
   [
     "mergeKeywords",
     async (ctx) => {

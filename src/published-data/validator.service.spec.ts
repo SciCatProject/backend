@@ -22,16 +22,14 @@ describe("ValidatorService", () => {
     findOne: jest.fn(),
     findAll: jest.fn(),
     count: jest.fn(),
+    create: jest.fn(),
   };
 
   let customDefinitionsCount = 0;
 
-  const createService = async (
+  const createServiceWithModule = async (
     publishedDataConfig: unknown,
-    customDefinitions?: {
-      keywords?: KeywordDefinition[];
-      dynamicDefaults?: Map<string, (...args: never[]) => unknown>;
-    },
+    customDefinitions?: object,
   ) => {
     const customDefinitionsPath = `ajv-custom-definitions-${customDefinitionsCount++}`;
     if (customDefinitions) {
@@ -59,6 +57,14 @@ describe("ValidatorService", () => {
 
     return module.get<ValidatorService>(ValidatorService);
   };
+
+  const createService = (
+    publishedDataConfig: unknown,
+    customDefinitions?: {
+      keywords?: KeywordDefinition[];
+      dynamicDefaults?: Map<string, (...args: never[]) => unknown>;
+    },
+  ) => createServiceWithModule(publishedDataConfig, customDefinitions);
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -96,52 +102,31 @@ describe("ValidatorService", () => {
       },
     );
 
-    it("should ignore and log keywords that are not an array", async () => {
-      const errorSpy = jest.spyOn(Logger, "error").mockImplementation();
-
-      service = await createService(
-        { metadataSchema: schema },
-        // @ts-expect-error deliberately malformed module
+    it.each([
+      [
+        "keywords that are not an array",
         { keywords: { keyword: "notInArray" } },
-      );
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /^Ignoring keywords exported by '.*': expected an array, got 'object'\.$/,
-        ),
-      );
-      expect(await service.validate({ metadata: { name: "abc" } })).toBeNull();
-    });
-
-    it("should ignore and log dynamicDefaults that are not a Map", async () => {
-      const errorSpy = jest.spyOn(Logger, "error").mockImplementation();
-
-      service = await createService(
-        { metadataSchema: schema },
-        // @ts-expect-error deliberately malformed module
+        /^Invalid keywords exported by '.*': expected an array, got 'object'\.$/,
+      ],
+      [
+        "dynamicDefaults that are not a Map",
         { dynamicDefaults: { notInMap: () => () => 5 } },
-      );
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /^Ignoring dynamicDefaults exported by '.*': expected a Map, got 'object'\.$/,
-        ),
-      );
-      expect(await service.validate({ metadata: { name: "abc" } })).toBeNull();
-    });
-
-    it("should ignore and log dynamicDefaults entries that are not functions", async () => {
+        /^Invalid dynamicDefaults exported by '.*': expected a Map, got 'object'\.$/,
+      ],
+      [
+        "dynamicDefaults entries that are not functions",
+        { dynamicDefaults: new Map([["notAFunction", 5]]) },
+        /^Invalid dynamicDefaults function 'notAFunction' exported by '.*': expected a function, got 'number'\.$/,
+      ],
+    ])("should fail to load %s", async (_, customDefinitions, message) => {
       const errorSpy = jest.spyOn(Logger, "error").mockImplementation();
 
-      service = await createService(
-        { metadataSchema: schema },
-        // @ts-expect-error deliberately malformed module
-        { dynamicDefaults: new Map([["notAFunction", 5]]) },
-      );
-
-      expect(await service.validate({ metadata: { name: "abc" } })).toBeNull();
+      await expect(
+        createServiceWithModule({ metadataSchema: schema }, customDefinitions),
+      ).rejects.toThrow(message);
       expect(errorSpy).toHaveBeenCalledWith(
-        "Ignoring dynamic defaults function notAFunction should be of type 'function' not 'number'.",
+        expect.stringMatching(/^Failed to load module at '.*'$/),
+        expect.any(Error),
       );
     });
 
@@ -204,6 +189,21 @@ describe("ValidatorService", () => {
       expect(errorList.length).toBe(1);
       expect(errorList[0].message).toBe("must have required property 'name'");
     });
+
+    it.each([
+      [true, null],
+      [
+        false,
+        [expect.objectContaining({ message: "boolean schema is false" })],
+      ],
+    ])(
+      "should preserve boolean metadataSchema %s semantics",
+      async (schema, expected) => {
+        service = await createService({ metadataSchema: schema });
+        const errors = await service.validate({ metadata: { name: "abc" } });
+        expect(errors).toEqual(expected);
+      },
+    );
   });
 
   describe("Dynamic Defaults", () => {
@@ -306,6 +306,42 @@ describe("ValidatorService", () => {
   });
 
   describe("Custom Keywords", () => {
+    it("should only expose read-only methods on context services", async () => {
+      let context: ValidationContext | undefined;
+      service = await createService(
+        { metadataSchema: { captureContext: true } },
+        {
+          keywords: [
+            {
+              keyword: "captureContext",
+              validate: function (this: ValidationContext) {
+                context = { ...this };
+                return true;
+              },
+            },
+          ],
+        },
+      );
+
+      await service.validate({ metadata: {} });
+
+      for (const name of [
+        "proposalService",
+        "datasetsService",
+        "attachmentsService",
+      ] as const) {
+        expect(Object.keys(context![name]).sort()).toEqual([
+          "count",
+          "findAll",
+          "findOne",
+        ]);
+        expect(Object.isFrozen(context![name])).toBe(true);
+      }
+
+      await context!.datasetsService.count({});
+      expect(mockDataService.count).toHaveBeenCalledWith({});
+    });
+
     it("should pass the validation context to synchronous keywords", async () => {
       const schema = {
         type: "object",

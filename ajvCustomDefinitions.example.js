@@ -1,4 +1,4 @@
-keywords = [
+const keywords = [
   // Automatically sets the name property based on givenName and familyName
   {
     keyword: "setFullName",

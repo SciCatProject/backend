@@ -17,18 +17,25 @@ import {
   UpdatePublishedDataV4Dto,
 } from "./dto/update-published-data.v4.dto";
 
-export type ReadOnlyProposalsService = Pick<
-  ProposalsService,
-  "findOne" | "findAll" | "count"
+type ReadOnlyMethod = "findOne" | "findAll" | "count";
+type ReadOnlyService<T extends Record<ReadOnlyMethod, unknown>> = Pick<
+  T,
+  ReadOnlyMethod
 >;
-export type ReadOnlyDatasetsService = Pick<
-  DatasetsService,
-  "findOne" | "findAll" | "count"
->;
-export type ReadOnlyAttachmentsService = Pick<
-  AttachmentsService,
-  "findOne" | "findAll" | "count"
->;
+
+export type ReadOnlyProposalsService = ReadOnlyService<ProposalsService>;
+export type ReadOnlyDatasetsService = ReadOnlyService<DatasetsService>;
+export type ReadOnlyAttachmentsService = ReadOnlyService<AttachmentsService>;
+
+function toReadOnly<
+  T extends Record<ReadOnlyMethod, (...args: never[]) => unknown>,
+>(service: T): ReadOnlyService<T> {
+  return Object.freeze({
+    findOne: service.findOne.bind(service),
+    findAll: service.findAll.bind(service),
+    count: service.count.bind(service),
+  } as ReadOnlyService<T>);
+}
 
 export type ValidationContext = {
   publishedData:
@@ -45,16 +52,23 @@ export class ValidatorService {
   private ajv: Ajv2019;
   private config: PublishedDataConfigDto;
   private metadataSchema: AsyncSchema | undefined;
+  private readonly readOnlyServices: Omit<ValidationContext, "publishedData">;
   private dynamicDefaults: Map<string, DynamicDefaultFunc> = new Map([
     ["currentYear", () => () => new Date().getFullYear()],
   ]);
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly proposalsService: ProposalsService,
-    private readonly datasetsService: DatasetsService,
-    private readonly attachmentsService: AttachmentsService,
+    proposalsService: ProposalsService,
+    datasetsService: DatasetsService,
+    attachmentsService: AttachmentsService,
   ) {
+    this.readOnlyServices = {
+      proposalService: toReadOnly(proposalsService),
+      datasetsService: toReadOnly(datasetsService),
+      attachmentsService: toReadOnly(attachmentsService),
+    };
+
     this.ajv = new Ajv2019({
       useDefaults: "empty",
       allErrors: true,
@@ -74,8 +88,8 @@ export class ValidatorService {
     }
 
     this.metadataSchema = {
-      ...this.config.metadataSchema,
       $async: true,
+      allOf: [this.config.metadataSchema],
     };
 
     const modulePath = this.configService.get<string>("ajvCustomDefinitions");
@@ -92,19 +106,26 @@ export class ValidatorService {
           this.ajv.addKeyword(definition);
         }
       } else if (!isNil(externalModule.keywords)) {
-        Logger.error(
-          `Ignoring keywords exported by '${modulePath}': expected an array, got '${typeof externalModule.keywords}'.`,
+        throw new Error(
+          `Invalid keywords exported by '${modulePath}': expected an array, got '${typeof externalModule.keywords}'.`,
         );
       }
 
       if (isMap(externalModule.dynamicDefaults)) {
+        for (const [name, implementation] of externalModule.dynamicDefaults) {
+          if (typeof implementation !== "function") {
+            throw new Error(
+              `Invalid dynamicDefaults function '${name}' exported by '${modulePath}': expected a function, got '${typeof implementation}'.`,
+            );
+          }
+        }
         this.dynamicDefaults = new Map([
           ...this.dynamicDefaults,
           ...externalModule.dynamicDefaults,
         ]);
       } else if (!isNil(externalModule.dynamicDefaults)) {
-        Logger.error(
-          `Ignoring dynamicDefaults exported by '${modulePath}': expected a Map, got '${typeof externalModule.dynamicDefaults}'.`,
+        throw new Error(
+          `Invalid dynamicDefaults exported by '${modulePath}': expected a Map, got '${typeof externalModule.dynamicDefaults}'.`,
         );
       }
     } catch (error) {
@@ -125,9 +146,7 @@ export class ValidatorService {
 
     const context: ValidationContext = {
       publishedData,
-      proposalService: this.proposalsService,
-      datasetsService: this.datasetsService,
-      attachmentsService: this.attachmentsService,
+      ...this.readOnlyServices,
     };
 
     await this.loadDynamicDefaultFunctions(context);
@@ -154,12 +173,6 @@ export class ValidatorService {
 
   private async loadDynamicDefaultFunctions(context: ValidationContext) {
     for (const [name, implementation] of this.dynamicDefaults.entries()) {
-      if (typeof implementation !== "function") {
-        Logger.error(
-          `Ignoring dynamic defaults function ${name} should be of type 'function' not '${typeof implementation}'.`,
-        );
-        continue;
-      }
       switch (implementation.constructor.name) {
         case "Function":
           def.DEFAULTS[name] = implementation;
