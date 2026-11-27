@@ -18,12 +18,16 @@ describe("ValidatorService", () => {
     get: jest.fn(),
   };
 
-  const mockDataService = {
+  const createMockDataService = () => ({
     findOne: jest.fn(),
     findAll: jest.fn(),
     count: jest.fn(),
     create: jest.fn(),
-  };
+  });
+
+  const mockProposalsService = createMockDataService();
+  const mockDatasetsService = createMockDataService();
+  const mockAttachmentsService = createMockDataService();
 
   let customDefinitionsCount = 0;
 
@@ -49,9 +53,9 @@ describe("ValidatorService", () => {
       providers: [
         ValidatorService,
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: ProposalsService, useValue: mockDataService },
-        { provide: DatasetsService, useValue: mockDataService },
-        { provide: AttachmentsService, useValue: mockDataService },
+        { provide: ProposalsService, useValue: mockProposalsService },
+        { provide: DatasetsService, useValue: mockDatasetsService },
+        { provide: AttachmentsService, useValue: mockAttachmentsService },
       ],
     }).compile();
 
@@ -206,6 +210,21 @@ describe("ValidatorService", () => {
     );
   });
 
+  it("should resolve local references against the configured schema root", async () => {
+    service = await createService({
+      metadataSchema: {
+        type: "object",
+        $defs: { name: { type: "string" } },
+        properties: { name: { $ref: "#/$defs/name" } },
+      },
+    });
+
+    expect(await service.validate({ metadata: { name: "abc" } })).toBeNull();
+    expect(await service.validate({ metadata: { name: 5 } })).toEqual([
+      expect.objectContaining({ instancePath: "/name", keyword: "type" }),
+    ]);
+  });
+
   describe("Dynamic Defaults", () => {
     it("should handle pre-defined dynamic default (currentYear)", async () => {
       const schema = {
@@ -260,7 +279,7 @@ describe("ValidatorService", () => {
         ],
       };
 
-      mockDataService.count.mockImplementation(() => 6);
+      mockDatasetsService.count.mockImplementation(() => 6);
       service = await createService(
         { metadataSchema: schema },
         {
@@ -325,21 +344,35 @@ describe("ValidatorService", () => {
 
       await service.validate({ metadata: {} });
 
-      for (const name of [
-        "proposalService",
-        "datasetsService",
-        "attachmentsService",
+      for (const [name, mock] of [
+        ["proposalService", mockProposalsService],
+        ["datasetsService", mockDatasetsService],
+        ["attachmentsService", mockAttachmentsService],
       ] as const) {
-        expect(Object.keys(context![name]).sort()).toEqual([
+        const contextService = context![name];
+        expect(Object.keys(contextService).sort()).toEqual([
           "count",
           "findAll",
           "findOne",
         ]);
-        expect(Object.isFrozen(context![name])).toBe(true);
-      }
+        expect(Object.isFrozen(contextService)).toBe(true);
 
-      await context!.datasetsService.count({});
-      expect(mockDataService.count).toHaveBeenCalledWith({});
+        await contextService.findOne({ where: { name } });
+        await contextService.findAll({ where: { name } });
+        await contextService.count({ name });
+        expect(mock.findOne).toHaveBeenCalledWith({ where: { name } });
+        expect(mock.findAll).toHaveBeenCalledWith({ where: { name } });
+        expect(mock.count).toHaveBeenCalledWith({ name });
+      }
+      for (const mock of [
+        mockProposalsService,
+        mockDatasetsService,
+        mockAttachmentsService,
+      ]) {
+        expect(mock.findOne).toHaveBeenCalledTimes(1);
+        expect(mock.findAll).toHaveBeenCalledTimes(1);
+        expect(mock.count).toHaveBeenCalledTimes(1);
+      }
     });
 
     it("should pass the validation context to synchronous keywords", async () => {
@@ -395,7 +428,7 @@ describe("ValidatorService", () => {
         },
       };
 
-      mockDataService.findOne.mockImplementation(
+      mockProposalsService.findOne.mockImplementation(
         async (filter: { where: { proposalId: string } }) =>
           filter.where.proposalId === "prop-123" ? {} : null,
       );
@@ -430,10 +463,10 @@ describe("ValidatorService", () => {
         metadata: { proposalId: "prop-123", relatedProposalId: "prop-999" },
       });
       expect(errors).toBeNull();
-      expect(mockDataService.findOne).toHaveBeenCalledTimes(1);
+      expect(mockProposalsService.findOne).toHaveBeenCalledTimes(1);
 
       errors = await service.validate({ metadata: { proposalId: "prop-999" } });
-      expect(mockDataService.findOne).toHaveBeenCalledWith({
+      expect(mockProposalsService.findOne).toHaveBeenCalledWith({
         where: { proposalId: "prop-999" },
       });
       expect(errors).toHaveLength(1);
@@ -446,7 +479,7 @@ describe("ValidatorService", () => {
         properties: { proposalId: { type: "string", proposalExists: true } },
       };
 
-      mockDataService.findOne.mockResolvedValue(null);
+      mockProposalsService.findOne.mockResolvedValue(null);
 
       service = await createService(
         { metadataSchema: schema },

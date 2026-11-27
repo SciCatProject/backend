@@ -87,10 +87,11 @@ export class ValidatorService {
       return;
     }
 
-    this.metadataSchema = {
-      $async: true,
-      allOf: [this.config.metadataSchema],
-    };
+    const { metadataSchema } = this.config;
+    this.metadataSchema =
+      typeof metadataSchema === "boolean"
+        ? { $async: true, allOf: [metadataSchema] }
+        : { ...metadataSchema, $async: true };
 
     const modulePath = this.configService.get<string>("ajvCustomDefinitions");
     if (isEmpty(modulePath)) {
