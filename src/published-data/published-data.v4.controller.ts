@@ -6,6 +6,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -73,6 +74,8 @@ import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
  */
 @Controller({ path: "publisheddata", version: "4" })
 export class PublishedDataV4Controller {
+  private readonly publicURLprefix: string | undefined;
+
   constructor(
     private readonly attachmentsService: AttachmentsService,
     private readonly configService: ConfigService,
@@ -83,7 +86,9 @@ export class PublishedDataV4Controller {
     private readonly publishedDataService: PublishedDataService,
     private caslAbilityFactory: CaslAbilityFactory,
     private validatorService: ValidatorService,
-  ) {}
+  ) {
+    this.publicURLprefix = this.configService.get<string>("publicURLprefix");
+  }
 
   @AllowAny()
   @Get("config")
@@ -647,7 +652,10 @@ export class PublishedDataV4Controller {
           this.httpService.request(registerDataciteDoiOptions),
         );
       } catch (err) {
-        console.log("Error in registerDataciteDoiOptions", err);
+        Logger.error(
+          `DataCite DOI registration failed for ${publishedData.doi}`,
+          "PublishedDataController.register",
+        );
 
         handleAxiosRequestError(err, "PublishedDataController.register");
         throw new HttpException(
@@ -762,9 +770,19 @@ export class PublishedDataV4Controller {
       (landingPage.startsWith("https://") || landingPage.startsWith("http://"))
         ? landingPage
         : `https://${landingPage}`;
+    if (!landingPage && !this.publicURLprefix) {
+      Logger.error(
+        `Cannot build DOI landing page URL for ${doi}: neither metadata.landingPage nor PUBLIC_URL_PREFIX is set.`,
+        "PublishedDataV4Controller.doiRegistrationJSON",
+      );
+      throw new HttpException(
+        "DOI landing page URL could not be determined.",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
     const url = landingPage
       ? `${landingPageBase}${encodeURIComponent(doi)}`
-      : `${this.configService.get<string>("publicURLprefix")}${encodeURIComponent(doi)}`;
+      : `${this.publicURLprefix}${encodeURIComponent(doi)}`;
 
     const descriptionsArray = [
       { description: abstract, descriptionType: "Abstract", lang: "en" },
