@@ -5,49 +5,75 @@ import addKeywords from "ajv-keywords";
 import def, {
   DynamicDefaultFunc,
 } from "ajv-keywords/dist/definitions/dynamicDefaults";
-import Ajv2019, { Schema } from "ajv/dist/2019";
+import Ajv2019, { AsyncSchema, ValidationError } from "ajv/dist/2019";
 import { isArray, isEmpty, isMap, isNil } from "lodash";
 import { AttachmentsService } from "src/attachments/attachments.service";
 import { DatasetsService } from "src/datasets/datasets.service";
 import { ProposalsService } from "src/proposals/proposals.service";
 import { CreatePublishedDataV4Dto } from "./dto/create-published-data.v4.dto";
+import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
 import {
   PartialUpdatePublishedDataV4Dto,
   UpdatePublishedDataV4Dto,
 } from "./dto/update-published-data.v4.dto";
-import { PublishedDataConfigDto } from "./dto/published-data-config.dto";
 
-export type ReadOnlyProposalsService = Pick<
-  ProposalsService,
-  "findOne" | "findAll" | "count"
+type ReadOnlyMethod = "findOne" | "findAll" | "count";
+type ReadOnlyService<T extends Record<ReadOnlyMethod, unknown>> = Pick<
+  T,
+  ReadOnlyMethod
 >;
-export type ReadOnlyDatasetsService = Pick<
-  DatasetsService,
-  "findOne" | "findAll" | "count"
->;
-export type ReadOnlyAttachmentsService = Pick<
-  AttachmentsService,
-  "findOne" | "findAll" | "count"
->;
+
+export type ReadOnlyProposalsService = ReadOnlyService<ProposalsService>;
+export type ReadOnlyDatasetsService = ReadOnlyService<DatasetsService>;
+export type ReadOnlyAttachmentsService = ReadOnlyService<AttachmentsService>;
+
+function toReadOnly<
+  T extends Record<ReadOnlyMethod, (...args: never[]) => unknown>,
+>(service: T): ReadOnlyService<T> {
+  return Object.freeze({
+    findOne: service.findOne.bind(service),
+    findAll: service.findAll.bind(service),
+    count: service.count.bind(service),
+  } as ReadOnlyService<T>);
+}
+
+export type ValidationContext = {
+  publishedData:
+    | CreatePublishedDataV4Dto
+    | UpdatePublishedDataV4Dto
+    | PartialUpdatePublishedDataV4Dto;
+  proposalService: ReadOnlyProposalsService;
+  datasetsService: ReadOnlyDatasetsService;
+  attachmentsService: ReadOnlyAttachmentsService;
+};
 
 @Injectable()
 export class ValidatorService {
   private ajv: Ajv2019;
   private config: PublishedDataConfigDto;
+  private metadataSchema: AsyncSchema | undefined;
+  private readonly readOnlyServices: Omit<ValidationContext, "publishedData">;
   private dynamicDefaults: Map<string, DynamicDefaultFunc> = new Map([
     ["currentYear", () => () => new Date().getFullYear()],
   ]);
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly proposalsService: ProposalsService,
-    private readonly datasetsService: DatasetsService,
-    private readonly attachmentsService: AttachmentsService,
+    proposalsService: ProposalsService,
+    datasetsService: DatasetsService,
+    attachmentsService: AttachmentsService,
   ) {
+    this.readOnlyServices = {
+      proposalService: toReadOnly(proposalsService),
+      datasetsService: toReadOnly(datasetsService),
+      attachmentsService: toReadOnly(attachmentsService),
+    };
+
     this.ajv = new Ajv2019({
       useDefaults: "empty",
       allErrors: true,
       strict: false,
+      passContext: true,
     });
     addFormats(this.ajv);
     addKeywords(this.ajv);
@@ -60,6 +86,12 @@ export class ValidatorService {
     if (isNil(this.config.metadataSchema)) {
       return;
     }
+
+    const { metadataSchema } = this.config;
+    this.metadataSchema =
+      typeof metadataSchema === "boolean"
+        ? { $async: true, allOf: [metadataSchema] }
+        : { ...metadataSchema, $async: true };
 
     const modulePath = this.configService.get<string>("ajvCustomDefinitions");
     if (isEmpty(modulePath)) {
@@ -74,13 +106,28 @@ export class ValidatorService {
           Logger.log(`Adding ajv keyword: '${definition.keyword}'`);
           this.ajv.addKeyword(definition);
         }
+      } else if (!isNil(externalModule.keywords)) {
+        throw new Error(
+          `Invalid keywords exported by '${modulePath}': expected an array, got '${typeof externalModule.keywords}'.`,
+        );
       }
 
       if (isMap(externalModule.dynamicDefaults)) {
+        for (const [name, implementation] of externalModule.dynamicDefaults) {
+          if (typeof implementation !== "function") {
+            throw new Error(
+              `Invalid dynamicDefaults function '${name}' exported by '${modulePath}': expected a function, got '${typeof implementation}'.`,
+            );
+          }
+        }
         this.dynamicDefaults = new Map([
           ...this.dynamicDefaults,
           ...externalModule.dynamicDefaults,
         ]);
+      } else if (!isNil(externalModule.dynamicDefaults)) {
+        throw new Error(
+          `Invalid dynamicDefaults exported by '${modulePath}': expected a Map, got '${typeof externalModule.dynamicDefaults}'.`,
+        );
       }
     } catch (error) {
       Logger.error(`Failed to load module at '${modulePath}'`, error);
@@ -94,15 +141,27 @@ export class ValidatorService {
       | UpdatePublishedDataV4Dto
       | PartialUpdatePublishedDataV4Dto,
   ) {
-    if (isNil(this.config.metadataSchema)) {
+    if (isNil(this.metadataSchema)) {
       return null;
     }
 
-    await this.loadDynamicDefaultFunctions(publishedData);
+    const context: ValidationContext = {
+      publishedData,
+      ...this.readOnlyServices,
+    };
 
-    const validateFn = this.ajv.compile(this.config.metadataSchema as Schema);
-    validateFn(publishedData.metadata);
-    return validateFn.errors;
+    await this.loadDynamicDefaultFunctions(context);
+
+    const validateFn = this.ajv.compile(this.metadataSchema);
+    try {
+      await validateFn.call(context, publishedData.metadata);
+      return null;
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        return err.errors;
+      }
+      throw err;
+    }
   }
 
   private loadExternalModule(path: string) {
@@ -113,19 +172,8 @@ export class ValidatorService {
     return externalModule;
   }
 
-  private async loadDynamicDefaultFunctions(
-    publishedData:
-      | CreatePublishedDataV4Dto
-      | UpdatePublishedDataV4Dto
-      | PartialUpdatePublishedDataV4Dto,
-  ) {
+  private async loadDynamicDefaultFunctions(context: ValidationContext) {
     for (const [name, implementation] of this.dynamicDefaults.entries()) {
-      if (typeof implementation !== "function") {
-        Logger.error(
-          `Ignoring dynamic defaults function ${name} should be of type 'function' not '${typeof implementation}'.`,
-        );
-        continue;
-      }
       switch (implementation.constructor.name) {
         case "Function":
           def.DEFAULTS[name] = implementation;
@@ -136,14 +184,7 @@ export class ValidatorService {
            * AsyncFunction now to perform any setup (like DB queries).
            */
           try {
-            const syncFunc = await implementation({
-              publishedData: publishedData,
-              proposalService: this
-                .proposalsService as ReadOnlyProposalsService,
-              datasetsService: this.datasetsService as ReadOnlyDatasetsService,
-              attachmentsService: this
-                .attachmentsService as ReadOnlyAttachmentsService,
-            });
+            const syncFunc = await implementation(context);
             def.DEFAULTS[name] = () => syncFunc;
           } catch (err) {
             throw new Error(

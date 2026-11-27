@@ -14,46 +14,76 @@ Supported features:
 
 ## Writing your own extensions
 
-Custom code will be loaded as a [Javascript Module](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) by the backend.
+Custom code will be loaded by the backend with `require()`, so it must be a [CommonJS module](https://nodejs.org/api/modules.html) using `module.exports`.
 
 To load a module, define the `AJV_CUSTOM_DEFINITIONS_FILE` environment variable with the path to your module.
 
-It should export two symbols:
+It should export two properties:
 - `keywords` an array of custom keyword definitions
 - `dynamicDefaults` a map of function name / function
 
 see [the example file](../../ajvCustomDefinitions.example.js).
 
+### Validation context
+
+Every validation is run with a context object containing:
+- `publishedData`: the `PublishedData` instance being validated
+- `proposalService`, `datasetsService`, `attachmentsService`: read-only access to the corresponding services
+
+Only the following methods are exposed on these services:
+- `findOne`
+- `findAll`
+- `count`
+
+### Keywords
+
+Keywords receive the context as `this`, using ajv's [`passContext`](https://ajv.js.org/options.html#passcontext) option.
+
+Example:
+```js
+module.exports.keywords = [
+  {
+    keyword: "proposalExists",
+    async: true,
+    schema: true,
+    schemaType: "boolean",
+    validate: async function (schema, data) {
+      if (!schema) return true;
+
+      const proposal = await this.proposalService.findOne({
+        where: { proposalId: data },
+      });
+      return proposal !== null;
+    },
+  },
+];
+```
+
+### dynamicDefaults
+
 ⚠️ Ajv expects higher-order functions (i.e., a function that returns another function).
 
-### Synchronous functions
+#### Synchronous functions
 
 If a function is synchronous, it will simply be registered in ajv and its execution is entirely delegated to the library.
 
 Example:
 ```js
-export const dynamicDefaults = new Map([
+module.exports.dynamicDefaults = new Map([
     ["mySyncDynamicDefault", () => () => Math.random()]
 ]);
 ```
 
-### Asynchronous functions
+#### Asynchronous functions
 
-If you need to execute asynchronous code, you should declare your function `async` (only supported for dynamicDefaults).
-It should return a synchronous function as ajv will not resolve any `Promise` returned by custom code.
+If you need to execute asynchronous code in a dynamicDefaults function, you should declare your function `async`.
+It should return a synchronous function as ajv will not resolve any `Promise` returned by dynamicDefaults functions.
 
-Asynchronous functions have access to additional context via the `ctx` argument:
-- The `PublishedData` instance being validated
-- Read-only access to the following services: `ProposalsService`, `DatasetsService` and `AttachmentsService`
-
-Currently only the following methods are supported on read-only services:
-- `findOne`
-- `findAll`
-- `count`
+Asynchronous dynamicDefaults functions receive the validation context via the `ctx` argument.
 
 Example:
 ```js
-export const dynamicDefaults = new Map([
+module.exports.dynamicDefaults = new Map([
   [
     "mergeKeywords",
     async (ctx) => {
