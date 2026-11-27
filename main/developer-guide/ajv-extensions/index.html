@@ -401,6 +401,40 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#validation-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamicdefaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamicDefaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="dynamicDefaults">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#synchronous-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -419,6 +453,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1385,6 +1424,40 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#validation-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keywords
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamicdefaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dynamicDefaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="dynamicDefaults">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#synchronous-functions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1403,6 +1476,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1437,32 +1515,55 @@
 - registering new <a href="https://ajv.js.org/keywords.html">keywords</a>
 - registering new <a href="https://ajv.js.org/packages/ajv-keywords.html#dynamicdefaults">dynamicDefaults functions</a></p>
 <h2 id="writing-your-own-extensions">Writing your own extensions<a class="headerlink" href="#writing-your-own-extensions" title="Permanent link">¶</a></h2>
-<p>Custom code will be loaded as a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules">Javascript Module</a> by the backend.</p>
+<p>Custom code will be loaded by the backend with <code>require()</code>, so it must be a <a href="https://nodejs.org/api/modules.html">CommonJS module</a> using <code>module.exports</code>.</p>
 <p>To load a module, define the <code>AJV_CUSTOM_DEFINITIONS_FILE</code> environment variable with the path to your module.</p>
-<p>It should export two symbols:
+<p>It should export two properties:
 - <code>keywords</code> an array of custom keyword definitions
 - <code>dynamicDefaults</code> a map of function name / function</p>
 <p>see <a href="../../ajvCustomDefinitions.example.js">the example file</a>.</p>
-<p>⚠️ Ajv expects higher-order functions (i.e., a function that returns another function).</p>
-<h3 id="synchronous-functions">Synchronous functions<a class="headerlink" href="#synchronous-functions" title="Permanent link">¶</a></h3>
-<p>If a function is synchronous, it will simply be registered in ajv and its execution is entirely delegated to the library.</p>
-<p>Example:
-</p><div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">dynamicDefaults</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
-<span class="w">    </span><span class="p">[</span><span class="s2">"mySyncDynamicDefault"</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()]</span>
-<span class="p">]);</span>
-</code></pre></div><p></p>
-<h3 id="asynchronous-functions">Asynchronous functions<a class="headerlink" href="#asynchronous-functions" title="Permanent link">¶</a></h3>
-<p>If you need to execute asynchronous code, you should declare your function <code>async</code> (only supported for dynamicDefaults).
-It should return a synchronous function as ajv will not resolve any <code>Promise</code> returned by custom code.</p>
-<p>Asynchronous functions have access to additional context via the <code>ctx</code> argument:
-- The <code>PublishedData</code> instance being validated
-- Read-only access to the following services: <code>ProposalsService</code>, <code>DatasetsService</code> and <code>AttachmentsService</code></p>
-<p>Currently only the following methods are supported on read-only services:
+<h3 id="validation-context">Validation context<a class="headerlink" href="#validation-context" title="Permanent link">¶</a></h3>
+<p>Every validation is run with a context object containing:
+- <code>publishedData</code>: the <code>PublishedData</code> instance being validated
+- <code>proposalService</code>, <code>datasetsService</code>, <code>attachmentsService</code>: read-only access to the corresponding services</p>
+<p>Only the following methods are exposed on these services:
 - <code>findOne</code>
 - <code>findAll</code>
 - <code>count</code></p>
+<h3 id="keywords">Keywords<a class="headerlink" href="#keywords" title="Permanent link">¶</a></h3>
+<p>Keywords receive the context as <code>this</code>, using ajv's <a href="https://ajv.js.org/options.html#passcontext"><code>passContext</code></a> option.</p>
 <p>Example:
-</p><div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">dynamicDefaults</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
+</p><div class="highlight"><pre><span></span><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">keywords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">keyword</span><span class="o">:</span><span class="w"> </span><span class="s2">"proposalExists"</span><span class="p">,</span>
+<span class="w">    </span><span class="k">async</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">schema</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">schemaType</span><span class="o">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">validate</span><span class="o">:</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="p">(</span><span class="nx">schema</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">schema</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">proposal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">proposalService</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span>
+<span class="w">        </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">proposalId</span><span class="o">:</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="p">});</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">proposal</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">];</span>
+</code></pre></div><p></p>
+<h3 id="dynamicdefaults">dynamicDefaults<a class="headerlink" href="#dynamicdefaults" title="Permanent link">¶</a></h3>
+<p>⚠️ Ajv expects higher-order functions (i.e., a function that returns another function).</p>
+<h4 id="synchronous-functions">Synchronous functions<a class="headerlink" href="#synchronous-functions" title="Permanent link">¶</a></h4>
+<p>If a function is synchronous, it will simply be registered in ajv and its execution is entirely delegated to the library.</p>
+<p>Example:
+</p><div class="highlight"><pre><span></span><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">dynamicDefaults</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">"mySyncDynamicDefault"</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()]</span>
+<span class="p">]);</span>
+</code></pre></div><p></p>
+<h4 id="asynchronous-functions">Asynchronous functions<a class="headerlink" href="#asynchronous-functions" title="Permanent link">¶</a></h4>
+<p>If you need to execute asynchronous code in a dynamicDefaults function, you should declare your function <code>async</code>.
+It should return a synchronous function as ajv will not resolve any <code>Promise</code> returned by dynamicDefaults functions.</p>
+<p>Asynchronous dynamicDefaults functions receive the validation context via the <code>ctx</code> argument.</p>
+<p>Example:
+</p><div class="highlight"><pre><span></span><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">dynamicDefaults</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="p">([</span>
 <span class="w">  </span><span class="p">[</span>
 <span class="w">    </span><span class="s2">"mergeKeywords"</span><span class="p">,</span>
 <span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
